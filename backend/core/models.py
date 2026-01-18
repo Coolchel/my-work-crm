@@ -220,3 +220,102 @@ class ContractorNote(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.amount} {self.currency}"
+
+
+class ShieldGroup(models.Model):
+    """
+    Группа щита.
+    """
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='shield_groups', verbose_name="Проект")
+    device = models.CharField(max_length=255, verbose_name="Устройство/Номинал")
+    zone = models.CharField(max_length=255, verbose_name="Зона/Потребитель")
+    catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
+
+    class Meta:
+        verbose_name = "Группа щита"
+        verbose_name_plural = "Группы щита"
+
+    def __str__(self):
+        return f"{self.device} - {self.zone}"
+
+
+class LedZone(models.Model):
+    """
+    Зона LED подсветки.
+    """
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='led_zones', verbose_name="Проект")
+    transformer = models.CharField(max_length=255, verbose_name="Трансформатор/Блок")
+    zone = models.CharField(max_length=255, verbose_name="Место установки/Лента")
+    catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
+
+    class Meta:
+        verbose_name = "Зона LED"
+        verbose_name_plural = "Зоны LED"
+
+    def __str__(self):
+        return f"{self.transformer} - {self.zone}"
+
+
+class ShieldTemplate(models.Model):
+    """
+    Шаблон щита.
+    """
+    name = models.CharField(max_length=255, verbose_name="Название шаблона")
+    description = models.TextField(blank=True, verbose_name="Описание")
+
+    class Meta:
+        verbose_name = "Шаблон щита"
+        verbose_name_plural = "Шаблоны щитов"
+
+    def __str__(self):
+        return self.name
+
+
+class ShieldTemplateItem(models.Model):
+    """
+    Пункт шаблона щита.
+    """
+    template = models.ForeignKey(ShieldTemplate, on_delete=models.CASCADE, related_name='items', verbose_name="Шаблон")
+    device = models.CharField(max_length=255, verbose_name="Устройство/Номинал")
+    zone = models.CharField(max_length=255, verbose_name="Зона/Потребитель")
+    catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
+
+    class Meta:
+        verbose_name = "Пункт шаблона щита"
+        verbose_name_plural = "Пункты шаблона щита"
+
+    def __str__(self):
+        return f"{self.device} - {self.zone}"
+
+
+class LedTemplate(models.Model):
+    """
+    Шаблон LED.
+    """
+    name = models.CharField(max_length=255, verbose_name="Название шаблона")
+    description = models.TextField(blank=True, verbose_name="Описание")
+
+    class Meta:
+        verbose_name = "Шаблон LED"
+        verbose_name_plural = "Шаблоны LED"
+
+    def __str__(self):
+        return self.name
+
+
+class LedTemplateItem(models.Model):
+    """
+    Пункт шаблона LED.
+    """
+    template = models.ForeignKey(LedTemplate, on_delete=models.CASCADE, related_name='items', verbose_name="Шаблон")
+    transformer = models.CharField(max_length=255, verbose_name="Трансформатор/Блок")
+    zone = models.CharField(max_length=255, verbose_name="Место установки/Лента")
+    catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
+
+    class Meta:
+        verbose_name = "Пункт шаблона LED"
+        verbose_name_plural = "Пункты шаблона LED"
+
+    def __str__(self):
+        return f"{self.transformer} - {self.zone}"
+

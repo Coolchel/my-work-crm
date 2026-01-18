@@ -2,7 +2,9 @@ from django.contrib import admin
 from .models import (
     Project, Stage, EstimateItem, ProjectFile, 
     CatalogCategory, CatalogItem, EstimateTemplate, TemplateItem,
-    ContractorNote
+    CatalogCategory, CatalogItem, EstimateTemplate, TemplateItem,
+    ContractorNote, ShieldGroup, LedZone,
+    ShieldTemplate, ShieldTemplateItem, LedTemplate, LedTemplateItem
 )
 
 class ProjectFileInline(admin.TabularInline):
@@ -34,6 +36,31 @@ class TemplateItemInline(admin.TabularInline):
     verbose_name = "Позиция шаблона"
     verbose_name_plural = "Позиции шаблона"
 
+class ShieldGroupInline(admin.TabularInline):
+    model = ShieldGroup
+    extra = 1
+    verbose_name = "Группа щита"
+    verbose_name_plural = "Конфигурация щита"
+    autocomplete_fields = ['catalog_item']
+
+class LedZoneInline(admin.TabularInline):
+    model = LedZone
+    extra = 1
+    verbose_name = "Зона LED"
+    verbose_name_plural = "Конфигурация LED"
+    verbose_name_plural = "Конфигурация LED"
+    autocomplete_fields = ['catalog_item']
+
+class ShieldTemplateItemInline(admin.TabularInline):
+    model = ShieldTemplateItem
+    extra = 1
+    autocomplete_fields = ['catalog_item']
+
+class LedTemplateItemInline(admin.TabularInline):
+    model = LedTemplateItem
+    extra = 1
+    autocomplete_fields = ['catalog_item']
+
 @admin.register(CatalogCategory)
 class CatalogCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'labor_coefficient')
@@ -55,7 +82,8 @@ class ProjectAdmin(admin.ModelAdmin):
     list_display = ('address', 'object_type', 'status', 'created_at')
     list_filter = ('object_type', 'status', 'created_at')
     search_fields = ('address', 'client_info')
-    inlines = [StageInline, ProjectFileInline]
+    search_fields = ('address', 'client_info')
+    inlines = [StageInline, ProjectFileInline, ShieldGroupInline, LedZoneInline]
     fieldsets = (
         ('Основная информация', {
             'fields': ('address', 'object_type', 'client_info', 'source', 'status')
@@ -100,4 +128,15 @@ class ProjectFileAdmin(admin.ModelAdmin):
 class ContractorNoteAdmin(admin.ModelAdmin):
     list_display = ('title', 'amount', 'currency', 'date', 'is_paid')
     list_filter = ('currency', 'is_paid', 'date')
+    list_filter = ('currency', 'is_paid', 'date')
     search_fields = ('title', 'description')
+
+@admin.register(ShieldTemplate)
+class ShieldTemplateAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    inlines = [ShieldTemplateItemInline]
+
+@admin.register(LedTemplate)
+class LedTemplateAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    inlines = [LedTemplateItemInline]

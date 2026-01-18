@@ -2,7 +2,8 @@ from rest_framework import serializers
 from .models import (
     Project, Stage, EstimateItem, ProjectFile,
     CatalogCategory, CatalogItem, EstimateTemplate, TemplateItem,
-    ContractorNote
+    ContractorNote, ShieldGroup, LedZone,
+    ShieldTemplate, LedTemplate
 )
 
 class ProjectFileSerializer(serializers.ModelSerializer):
@@ -25,10 +26,18 @@ class StageSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     stages = StageSerializer(many=True, read_only=True)
     files = ProjectFileSerializer(many=True, read_only=True)
+    shield_groups = serializers.SerializerMethodField()
+    led_zones = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
         fields = '__all__'
+
+    def get_shield_groups(self, obj):
+        return ShieldGroupSerializer(obj.shield_groups.all(), many=True).data
+
+    def get_led_zones(self, obj):
+        return LedZoneSerializer(obj.led_zones.all(), many=True).data
 
 class CatalogCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -56,3 +65,23 @@ class ContractorNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractorNote
         fields = '__all__'
+
+class ShieldGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShieldGroup
+        fields = '__all__'
+
+class LedZoneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LedZone
+        fields = '__all__'
+
+class ShieldTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShieldTemplate
+        fields = ['id', 'name', 'description']
+
+class LedTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LedTemplate
+        fields = ['id', 'name', 'description']
