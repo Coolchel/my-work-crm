@@ -74,21 +74,32 @@ class TemplateItem(models.Model):
 
 class Project(models.Model):
     STATUS_CHOICES = [
-        ('precalculation', 'Предпросчет'),
-        ('in_progress', 'В работе'),
-        ('pause', 'Пауза'),
+        ('new', 'Новый'),
+        ('calculating', 'Предпросчет'),
+        ('stage1_done', 'Этап 1 готов'),
+        ('stage2_done', 'Этап 2 готов'),
+        ('stage3_done', 'Этап 3 готов'),
         ('completed', 'Завершен'),
+    ]
+    
+    OBJECT_TYPE_CHOICES = [
+        ('new_building', 'Новостройка'),
+        ('secondary', 'Вторичка'),
+        ('cottage', 'Коттедж'),
+        ('office', 'Офис'),
+        ('other', 'Другое'),
     ]
 
     address = models.CharField(max_length=255, verbose_name="Адрес объекта")
-    # Новые поля
+    object_type = models.CharField(max_length=20, choices=OBJECT_TYPE_CHOICES, default='new_building', verbose_name="Тип объекта")
+    
     entrance = models.CharField(max_length=10, blank=True, verbose_name="Подъезд")
     floor = models.IntegerField(null=True, blank=True, verbose_name="Этаж")
     intercom_code = models.CharField(max_length=20, blank=True, verbose_name="Код домофона")
 
     client_info = models.TextField(verbose_name="Контактные данные")
     source = models.CharField(max_length=100, verbose_name="Источник объекта")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='precalculation', verbose_name="Статус")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new', verbose_name="Статус")
     notes = models.TextField(blank=True, verbose_name="Заметки")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
@@ -134,17 +145,25 @@ class EstimateItem(models.Model):
         ('work', 'Работа'),
         ('material', 'Материал'),
     ]
+    CURRENCY_CHOICES = [
+        ('USD', 'USD'),
+        ('BYN', 'BYN'),
+    ]
 
     stage = models.ForeignKey(Stage, on_delete=models.CASCADE, related_name='estimate_items', verbose_name="Этап")
-    # Новое поле: связь со справочником (может быть пустым, если позиция уникальная)
     catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Из каталога")
 
     item_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name="Тип")
     is_preliminary = models.BooleanField(default=False, verbose_name="Это предпросчет?")
+    
     name = models.CharField(max_length=255, verbose_name="Наименование")
     quantity = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Количество")
     unit = models.CharField(max_length=20, verbose_name="Ед. изм.")
     price_per_unit = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Цена за единицу", blank=True, null=True)
+    
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD', verbose_name="Валюта")
+    # is_subcontractor удалено, заменено на contractor_quantity
+    contractor_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Кол-во подрядчика")
 
     class Meta:
         verbose_name = "Пункт сметы"
@@ -154,7 +173,6 @@ class EstimateItem(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        # Если привязали элемент каталога, авто-заполняем поля, если они пустые
         if self.catalog_item:
             if not self.name:
                 self.name = self.catalog_item.name
@@ -162,11 +180,8 @@ class EstimateItem(models.Model):
                 self.unit = self.catalog_item.unit
             if not self.item_type:
                 self.item_type = self.catalog_item.item_type
-            # Если цена не задана явно (None), берем из каталога
             if self.price_per_unit is None:
                 self.price_per_unit = self.catalog_item.default_price
-
-        # Вызываем оригинальный метод save, чтобы сохранить в БД
         super().save(*args, **kwargs)
 
 
@@ -181,3 +196,27 @@ class ProjectFile(models.Model):
 
     def __str__(self):
         return self.description or str(self.file)
+
+
+class ContractorNote(models.Model):
+    """
+    Записи подрядчика (для раздела 'Итоговые сметы ч.2').
+    """
+    CURRENCY_CHOICES = [
+        ('USD', 'USD'),
+        ('BYN', 'BYN'),
+    ]
+
+    title = models.CharField(max_length=255, verbose_name="Заголовок/Объект")
+    amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Сумма")
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD', verbose_name="Валюта")
+    description = models.TextField(blank=True, verbose_name="Описание")
+    date = models.DateField(auto_now_add=True, verbose_name="Дата")
+    is_paid = models.BooleanField(default=False, verbose_name="Оплачено")
+
+    class Meta:
+        verbose_name = "Запись подрядчика"
+        verbose_name_plural = "Записи подрядчика"
+
+    def __str__(self):
+        return f"{self.title} - {self.amount} {self.currency}"

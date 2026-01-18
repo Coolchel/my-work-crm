@@ -1,5 +1,9 @@
 from django.contrib import admin
-from .models import Project, Stage, EstimateItem, ProjectFile, CatalogCategory, CatalogItem, EstimateTemplate, TemplateItem
+from .models import (
+    Project, Stage, EstimateItem, ProjectFile, 
+    CatalogCategory, CatalogItem, EstimateTemplate, TemplateItem,
+    ContractorNote
+)
 
 class ProjectFileInline(admin.TabularInline):
     model = ProjectFile
@@ -12,7 +16,9 @@ class EstimateItemInline(admin.TabularInline):
     extra = 1
     verbose_name = "Пункт сметы"
     verbose_name_plural = "Пункты сметы"
-    autocomplete_fields = ['catalog_item'] # Позволяет искать товары из списка, а не листать выпадающий список
+    autocomplete_fields = ['catalog_item']
+    # Выводим contractor_quantity рядом с quantity
+    fields = ('name', 'catalog_item', 'item_type', 'quantity', 'contractor_quantity', 'unit', 'price_per_unit', 'currency', 'is_preliminary')
 
 class StageInline(admin.TabularInline):
     model = Stage
@@ -31,7 +37,7 @@ class TemplateItemInline(admin.TabularInline):
 @admin.register(CatalogCategory)
 class CatalogCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug', 'labor_coefficient')
-    prepopulated_fields = {'slug': ('name',)} # Автоматическое заполнение slug при вводе имени
+    prepopulated_fields = {'slug': ('name',)}
 
 @admin.register(CatalogItem)
 class CatalogItemAdmin(admin.ModelAdmin):
@@ -46,13 +52,13 @@ class EstimateTemplateAdmin(admin.ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('address', 'status', 'created_at')
-    list_filter = ('status', 'created_at')
+    list_display = ('address', 'object_type', 'status', 'created_at')
+    list_filter = ('object_type', 'status', 'created_at')
     search_fields = ('address', 'client_info')
     inlines = [StageInline, ProjectFileInline]
     fieldsets = (
         ('Основная информация', {
-            'fields': ('address', 'client_info', 'source', 'status')
+            'fields': ('address', 'object_type', 'client_info', 'source', 'status')
         }),
         ('Детали объекта', {
             'fields': ('entrance', 'floor', 'intercom_code')
@@ -74,17 +80,24 @@ class StageAdmin(admin.ModelAdmin):
 
 @admin.register(EstimateItem)
 class EstimateItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'stage', 'item_type', 'quantity', 'unit', 'price_per_unit', 'total_price')
-    list_filter = ('item_type', 'is_preliminary')
+    # Обновили колонки: убрали is_subcontractor, добавили contractor_quantity
+    list_display = ('name', 'stage', 'item_type', 'quantity', 'contractor_quantity', 'unit', 'price_per_unit', 'currency', 'total_price')
+    list_filter = ('item_type', 'is_preliminary', 'currency')
     search_fields = ('name', 'stage__project__address')
     autocomplete_fields = ['catalog_item']
     
     def total_price(self, obj):
         if obj.quantity and obj.price_per_unit:
-            return obj.quantity * obj.price_per_unit
+            return f"{obj.quantity * obj.price_per_unit} {obj.currency}"
         return 0
     total_price.short_description = "Итого"
 
 @admin.register(ProjectFile)
 class ProjectFileAdmin(admin.ModelAdmin):
     list_display = ('description', 'project', 'file')
+
+@admin.register(ContractorNote)
+class ContractorNoteAdmin(admin.ModelAdmin):
+    list_display = ('title', 'amount', 'currency', 'date', 'is_paid')
+    list_filter = ('currency', 'is_paid', 'date')
+    search_fields = ('title', 'description')
