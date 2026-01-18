@@ -1,0 +1,26 @@
+# General
+.env
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# Backend (Django)
+backend/db.sqlite3
+backend/media/
+backend/staticfiles/
+*.log
+
+# Frontend (Flutter)
+frontend/build/
+frontend/.dart_tool/
+frontend/.idea/
+frontend/.pub-cache/
+frontend/.packages
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/android/.gradle
+frontend/android/local.properties
+frontend/ios/Flutter/Generated.xcconfig
+frontend/ios/Flutter/flutter_export_environment.sh
