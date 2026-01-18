@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, Stage, EstimateItem, ProjectFile
+from .models import Project, Stage, EstimateItem, ProjectFile, CatalogCategory, CatalogItem, EstimateTemplate, TemplateItem
 
 class ProjectFileInline(admin.TabularInline):
     model = ProjectFile
@@ -12,6 +12,7 @@ class EstimateItemInline(admin.TabularInline):
     extra = 1
     verbose_name = "Пункт сметы"
     verbose_name_plural = "Пункты сметы"
+    autocomplete_fields = ['catalog_item'] # Позволяет искать товары из списка, а не листать выпадающий список
 
 class StageInline(admin.TabularInline):
     model = Stage
@@ -19,6 +20,29 @@ class StageInline(admin.TabularInline):
     show_change_link = True
     verbose_name = "Этап"
     verbose_name_plural = "Этапы"
+
+class TemplateItemInline(admin.TabularInline):
+    model = TemplateItem
+    extra = 1
+    autocomplete_fields = ['catalog_item']
+    verbose_name = "Позиция шаблона"
+    verbose_name_plural = "Позиции шаблона"
+
+@admin.register(CatalogCategory)
+class CatalogCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'labor_coefficient')
+    prepopulated_fields = {'slug': ('name',)} # Автоматическое заполнение slug при вводе имени
+
+@admin.register(CatalogItem)
+class CatalogItemAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'item_type', 'default_price', 'unit')
+    list_filter = ('category', 'item_type')
+    search_fields = ('name',)
+
+@admin.register(EstimateTemplate)
+class EstimateTemplateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
+    inlines = [TemplateItemInline]
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
@@ -29,6 +53,9 @@ class ProjectAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Основная информация', {
             'fields': ('address', 'client_info', 'source', 'status')
+        }),
+        ('Детали объекта', {
+            'fields': ('entrance', 'floor', 'intercom_code')
         }),
         ('Дополнительно', {
             'fields': ('notes', 'created_at', 'updated_at'),
@@ -50,6 +77,7 @@ class EstimateItemAdmin(admin.ModelAdmin):
     list_display = ('name', 'stage', 'item_type', 'quantity', 'unit', 'price_per_unit', 'total_price')
     list_filter = ('item_type', 'is_preliminary')
     search_fields = ('name', 'stage__project__address')
+    autocomplete_fields = ['catalog_item']
     
     def total_price(self, obj):
         if obj.quantity and obj.price_per_unit:
@@ -60,4 +88,3 @@ class EstimateItemAdmin(admin.ModelAdmin):
 @admin.register(ProjectFile)
 class ProjectFileAdmin(admin.ModelAdmin):
     list_display = ('description', 'project', 'file')
-
