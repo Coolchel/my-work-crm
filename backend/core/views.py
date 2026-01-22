@@ -1,8 +1,13 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Project, ShieldTemplate, LedTemplate, ShieldGroup, LedZone
-from .serializers import ProjectSerializer
+from .models import Project, ShieldTemplate, LedTemplate, ShieldGroup, LedZone, CatalogCategory
+from .serializers import ProjectSerializer, CatalogCategorySerializer
+
+class CatalogCategoryViewSet(viewsets.ModelViewSet):
+    queryset = CatalogCategory.objects.all()
+    serializer_class = CatalogCategorySerializer
+
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
