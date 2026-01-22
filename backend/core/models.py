@@ -6,7 +6,7 @@ class CatalogCategory(models.Model):
     Используется для группировки товаров и работ.
     """
     name = models.CharField(max_length=100, verbose_name="Название категории")
-    slug = models.SlugField(unique=True, verbose_name="Уникальный код (slug)")
+    slug = models.SlugField(unique=True, allow_unicode=True, verbose_name="Уникальный код (slug)")
     labor_coefficient = models.FloatField(default=1.0, verbose_name="Коэффициент сложности")
 
     class Meta:
