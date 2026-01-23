@@ -4,16 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:smart_electric_crm/src/core/api/dio_client.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/category_model.dart';
+import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 
 part 'catalog_repository.g.dart';
 
 class CatalogRepository {
   final Dio _client;
-  final Ref _ref;
-
-  CatalogRepository({required Dio client, required Ref ref})
-      : _client = client,
-        _ref = ref;
+  CatalogRepository({required Dio client}) : _client = client;
 
   Future<List<CatalogCategory>> getCategories() async {
     final response = await _client.get('/categories/');
@@ -37,12 +34,53 @@ class CatalogRepository {
       rethrow; // Обязательно пробрасываем ошибку дальше!
     }
   }
+
+  Future<List<CatalogItem>> fetchItems(int categoryId) async {
+    final response = await _client.get('/catalog-items/', queryParameters: {
+      'category_id': categoryId,
+    });
+    final List<dynamic> data = response.data as List<dynamic>;
+    return data
+        .map((e) => CatalogItem.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> createItem({
+    required int categoryId,
+    required String name,
+    required double price,
+    required String measurementUnit,
+    required String itemType,
+  }) async {
+    try {
+      final data = {
+        'category': categoryId, // Send ID directly as 'category'
+        'name': name,
+        'default_price': price, // Rename to default_price
+        'unit': measurementUnit, // Rename to unit
+        'item_type': itemType, // 'work' or 'material'
+      };
+
+      debugPrint('Данные для отправки: $data');
+
+      await _client.post('/catalog-items/', data: data);
+    } on DioException catch (e) {
+      debugPrint('Ошибка сервера при создании товара: ${e.response?.data}');
+      rethrow;
+    }
+  }
 }
 
 @riverpod
 CatalogRepository catalogRepository(CatalogRepositoryRef ref) {
   final dio = ref.watch(dioProvider);
-  return CatalogRepository(client: dio, ref: ref);
+  return CatalogRepository(client: dio);
+}
+
+@riverpod
+Future<List<CatalogItem>> fetchCategoryItems(
+    FetchCategoryItemsRef ref, int categoryId) {
+  return ref.watch(catalogRepositoryProvider).fetchItems(categoryId);
 }
 
 @riverpod

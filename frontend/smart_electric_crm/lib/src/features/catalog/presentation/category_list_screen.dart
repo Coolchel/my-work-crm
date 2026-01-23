@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
+import 'package:smart_electric_crm/src/features/catalog/presentation/item_list_screen.dart';
 
 class CategoryListScreen extends ConsumerWidget {
   const CategoryListScreen({super.key});
@@ -28,6 +29,16 @@ class CategoryListScreen extends ConsumerWidget {
                 leading: const Icon(Icons.folder, color: Colors.amber),
                 title: Text(category.name),
                 subtitle: Text('Коэф: ${category.laborCoefficient}'),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ItemListScreen(
+                        categoryId: category.id,
+                        categoryName: category.name,
+                      ),
+                    ),
+                  );
+                },
               );
             },
           );

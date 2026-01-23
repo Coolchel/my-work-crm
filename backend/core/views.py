@@ -1,12 +1,20 @@
 from rest_framework import viewsets, status
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Project, ShieldTemplate, LedTemplate, ShieldGroup, LedZone, CatalogCategory
-from .serializers import ProjectSerializer, CatalogCategorySerializer
+from .models import Project, ShieldTemplate, LedTemplate, ShieldGroup, LedZone, CatalogCategory, CatalogItem
+from .serializers import ProjectSerializer, CatalogCategorySerializer, CatalogItemSerializer
 
 class CatalogCategoryViewSet(viewsets.ModelViewSet):
     queryset = CatalogCategory.objects.all()
     serializer_class = CatalogCategorySerializer
+
+
+class CatalogItemViewSet(viewsets.ModelViewSet):
+    queryset = CatalogItem.objects.all()
+    serializer_class = CatalogItemSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['category']
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
