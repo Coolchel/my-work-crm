@@ -99,126 +99,125 @@ class _AddProjectScreenState extends ConsumerState<AddProjectScreen> {
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 500),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextFormField(
-                          controller: _addressController,
-                          decoration: const InputDecoration(
-                            labelText: 'Адрес объекта *',
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Введите адрес';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
-                          value: _objectType,
-                          decoration: const InputDecoration(
-                            labelText: 'Тип объекта',
-                            border: OutlineInputBorder(),
-                          ),
-                          isExpanded: true,
-                          items: const [
-                            DropdownMenuItem(
-                                value: 'new_building',
-                                child: Text('Новостройка')),
-                            DropdownMenuItem(
-                                value: 'secondary', child: Text('Вторичка')),
-                            DropdownMenuItem(
-                                value: 'cottage', child: Text('Коттедж')),
-                            DropdownMenuItem(
-                                value: 'office', child: Text('Офис')),
-                            DropdownMenuItem(
-                                value: 'other', child: Text('Другое')),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() => _objectType = value);
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _intercomController,
-                          decoration: const InputDecoration(
-                            labelText: 'Код домофона',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _clientInfoController,
-                          decoration: const InputDecoration(
-                            labelText: 'Заказчик',
-                            border: OutlineInputBorder(),
-                            hintText: 'Имя, телефон...',
-                          ),
-                          maxLines: 1,
-                        ),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
-                          value: _source,
-                          decoration: const InputDecoration(
-                            labelText: 'Источник',
-                            border: OutlineInputBorder(),
-                          ),
-                          isExpanded: true,
-                          items: const [
-                            DropdownMenuItem(
-                                value: 'Владимир', child: Text('Владимир')),
-                            DropdownMenuItem(
-                                value: 'Другое', child: Text('Другое')),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) {
-                              setState(() => _source = value);
-                            }
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'Создать начальные этапы:',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        Card(
-                          child: Column(
-                            children: _stageLabels.keys.map((key) {
-                              return CheckboxListTile(
-                                title: Text(_stageLabels[key]!),
-                                value: _selectedStages[key],
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _selectedStages[key] = value ?? false;
-                                  });
-                                },
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Center(
-                          child: SizedBox(
-                            width: 250,
-                            child: FilledButton(
-                              onPressed: _submitForm,
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 12.0),
-                                child: Text('Создать объект'),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextFormField(
+                              controller: _addressController,
+                              decoration: const InputDecoration(
+                                labelText: 'Адрес объекта *',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Введите адрес';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            DropdownMenu<String>(
+                              width: constraints.maxWidth,
+                              initialSelection: _objectType,
+                              label: const Text('Тип объекта'),
+                              dropdownMenuEntries: const [
+                                DropdownMenuEntry(
+                                    value: 'new_building',
+                                    label: 'Новостройка'),
+                                DropdownMenuEntry(
+                                    value: 'secondary', label: 'Вторичка'),
+                                DropdownMenuEntry(
+                                    value: 'cottage', label: 'Коттедж'),
+                                DropdownMenuEntry(
+                                    value: 'office', label: 'Офис'),
+                                DropdownMenuEntry(
+                                    value: 'other', label: 'Другое'),
+                              ],
+                              onSelected: (value) {
+                                if (value != null) {
+                                  setState(() => _objectType = value);
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _intercomController,
+                              decoration: const InputDecoration(
+                                labelText: 'Код домофона',
+                                border: OutlineInputBorder(),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _clientInfoController,
+                              decoration: const InputDecoration(
+                                labelText: 'Заказчик',
+                                border: OutlineInputBorder(),
+                                hintText: 'Имя, телефон...',
+                              ),
+                              maxLines: 1,
+                            ),
+                            const SizedBox(height: 16),
+                            DropdownMenu<String>(
+                              width: constraints.maxWidth,
+                              initialSelection: _source,
+                              label: const Text('Источник'),
+                              dropdownMenuEntries: const [
+                                DropdownMenuEntry(
+                                    value: 'Владимир', label: 'Владимир'),
+                                DropdownMenuEntry(
+                                    value: 'Другое', label: 'Другое'),
+                              ],
+                              onSelected: (value) {
+                                if (value != null) {
+                                  setState(() => _source = value);
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'Создать начальные этапы:',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 8),
+                            Card(
+                              child: Column(
+                                children: _stageLabels.keys.map((key) {
+                                  return CheckboxListTile(
+                                    title: Text(_stageLabels[key]!),
+                                    value: _selectedStages[key],
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        _selectedStages[key] = value ?? false;
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Center(
+                              child: SizedBox(
+                                width: 250,
+                                child: FilledButton(
+                                  onPressed: _submitForm,
+                                  child: const Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(vertical: 12.0),
+                                    child: Text('Создать объект'),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 100),
+                          ],
                         ),
-                        const SizedBox(height: 100),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
               ),
