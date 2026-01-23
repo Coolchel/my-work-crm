@@ -88,27 +88,30 @@ class _ProjectCard extends StatelessWidget {
           project.address,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Row(
-          children: [
-            // Тип объекта
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(4),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Row(
+            children: [
+              // Тип объекта
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  _getObjectTypeDisplay(project.objectType),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
-              child: Text(
-                _getObjectTypeDisplay(project.objectType),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Статус с иконкой
-            Icon(Icons.circle, size: 8, color: statusColor),
-            const SizedBox(width: 4),
-            Text(_getProjectStatusDisplay(project.status),
-                style: Theme.of(context).textTheme.bodySmall),
-          ],
+              const SizedBox(width: 8),
+              // Статус с иконкой
+              Icon(Icons.circle, size: 8, color: statusColor),
+              const SizedBox(width: 4),
+              Text(_getProjectStatusDisplay(project.status),
+                  style: Theme.of(context).textTheme.bodySmall),
+            ],
+          ),
         ),
         trailing: Text(dateStr),
         onTap: () {

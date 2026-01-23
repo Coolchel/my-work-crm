@@ -101,10 +101,15 @@ class _ProjectDetailContent extends ConsumerWidget {
   }
 
   Future<void> _updateStatus(BuildContext context, WidgetRef ref,
-      String stageId, String currentStatus) async {
+      String stageId, String currentStatus, Offset globalPosition) async {
     final newStatus = await showMenu<String>(
       context: context,
-      position: const RelativeRect.fromLTRB(100, 100, 0, 0),
+      position: RelativeRect.fromLTRB(
+        globalPosition.dx,
+        globalPosition.dy,
+        globalPosition.dx,
+        globalPosition.dy,
+      ),
       items: const [
         PopupMenuItem(value: 'plan', child: Text('План')),
         PopupMenuItem(value: 'in_progress', child: Text('В процессе')),
@@ -169,21 +174,29 @@ class _ProjectDetailContent extends ConsumerWidget {
                 title: Text(_getStageTitleDisplay(stage.title)),
                 subtitle: Align(
                   alignment: Alignment.centerLeft,
-                  child: InkWell(
-                    onTap: () => _updateStatus(
-                        context, ref, stage.id.toString(), stage.status),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8.0, vertical: 4.0),
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        _getStageStatusDisplay(stage.status),
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: InkWell(
+                      onTapDown: (details) => _updateStatus(
+                          context,
+                          ref,
+                          stage.id.toString(),
+                          stage.status,
+                          details.globalPosition),
+                      onTap: () {}, // Необходим для эффекта нажатия
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10.0, vertical: 6.0),
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _getStageStatusDisplay(stage.status),
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 12),
+                        ),
                       ),
                     ),
                   ),
