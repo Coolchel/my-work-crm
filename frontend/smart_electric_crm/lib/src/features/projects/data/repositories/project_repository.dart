@@ -28,4 +28,16 @@ class ProjectRepository {
       rethrow;
     }
   }
+
+  /// Добавляет новый этап к проекту.
+  Future<void> addStage(String projectId, String title) async {
+    try {
+      await _dio.post('/stages/', data: {
+        'project': projectId,
+        'title': title,
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

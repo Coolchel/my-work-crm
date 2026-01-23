@@ -115,7 +115,7 @@ class Project(models.Model):
 class Stage(models.Model):
     TITLE_CHOICES = [
         ('stage_1', 'Этап 1 (Черновой)'),
-        ('stage_2', 'Этап 2 (Подрозетники/Щиты)'),
+        ('stage_2', 'Этап 2 (Черновой)'),
         ('stage_3', 'Этап 3 (Чистовой)'),
         ('extra', 'Доп. работы'),
     ]

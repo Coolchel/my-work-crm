@@ -1,5 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:dio/dio.dart';
+
 import '../../data/models/project_model.dart';
 import '../../data/repositories/project_repository.dart';
 import '../../../../core/api/dio_client.dart';
@@ -36,6 +36,19 @@ class ProjectList extends _$ProjectList {
     ref.invalidateSelf();
 
     // Ожидаем завершения будущей загрузки, чтобы UI обновился (опционально)
+    await future;
+  }
+
+  /// Добавляет этап к проекту и обновляет список.
+  Future<void> addStage(String projectId, String title) async {
+    final repository = ref.read(projectRepositoryProvider);
+
+    // Выполняем запрос
+    await repository.addStage(projectId, title);
+
+    // Инвалидируем провайдер, чтобы обновить данные (включая новые этапы)
+    ref.invalidateSelf();
+
     await future;
   }
 }

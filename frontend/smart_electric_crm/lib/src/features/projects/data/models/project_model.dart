@@ -17,6 +17,10 @@ class ProjectModel {
   /// Статус проекта
   final String status;
 
+  /// Информация о клиенте
+  @JsonKey(name: 'client_info', defaultValue: '')
+  final String clientInfo;
+
   /// Дата создания
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
@@ -29,6 +33,7 @@ class ProjectModel {
     required this.address,
     required this.objectType,
     required this.status,
+    this.clientInfo = '',
     required this.createdAt,
     required this.stages,
   });
@@ -46,6 +51,7 @@ class ProjectModel {
     String? address,
     String? objectType,
     String? status,
+    String? clientInfo,
     DateTime? createdAt,
     List<StageModel>? stages,
   }) {
@@ -54,6 +60,7 @@ class ProjectModel {
       address: address ?? this.address,
       objectType: objectType ?? this.objectType,
       status: status ?? this.status,
+      clientInfo: clientInfo ?? this.clientInfo,
       createdAt: createdAt ?? this.createdAt,
       stages: stages ?? this.stages,
     );

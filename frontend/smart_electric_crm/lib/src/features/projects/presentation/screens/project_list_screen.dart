@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/project_providers.dart';
 import '../../data/models/project_model.dart';
+import 'project_detail_screen.dart';
+import 'add_project_screen.dart';
 
 class ProjectListScreen extends ConsumerWidget {
   const ProjectListScreen({super.key});
@@ -17,9 +19,9 @@ class ProjectListScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Пока выводим сообщение, как заглушку
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Скоро здесь будет форма создания')),
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddProjectScreen()),
           );
         },
         child: const Icon(Icons.add),
@@ -109,7 +111,13 @@ class _ProjectCard extends StatelessWidget {
         ),
         trailing: Text(dateStr),
         onTap: () {
-          // TODO: Навигация в детали
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  ProjectDetailScreen(projectId: project.id.toString()),
+            ),
+          );
         },
       ),
     );
