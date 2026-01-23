@@ -11,6 +11,7 @@ ProjectModel _$ProjectModelFromJson(Map<String, dynamic> json) => ProjectModel(
       address: json['address'] as String,
       objectType: json['object_type'] as String,
       status: json['status'] as String,
+      intercomCode: json['intercom_code'] as String? ?? '',
       clientInfo: json['client_info'] as String? ?? '',
       createdAt: DateTime.parse(json['created_at'] as String),
       stages: (json['stages'] as List<dynamic>)
@@ -24,6 +25,7 @@ Map<String, dynamic> _$ProjectModelToJson(ProjectModel instance) =>
       'address': instance.address,
       'object_type': instance.objectType,
       'status': instance.status,
+      'intercom_code': instance.intercomCode,
       'client_info': instance.clientInfo,
       'created_at': instance.createdAt.toIso8601String(),
       'stages': instance.stages,

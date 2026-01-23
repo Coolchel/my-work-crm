@@ -25,6 +25,9 @@ class ProjectRepository {
       final response = await _dio.post('/projects/', data: data);
       return ProjectModel.fromJson(response.data);
     } catch (e) {
+      if (e is DioException && e.response != null) {
+        print("❌ Create Project Error: ${e.response?.data}");
+      }
       rethrow;
     }
   }
@@ -37,6 +40,22 @@ class ProjectRepository {
         'title': title,
       });
     } catch (e) {
+      if (e is DioException && e.response != null) {
+        print("❌ Add Stage Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  /// Обновляет статус этапа.
+  /// Используем PATCH, чтобы обновить только статус.
+  Future<void> updateStageStatus(String stageId, String status) async {
+    try {
+      await _dio.patch('/stages/$stageId/', data: {'status': status});
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        print("❌ Update Stage Status Error: ${e.response?.data}");
+      }
       rethrow;
     }
   }

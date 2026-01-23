@@ -17,6 +17,10 @@ class ProjectModel {
   /// Статус проекта
   final String status;
 
+  /// Код домофона
+  @JsonKey(name: 'intercom_code', defaultValue: '')
+  final String intercomCode;
+
   /// Информация о клиенте
   @JsonKey(name: 'client_info', defaultValue: '')
   final String clientInfo;
@@ -33,6 +37,7 @@ class ProjectModel {
     required this.address,
     required this.objectType,
     required this.status,
+    this.intercomCode = '',
     this.clientInfo = '',
     required this.createdAt,
     required this.stages,
@@ -51,6 +56,7 @@ class ProjectModel {
     String? address,
     String? objectType,
     String? status,
+    String? intercomCode,
     String? clientInfo,
     DateTime? createdAt,
     List<StageModel>? stages,
@@ -60,6 +66,7 @@ class ProjectModel {
       address: address ?? this.address,
       objectType: objectType ?? this.objectType,
       status: status ?? this.status,
+      intercomCode: intercomCode ?? this.intercomCode,
       clientInfo: clientInfo ?? this.clientInfo,
       createdAt: createdAt ?? this.createdAt,
       stages: stages ?? this.stages,

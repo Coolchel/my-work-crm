@@ -51,4 +51,15 @@ class ProjectList extends _$ProjectList {
 
     await future;
   }
+
+  /// Обновляет статус этапа и обновляет список.
+  Future<void> updateStageStatus(String stageId, String status) async {
+    final repository = ref.read(projectRepositoryProvider);
+
+    await repository.updateStageStatus(stageId, status);
+
+    // Инвалидируем провайдер
+    ref.invalidateSelf();
+    await future;
+  }
 }

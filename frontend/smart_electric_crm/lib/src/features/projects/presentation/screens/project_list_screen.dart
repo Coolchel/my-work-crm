@@ -98,7 +98,7 @@ class _ProjectCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                project.objectType,
+                _getObjectTypeDisplay(project.objectType),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
@@ -106,7 +106,8 @@ class _ProjectCard extends StatelessWidget {
             // Статус с иконкой
             Icon(Icons.circle, size: 8, color: statusColor),
             const SizedBox(width: 4),
-            Text(project.status, style: Theme.of(context).textTheme.bodySmall),
+            Text(_getProjectStatusDisplay(project.status),
+                style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
         trailing: Text(dateStr),
@@ -121,5 +122,30 @@ class _ProjectCard extends StatelessWidget {
         },
       ),
     );
+  }
+
+  // Маппинг для типов объектов
+  String _getObjectTypeDisplay(String type) {
+    const map = {
+      'new_building': 'Новостройка',
+      'secondary': 'Вторичка',
+      'cottage': 'Коттедж',
+      'office': 'Офис',
+      'other': 'Другое',
+    };
+    return map[type] ?? type;
+  }
+
+  // Маппинг для статусов проекта
+  String _getProjectStatusDisplay(String status) {
+    const map = {
+      'new': 'Новый',
+      'calculating': 'Предпросчет',
+      'stage1_done': 'Этап 1 готов',
+      'stage2_done': 'Этап 2 готов',
+      'stage3_done': 'Этап 3 готов',
+      'completed': 'Завершен',
+    };
+    return map[status] ?? status;
   }
 }

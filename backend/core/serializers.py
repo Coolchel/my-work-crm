@@ -32,6 +32,12 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = '__all__'
+        extra_kwargs = {
+            'intercom_code': {'required': False, 'allow_blank': True},
+            'client_info': {'required': False, 'allow_blank': True},
+            'source': {'required': False, 'allow_blank': True},
+            'notes': {'required': False, 'allow_blank': True},
+        }
 
     def get_shield_groups(self, obj):
         return ShieldGroupSerializer(obj.shield_groups.all(), many=True).data

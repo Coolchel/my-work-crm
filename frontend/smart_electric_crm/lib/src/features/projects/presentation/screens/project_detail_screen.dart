@@ -54,6 +54,7 @@ class _ProjectDetailContent extends ConsumerWidget {
     const map = {
       'new': 'Новый',
       'calculating': 'Предпросчет',
+      'precalculation': 'Предпросчет',
       'stage1_done': 'Этап 1 готов',
       'stage2_done': 'Этап 2 готов',
       'stage3_done': 'Этап 3 готов',
@@ -65,10 +66,13 @@ class _ProjectDetailContent extends ConsumerWidget {
   // Маппинг для названий этапов
   String _getStageTitleDisplay(String title) {
     const map = {
+      'precalc': 'Предпросчет',
       'stage_1': 'Этап 1 (Черновой)',
+      'stage_1_2': 'Этап 1+2 (Черновой)',
       'stage_2': 'Этап 2 (Черновой)',
       'stage_3': 'Этап 3 (Чистовой)',
       'extra': 'Доп. работы',
+      'other': 'Другое',
     };
     return map[title] ?? title;
   }
@@ -81,6 +85,38 @@ class _ProjectDetailContent extends ConsumerWidget {
       'completed': 'Завершен',
     };
     return map[status] ?? status;
+  }
+
+  Color _getStageStatusColor(String status) {
+    switch (status) {
+      case 'plan':
+        return Colors.grey;
+      case 'in_progress':
+        return Colors.blue;
+      case 'completed':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Future<void> _updateStatus(BuildContext context, WidgetRef ref,
+      String stageId, String currentStatus) async {
+    final newStatus = await showMenu<String>(
+      context: context,
+      position: const RelativeRect.fromLTRB(100, 100, 0, 0),
+      items: const [
+        PopupMenuItem(value: 'plan', child: Text('План')),
+        PopupMenuItem(value: 'in_progress', child: Text('В процессе')),
+        PopupMenuItem(value: 'completed', child: Text('Завершен')),
+      ],
+    );
+
+    if (newStatus != null && newStatus != currentStatus) {
+      await ref
+          .read(projectListProvider.notifier)
+          .updateStageStatus(stageId, newStatus);
+    }
   }
 
   @override
@@ -125,17 +161,39 @@ class _ProjectDetailContent extends ConsumerWidget {
           // Список этапов
           if (project.stages.isEmpty) const Text('Этапы еще не созданы'),
 
-          ...project.stages.map((stage) => Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  title: Text(_getStageTitleDisplay(stage.title)),
-                  subtitle:
-                      Text('Статус: ${_getStageStatusDisplay(stage.status)}'),
-                  trailing: stage.isPaid
-                      ? const Icon(Icons.monetization_on, color: Colors.green)
-                      : const Icon(Icons.money_off, color: Colors.grey),
+          ...project.stages.map((stage) {
+            final statusColor = _getStageStatusColor(stage.status);
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                title: Text(_getStageTitleDisplay(stage.title)),
+                subtitle: Align(
+                  alignment: Alignment.centerLeft,
+                  child: InkWell(
+                    onTap: () => _updateStatus(
+                        context, ref, stage.id.toString(), stage.status),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 4.0),
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _getStageStatusDisplay(stage.status),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                  ),
                 ),
-              )),
+                trailing: stage.isPaid
+                    ? const Icon(Icons.monetization_on, color: Colors.green)
+                    : const Icon(Icons.money_off, color: Colors.grey),
+              ),
+            );
+          }),
 
           const SizedBox(height: 16),
           // Кнопка добавления этапа
@@ -183,18 +241,21 @@ class _AddStageSheetState extends ConsumerState<_AddStageSheet> {
   bool _isLoading = false;
 
   final Map<String, String> _allStages = {
+    'precalc': 'Предпросчет',
     'stage_1': 'Этап 1 (Черновой)',
+    'stage_1_2': 'Этап 1+2 (Черновой)',
     'stage_2': 'Этап 2 (Черновой)',
     'stage_3': 'Этап 3 (Чистовой)',
     'extra': 'Доп. работы',
+    'other': 'Другое',
   };
 
-  // Получаем только те этапы, которых нет в проекте (кроме 'extra', их может быть много)
+  // Получаем только те этапы, которых нет в проекте (кроме 'extra' и 'other', их может быть много)
   Map<String, String> get _availableStages {
     final available = Map<String, String>.from(_allStages);
-    // Удаляем из списка уже существующие этапы, кроме 'extra' (их можно добавлять сколько угодно)
+    // Удаляем из списка уже существующие этапы, кроме 'extra' и 'other'
     for (final key in widget.existingStageKeys) {
-      if (key != 'extra') {
+      if (key != 'extra' && key != 'other') {
         available.remove(key);
       }
     }
