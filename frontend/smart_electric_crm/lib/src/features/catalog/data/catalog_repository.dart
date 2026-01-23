@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:smart_electric_crm/src/core/api/dio_client.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/category_model.dart';

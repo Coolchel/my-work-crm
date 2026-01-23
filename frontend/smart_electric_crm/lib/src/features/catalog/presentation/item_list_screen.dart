@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
-import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 
 class ItemListScreen extends ConsumerWidget {
   final int categoryId;
