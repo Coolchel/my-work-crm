@@ -59,4 +59,28 @@ class ProjectRepository {
       rethrow;
     }
   }
+
+  /// Удаляет проект по ID.
+  Future<void> deleteProject(String id) async {
+    try {
+      await _dio.delete('/projects/$id/');
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        print("❌ Delete Project Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  /// Обновляет данные проекта по ID.
+  Future<void> updateProject(String id, Map<String, dynamic> data) async {
+    try {
+      await _dio.patch('/projects/$id/', data: data);
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        print("❌ Update Project Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
 }

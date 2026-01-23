@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/project_providers.dart';
 import '../../data/models/project_model.dart';
+import 'add_project_screen.dart';
 
 class ProjectDetailScreen extends ConsumerWidget {
   final String projectId;
@@ -9,24 +10,32 @@ class ProjectDetailScreen extends ConsumerWidget {
   const ProjectDetailScreen({super.key, required this.projectId});
 
   @override
+  @override
   Widget build(BuildContext context, WidgetRef ref) {
     final projectListAsync = ref.watch(projectListProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Детали проекта'),
-      ),
-      body: projectListAsync.when(
-        data: (projects) {
-          // Ищем проект в списке по ID
+    return projectListAsync.when(
+      data: (projects) {
+        // Ищем проект в списке по ID
+        try {
           final project = projects.firstWhere(
             (p) => p.id.toString() == projectId,
-            orElse: () => throw Exception('Проект не найден'),
           );
           return _ProjectDetailContent(project: project);
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Ошибка: $error')),
+        } catch (_) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Детали объекта')),
+            body: const Center(child: Text('Объект не найден')),
+          );
+        }
+      },
+      loading: () => Scaffold(
+        appBar: AppBar(title: const Text('Детали объекта')),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, stack) => Scaffold(
+        appBar: AppBar(title: const Text('Детали объекта')),
+        body: Center(child: Text('Ошибка: $error')),
       ),
     );
   }
@@ -124,100 +133,188 @@ class _ProjectDetailContent extends ConsumerWidget {
     }
   }
 
+  Future<void> _deleteProject(BuildContext context, WidgetRef ref) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Удаление проекта'),
+        content: const Text('Вы уверены, что хотите удалить этот проект?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      // Покажем индикатор загрузки или просто попытаемся удалить
+      try {
+        await ref
+            .read(projectListProvider.notifier)
+            .deleteProject(project.id.toString());
+
+        if (context.mounted) {
+          Navigator.pop(context); // Возвращаемся в список
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Проект удален')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Не удалось удалить: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  void _editProject(BuildContext context) {
+    // Импорт надо добавить, если нет, но AddProjectScreen в том же пакете или рядом
+    // Здесь ProjectDetailScreen и AddProjectScreen в одной папке, так что импорт должен быть доступен
+    // или добавлен. В исходном файле уже был import 'add_project_screen.dart' в ProjectListScreen.
+    // Но ProjectDetailScreen отдельный файл. Проверим импорты.
+    // Если импорта нет, добавим.
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddProjectScreen(project: project),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Карточка с основной информацией
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    project.address,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  _InfoRow(
-                      label: 'Тип:',
-                      value: _getObjectTypeDisplay(project.objectType)),
-                  _InfoRow(
-                      label: 'Статус:',
-                      value: _getProjectStatusDisplay(project.status)),
-                  if (project.clientInfo.isNotEmpty)
-                    _InfoRow(label: 'Клиент:', value: project.clientInfo),
-                ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Детали объекта'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Карточка с основной информацией
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            project.address,
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit_outlined),
+                              tooltip: 'Редактировать',
+                              onPressed: () => _editProject(context),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline,
+                                  color: Colors.red),
+                              tooltip: 'Удалить',
+                              onPressed: () => _deleteProject(context, ref),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _InfoRow(
+                        label: 'Тип:',
+                        value: _getObjectTypeDisplay(project.objectType)),
+                    _InfoRow(
+                        label: 'Статус:',
+                        value: _getProjectStatusDisplay(project.status)),
+                    if (project.clientInfo.isNotEmpty)
+                      _InfoRow(label: 'Клиент:', value: project.clientInfo),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          Text(
-            'Этапы работ',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
+            Text(
+              'Этапы работ',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
 
-          // Список этапов
-          if (project.stages.isEmpty) const Text('Этапы еще не созданы'),
+            // Список этапов
+            if (project.stages.isEmpty) const Text('Этапы еще не созданы'),
 
-          ...project.stages.map((stage) {
-            final statusColor = _getStageStatusColor(stage.status);
-            return Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                title: Text(_getStageTitleDisplay(stage.title)),
-                subtitle: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: InkWell(
-                      onTapDown: (details) => _updateStatus(
-                          context,
-                          ref,
-                          stage.id.toString(),
-                          stage.status,
-                          details.globalPosition),
-                      onTap: () {}, // Необходим для эффекта нажатия
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10.0, vertical: 6.0),
-                        decoration: BoxDecoration(
-                          color: statusColor,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _getStageStatusDisplay(stage.status),
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 12),
+            ...project.stages.map((stage) {
+              final statusColor = _getStageStatusColor(stage.status);
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  title: Text(_getStageTitleDisplay(stage.title)),
+                  subtitle: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: InkWell(
+                        onTapDown: (details) => _updateStatus(
+                            context,
+                            ref,
+                            stage.id.toString(),
+                            stage.status,
+                            details.globalPosition),
+                        onTap: () {}, // Необходим для эффекта нажатия
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10.0, vertical: 6.0),
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _getStageStatusDisplay(stage.status),
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 12),
+                          ),
                         ),
                       ),
                     ),
                   ),
+                  trailing: stage.isPaid
+                      ? const Icon(Icons.monetization_on, color: Colors.green)
+                      : const Icon(Icons.money_off, color: Colors.grey),
                 ),
-                trailing: stage.isPaid
-                    ? const Icon(Icons.monetization_on, color: Colors.green)
-                    : const Icon(Icons.money_off, color: Colors.grey),
-              ),
-            );
-          }),
+              );
+            }),
 
-          const SizedBox(height: 16),
-          // Кнопка добавления этапа
-          Center(
-            child: FilledButton.icon(
-              onPressed: () => _showAddStageSheet(context, ref),
-              icon: const Icon(Icons.add),
-              label: const Text('Добавить этап'),
+            const SizedBox(height: 16),
+            // Кнопка добавления этапа
+            Center(
+              child: FilledButton.icon(
+                onPressed: () => _showAddStageSheet(context, ref),
+                icon: const Icon(Icons.add),
+                label: const Text('Добавить этап'),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 50),
+          ],
+        ),
       ),
     );
   }

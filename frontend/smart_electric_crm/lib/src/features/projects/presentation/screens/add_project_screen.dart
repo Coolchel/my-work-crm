@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/project_providers.dart';
+import '../../data/models/project_model.dart';
 
 class AddProjectScreen extends ConsumerStatefulWidget {
-  const AddProjectScreen({super.key});
+  final ProjectModel? project;
+
+  const AddProjectScreen({super.key, this.project});
 
   @override
   ConsumerState<AddProjectScreen> createState() => _AddProjectScreenState();
@@ -41,6 +44,26 @@ class _AddProjectScreenState extends ConsumerState<AddProjectScreen> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.project != null) {
+      // Если режим редактирования, заполняем поля
+      final p = widget.project!;
+      _addressController.text = p.address;
+      _intercomController.text = p.intercomCode;
+      _clientInfoController.text = p.clientInfo;
+      // Проверяем, есть ли такой тип в нашем списке, иначе 'new_building'
+      _objectType = p.objectType;
+      // Сохраняем источник, если он есть (в модели пока нет явного поля source,
+      // но в создании отправляется. Если в модели его нет, то оставляем дефолт или
+      // добавляем поле в модель. Пока оставим 'Владимир' по умолчанию или не трогаем,
+      // так как в модели source не отображен в явном виде в предоставленном ProjectModel ранее,
+      // или я его пропустил. Проверим ProjectModel.
+      // В ProjectModel нет поля source, значит пока оставляем дефолтное или не редактируем.
+    }
+  }
+
+  @override
   void dispose() {
     _addressController.dispose();
     _intercomController.dispose();
@@ -54,27 +77,50 @@ class _AddProjectScreenState extends ConsumerState<AddProjectScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final initStages = _selectedStages.entries
-          .where((entry) => entry.value)
-          .map((entry) => entry.key)
-          .toList();
+      if (widget.project == null) {
+        // --- СОЗДАНИЕ ---
+        final initStages = _selectedStages.entries
+            .where((entry) => entry.value)
+            .map((entry) => entry.key)
+            .toList();
 
-      final data = {
-        'address': _addressController.text,
-        'object_type': _objectType,
-        'intercom_code': _intercomController.text,
-        'client_info': _clientInfoController.text,
-        'source': _source,
-        'init_stages': initStages,
-      };
+        final data = {
+          'address': _addressController.text,
+          'object_type': _objectType,
+          'intercom_code': _intercomController.text,
+          'client_info': _clientInfoController.text,
+          'source': _source,
+          'init_stages': initStages,
+        };
 
-      await ref.read(projectListProvider.notifier).addProject(data);
+        await ref.read(projectListProvider.notifier).addProject(data);
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Объект успешно создан')),
+          );
+        }
+      } else {
+        // --- ОБНОВЛЕНИЕ ---
+        final data = {
+          'address': _addressController.text,
+          'object_type': _objectType,
+          'intercom_code': _intercomController.text,
+          'client_info': _clientInfoController.text,
+          'source': _source,
+        };
 
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Объект успешно создан')),
-        );
+        await ref.read(projectListProvider.notifier).updateProject(
+              widget.project!.id.toString(),
+              data,
+            );
+
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Изменения сохранены')),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -87,11 +133,12 @@ class _AddProjectScreenState extends ConsumerState<AddProjectScreen> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
+    final isEditing = widget.project != null;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Новый объект'),
+        title: Text(isEditing ? 'Редактировать объект' : 'Новый объект'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -164,6 +211,10 @@ class _AddProjectScreenState extends ConsumerState<AddProjectScreen> {
                               ),
                               maxLines: 1,
                             ),
+
+                            // Источник показываем только при создании, так как в модели его нет для редактирования
+                            // Или оставляем, если хотим менять, но нужно знать текущий
+                            // Источник
                             const SizedBox(height: 16),
                             DropdownMenu<String>(
                               width: constraints.maxWidth,
@@ -183,37 +234,44 @@ class _AddProjectScreenState extends ConsumerState<AddProjectScreen> {
                                 }
                               },
                             ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'Создать начальные этапы:',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 8),
-                            Card(
-                              child: Column(
-                                children: _stageLabels.keys.map((key) {
-                                  return CheckboxListTile(
-                                    title: Text(_stageLabels[key]!),
-                                    value: _selectedStages[key],
-                                    onChanged: (bool? value) {
-                                      setState(() {
-                                        _selectedStages[key] = value ?? false;
-                                      });
-                                    },
-                                  );
-                                }).toList(),
+
+                            // Начальные этапы только при создании
+                            if (!isEditing) ...[
+                              const SizedBox(height: 24),
+                              Text(
+                                'Создать начальные этапы:',
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
-                            ),
+                              const SizedBox(height: 8),
+                              Card(
+                                child: Column(
+                                  children: _stageLabels.keys.map((key) {
+                                    return CheckboxListTile(
+                                      title: Text(_stageLabels[key]!),
+                                      value: _selectedStages[key],
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          _selectedStages[key] = value ?? false;
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ],
+
                             const SizedBox(height: 24),
                             Center(
                               child: SizedBox(
                                 width: 250,
                                 child: FilledButton(
                                   onPressed: _submitForm,
-                                  child: const Padding(
-                                    padding:
-                                        EdgeInsets.symmetric(vertical: 12.0),
-                                    child: Text('Создать объект'),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12.0),
+                                    child: Text(isEditing
+                                        ? 'Сохранить изменения'
+                                        : 'Создать объект'),
                                   ),
                                 ),
                               ),

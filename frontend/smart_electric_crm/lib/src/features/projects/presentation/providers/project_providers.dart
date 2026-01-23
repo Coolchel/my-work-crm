@@ -62,4 +62,20 @@ class ProjectList extends _$ProjectList {
     ref.invalidateSelf();
     await future;
   }
+
+  /// Удаляет проект и обновляет список.
+  Future<void> deleteProject(String id) async {
+    final repository = ref.read(projectRepositoryProvider);
+    await repository.deleteProject(id);
+    ref.invalidateSelf();
+    await future;
+  }
+
+  /// Обновляет проект и обновляет список.
+  Future<void> updateProject(String id, Map<String, dynamic> data) async {
+    final repository = ref.read(projectRepositoryProvider);
+    await repository.updateProject(id, data);
+    ref.invalidateSelf();
+    await future;
+  }
 }
