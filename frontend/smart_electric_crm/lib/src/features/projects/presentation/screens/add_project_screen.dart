@@ -87,6 +87,7 @@ class _AddProjectScreenState extends ConsumerState<AddProjectScreen> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -124,6 +125,8 @@ class _AddProjectScreenState extends ConsumerState<AddProjectScreen> {
                               width: constraints.maxWidth,
                               initialSelection: _objectType,
                               label: const Text('Тип объекта'),
+                              requestFocusOnTap: false,
+                              enableFilter: false,
                               dropdownMenuEntries: const [
                                 DropdownMenuEntry(
                                     value: 'new_building',
@@ -166,6 +169,8 @@ class _AddProjectScreenState extends ConsumerState<AddProjectScreen> {
                               width: constraints.maxWidth,
                               initialSelection: _source,
                               label: const Text('Источник'),
+                              requestFocusOnTap: false,
+                              enableFilter: false,
                               dropdownMenuEntries: const [
                                 DropdownMenuEntry(
                                     value: 'Владимир', label: 'Владимир'),
