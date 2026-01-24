@@ -333,98 +333,286 @@ class _ShieldTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final shieldGroupsAsync = ref.watch(shieldGroupsProvider(projectId));
 
+    // Note: FABs are removed in favor of in-body buttons or bottom bar.
+    // User requested buttons at top/body. Let's place them at top for better UX on desktop/tablet.
     return Scaffold(
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton.small(
-            heroTag: null,
-            tooltip: 'Добавить строку',
-            onPressed: () => _showEditDialog(context, ref),
-            child: const Icon(Icons.add),
-          ),
-          const SizedBox(height: 8),
-          FloatingActionButton.extended(
-            heroTag: null,
-            onPressed: () => _showApplyTemplateDialog(context, ref),
-            icon: const Icon(Icons.copy),
-            label: const Text('По шаблону'),
-          ),
-        ],
-      ),
+      floatingActionButton: null,
       body: shieldGroupsAsync.when(
         data: (groups) {
-          if (groups.isEmpty) {
-            return const Center(
-                child: Text('Нет групп щита. Добавьте или примените шаблон.'));
+          // 1. Calculate Totals
+          final totalModules =
+              groups.fold(0, (sum, item) => sum + item.modulesCount);
+          final recommendedShield = _calculateRecommendedShield(totalModules);
+
+          // 2. Group items by Device Type
+          final grouped = <String, List<ShieldGroupModel>>{};
+          for (var item in groups) {
+            grouped.putIfAbsent(item.deviceType, () => []).add(item);
           }
-          return ListView.separated(
-            padding:
-                const EdgeInsets.only(left: 16, right: 16, bottom: 80, top: 16),
-            itemCount: groups.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final group = groups[index];
-              return Dismissible(
-                key: ValueKey(group.id),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  color: Colors.red,
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: const Icon(Icons.delete, color: Colors.white),
-                ),
-                confirmDismiss: (direction) async {
-                  return await showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Удалить группу?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Отмена'),
+
+          // Order of types
+          final typeOrder = [
+            'circuit_breaker',
+            'diff_breaker',
+            'rcd',
+            'relay',
+            'contactor',
+            'load_switch',
+            'other'
+          ];
+
+          final typeNames = {
+            'circuit_breaker': 'Автоматы',
+            'diff_breaker': 'Диф. автоматы',
+            'rcd': 'УЗО',
+            'relay': 'Реле и автоматика',
+            'contactor': 'Контакторы',
+            'load_switch': 'Выключатели нагрузки',
+            'other': 'Другое',
+          };
+
+          return Column(
+            children: [
+              // Top controls and summary
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Summary Card
+                    Card(
+                      color: Colors.teal.shade50,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 24),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('$totalModules',
+                                    style: TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.teal.shade800)),
+                                const Text('Модулей всего',
+                                    style: TextStyle(color: Colors.teal)),
+                              ],
+                            ),
+                            Container(
+                                width: 1,
+                                height: 40,
+                                color: Colors.teal.shade200),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text('$recommendedShield',
+                                    style: TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.teal.shade800)),
+                                const Text('Щит (мест)',
+                                    style: TextStyle(color: Colors.teal)),
+                              ],
+                            ),
+                          ],
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Удалить',
-                              style: TextStyle(color: Colors.red)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Control Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: FilledButton.icon(
+                            onPressed: () => _showEditDialog(context, ref),
+                            style: FilledButton.styleFrom(
+                              minimumSize: const Size(0, 48),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Добавить строку'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () =>
+                                _showApplyTemplateDialog(context, ref),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(0, 48),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            icon: const Icon(Icons.copy),
+                            label: const Text('Шаблон'),
+                          ),
                         ),
                       ],
                     ),
-                  );
-                },
-                onDismissed: (direction) {
-                  ref
-                      .read(shieldGroupsProvider(projectId).notifier)
-                      .delete(group.id);
-                },
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const CircleAvatar(
-                    backgroundColor: Colors.amber,
-                    child: Icon(Icons.electric_bolt,
-                        color: Colors.white, size: 20),
-                  ),
-                  title: Text(
-                    group.device, // Computed string from backend should be fine
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text("${group.zone} • ${group.modulesCount} мод."),
-                  onTap: () => _showEditDialog(context, ref, group: group),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.edit, size: 20, color: Colors.grey),
-                    onPressed: () =>
-                        _showEditDialog(context, ref, group: group),
-                  ),
+                  ],
                 ),
-              );
-            },
+              ),
+
+              // Grouped List
+              Expanded(
+                child: groups.isEmpty
+                    ? const Center(
+                        child: Text(
+                            'Нет групп щита. Добавьте или примените шаблон.',
+                            style: TextStyle(color: Colors.grey)))
+                    : ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        children: [
+                          for (final type in typeOrder)
+                            if (grouped.containsKey(type)) ...[
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    top: 16.0, bottom: 8.0, left: 4),
+                                child: Text(
+                                  typeNames[type] ?? type,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleSmall
+                                      ?.copyWith(
+                                        color: Colors.blueGrey,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1.0,
+                                      ),
+                                ),
+                              ),
+                              ...grouped[type]!.map((group) => Card(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        side: BorderSide(
+                                            color: Colors.grey.shade200)),
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(12),
+                                      onTap: () => _showEditDialog(context, ref,
+                                          group: group),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: _getTypeColor(
+                                                        group.deviceType)
+                                                    .withOpacity(0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: Icon(Icons.electric_bolt,
+                                                  color: _getTypeColor(
+                                                      group.deviceType),
+                                                  size: 20),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    // If zone is empty (backend logic puts type), show Device name manually constructed or backend string
+                                                    group.device,
+                                                    style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 16),
+                                                  ),
+                                                  if (group.zone.isNotEmpty)
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 4),
+                                                      child: Text(group.zone,
+                                                          style:
+                                                              const TextStyle(
+                                                                  color: Colors
+                                                                      .grey)),
+                                                    )
+                                                ],
+                                              ),
+                                            ),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.shade100,
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                  '${group.modulesCount} мод.',
+                                                  style: const TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.blueGrey)),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            IconButton(
+                                              icon: const Icon(
+                                                  Icons.delete_outline,
+                                                  color: Colors.red,
+                                                  size: 20),
+                                              onPressed: () => _deleteGroup(
+                                                  context, ref, group),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  )),
+                            ],
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+              ),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Ошибка: $err')),
       ),
     );
+  }
+
+  int _calculateRecommendedShield(int modules) {
+    const sizes = [1, 2, 4, 6, 8, 12, 18, 24, 36, 48, 60, 72, 96, 108, 144];
+    for (final size in sizes) {
+      if (modules <= size) return size;
+    }
+    return modules;
+  }
+
+  Color _getTypeColor(String type) {
+    switch (type) {
+      case 'diff_breaker':
+        return Colors.orange;
+      case 'rcd':
+        return Colors.deepPurple;
+      case 'relay':
+        return Colors.blue;
+      case 'contactor':
+        return Colors.teal;
+      case 'load_switch':
+        return Colors.black87;
+      case 'circuit_breaker':
+      default:
+        return Colors.amber;
+    }
   }
 
   void _showApplyTemplateDialog(BuildContext context, WidgetRef ref) {
@@ -447,6 +635,30 @@ class _ShieldTab extends ConsumerWidget {
       ),
     );
   }
+
+  Future<void> _deleteGroup(
+      BuildContext context, WidgetRef ref, ShieldGroupModel group) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Удалить?'),
+        content: Text(group.device),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Удалить', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      ref.read(shieldGroupsProvider(projectId).notifier).delete(group.id);
+    }
+  }
 }
 
 class _ShieldGroupDialog extends StatefulWidget {
@@ -461,10 +673,10 @@ class _ShieldGroupDialog extends StatefulWidget {
 
 class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
   late TextEditingController _zoneController;
+  late TextEditingController _ratingController;
+  late TextEditingController _polesController;
 
   String _selectedDeviceType = 'circuit_breaker';
-  String _selectedRating = '16A';
-  String _selectedPoles = '1P';
 
   final Map<String, String> _deviceTypes = {
     'circuit_breaker': 'Автомат',
@@ -472,6 +684,7 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
     'rcd': 'УЗО',
     'relay': 'Реле напряжения',
     'contactor': 'Контактор',
+    'load_switch': 'Выключатель нагрузки',
     'other': 'Другое',
   };
 
@@ -484,25 +697,30 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
     '32A',
     '40A',
     '50A',
-    '63A'
+    '63A',
+    '80A',
+    '100A'
   ];
-  final List<String> _poles = ['1P', '2P', '3P', '4P'];
+  final List<String> _poles = ['1P', '2P', '3P', '4P', '3P+N'];
 
   @override
   void initState() {
     super.initState();
     _zoneController = TextEditingController(text: widget.group?.zone ?? '');
+    _ratingController =
+        TextEditingController(text: widget.group?.rating ?? '16A');
+    _polesController = TextEditingController(text: widget.group?.poles ?? '1P');
 
     if (widget.group != null) {
       _selectedDeviceType = widget.group!.deviceType;
-      _selectedRating = widget.group!.rating;
-      _selectedPoles = widget.group!.poles;
     }
   }
 
   @override
   void dispose() {
     _zoneController.dispose();
+    _ratingController.dispose();
+    _polesController.dispose();
     super.dispose();
   }
 
@@ -529,35 +747,57 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
             Row(
               children: [
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _ratings.contains(_selectedRating)
-                        ? _selectedRating
-                        : '16A',
-                    decoration: const InputDecoration(labelText: 'Номинал'),
-                    items: _ratings.map((e) {
-                      return DropdownMenuItem(value: e, child: Text(e));
-                    }).toList(),
-                    onChanged: (val) => setState(() => _selectedRating = val!),
+                  child: TextField(
+                    controller: _ratingController,
+                    decoration: InputDecoration(
+                      labelText: 'Номинал',
+                      suffixIcon: PopupMenuButton<String>(
+                        icon: const Icon(Icons.arrow_drop_down),
+                        onSelected: (String value) {
+                          _ratingController.text = value;
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return _ratings.map((String choice) {
+                            return PopupMenuItem<String>(
+                              value: choice,
+                              child: Text(choice),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value:
-                        _poles.contains(_selectedPoles) ? _selectedPoles : '1P',
-                    decoration: const InputDecoration(labelText: 'Полюса'),
-                    items: _poles.map((e) {
-                      return DropdownMenuItem(value: e, child: Text(e));
-                    }).toList(),
-                    onChanged: (val) => setState(() => _selectedPoles = val!),
+                  child: TextField(
+                    controller: _polesController,
+                    decoration: InputDecoration(
+                      labelText: 'Полюса',
+                      suffixIcon: PopupMenuButton<String>(
+                        icon: const Icon(Icons.arrow_drop_down),
+                        onSelected: (String value) {
+                          _polesController.text = value;
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return _poles.map((String choice) {
+                            return PopupMenuItem<String>(
+                              value: choice,
+                              child: Text(choice),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 16),
             TextField(
               controller: _zoneController,
-              decoration:
-                  const InputDecoration(labelText: 'Зона (напр. Кухня)'),
+              decoration: const InputDecoration(
+                  labelText: 'Зона или потребитель (напр. Кухня, Плита)'),
             ),
           ],
         ),
@@ -572,8 +812,6 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
             return ElevatedButton(
               onPressed: () async {
                 final zone = _zoneController.text;
-                if (zone.isEmpty) return;
-
                 Navigator.pop(context);
 
                 try {
@@ -583,8 +821,8 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
                         .updateShieldGroup(
                           widget.group!.id,
                           _selectedDeviceType,
-                          _selectedRating,
-                          _selectedPoles,
+                          _ratingController.text,
+                          _polesController.text,
                           zone,
                         );
                   } else {
@@ -592,13 +830,13 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
                         .read(shieldGroupsProvider(widget.projectId).notifier)
                         .add(
                           _selectedDeviceType,
-                          _selectedRating,
-                          _selectedPoles,
+                          _ratingController.text,
+                          _polesController.text,
                           zone,
                         );
                   }
                 } catch (e) {
-                  // Обработка ошибок
+                  // Error handling
                 }
               },
               child: const Text('Сохранить'),
