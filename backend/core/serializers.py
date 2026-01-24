@@ -61,16 +61,17 @@ class ShieldSerializer(serializers.ModelSerializer):
         elif obj.shield_type == 'led':
             count = obj.led_zones.count()
             if count <= 0: return None
+            if count <= 2: return "Переместить в слаботочный щит"
             if count <= 4: return "24 модуля"
-            if count <= 8: return "36 модулей"
+            if count <= 9: return "36 модулей"
             if count <= 12: return "48 модулей"
-            if count <= 17: return "60 модулей"
+            if count <= 15: return "60 модулей"
             return "Требуется инд. расчет"
         elif obj.shield_type == 'multimedia':
-            if obj.internet_lines_count <= 8:
-                return "Mistral 12M"
-            if obj.internet_lines_count <= 24:
-                return "Mistral 48M"
+            if obj.internet_lines_count <= 4:
+                return "24 модуля"
+            if obj.internet_lines_count <= 10:
+                return "36 модулей"
             return "Требуется инд. расчет"
         return None
 

@@ -522,14 +522,32 @@ class _LedShieldContent extends ConsumerWidget {
         if (zones.isEmpty)
           const Text('Нет зон', style: TextStyle(color: Colors.grey))
         else
-          ...zones.map((zone) => ListTile(
+          ...zones.map((zone) => Card(
+              elevation: 0,
+              margin: const EdgeInsets.only(bottom: 4),
+              color: Theme.of(context).colorScheme.surface,
+              shape: RoundedRectangleBorder(
+                  side: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                  borderRadius: BorderRadius.circular(8)),
+              child: ListTile(
                 dense: true,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                 onTap: () => _showAddZoneDialog(context, ref, zone: zone),
-                leading: const Icon(Icons.lightbulb_outline, size: 16),
-                title: Text(zone.transformer),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.lightbulb,
+                      size: 20, color: Colors.purple),
+                ),
+                title: Text(zone.transformer,
+                    style: const TextStyle(fontWeight: FontWeight.w500)),
                 subtitle: Text(zone.zone),
                 trailing: IconButton(
-                  icon: const Icon(Icons.delete, size: 16, color: Colors.red),
+                  icon: const Icon(Icons.delete, size: 16, color: Colors.grey),
                   onPressed: () async {
                     await ref
                         .read(engineeringRepositoryProvider)
@@ -537,7 +555,7 @@ class _LedShieldContent extends ConsumerWidget {
                     ref.invalidate(projectListProvider);
                   },
                 ),
-              )),
+              ))),
       ],
     );
   }
@@ -641,7 +659,7 @@ class _MultimediaShieldContentState
             onPressed: _isSaving ? null : _save,
             child: const Text('Сохранить'),
           ),
-        )
+        ),
       ],
     );
   }
@@ -852,6 +870,7 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
                       labelText: 'Номинал',
                       border: const OutlineInputBorder(),
                       suffixIcon: PopupMenuButton<String>(
+                        tooltip: 'Показать',
                         icon: const Icon(Icons.arrow_drop_down),
                         onSelected: (String value) {
                           _ratingController.text = value;
@@ -887,6 +906,7 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
                       labelText: 'Полюса',
                       border: const OutlineInputBorder(),
                       suffixIcon: PopupMenuButton<String>(
+                        tooltip: 'Показать',
                         icon: const Icon(Icons.arrow_drop_down),
                         onSelected: (String value) {
                           _polesController.text = value;
