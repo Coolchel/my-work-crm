@@ -1,4 +1,5 @@
 from django.db import models
+import re
 
 class CatalogCategory(models.Model):
     """
@@ -257,40 +258,50 @@ class ShieldGroup(models.Model):
         verbose_name_plural = "Группы щита"
 
     def save(self, *args, **kwargs):
-        # 0. Pre-fill zone/consumer if empty
+        # 1. Унификация: Удаляем пробелы и приводим к верхнему регистру / латинице.
+        def unify_string(s):
+            if not s: return ""
+            s = str(s).replace(" ", "").upper()
+            # Замена кириллицы на латиницу для стандартных обозначений (Амперы, Полюса)
+            replacements = {'А': 'A', 'Р': 'P', 'P': 'P'} 
+            for cyr, lat in replacements.items():
+                s = s.replace(cyr, lat)
+            return s
+            
+        self.rating = unify_string(self.rating)
+        self.poles = unify_string(self.poles)
+
+        # 1.1 Добавляем суффиксы A и P, если их нет (только если есть цифры)
+        if self.rating and re.search(r'\d', self.rating) and not self.rating.endswith('A'):
+             self.rating += 'A'
+
+        if self.poles and re.search(r'\d', self.poles) and not self.poles.endswith('P'):
+             self.poles += 'P'
+
+        # 2. Логика "Зона или потребитель"
+        # Если поле пустое, записываем туда название типа устройства
         if not self.zone:
              self.zone = dict(self.DEVICE_CHOICES).get(self.device_type, self.device_type)
 
-        # 1. Auto-calculate modules count
-        # Try to parse poles as raw number first (e.g. "6")
-        try:
-            val = int(self.poles)
-            if val > 0:
-                self.modules_count = val
-        except ValueError:
-            # Fallback to logic based on Type + Poles string
-            p_upper = self.poles.upper()
-            
-            if self.device_type in ['circuit_breaker', 'load_switch']:
-                if '1P' in p_upper: self.modules_count = 1
-                elif '2P' in p_upper: self.modules_count = 2
-                elif '3P' in p_upper: self.modules_count = 3
-                elif '4P' in p_upper: self.modules_count = 4
-                else: self.modules_count = 1 # default
-            elif self.device_type in ['diff_breaker', 'rcd']:
-                if '1P' in p_upper or '2P' in p_upper:
-                    self.modules_count = 2
-                elif '3P' in p_upper or '4P' in p_upper:
-                    self.modules_count = 4
-                else: self.modules_count = 2
-            elif self.device_type == 'relay':
-                self.modules_count = 2 # Usually 2 or 3
-            elif self.device_type == 'contactor':
-                self.modules_count = 2 
-            else:
-                if self.modules_count <= 0: self.modules_count = 1
+        # 3. Извлечение количества модулей из поля 'poles'
+        # Используем рег. выражения для поиска цифр.
+        # re.findall(r'\d+', string) ищет все последовательности цифр (\d+) в строке.
+        # Возвращает список строк. Например "3P+N" -> ['3'].
+        digits = re.findall(r'\d+', self.poles)
         
-        # 2. Auto-generate device display name
+        if digits:
+            # Берем первое найденное число
+            self.modules_count = int(digits[0])
+        else:
+            # Если цифр нет (например "N"), ставим 1 модуль по умолчанию
+            self.modules_count = 1
+            
+        # Специальная логика для некоторых типов, если нужно переопределить
+        # Например, Диф. автоматы часто занимают больше места, если это не указано явно,
+        # но пользователь просил "извлеки только цифры".
+        # Оставим приоритет за введенными цифрами. Если цифр нет - 1.
+        
+        # 4. Авто-генерация названия устройства для отображения
         d_display = dict(self.DEVICE_CHOICES).get(self.device_type, self.device_type)
         self.device = f"{d_display} {self.rating} {self.poles}"
 

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+// import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -22,12 +22,12 @@ Dio dio(Ref ref) {
 
   final dio = Dio(options);
 
-  // Добавляем логирование, чтобы видеть запросы в консоли
-  dio.interceptors.add(LogInterceptor(
-    requestBody: true,
-    responseBody: true,
-    logPrint: (obj) => debugPrint('🌐 API LOG: $obj'),
-  ));
+  // Добавляем логирование, чтобы видеть запросы в консоли (Временно отключено по просьбе)
+  // dio.interceptors.add(LogInterceptor(
+  //   requestBody: true,
+  //   responseBody: true,
+  //   logPrint: (obj) => debugPrint('🌐 API LOG: $obj'),
+  // ));
 
   return dio;
 }

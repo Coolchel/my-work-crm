@@ -375,91 +375,76 @@ class _ShieldTab extends ConsumerWidget {
             children: [
               // Top controls and summary
               Container(
-                padding: const EdgeInsets.all(16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                color: Colors.white,
                 child: Column(
                   children: [
-                    // Summary Card
-                    Card(
-                      color: Colors.teal.shade50,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 16, horizontal: 24),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('$totalModules',
-                                    style: TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.teal.shade800)),
-                                const Text('Модулей всего',
-                                    style: TextStyle(color: Colors.teal)),
-                              ],
-                            ),
-                            Container(
-                                width: 1,
-                                height: 40,
-                                color: Colors.teal.shade200),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text('$recommendedShield',
-                                    style: TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.teal.shade800)),
-                                const Text('Щит (мест)',
-                                    style: TextStyle(color: Colors.teal)),
-                              ],
-                            ),
-                          ],
-                        ),
+                    // Modern Summary Strip
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.teal.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.teal.shade100),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _SummaryItem(
+                              icon: Icons.view_module,
+                              label: 'Модулей',
+                              value: '$totalModules',
+                              color: Colors.teal),
+                          Container(
+                              width: 1,
+                              height: 24,
+                              color: Colors.teal.shade200),
+                          _SummaryItem(
+                              icon: Icons.crop_square,
+                              label: 'Щит',
+                              value: '$recommendedShield',
+                              color: Colors.blueGrey),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     // Control Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: FilledButton.icon(
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          FilledButton.icon(
                             onPressed: () => _showEditDialog(context, ref),
                             style: FilledButton.styleFrom(
-                              minimumSize: const Size(0, 48),
+                              visualDensity: VisualDensity.compact,
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                  borderRadius: BorderRadius.circular(8)),
                             ),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Добавить строку'),
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('Добавить'),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton.icon(
+                          const SizedBox(width: 8),
+                          OutlinedButton.icon(
                             onPressed: () =>
                                 _showApplyTemplateDialog(context, ref),
                             style: OutlinedButton.styleFrom(
-                              minimumSize: const Size(0, 48),
+                              visualDensity: VisualDensity.compact,
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                  borderRadius: BorderRadius.circular(8)),
                             ),
-                            icon: const Icon(Icons.copy),
+                            icon: const Icon(Icons.copy, size: 18),
                             label: const Text('Шаблон'),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
 
-              // Grouped List
+              // Grouped List (unchanged logic)
               Expanded(
                 child: groups.isEmpty
                     ? const Center(
@@ -522,7 +507,6 @@ class _ShieldTab extends ConsumerWidget {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    // If zone is empty (backend logic puts type), show Device name manually constructed or backend string
                                                     group.device,
                                                     style: const TextStyle(
                                                         fontWeight:
@@ -661,6 +645,40 @@ class _ShieldTab extends ConsumerWidget {
   }
 }
 
+class _SummaryItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  const _SummaryItem(
+      {required this.icon,
+      required this.label,
+      required this.value,
+      required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(value,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 16, color: color)),
+            Text(label,
+                style: TextStyle(fontSize: 10, color: color.withOpacity(0.8))),
+          ],
+        )
+      ],
+    );
+  }
+}
+
 class _ShieldGroupDialog extends StatefulWidget {
   final String projectId;
   final ShieldGroupModel? group;
@@ -701,7 +719,7 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
     '80A',
     '100A'
   ];
-  final List<String> _poles = ['1P', '2P', '3P', '4P', '3P+N'];
+  final List<String> _poles = ['1P', '2P', '3P', '4P'];
 
   @override
   void initState() {
@@ -729,6 +747,8 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
     final isEdit = widget.group != null;
     return AlertDialog(
       title: Text(isEdit ? 'Редактировать группу' : 'Добавить группу'),
+      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      actionsAlignment: MainAxisAlignment.center,
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -737,7 +757,11 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
               value: _deviceTypes.containsKey(_selectedDeviceType)
                   ? _selectedDeviceType
                   : 'circuit_breaker',
-              decoration: const InputDecoration(labelText: 'Тип устройства'),
+              decoration: const InputDecoration(
+                  labelText: 'Тип устройства',
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
               items: _deviceTypes.entries.map((e) {
                 return DropdownMenuItem(value: e.key, child: Text(e.value));
               }).toList(),
@@ -751,6 +775,10 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
                     controller: _ratingController,
                     decoration: InputDecoration(
                       labelText: 'Номинал',
+                      hintText: 'Напр. 16A',
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
                       suffixIcon: PopupMenuButton<String>(
                         icon: const Icon(Icons.arrow_drop_down),
                         onSelected: (String value) {
@@ -774,6 +802,10 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
                     controller: _polesController,
                     decoration: InputDecoration(
                       labelText: 'Полюса',
+                      hintText: 'Напр. 1P',
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
                       suffixIcon: PopupMenuButton<String>(
                         icon: const Icon(Icons.arrow_drop_down),
                         onSelected: (String value) {
@@ -797,19 +829,24 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
             TextField(
               controller: _zoneController,
               decoration: const InputDecoration(
-                  labelText: 'Зона или потребитель (напр. Кухня, Плита)'),
+                  labelText: 'Зона или потребитель',
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
       actions: [
-        TextButton(
+        OutlinedButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Отмена'),
         ),
+        const SizedBox(width: 16),
         Consumer(
           builder: (context, ref, child) {
-            return ElevatedButton(
+            return FilledButton(
               onPressed: () async {
                 final zone = _zoneController.text;
                 Navigator.pop(context);
