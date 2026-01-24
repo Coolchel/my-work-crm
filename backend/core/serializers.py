@@ -28,6 +28,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     files = ProjectFileSerializer(many=True, read_only=True)
     shield_groups = serializers.SerializerMethodField()
     led_zones = serializers.SerializerMethodField()
+    led_shield_size = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -44,6 +45,20 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def get_led_zones(self, obj):
         return LedZoneSerializer(obj.led_zones.all(), many=True).data
+
+    def get_led_shield_size(self, obj):
+        count = obj.led_zones.count()
+        if count <= 0:
+            return None
+        if count <= 4:
+            return "24 модуля"
+        if count <= 8:
+            return "36 модулей"
+        if count <= 12:
+            return "48 модулей"
+        if count <= 17:
+            return "60 модулей"
+        return "Требуется инд. расчет"
 
 class CatalogCategorySerializer(serializers.ModelSerializer):
     class Meta:

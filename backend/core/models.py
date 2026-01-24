@@ -102,6 +102,11 @@ class Project(models.Model):
     source = models.CharField(max_length=100, verbose_name="Источник объекта")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new', verbose_name="Статус")
     notes = models.TextField(blank=True, verbose_name="Заметки")
+
+    # Слаботочка
+    internet_lines_count = models.IntegerField(default=0, verbose_name="Кол-во интернет-линий")
+    multimedia_notes = models.TextField(blank=True, verbose_name="Заметки по мультимедиа")
+    suggested_internet_shield = models.CharField(max_length=255, blank=True, verbose_name="Предполагаемый щиток слаботочки")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
