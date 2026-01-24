@@ -98,7 +98,7 @@ class _ShieldCard extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 3,
       child: ExpansionTile(
-        initiallyExpanded: true, // Auto-expand
+        initiallyExpanded: false, // Collapsed by default
         title: Row(
           children: [
             Icon(_getIconForType(shield.shieldType),
@@ -293,6 +293,7 @@ class _PowerShieldContent extends ConsumerWidget {
         else
           ...groups.map((group) => ListTile(
                 dense: true,
+                onTap: () => _showAddGroupDialog(context, ref, group: group),
                 leading: const Icon(Icons.electric_bolt, size: 16),
                 title: Text(group.device),
                 subtitle: Text(group.zone),
@@ -310,11 +311,13 @@ class _PowerShieldContent extends ConsumerWidget {
     );
   }
 
-  void _showAddGroupDialog(BuildContext context, WidgetRef ref) {
+  void _showAddGroupDialog(BuildContext context, WidgetRef ref,
+      {ShieldGroupModel? group}) {
+    debugPrint('Opening dialog for group: ${group?.id}');
     showDialog(
       context: context,
-      builder: (context) =>
-          _ShieldGroupDialog(projectId: projectId, shieldId: shield.id),
+      builder: (context) => _ShieldGroupDialog(
+          projectId: projectId, shieldId: shield.id, group: group),
     );
   }
 
@@ -367,6 +370,7 @@ class _LedShieldContent extends ConsumerWidget {
         else
           ...zones.map((zone) => ListTile(
                 dense: true,
+                onTap: () => _showAddZoneDialog(context, ref, zone: zone),
                 leading: const Icon(Icons.lightbulb_outline, size: 16),
                 title: Text(zone.transformer),
                 subtitle: Text(zone.zone),
@@ -384,11 +388,12 @@ class _LedShieldContent extends ConsumerWidget {
     );
   }
 
-  void _showAddZoneDialog(BuildContext context, WidgetRef ref) {
+  void _showAddZoneDialog(BuildContext context, WidgetRef ref,
+      {LedZoneModel? zone}) {
     showDialog(
       context: context,
       builder: (context) =>
-          _LedZoneDialog(projectId: projectId, shieldId: shield.id),
+          _LedZoneDialog(projectId: projectId, shieldId: shield.id, zone: zone),
     );
   }
 
@@ -538,31 +543,41 @@ class _AddShieldDialogState extends State<_AddShieldDialog> {
         ],
       ),
       actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена')),
-        Consumer(builder: (context, ref, _) {
-          return FilledButton(
-            onPressed: () async {
-              if (_nameController.text.isEmpty) return;
-              try {
-                await ref
-                    .read(engineeringRepositoryProvider)
-                    .addShield(widget.projectId, {
-                  'name': _nameController.text,
-                  'shield_type': _type,
-                  'mounting': _mounting,
-                });
-                ref.invalidate(projectListProvider);
-                ref.invalidate(projectByIdProvider(widget.projectId));
-                if (context.mounted) Navigator.pop(context);
-              } catch (e) {
-                // Error
-              }
-            },
-            child: const Text('Создать'),
-          );
-        })
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Отмена'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Consumer(builder: (context, ref, _) {
+                return FilledButton(
+                  onPressed: () async {
+                    if (_nameController.text.isEmpty) return;
+                    try {
+                      await ref
+                          .read(engineeringRepositoryProvider)
+                          .addShield(widget.projectId, {
+                        'name': _nameController.text,
+                        'shield_type': _type,
+                        'mounting': _mounting,
+                      });
+                      ref.invalidate(projectListProvider);
+                      ref.invalidate(projectByIdProvider(widget.projectId));
+                      if (context.mounted) Navigator.pop(context);
+                    } catch (e) {
+                      // Error
+                    }
+                  },
+                  child: const Text('Создать'),
+                );
+              }),
+            ),
+          ],
+        )
       ],
     );
   }
@@ -600,15 +615,24 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
   @override
   void initState() {
     super.initState();
-    _zoneController = TextEditingController(text: widget.group?.zone ?? '');
-    _ratingController =
-        TextEditingController(text: widget.group?.rating ?? '16A');
-    _polesController = TextEditingController(text: widget.group?.poles ?? '1P');
-    if (widget.group != null) _selectedDeviceType = widget.group!.deviceType;
+    debugPrint('ShieldGroupDialog: initState');
+    try {
+      _zoneController = TextEditingController(text: widget.group?.zone ?? '');
+      _ratingController =
+          TextEditingController(text: widget.group?.rating ?? '16A');
+      _polesController =
+          TextEditingController(text: widget.group?.poles ?? '1P');
+      if (widget.group != null) {
+        debugPrint('Editing group: ${widget.group!.id}');
+        _selectedDeviceType = widget.group!.deviceType;
+      }
 
-    // Add listeners for smart normalization
-    _ratingController.addListener(_normalizeRating);
-    _polesController.addListener(_normalizePoles);
+      // Add listeners for smart normalization
+      _ratingController.addListener(_normalizeRating);
+      _polesController.addListener(_normalizePoles);
+    } catch (e, stack) {
+      debugPrint('Error in ShieldGroupDialog initState: $e\n$stack');
+    }
   }
 
   void _normalizeRating() {
@@ -671,9 +695,8 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
                   child: TextField(
                     controller: _ratingController,
                     decoration: const InputDecoration(
-                      labelText: 'Номинал (16A)',
+                      labelText: 'Номинал',
                       border: OutlineInputBorder(),
-                      helperText: 'Например: 16A',
                     ),
                   ),
                 ),
@@ -682,9 +705,8 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
                   child: TextField(
                     controller: _polesController,
                     decoration: const InputDecoration(
-                      labelText: 'Полюса (1P)',
+                      labelText: 'Полюса',
                       border: OutlineInputBorder(),
-                      helperText: 'Например: 1P',
                     ),
                   ),
                 ),
@@ -695,62 +717,72 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
               controller: _zoneController,
               decoration: const InputDecoration(
                 labelText: 'Зона / Потребитель',
+                hintText: 'Например: Кухня',
                 border: OutlineInputBorder(),
-                hintText: 'Прихожая, Розетки кухни...',
+                floatingLabelBehavior: FloatingLabelBehavior.always,
               ),
             ),
           ],
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Отмена'),
-        ),
-        Consumer(builder: (context, ref, _) {
-          return FilledButton(
-            onPressed: _isSaving
-                ? null
-                : () async {
-                    setState(() => _isSaving = true);
-                    try {
-                      final data = {
-                        'device_type': _selectedDeviceType,
-                        'rating': _ratingController.text,
-                        'poles': _polesController.text,
-                        'zone': _zoneController.text,
-                      };
-
-                      if (isEdit) {
-                        await ref
-                            .read(engineeringRepositoryProvider)
-                            .updateShieldGroup(widget.group!.id, data);
-                      } else {
-                        await ref
-                            .read(engineeringRepositoryProvider)
-                            .addShieldGroup(widget.shieldId, data);
-                      }
-                      ref.invalidate(projectListProvider);
-                      ref.invalidate(projectByIdProvider(widget.projectId));
-                      if (context.mounted) Navigator.pop(context);
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Ошибка: $e')));
-                      }
-                    } finally {
-                      if (mounted) setState(() => _isSaving = false);
-                    }
-                  },
-            child: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
-                : const Text('Сохранить'),
-          );
-        }),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Отмена'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Consumer(builder: (context, ref, _) {
+                return FilledButton(
+                  onPressed: _isSaving
+                      ? null
+                      : () async {
+                          setState(() => _isSaving = true);
+                          try {
+                            final data = {
+                              'device_type': _selectedDeviceType,
+                              'rating': _ratingController.text,
+                              'poles': _polesController.text,
+                              'zone': _zoneController.text,
+                            };
+                            if (isEdit) {
+                              await ref
+                                  .read(engineeringRepositoryProvider)
+                                  .updateShieldGroup(widget.group!.id, data);
+                            } else {
+                              await ref
+                                  .read(engineeringRepositoryProvider)
+                                  .addShieldGroup(widget.shieldId, data);
+                            }
+                            ref.invalidate(projectListProvider);
+                            ref.invalidate(
+                                projectByIdProvider(widget.projectId));
+                            if (context.mounted) Navigator.pop(context);
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Ошибка: $e')));
+                            }
+                          } finally {
+                            if (mounted) setState(() => _isSaving = false);
+                          }
+                        },
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Text('Сохранить'),
+                );
+              }),
+            ),
+          ],
+        )
       ],
     );
   }
@@ -802,7 +834,7 @@ class _LedZoneDialogState extends State<_LedZoneDialog> {
               decoration: const InputDecoration(
                 labelText: 'Трансформатор / Блок питания',
                 border: OutlineInputBorder(),
-                helperText: 'Например: 100W IP67',
+                floatingLabelBehavior: FloatingLabelBehavior.always,
               ),
             ),
             const SizedBox(height: 16),
@@ -811,59 +843,68 @@ class _LedZoneDialogState extends State<_LedZoneDialog> {
               decoration: const InputDecoration(
                 labelText: 'Зона подсветки / Лента',
                 border: OutlineInputBorder(),
-                helperText: 'Например: Потолок гостиной, 14.4W 4000K',
+                floatingLabelBehavior: FloatingLabelBehavior.always,
               ),
-              maxLines: 2,
             ),
           ],
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Отмена'),
-        ),
-        Consumer(builder: (context, ref, _) {
-          return FilledButton(
-            onPressed: _isSaving
-                ? null
-                : () async {
-                    setState(() => _isSaving = true);
-                    try {
-                      final data = {
-                        'transformer': _transformerController.text,
-                        'zone': _zoneController.text,
-                      };
-                      if (isEdit) {
-                        await ref
-                            .read(engineeringRepositoryProvider)
-                            .updateLedZone(widget.zone!.id, data);
-                      } else {
-                        await ref
-                            .read(engineeringRepositoryProvider)
-                            .addLedZone(widget.shieldId, data);
-                      }
-                      ref.invalidate(projectListProvider);
-                      ref.invalidate(projectByIdProvider(widget.projectId));
-                      if (context.mounted) Navigator.pop(context);
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Ошибка: $e')));
-                      }
-                    } finally {
-                      if (mounted) setState(() => _isSaving = false);
-                    }
-                  },
-            child: _isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
-                : const Text('Сохранить'),
-          );
-        }),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Отмена'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Consumer(builder: (context, ref, _) {
+                return FilledButton(
+                  onPressed: _isSaving
+                      ? null
+                      : () async {
+                          setState(() => _isSaving = true);
+                          try {
+                            final data = {
+                              'transformer': _transformerController.text,
+                              'zone': _zoneController.text,
+                            };
+                            if (isEdit) {
+                              await ref
+                                  .read(engineeringRepositoryProvider)
+                                  .updateLedZone(widget.zone!.id, data);
+                            } else {
+                              await ref
+                                  .read(engineeringRepositoryProvider)
+                                  .addLedZone(widget.shieldId, data);
+                            }
+                            ref.invalidate(projectListProvider);
+                            ref.invalidate(
+                                projectByIdProvider(widget.projectId));
+                            if (context.mounted) Navigator.pop(context);
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Ошибка: $e')));
+                            }
+                          } finally {
+                            if (mounted) setState(() => _isSaving = false);
+                          }
+                        },
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Text('Сохранить'),
+                );
+              }),
+            ),
+          ],
+        )
       ],
     );
   }
