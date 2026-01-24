@@ -51,6 +51,7 @@ class CategoryListScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: () {
           showDialog(
             context: context,

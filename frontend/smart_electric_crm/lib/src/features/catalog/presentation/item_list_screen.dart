@@ -50,6 +50,7 @@ class ItemListScreen extends ConsumerWidget {
         error: (err, stack) => Center(child: Text('Ошибка: $err')),
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: () {
           showDialog(
             context: context,

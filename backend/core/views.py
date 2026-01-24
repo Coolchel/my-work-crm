@@ -3,7 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Project, Stage, ShieldTemplate, LedTemplate, ShieldGroup, LedZone, CatalogCategory, CatalogItem
-from .serializers import ProjectSerializer, StageSerializer, CatalogCategorySerializer, CatalogItemSerializer
+from .serializers import ProjectSerializer, StageSerializer, CatalogCategorySerializer, CatalogItemSerializer, ShieldGroupSerializer, LedZoneSerializer, ShieldTemplateSerializer, LedTemplateSerializer
 
 class CatalogCategoryViewSet(viewsets.ModelViewSet):
     queryset = CatalogCategory.objects.all()
@@ -15,6 +15,30 @@ class CatalogItemViewSet(viewsets.ModelViewSet):
     serializer_class = CatalogItemSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['category']
+
+
+class ShieldGroupViewSet(viewsets.ModelViewSet):
+    queryset = ShieldGroup.objects.all()
+    serializer_class = ShieldGroupSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['project']
+
+
+class LedZoneViewSet(viewsets.ModelViewSet):
+    queryset = LedZone.objects.all()
+    serializer_class = LedZoneSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['project']
+
+
+class ShieldTemplateViewSet(viewsets.ModelViewSet):
+    queryset = ShieldTemplate.objects.all()
+    serializer_class = ShieldTemplateSerializer
+
+
+class LedTemplateViewSet(viewsets.ModelViewSet):
+    queryset = LedTemplate.objects.all()
+    serializer_class = LedTemplateSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -59,18 +83,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
             if stages_to_create:
                 Stage.objects.bulk_create(stages_to_create)
 
-
-class StageViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet для управления этапами.
-    Позволяет фильтровать этапы по id проекта: /api/stages/?project=1
-    """
-    queryset = Stage.objects.all()
-    serializer_class = StageSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['project']
-
-
     @action(detail=True, methods=['post'])
     def apply_shield_template(self, request, pk=None):
         project = self.get_object()
@@ -84,7 +96,7 @@ class StageViewSet(viewsets.ModelViewSet):
         except ShieldTemplate.DoesNotExist:
             return Response({'error': 'Template not found'}, status=status.HTTP_404_NOT_FOUND)
             
-        # Copy items
+        # Копируем элементы шаблона в проект
         items_to_create = []
         for item in template.items.all():
             items_to_create.append(ShieldGroup(
@@ -110,7 +122,7 @@ class StageViewSet(viewsets.ModelViewSet):
         except LedTemplate.DoesNotExist:
             return Response({'error': 'Template not found'}, status=status.HTTP_404_NOT_FOUND)
             
-        # Copy items
+        # Копируем элементы шаблона в проект
         items_to_create = []
         for item in template.items.all():
             items_to_create.append(LedZone(
@@ -122,3 +134,17 @@ class StageViewSet(viewsets.ModelViewSet):
             
         LedZone.objects.bulk_create(items_to_create)
         return Response({'status': 'LED template applied', 'added_count': len(items_to_create)})
+
+
+class StageViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet для управления этапами.
+    Позволяет фильтровать этапы по id проекта: /api/stages/?project=1
+    """
+    queryset = Stage.objects.all()
+    serializer_class = StageSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['project']
+
+
+

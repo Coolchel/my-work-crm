@@ -3,7 +3,7 @@ from .models import (
     Project, Stage, EstimateItem, ProjectFile,
     CatalogCategory, CatalogItem, EstimateTemplate, TemplateItem,
     ContractorNote, ShieldGroup, LedZone,
-    ShieldTemplate, LedTemplate
+    ShieldTemplate, LedTemplate, ShieldTemplateItem, LedTemplateItem
 )
 
 class ProjectFileSerializer(serializers.ModelSerializer):
@@ -82,12 +82,26 @@ class LedZoneSerializer(serializers.ModelSerializer):
         model = LedZone
         fields = '__all__'
 
+class ShieldTemplateitemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShieldTemplateItem
+        fields = '__all__'
+
+class LedTemplateItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LedTemplateItem
+        fields = '__all__'
+
 class ShieldTemplateSerializer(serializers.ModelSerializer):
+    items = ShieldTemplateitemSerializer(many=True, read_only=True)
+
     class Meta:
         model = ShieldTemplate
-        fields = ['id', 'name', 'description']
+        fields = ['id', 'name', 'description', 'items']
 
 class LedTemplateSerializer(serializers.ModelSerializer):
+    items = LedTemplateItemSerializer(many=True, read_only=True)
+
     class Meta:
         model = LedTemplate
-        fields = ['id', 'name', 'description']
+        fields = ['id', 'name', 'description', 'items']

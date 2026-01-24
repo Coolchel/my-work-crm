@@ -18,6 +18,7 @@ class ProjectListScreen extends ConsumerWidget {
         title: const Text('Мои Объекты'),
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: null,
         onPressed: () {
           Navigator.push(
             context,

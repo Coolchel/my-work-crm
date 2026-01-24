@@ -24,7 +24,7 @@ final projectRepositoryProvider =
 );
 
 typedef ProjectRepositoryRef = AutoDisposeProviderRef<ProjectRepository>;
-String _$projectListHash() => r'b10e47249c10d091841277f2a9e2bdcdc08977a3';
+String _$projectListHash() => r'c93522e5603017c97481e8e2bf315c40b705bc9a';
 
 /// Провайдер списка проектов.
 /// Использует AsyncNotifier для управления состоянием загрузки и данных.
