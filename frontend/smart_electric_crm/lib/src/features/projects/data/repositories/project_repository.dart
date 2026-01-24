@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../data/models/project_model.dart';
 
 class ProjectRepository {
@@ -13,7 +14,7 @@ class ProjectRepository {
       final List<dynamic> data = response.data;
       return data.map((json) => ProjectModel.fromJson(json)).toList();
     } catch (e) {
-      // Можно добавить более сложную обработку ошибок или логирование
+      debugPrint("❌ Fetch Projects Error: $e");
       rethrow;
     }
   }
@@ -26,7 +27,7 @@ class ProjectRepository {
       return ProjectModel.fromJson(response.data);
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Create Project Error: ${e.response?.data}");
+        debugPrint("❌ Create Project Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -41,7 +42,7 @@ class ProjectRepository {
       });
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Add Stage Error: ${e.response?.data}");
+        debugPrint("❌ Add Stage Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -54,7 +55,7 @@ class ProjectRepository {
       await _dio.patch('/stages/$stageId/', data: {'status': status});
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Update Stage Status Error: ${e.response?.data}");
+        debugPrint("❌ Update Stage Status Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -66,7 +67,7 @@ class ProjectRepository {
       await _dio.delete('/projects/$id/');
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Delete Project Error: ${e.response?.data}");
+        debugPrint("❌ Delete Project Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -78,7 +79,7 @@ class ProjectRepository {
       await _dio.patch('/projects/$id/', data: data);
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Update Project Error: ${e.response?.data}");
+        debugPrint("❌ Update Project Error: ${e.response?.data}");
       }
       rethrow;
     }

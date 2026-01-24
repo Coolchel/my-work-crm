@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../models/shield_group_model.dart';
 import '../models/led_zone_model.dart';
 import '../models/shield_template_model.dart';
@@ -18,7 +19,7 @@ class EngineeringRepository {
       return data.map((json) => ShieldGroupModel.fromJson(json)).toList();
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Fetch Shield Groups Error: ${e.response?.data}");
+        debugPrint("❌ Fetch Shield Groups Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -33,7 +34,7 @@ class EngineeringRepository {
       return data.map((json) => LedZoneModel.fromJson(json)).toList();
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Fetch LED Zones Error: ${e.response?.data}");
+        debugPrint("❌ Fetch LED Zones Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -46,7 +47,7 @@ class EngineeringRepository {
       final List<dynamic> data = response.data;
       return data.map((json) => ShieldTemplateModel.fromJson(json)).toList();
     } catch (e) {
-      print("❌ Fetch Shield Templates Error: $e");
+      debugPrint("❌ Fetch Shield Templates Error: $e");
       rethrow;
     }
   }
@@ -58,7 +59,7 @@ class EngineeringRepository {
       final List<dynamic> data = response.data;
       return data.map((json) => LedTemplateModel.fromJson(json)).toList();
     } catch (e) {
-      print("❌ Fetch LED Templates Error: $e");
+      debugPrint("❌ Fetch LED Templates Error: $e");
       rethrow;
     }
   }
@@ -72,7 +73,7 @@ class EngineeringRepository {
       );
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Apply Shield Template Error: ${e.response?.data}");
+        debugPrint("❌ Apply Shield Template Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -87,7 +88,7 @@ class EngineeringRepository {
       );
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Apply LED Template Error: ${e.response?.data}");
+        debugPrint("❌ Apply LED Template Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -104,7 +105,7 @@ class EngineeringRepository {
       return ShieldGroupModel.fromJson(response.data);
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Add Shield Group Error: ${e.response?.data}");
+        debugPrint("❌ Add Shield Group Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -116,7 +117,7 @@ class EngineeringRepository {
       await _dio.patch('/shield-groups/$id/', data: data);
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Update Shield Group Error: ${e.response?.data}");
+        debugPrint("❌ Update Shield Group Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -128,7 +129,7 @@ class EngineeringRepository {
       await _dio.delete('/shield-groups/$id/');
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Delete Shield Group Error: ${e.response?.data}");
+        debugPrint("❌ Delete Shield Group Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -145,7 +146,7 @@ class EngineeringRepository {
       return LedZoneModel.fromJson(response.data);
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Add LED Zone Error: ${e.response?.data}");
+        debugPrint("❌ Add LED Zone Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -157,7 +158,7 @@ class EngineeringRepository {
       await _dio.patch('/led-zones/$id/', data: data);
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Update LED Zone Error: ${e.response?.data}");
+        debugPrint("❌ Update LED Zone Error: ${e.response?.data}");
       }
       rethrow;
     }
@@ -169,7 +170,7 @@ class EngineeringRepository {
       await _dio.delete('/led-zones/$id/');
     } catch (e) {
       if (e is DioException && e.response != null) {
-        print("❌ Delete LED Zone Error: ${e.response?.data}");
+        debugPrint("❌ Delete LED Zone Error: ${e.response?.data}");
       }
       rethrow;
     }
