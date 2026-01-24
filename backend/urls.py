@@ -17,11 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from core.views import ProjectViewSet, CatalogCategoryViewSet, CatalogItemViewSet, StageViewSet, ShieldGroupViewSet, LedZoneViewSet, ShieldTemplateViewSet, LedTemplateViewSet
+from core.views import ProjectViewSet, CatalogCategoryViewSet, CatalogItemViewSet, StageViewSet, ShieldGroupViewSet, LedZoneViewSet, ShieldTemplateViewSet, LedTemplateViewSet, ShieldViewSet
 
 router = DefaultRouter()
 router.register(r'projects', ProjectViewSet)
 router.register(r'stages', StageViewSet)
+router.register(r'shields', ShieldViewSet)
 router.register(r'categories', CatalogCategoryViewSet, basename='category')
 router.register(r'catalog-items', CatalogItemViewSet, basename='catalog-item')
 router.register(r'shield-groups', ShieldGroupViewSet, basename='shield-group')

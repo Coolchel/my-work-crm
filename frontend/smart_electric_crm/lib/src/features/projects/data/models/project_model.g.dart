@@ -20,7 +20,7 @@ ProjectModel _$ProjectModelFromJson(Map<String, dynamic> json) => ProjectModel(
       shields: (json['shields'] as List<dynamic>?)
               ?.map((e) => ShieldModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
-          const [],
+          [],
     );
 
 Map<String, dynamic> _$ProjectModelToJson(ProjectModel instance) =>

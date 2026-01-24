@@ -34,6 +34,7 @@ class ProjectModel {
   final List<StageModel> stages;
 
   /// Список щитов (New)
+  @JsonKey(defaultValue: [])
   final List<ShieldModel> shields;
 
   ProjectModel({

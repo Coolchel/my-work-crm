@@ -19,6 +19,17 @@ class ProjectRepository {
     }
   }
 
+  /// Получает проект по ID.
+  Future<ProjectModel> fetchProject(String id) async {
+    try {
+      final response = await _dio.get('/projects/$id/');
+      return ProjectModel.fromJson(response.data);
+    } catch (e) {
+      debugPrint("❌ Fetch Project Error: $e");
+      rethrow;
+    }
+  }
+
   /// Создает новый проект.
   /// [data] - данные проекта, включая init_stages.
   Future<ProjectModel> createProject(Map<String, dynamic> data) async {

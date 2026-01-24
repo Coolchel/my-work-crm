@@ -82,7 +82,7 @@ class _ShieldCard extends ConsumerWidget {
     if (confirm == true) {
       try {
         await ref.read(engineeringRepositoryProvider).deleteShield(shield.id);
-        ref.invalidate(projectByIdProvider(projectId));
+        ref.invalidate(projectListProvider);
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context)
@@ -109,11 +109,60 @@ class _ShieldCard extends ConsumerWidget {
           ],
         ),
         subtitle: Text(
-          '${_getTypeName(shield.shieldType)} • ${shield.mounting == 'internal' ? 'Внутренний' : 'Наружный'}',
+          _getTypeName(shield.shieldType),
           style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
         ),
         childrenPadding: const EdgeInsets.all(16),
         children: [
+          // Mounting Toggle
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: Row(
+              children: [
+                const Text('Монтаж:',
+                    style: TextStyle(fontWeight: FontWeight.w500)),
+                const SizedBox(width: 12),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(
+                      value: 'internal',
+                      label: Text('Внутренний'),
+                      icon: Icon(Icons.grid_view, size: 16),
+                    ),
+                    ButtonSegment(
+                      value: 'external',
+                      label: Text('Наружный'),
+                      icon: Icon(Icons.check_box_outline_blank, size: 16),
+                    ),
+                  ],
+                  selected: {shield.mounting},
+                  onSelectionChanged: (Set<String> newSelection) async {
+                    final newValue = newSelection.first;
+                    try {
+                      await ref
+                          .read(engineeringRepositoryProvider)
+                          .updateShield(shield.id, {'mounting': newValue});
+                      ref.invalidate(projectListProvider);
+                      // Invalidate specific project provider too just in case
+                      ref.invalidate(projectByIdProvider(projectId));
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Ошибка обновления: $e')));
+                      }
+                    }
+                  },
+                  showSelectedIcon: false,
+                  style: ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: MaterialStateProperty.all(EdgeInsets.zero),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           // Shield Info / Stats
           if (shield.suggestedSize != null)
             Container(
@@ -253,7 +302,7 @@ class _PowerShieldContent extends ConsumerWidget {
                     await ref
                         .read(engineeringRepositoryProvider)
                         .deleteShieldGroup(group.id);
-                    ref.invalidate(projectByIdProvider(projectId));
+                    ref.invalidate(projectListProvider);
                   },
                 ),
               )),
@@ -327,7 +376,7 @@ class _LedShieldContent extends ConsumerWidget {
                     await ref
                         .read(engineeringRepositoryProvider)
                         .deleteLedZone(zone.id);
-                    ref.invalidate(projectByIdProvider(projectId));
+                    ref.invalidate(projectListProvider);
                   },
                 ),
               )),
@@ -396,7 +445,7 @@ class _MultimediaShieldContentState
         'internet_lines_count': lines,
         'multimedia_notes': _notesController.text,
       });
-      ref.invalidate(projectByIdProvider(widget.projectId));
+      ref.invalidate(projectListProvider);
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('Сохранено')));
@@ -496,7 +545,6 @@ class _AddShieldDialogState extends State<_AddShieldDialog> {
           return FilledButton(
             onPressed: () async {
               if (_nameController.text.isEmpty) return;
-              Navigator.pop(context);
               try {
                 await ref
                     .read(engineeringRepositoryProvider)
@@ -505,7 +553,9 @@ class _AddShieldDialogState extends State<_AddShieldDialog> {
                   'shield_type': _type,
                   'mounting': _mounting,
                 });
+                ref.invalidate(projectListProvider);
                 ref.invalidate(projectByIdProvider(widget.projectId));
+                if (context.mounted) Navigator.pop(context);
               } catch (e) {
                 // Error
               }
@@ -535,6 +585,7 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
   late TextEditingController _ratingController;
   late TextEditingController _polesController;
   String _selectedDeviceType = 'circuit_breaker';
+  bool _isSaving = false;
 
   final Map<String, String> _deviceTypes = {
     'circuit_breaker': 'Автомат',
@@ -554,9 +605,41 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
         TextEditingController(text: widget.group?.rating ?? '16A');
     _polesController = TextEditingController(text: widget.group?.poles ?? '1P');
     if (widget.group != null) _selectedDeviceType = widget.group!.deviceType;
+
+    // Add listeners for smart normalization
+    _ratingController.addListener(_normalizeRating);
+    _polesController.addListener(_normalizePoles);
   }
 
-  // Dispose skipped for brevity, but needed in prod
+  void _normalizeRating() {
+    String text = _ratingController.text;
+    String newText = text.replaceAll(RegExp(r'а|a', caseSensitive: false), 'A');
+    if (text != newText) {
+      _ratingController.value = _ratingController.value.copyWith(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newText.length),
+      );
+    }
+  }
+
+  void _normalizePoles() {
+    String text = _polesController.text;
+    String newText = text.replaceAll(RegExp(r'п|p', caseSensitive: false), 'P');
+    if (text != newText) {
+      _polesController.value = _polesController.value.copyWith(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newText.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _zoneController.dispose();
+    _ratingController.dispose();
+    _polesController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -564,63 +647,110 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
     return AlertDialog(
       title: Text(isEdit ? 'Редактировать группу' : 'Добавить группу'),
       content: SingleChildScrollView(
-          child: Column(children: [
-        DropdownButtonFormField<String>(
-          value: _deviceTypes.containsKey(_selectedDeviceType)
-              ? _selectedDeviceType
-              : 'circuit_breaker',
-          items: _deviceTypes.entries
-              .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
-              .toList(),
-          onChanged: (v) => setState(() => _selectedDeviceType = v!),
-          decoration: const InputDecoration(labelText: 'Тип'),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              value: _deviceTypes.containsKey(_selectedDeviceType)
+                  ? _selectedDeviceType
+                  : 'circuit_breaker',
+              items: _deviceTypes.entries
+                  .map((e) =>
+                      DropdownMenuItem(value: e.key, child: Text(e.value)))
+                  .toList(),
+              onChanged: (v) => setState(() => _selectedDeviceType = v!),
+              decoration: const InputDecoration(
+                labelText: 'Тип устройства',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _ratingController,
+                    decoration: const InputDecoration(
+                      labelText: 'Номинал (16A)',
+                      border: OutlineInputBorder(),
+                      helperText: 'Например: 16A',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextField(
+                    controller: _polesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Полюса (1P)',
+                      border: OutlineInputBorder(),
+                      helperText: 'Например: 1P',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _zoneController,
+              decoration: const InputDecoration(
+                labelText: 'Зона / Потребитель',
+                border: OutlineInputBorder(),
+                hintText: 'Прихожая, Розетки кухни...',
+              ),
+            ),
+          ],
         ),
-        TextField(
-            controller: _ratingController,
-            decoration: const InputDecoration(labelText: 'Номинал')),
-        TextField(
-            controller: _polesController,
-            decoration: const InputDecoration(labelText: 'Полюса')),
-        TextField(
-            controller: _zoneController,
-            decoration: const InputDecoration(labelText: 'Зона')),
-      ])),
+      ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена')),
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Отмена'),
+        ),
         Consumer(builder: (context, ref, _) {
           return FilledButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                if (isEdit) {
-                  await ref
-                      .read(engineeringRepositoryProvider)
-                      .updateShieldGroup(widget.group!.id, {
-                    'device_type': _selectedDeviceType,
-                    'rating': _ratingController.text,
-                    'poles': _polesController.text,
-                    'zone': _zoneController.text,
-                  });
-                } else {
-                  await ref
-                      .read(engineeringRepositoryProvider)
-                      .addShieldGroup(widget.shieldId, {
-                    'device_type': _selectedDeviceType,
-                    'rating': _ratingController.text,
-                    'poles': _polesController.text,
-                    'zone': _zoneController.text,
-                  });
-                }
-                ref.invalidate(projectByIdProvider(widget.projectId));
-              } catch (e) {
-                // Error
-              }
-            },
-            child: const Text('Сохранить'),
+            onPressed: _isSaving
+                ? null
+                : () async {
+                    setState(() => _isSaving = true);
+                    try {
+                      final data = {
+                        'device_type': _selectedDeviceType,
+                        'rating': _ratingController.text,
+                        'poles': _polesController.text,
+                        'zone': _zoneController.text,
+                      };
+
+                      if (isEdit) {
+                        await ref
+                            .read(engineeringRepositoryProvider)
+                            .updateShieldGroup(widget.group!.id, data);
+                      } else {
+                        await ref
+                            .read(engineeringRepositoryProvider)
+                            .addShieldGroup(widget.shieldId, data);
+                      }
+                      ref.invalidate(projectListProvider);
+                      ref.invalidate(projectByIdProvider(widget.projectId));
+                      if (context.mounted) Navigator.pop(context);
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Ошибка: $e')));
+                      }
+                    } finally {
+                      if (mounted) setState(() => _isSaving = false);
+                    }
+                  },
+            child: _isSaving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white))
+                : const Text('Сохранить'),
           );
-        })
+        }),
       ],
     );
   }
@@ -641,6 +771,7 @@ class _LedZoneDialog extends StatefulWidget {
 class _LedZoneDialogState extends State<_LedZoneDialog> {
   late TextEditingController _transformerController;
   late TextEditingController _zoneController;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -651,49 +782,90 @@ class _LedZoneDialogState extends State<_LedZoneDialog> {
   }
 
   @override
+  void dispose() {
+    _transformerController.dispose();
+    _zoneController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isEdit = widget.zone != null;
     return AlertDialog(
-        title: const Text('LED зона'),
-        content: Column(
+      title: Text(isEdit ? 'Редактировать LED зону' : 'Добавить LED зону'),
+      content: SingleChildScrollView(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-                controller: _transformerController,
-                decoration: const InputDecoration(labelText: 'Трансформатор')),
+              controller: _transformerController,
+              decoration: const InputDecoration(
+                labelText: 'Трансформатор / Блок питания',
+                border: OutlineInputBorder(),
+                helperText: 'Например: 100W IP67',
+              ),
+            ),
+            const SizedBox(height: 16),
             TextField(
-                controller: _zoneController,
-                decoration: const InputDecoration(labelText: 'Зона')),
+              controller: _zoneController,
+              decoration: const InputDecoration(
+                labelText: 'Зона подсветки / Лента',
+                border: OutlineInputBorder(),
+                helperText: 'Например: Потолок гостиной, 14.4W 4000K',
+              ),
+              maxLines: 2,
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Отмена')),
-          Consumer(builder: (context, ref, _) {
-            return FilledButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                if (widget.zone != null) {
-                  await ref
-                      .read(engineeringRepositoryProvider)
-                      .updateLedZone(widget.zone!.id, {
-                    'transformer': _transformerController.text,
-                    'zone': _zoneController.text,
-                  });
-                } else {
-                  await ref
-                      .read(engineeringRepositoryProvider)
-                      .addLedZone(widget.shieldId, {
-                    'transformer': _transformerController.text,
-                    'zone': _zoneController.text,
-                  });
-                }
-                ref.invalidate(projectByIdProvider(widget.projectId));
-              },
-              child: const Text('Сохранить'),
-            );
-          })
-        ]);
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Отмена'),
+        ),
+        Consumer(builder: (context, ref, _) {
+          return FilledButton(
+            onPressed: _isSaving
+                ? null
+                : () async {
+                    setState(() => _isSaving = true);
+                    try {
+                      final data = {
+                        'transformer': _transformerController.text,
+                        'zone': _zoneController.text,
+                      };
+                      if (isEdit) {
+                        await ref
+                            .read(engineeringRepositoryProvider)
+                            .updateLedZone(widget.zone!.id, data);
+                      } else {
+                        await ref
+                            .read(engineeringRepositoryProvider)
+                            .addLedZone(widget.shieldId, data);
+                      }
+                      ref.invalidate(projectListProvider);
+                      ref.invalidate(projectByIdProvider(widget.projectId));
+                      if (context.mounted) Navigator.pop(context);
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Ошибка: $e')));
+                      }
+                    } finally {
+                      if (mounted) setState(() => _isSaving = false);
+                    }
+                  },
+            child: _isSaving
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white))
+                : const Text('Сохранить'),
+          );
+        }),
+      ],
+    );
   }
 }
 
@@ -736,7 +908,7 @@ class _ApplyTemplateDialog extends ConsumerWidget {
                           .read(engineeringRepositoryProvider)
                           .applyLedTemplate(shieldId, t.id);
                     }
-                    ref.invalidate(projectByIdProvider(projectId));
+                    ref.invalidate(projectListProvider);
                   },
                 );
               },
