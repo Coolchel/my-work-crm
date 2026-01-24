@@ -79,3 +79,10 @@ class ProjectList extends _$ProjectList {
     await future;
   }
 }
+
+/// Провайдер одного проекта по ID
+@riverpod
+Future<ProjectModel> projectById(ProjectByIdRef ref, String id) async {
+  final repository = ref.watch(projectRepositoryProvider);
+  return repository.fetchProject(id);
+}

@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'stage_model.dart';
+import 'package:smart_electric_crm/src/features/engineering/data/models/shield_model.dart';
 
 part 'project_model.g.dart';
 
@@ -29,21 +30,11 @@ class ProjectModel {
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
 
-  // New Fields
-  @JsonKey(name: 'internet_lines_count', defaultValue: 0)
-  final int internetLinesCount;
-
-  @JsonKey(name: 'multimedia_notes', defaultValue: '')
-  final String multimediaNotes;
-
-  @JsonKey(name: 'suggested_internet_shield', defaultValue: '')
-  final String suggestedInternetShield;
-
-  @JsonKey(name: 'led_shield_size')
-  final String? ledShieldSize;
-
   /// Список этапов проекта
   final List<StageModel> stages;
+
+  /// Список щитов (New)
+  final List<ShieldModel> shields;
 
   ProjectModel({
     required this.id,
@@ -54,10 +45,7 @@ class ProjectModel {
     this.clientInfo = '',
     required this.createdAt,
     required this.stages,
-    this.internetLinesCount = 0,
-    this.multimediaNotes = '',
-    this.suggestedInternetShield = '',
-    this.ledShieldSize,
+    this.shields = const [],
   });
 
   /// Создает экземпляр из JSON
@@ -77,10 +65,7 @@ class ProjectModel {
     String? clientInfo,
     DateTime? createdAt,
     List<StageModel>? stages,
-    int? internetLinesCount,
-    String? multimediaNotes,
-    String? suggestedInternetShield,
-    String? ledShieldSize,
+    List<ShieldModel>? shields,
   }) {
     return ProjectModel(
       id: id ?? this.id,
@@ -91,11 +76,7 @@ class ProjectModel {
       clientInfo: clientInfo ?? this.clientInfo,
       createdAt: createdAt ?? this.createdAt,
       stages: stages ?? this.stages,
-      internetLinesCount: internetLinesCount ?? this.internetLinesCount,
-      multimediaNotes: multimediaNotes ?? this.multimediaNotes,
-      suggestedInternetShield:
-          suggestedInternetShield ?? this.suggestedInternetShield,
-      ledShieldSize: ledShieldSize ?? this.ledShieldSize,
+      shields: shields ?? this.shields,
     );
   }
 }

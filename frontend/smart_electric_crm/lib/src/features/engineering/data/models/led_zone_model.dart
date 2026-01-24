@@ -16,11 +16,15 @@ class LedZoneModel {
   @JsonKey(name: 'catalog_item')
   final int? catalogItemId;
 
+  @JsonKey(name: 'shield')
+  final int shieldId;
+
   LedZoneModel({
     required this.id,
     required this.transformer,
     required this.zone,
     this.catalogItemId,
+    required this.shieldId,
   });
 
   factory LedZoneModel.fromJson(Map<String, dynamic> json) =>

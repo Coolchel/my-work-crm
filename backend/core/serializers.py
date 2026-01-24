@@ -3,7 +3,8 @@ from .models import (
     Project, Stage, EstimateItem, ProjectFile,
     CatalogCategory, CatalogItem, EstimateTemplate, TemplateItem,
     ContractorNote, ShieldGroup, LedZone,
-    ShieldTemplate, LedTemplate, ShieldTemplateItem, LedTemplateItem
+    ShieldTemplate, LedTemplate, ShieldTemplateItem, LedTemplateItem,
+    Shield
 )
 
 class ProjectFileSerializer(serializers.ModelSerializer):
@@ -23,12 +24,60 @@ class StageSerializer(serializers.ModelSerializer):
         model = Stage
         fields = '__all__'
 
+class ShieldGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShieldGroup
+        fields = '__all__'
+        read_only_fields = ['modules_count', 'device']
+        extra_kwargs = {
+            'device': {'required': False, 'read_only': True},
+            'modules_count': {'required': False, 'read_only': True},
+        }
+
+class LedZoneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LedZone
+        fields = '__all__'
+
+class ShieldSerializer(serializers.ModelSerializer):
+    groups = ShieldGroupSerializer(many=True, read_only=True)
+    led_zones = LedZoneSerializer(many=True, read_only=True)
+    
+    suggested_size = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Shield
+        fields = '__all__'
+    
+    def get_suggested_size(self, obj):
+        # Calculate size based on type
+        if obj.shield_type == 'power':
+            modules = sum(g.modules_count for g in obj.groups.all())
+            sizes = [1, 2, 4, 6, 8, 12, 18, 24, 36, 48, 60, 72, 96, 108, 144]
+            for size in sizes:
+                if modules <= size:
+                    return f"{size} модулей"
+            return f"{modules} модулей (инд. заказ)"
+        elif obj.shield_type == 'led':
+            count = obj.led_zones.count()
+            if count <= 0: return None
+            if count <= 4: return "24 модуля"
+            if count <= 8: return "36 модулей"
+            if count <= 12: return "48 модулей"
+            if count <= 17: return "60 модулей"
+            return "Требуется инд. расчет"
+        elif obj.shield_type == 'multimedia':
+            if obj.internet_lines_count <= 8:
+                return "Mistral 12M"
+            if obj.internet_lines_count <= 24:
+                return "Mistral 48M"
+            return "Требуется инд. расчет"
+        return None
+
 class ProjectSerializer(serializers.ModelSerializer):
     stages = StageSerializer(many=True, read_only=True)
     files = ProjectFileSerializer(many=True, read_only=True)
-    shield_groups = serializers.SerializerMethodField()
-    led_zones = serializers.SerializerMethodField()
-    led_shield_size = serializers.SerializerMethodField()
+    shields = ShieldSerializer(many=True, read_only=True)
 
     class Meta:
         model = Project
@@ -39,26 +88,6 @@ class ProjectSerializer(serializers.ModelSerializer):
             'source': {'required': False, 'allow_blank': True},
             'notes': {'required': False, 'allow_blank': True},
         }
-
-    def get_shield_groups(self, obj):
-        return ShieldGroupSerializer(obj.shield_groups.all(), many=True).data
-
-    def get_led_zones(self, obj):
-        return LedZoneSerializer(obj.led_zones.all(), many=True).data
-
-    def get_led_shield_size(self, obj):
-        count = obj.led_zones.count()
-        if count <= 0:
-            return None
-        if count <= 4:
-            return "24 модуля"
-        if count <= 8:
-            return "36 модулей"
-        if count <= 12:
-            return "48 модулей"
-        if count <= 17:
-            return "60 модулей"
-        return "Требуется инд. расчет"
 
 class CatalogCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -85,25 +114,6 @@ class EstimateTemplateSerializer(serializers.ModelSerializer):
 class ContractorNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractorNote
-        fields = '__all__'
-
-class ShieldGroupSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ShieldGroup
-        fields = '__all__'
-        read_only_fields = ['modules_count', 'device'] # Computed fields should be read-only from API perspective? Or allow override?
-        # User requested smart logic, usually implies computed. Let's make them read-only or just optional.
-        # Actually user might want to manually override. Let's keep them writable but auto-calculated if missing/on save.
-        # The save() method overrides modules_count based on other fields. So writing to it might be useless unless we add a check.
-        # For now, let's leave it as is. save() overwrites it. So effectively read-only behavior for logic, but writable for API.
-        extra_kwargs = {
-            'device': {'required': False, 'read_only': True}, # Device string is auto-generated
-            'modules_count': {'required': False, 'read_only': True}, # Auto-calculated
-        }
-
-class LedZoneSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LedZone
         fields = '__all__'
 
 class ShieldTemplateitemSerializer(serializers.ModelSerializer):

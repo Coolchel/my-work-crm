@@ -103,10 +103,6 @@ class Project(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new', verbose_name="Статус")
     notes = models.TextField(blank=True, verbose_name="Заметки")
 
-    # Слаботочка
-    internet_lines_count = models.IntegerField(default=0, verbose_name="Кол-во интернет-линий")
-    multimedia_notes = models.TextField(blank=True, verbose_name="Заметки по мультимедиа")
-    suggested_internet_shield = models.CharField(max_length=255, blank=True, verbose_name="Предполагаемый щиток слаботочки")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
 
@@ -231,9 +227,40 @@ class ContractorNote(models.Model):
         return f"{self.title} - {self.amount} {self.currency}"
 
 
+class Shield(models.Model):
+    """
+    Щит (электрический, слаботочный, LED).
+    """
+    SHIELD_TYPE_CHOICES = [
+        ('power', 'Силовой'),
+        ('led', 'LED'),
+        ('multimedia', 'Слаботочка'),
+    ]
+    MOUNTING_CHOICES = [
+        ('internal', 'Внутренний (в нишу)'),
+        ('external', 'Наружный (накладной)'),
+    ]
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='shields', verbose_name="Проект")
+    name = models.CharField(max_length=255, verbose_name="Название щита", default="Главный щит")
+    shield_type = models.CharField(max_length=20, choices=SHIELD_TYPE_CHOICES, default='power', verbose_name="Тип щита")
+    mounting = models.CharField(max_length=20, choices=MOUNTING_CHOICES, default='internal', verbose_name="Монтаж")
+
+    # Специфичные поля для мультимедиа (теперь здесь, а не в Project)
+    internet_lines_count = models.IntegerField(default=0, verbose_name="Кол-во интернет-линий")
+    multimedia_notes = models.TextField(blank=True, verbose_name="Заметки по мультимедиа")
+
+    class Meta:
+        verbose_name = "Щит"
+        verbose_name_plural = "Щиты"
+
+    def __str__(self):
+        return f"{self.name} ({self.get_shield_type_display()})"
+
+
 class ShieldGroup(models.Model):
     """
-    Группа щита.
+    Группа внутри силового щита.
     """
     DEVICE_CHOICES = [
         ('circuit_breaker', 'Автоматический выключатель'),
@@ -245,7 +272,8 @@ class ShieldGroup(models.Model):
         ('other', 'Другое'),
     ]
 
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='shield_groups', verbose_name="Проект")
+    # Changed from 'project' to 'shield'
+    shield = models.ForeignKey(Shield, on_delete=models.CASCADE, related_name='groups', verbose_name="Щит")
     
     device_type = models.CharField(max_length=20, choices=DEVICE_CHOICES, default='circuit_breaker', verbose_name="Тип устройства")
     rating = models.CharField(max_length=50, default='16A', verbose_name="Номинал")
@@ -264,31 +292,21 @@ class ShieldGroup(models.Model):
 
     def save(self, *args, **kwargs):
         # 1. Строгая нормализация поля 'poles' (Полюса)
-        # re.findall(r'\d+', ...) ищет последовательности цифр, игнорируя буквы, точки и запятые.
         pole_digits = re.findall(r'\d+', str(self.poles))
         if pole_digits:
-            # Берем первую найденную группу цифр (целую часть) и добавляем 'P'
             pole_val = int(pole_digits[0])
             self.poles = f"{pole_val}P"
-            # Обновляем количество модулей согласно количеству полюсов
             self.modules_count = pole_val
         else:
-            # Если цифр не найдено, ставим значение по умолчанию
             self.poles = "1P"
             self.modules_count = 1
 
         # 2. Строгая нормализация поля 'rating' (Номинал)
-        # Аналогично ищем первую группу цифр для номинала
         rating_digits = re.findall(r'\d+', str(self.rating))
         if rating_digits:
-             # Берем первую найденную группу и добавляем 'A'
              rating_val = int(rating_digits[0])
              self.rating = f"{rating_val}A"
         else:
-             # Если цифр нет, оставляем пустым или ставим 0A (по требованию можно уточнить, оставим как было - без изменений или 0A)
-             # В данном случае, если пользователь ввел некорректно, можно не менять или сбросить.
-             # Сбросим в пустую строку или сохраним "как есть" (но без цифр это странно). 
-             # Для безопасности оставим "0A" если совсем ничего нет.
              if not self.rating:
                  self.rating = ""
         
@@ -308,9 +326,10 @@ class ShieldGroup(models.Model):
 
 class LedZone(models.Model):
     """
-    Зона LED подсветки.
+    Зона LED подсветки (внутри LED щита).
     """
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='led_zones', verbose_name="Проект")
+    # Changed from 'project' to 'shield'
+    shield = models.ForeignKey(Shield, on_delete=models.CASCADE, related_name='led_zones', verbose_name="Щит")
     transformer = models.CharField(max_length=255, verbose_name="Трансформатор/Блок")
     zone = models.CharField(max_length=255, verbose_name="Место установки/Лента")
     catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
@@ -385,4 +404,3 @@ class LedTemplateItem(models.Model):
 
     def __str__(self):
         return f"{self.transformer} - {self.zone}"
-

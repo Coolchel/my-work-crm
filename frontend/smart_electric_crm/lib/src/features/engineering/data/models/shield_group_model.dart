@@ -34,6 +34,9 @@ class ShieldGroupModel {
   @JsonKey(name: 'catalog_item')
   final int? catalogItemId;
 
+  @JsonKey(name: 'shield')
+  final int shieldId;
+
   ShieldGroupModel({
     required this.id,
     required this.device,
@@ -43,6 +46,7 @@ class ShieldGroupModel {
     required this.poles,
     required this.modulesCount,
     this.catalogItemId,
+    required this.shieldId,
   });
 
   factory ShieldGroupModel.fromJson(Map<String, dynamic> json) =>

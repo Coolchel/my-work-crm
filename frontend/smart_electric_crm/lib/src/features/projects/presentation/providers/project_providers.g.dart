@@ -24,6 +24,167 @@ final projectRepositoryProvider =
 );
 
 typedef ProjectRepositoryRef = AutoDisposeProviderRef<ProjectRepository>;
+String _$projectByIdHash() => r'59ac53b67415c55a763f2af80143ee4766c63d6d';
+
+/// Copied from Dart SDK
+class _SystemHash {
+  _SystemHash._();
+
+  static int combine(int hash, int value) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + value);
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x0007ffff & hash) << 10));
+    return hash ^ (hash >> 6);
+  }
+
+  static int finish(int hash) {
+    // ignore: parameter_assignments
+    hash = 0x1fffffff & (hash + ((0x03ffffff & hash) << 3));
+    // ignore: parameter_assignments
+    hash = hash ^ (hash >> 11);
+    return 0x1fffffff & (hash + ((0x00003fff & hash) << 15));
+  }
+}
+
+/// Провайдер одного проекта по ID
+///
+/// Copied from [projectById].
+@ProviderFor(projectById)
+const projectByIdProvider = ProjectByIdFamily();
+
+/// Провайдер одного проекта по ID
+///
+/// Copied from [projectById].
+class ProjectByIdFamily extends Family<AsyncValue<ProjectModel>> {
+  /// Провайдер одного проекта по ID
+  ///
+  /// Copied from [projectById].
+  const ProjectByIdFamily();
+
+  /// Провайдер одного проекта по ID
+  ///
+  /// Copied from [projectById].
+  ProjectByIdProvider call(
+    String id,
+  ) {
+    return ProjectByIdProvider(
+      id,
+    );
+  }
+
+  @override
+  ProjectByIdProvider getProviderOverride(
+    covariant ProjectByIdProvider provider,
+  ) {
+    return call(
+      provider.id,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'projectByIdProvider';
+}
+
+/// Провайдер одного проекта по ID
+///
+/// Copied from [projectById].
+class ProjectByIdProvider extends AutoDisposeFutureProvider<ProjectModel> {
+  /// Провайдер одного проекта по ID
+  ///
+  /// Copied from [projectById].
+  ProjectByIdProvider(
+    String id,
+  ) : this._internal(
+          (ref) => projectById(
+            ref as ProjectByIdRef,
+            id,
+          ),
+          from: projectByIdProvider,
+          name: r'projectByIdProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$projectByIdHash,
+          dependencies: ProjectByIdFamily._dependencies,
+          allTransitiveDependencies:
+              ProjectByIdFamily._allTransitiveDependencies,
+          id: id,
+        );
+
+  ProjectByIdProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.id,
+  }) : super.internal();
+
+  final String id;
+
+  @override
+  Override overrideWith(
+    FutureOr<ProjectModel> Function(ProjectByIdRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: ProjectByIdProvider._internal(
+        (ref) => create(ref as ProjectByIdRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        id: id,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<ProjectModel> createElement() {
+    return _ProjectByIdProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is ProjectByIdProvider && other.id == id;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, id.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+mixin ProjectByIdRef on AutoDisposeFutureProviderRef<ProjectModel> {
+  /// The parameter `id` of this provider.
+  String get id;
+}
+
+class _ProjectByIdProviderElement
+    extends AutoDisposeFutureProviderElement<ProjectModel> with ProjectByIdRef {
+  _ProjectByIdProviderElement(super.provider);
+
+  @override
+  String get id => (origin as ProjectByIdProvider).id;
+}
+
 String _$projectListHash() => r'c93522e5603017c97481e8e2bf315c40b705bc9a';
 
 /// Провайдер списка проектов.

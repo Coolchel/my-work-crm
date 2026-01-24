@@ -11,6 +11,7 @@ LedZoneModel _$LedZoneModelFromJson(Map<String, dynamic> json) => LedZoneModel(
       transformer: json['transformer'] as String,
       zone: json['zone'] as String,
       catalogItemId: (json['catalog_item'] as num?)?.toInt(),
+      shieldId: (json['shield'] as num).toInt(),
     );
 
 Map<String, dynamic> _$LedZoneModelToJson(LedZoneModel instance) =>
@@ -19,4 +20,5 @@ Map<String, dynamic> _$LedZoneModelToJson(LedZoneModel instance) =>
       'transformer': instance.transformer,
       'zone': instance.zone,
       'catalog_item': instance.catalogItemId,
+      'shield': instance.shieldId,
     };

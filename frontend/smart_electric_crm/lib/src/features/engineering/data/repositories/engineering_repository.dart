@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../models/shield_model.dart';
 import '../models/shield_group_model.dart';
 import '../models/led_zone_model.dart';
 import '../models/shield_template_model.dart';
@@ -10,96 +11,58 @@ class EngineeringRepository {
 
   EngineeringRepository({required Dio dio}) : _dio = dio;
 
-  /// Получает список групп щита для проекта.
-  Future<List<ShieldGroupModel>> fetchShieldGroups(String projectId) async {
-    try {
-      final response = await _dio
-          .get('/shield-groups/', queryParameters: {'project': projectId});
-      final List<dynamic> data = response.data;
-      return data.map((json) => ShieldGroupModel.fromJson(json)).toList();
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Fetch Shield Groups Error: ${e.response?.data}");
-      }
-      rethrow;
-    }
-  }
+  // --- Shields ---
 
-  /// Получает список зон LED для проекта.
-  Future<List<LedZoneModel>> fetchLedZones(String projectId) async {
-    try {
-      final response = await _dio
-          .get('/led-zones/', queryParameters: {'project': projectId});
-      final List<dynamic> data = response.data;
-      return data.map((json) => LedZoneModel.fromJson(json)).toList();
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Fetch LED Zones Error: ${e.response?.data}");
-      }
-      rethrow;
-    }
-  }
-
-  /// Получает список шаблонов щитов.
-  Future<List<ShieldTemplateModel>> fetchShieldTemplates() async {
-    try {
-      final response = await _dio.get('/shield-templates/');
-      final List<dynamic> data = response.data;
-      return data.map((json) => ShieldTemplateModel.fromJson(json)).toList();
-    } catch (e) {
-      debugPrint("❌ Fetch Shield Templates Error: $e");
-      rethrow;
-    }
-  }
-
-  /// Получает список шаблонов LED.
-  Future<List<LedTemplateModel>> fetchLedTemplates() async {
-    try {
-      final response = await _dio.get('/led-templates/');
-      final List<dynamic> data = response.data;
-      return data.map((json) => LedTemplateModel.fromJson(json)).toList();
-    } catch (e) {
-      debugPrint("❌ Fetch LED Templates Error: $e");
-      rethrow;
-    }
-  }
-
-  /// Применяет шаблон щита к проекту.
-  Future<void> applyShieldTemplate(String projectId, int templateId) async {
-    try {
-      await _dio.post(
-        '/projects/$projectId/apply_shield_template/',
-        data: {'template_id': templateId},
-      );
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Apply Shield Template Error: ${e.response?.data}");
-      }
-      rethrow;
-    }
-  }
-
-  /// Применяет шаблон LED к проекту.
-  Future<void> applyLedTemplate(String projectId, int templateId) async {
-    try {
-      await _dio.post(
-        '/projects/$projectId/apply_led_template/',
-        data: {'template_id': templateId},
-      );
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Apply LED Template Error: ${e.response?.data}");
-      }
-      rethrow;
-    }
-  }
-
-  /// Добавляет группу щита.
-  Future<ShieldGroupModel> addShieldGroup(
+  /// Добавляет новый щит в проект
+  Future<ShieldModel> addShield(
       String projectId, Map<String, dynamic> data) async {
     try {
-      final response = await _dio.post('/shield-groups/', data: {
+      final response = await _dio.post('/shields/', data: {
         'project': projectId,
+        ...data,
+      });
+      return ShieldModel.fromJson(response.data);
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        debugPrint("❌ Add Shield Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  /// Обновляет щит
+  Future<ShieldModel> updateShield(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.patch('/shields/$id/', data: data);
+      return ShieldModel.fromJson(response.data);
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        debugPrint("❌ Update Shield Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  /// Удаляет щит
+  Future<void> deleteShield(int id) async {
+    try {
+      await _dio.delete('/shields/$id/');
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        debugPrint("❌ Delete Shield Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  // --- Shield Groups ---
+
+  /// Добавляет группу в щит
+  Future<ShieldGroupModel> addShieldGroup(
+      int shieldId, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/shield-groups/', data: {
+        'shield': shieldId,
         ...data,
       });
       return ShieldGroupModel.fromJson(response.data);
@@ -111,7 +74,7 @@ class EngineeringRepository {
     }
   }
 
-  /// Обновляет группу щита.
+  /// Обновляет группу щита
   Future<void> updateShieldGroup(int id, Map<String, dynamic> data) async {
     try {
       await _dio.patch('/shield-groups/$id/', data: data);
@@ -123,7 +86,7 @@ class EngineeringRepository {
     }
   }
 
-  /// Удаляет группу щита.
+  /// Удаляет группу щита
   Future<void> deleteShieldGroup(int id) async {
     try {
       await _dio.delete('/shield-groups/$id/');
@@ -135,12 +98,14 @@ class EngineeringRepository {
     }
   }
 
-  /// Добавляет зону LED.
+  // --- LED Zones ---
+
+  /// Добавляет зону в LED щит
   Future<LedZoneModel> addLedZone(
-      String projectId, Map<String, dynamic> data) async {
+      int shieldId, Map<String, dynamic> data) async {
     try {
       final response = await _dio.post('/led-zones/', data: {
-        'project': projectId,
+        'shield': shieldId,
         ...data,
       });
       return LedZoneModel.fromJson(response.data);
@@ -152,7 +117,7 @@ class EngineeringRepository {
     }
   }
 
-  /// Обновляет зону LED.
+  /// Обновляет зону LED
   Future<void> updateLedZone(int id, Map<String, dynamic> data) async {
     try {
       await _dio.patch('/led-zones/$id/', data: data);
@@ -164,13 +129,67 @@ class EngineeringRepository {
     }
   }
 
-  /// Удаляет зону LED.
+  /// Удаляет зону LED
   Future<void> deleteLedZone(int id) async {
     try {
       await _dio.delete('/led-zones/$id/');
     } catch (e) {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Delete LED Zone Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  // --- Templates ---
+
+  Future<List<ShieldTemplateModel>> fetchShieldTemplates() async {
+    try {
+      final response = await _dio.get('/shield-templates/');
+      final List<dynamic> data = response.data;
+      return data.map((json) => ShieldTemplateModel.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint("❌ Fetch Shield Templates Error: $e");
+      rethrow;
+    }
+  }
+
+  Future<List<LedTemplateModel>> fetchLedTemplates() async {
+    try {
+      final response = await _dio.get('/led-templates/');
+      final List<dynamic> data = response.data;
+      return data.map((json) => LedTemplateModel.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint("❌ Fetch LED Templates Error: $e");
+      rethrow;
+    }
+  }
+
+  /// Применяет шаблон щита к конкретному щиту
+  Future<void> applyShieldTemplate(int shieldId, int templateId) async {
+    try {
+      await _dio.post(
+        '/shields/$shieldId/apply_shield_template/',
+        data: {'template_id': templateId},
+      );
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        debugPrint("❌ Apply Shield Template Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  /// Применяет шаблон LED к конкретному щиту
+  Future<void> applyLedTemplate(int shieldId, int templateId) async {
+    try {
+      await _dio.post(
+        '/shields/$shieldId/apply_led_template/',
+        data: {'template_id': templateId},
+      );
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        debugPrint("❌ Apply LED Template Error: ${e.response?.data}");
       }
       rethrow;
     }

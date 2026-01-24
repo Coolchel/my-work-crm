@@ -2,9 +2,9 @@ from django.contrib import admin
 from .models import (
     Project, Stage, EstimateItem, ProjectFile, 
     CatalogCategory, CatalogItem, EstimateTemplate, TemplateItem,
-    CatalogCategory, CatalogItem, EstimateTemplate, TemplateItem,
     ContractorNote, ShieldGroup, LedZone,
-    ShieldTemplate, ShieldTemplateItem, LedTemplate, LedTemplateItem
+    ShieldTemplate, ShieldTemplateItem, LedTemplate, LedTemplateItem,
+    Shield
 )
 
 class ProjectFileInline(admin.TabularInline):
@@ -19,7 +19,6 @@ class EstimateItemInline(admin.TabularInline):
     verbose_name = "Пункт сметы"
     verbose_name_plural = "Пункты сметы"
     autocomplete_fields = ['catalog_item']
-    # Выводим contractor_quantity рядом с quantity
     fields = ('name', 'catalog_item', 'item_type', 'quantity', 'contractor_quantity', 'unit', 'price_per_unit', 'currency', 'is_preliminary')
 
 class StageInline(admin.TabularInline):
@@ -48,7 +47,6 @@ class LedZoneInline(admin.TabularInline):
     extra = 1
     verbose_name = "Зона LED"
     verbose_name_plural = "Конфигурация LED"
-    verbose_name_plural = "Конфигурация LED"
     autocomplete_fields = ['catalog_item']
 
 class ShieldTemplateItemInline(admin.TabularInline):
@@ -60,6 +58,13 @@ class LedTemplateItemInline(admin.TabularInline):
     model = LedTemplateItem
     extra = 1
     autocomplete_fields = ['catalog_item']
+
+@admin.register(Shield)
+class ShieldAdmin(admin.ModelAdmin):
+    list_display = ('name', 'project', 'shield_type', 'mounting')
+    list_filter = ('shield_type', 'mounting')
+    search_fields = ('name', 'project__address')
+    inlines = [ShieldGroupInline, LedZoneInline]
 
 @admin.register(CatalogCategory)
 class CatalogCategoryAdmin(admin.ModelAdmin):
@@ -82,8 +87,7 @@ class ProjectAdmin(admin.ModelAdmin):
     list_display = ('address', 'object_type', 'status', 'created_at')
     list_filter = ('object_type', 'status', 'created_at')
     search_fields = ('address', 'client_info')
-    search_fields = ('address', 'client_info')
-    inlines = [StageInline, ProjectFileInline, ShieldGroupInline, LedZoneInline]
+    inlines = [StageInline, ProjectFileInline]
     fieldsets = (
         ('Основная информация', {
             'fields': ('address', 'object_type', 'client_info', 'source', 'status')
@@ -108,7 +112,6 @@ class StageAdmin(admin.ModelAdmin):
 
 @admin.register(EstimateItem)
 class EstimateItemAdmin(admin.ModelAdmin):
-    # Обновили колонки: убрали is_subcontractor, добавили contractor_quantity
     list_display = ('name', 'stage', 'item_type', 'quantity', 'contractor_quantity', 'unit', 'price_per_unit', 'currency', 'total_price')
     list_filter = ('item_type', 'is_preliminary', 'currency')
     search_fields = ('name', 'stage__project__address')
@@ -127,7 +130,6 @@ class ProjectFileAdmin(admin.ModelAdmin):
 @admin.register(ContractorNote)
 class ContractorNoteAdmin(admin.ModelAdmin):
     list_display = ('title', 'amount', 'currency', 'date', 'is_paid')
-    list_filter = ('currency', 'is_paid', 'date')
     list_filter = ('currency', 'is_paid', 'date')
     search_fields = ('title', 'description')
 
