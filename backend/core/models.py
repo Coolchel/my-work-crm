@@ -258,52 +258,42 @@ class ShieldGroup(models.Model):
         verbose_name_plural = "Группы щита"
 
     def save(self, *args, **kwargs):
-        # 1. Унификация: Удаляем пробелы и приводим к верхнему регистру / латинице.
-        def unify_string(s):
-            if not s: return ""
-            s = str(s).replace(" ", "").upper()
-            # Замена кириллицы на латиницу для стандартных обозначений (Амперы, Полюса)
-            replacements = {'А': 'A', 'Р': 'P', 'P': 'P'} 
-            for cyr, lat in replacements.items():
-                s = s.replace(cyr, lat)
-            return s
-            
-        self.rating = unify_string(self.rating)
-        self.poles = unify_string(self.poles)
+        # 1. Строгая нормализация поля 'poles' (Полюса)
+        # re.findall(r'\d+', ...) ищет последовательности цифр, игнорируя буквы, точки и запятые.
+        pole_digits = re.findall(r'\d+', str(self.poles))
+        if pole_digits:
+            # Берем первую найденную группу цифр (целую часть) и добавляем 'P'
+            pole_val = int(pole_digits[0])
+            self.poles = f"{pole_val}P"
+            # Обновляем количество модулей согласно количеству полюсов
+            self.modules_count = pole_val
+        else:
+            # Если цифр не найдено, ставим значение по умолчанию
+            self.poles = "1P"
+            self.modules_count = 1
 
-        # 1.1 Добавляем суффиксы A и P, если их нет (только если есть цифры)
-        if self.rating and re.search(r'\d', self.rating) and not self.rating.endswith('A'):
-             self.rating += 'A'
-
-        if self.poles and re.search(r'\d', self.poles) and not self.poles.endswith('P'):
-             self.poles += 'P'
-
-        # 2. Логика "Зона или потребитель"
-        # Если поле пустое, записываем туда название типа устройства
+        # 2. Строгая нормализация поля 'rating' (Номинал)
+        # Аналогично ищем первую группу цифр для номинала
+        rating_digits = re.findall(r'\d+', str(self.rating))
+        if rating_digits:
+             # Берем первую найденную группу и добавляем 'A'
+             rating_val = int(rating_digits[0])
+             self.rating = f"{rating_val}A"
+        else:
+             # Если цифр нет, оставляем пустым или ставим 0A (по требованию можно уточнить, оставим как было - без изменений или 0A)
+             # В данном случае, если пользователь ввел некорректно, можно не менять или сбросить.
+             # Сбросим в пустую строку или сохраним "как есть" (но без цифр это странно). 
+             # Для безопасности оставим "0A" если совсем ничего нет.
+             if not self.rating:
+                 self.rating = ""
+        
+        # 3. Логика "Зона или потребитель"
         if not self.zone:
              self.zone = dict(self.DEVICE_CHOICES).get(self.device_type, self.device_type)
 
-        # 3. Извлечение количества модулей из поля 'poles'
-        # Используем рег. выражения для поиска цифр.
-        # re.findall(r'\d+', string) ищет все последовательности цифр (\d+) в строке.
-        # Возвращает список строк. Например "3P+N" -> ['3'].
-        digits = re.findall(r'\d+', self.poles)
-        
-        if digits:
-            # Берем первое найденное число
-            self.modules_count = int(digits[0])
-        else:
-            # Если цифр нет (например "N"), ставим 1 модуль по умолчанию
-            self.modules_count = 1
-            
-        # Специальная логика для некоторых типов, если нужно переопределить
-        # Например, Диф. автоматы часто занимают больше места, если это не указано явно,
-        # но пользователь просил "извлеки только цифры".
-        # Оставим приоритет за введенными цифрами. Если цифр нет - 1.
-        
-        # 4. Авто-генерация названия устройства для отображения
+        # 4. Авто-генерация названия устройства
         d_display = dict(self.DEVICE_CHOICES).get(self.device_type, self.device_type)
-        self.device = f"{d_display} {self.rating} {self.poles}"
+        self.device = f"{d_display} {self.rating} {self.poles}".strip()
 
         super().save(*args, **kwargs)
 
