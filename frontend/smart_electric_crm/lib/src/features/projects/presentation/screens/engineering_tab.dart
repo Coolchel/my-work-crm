@@ -694,9 +694,34 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
                 Expanded(
                   child: TextField(
                     controller: _ratingController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Номинал',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: PopupMenuButton<String>(
+                        icon: const Icon(Icons.arrow_drop_down),
+                        onSelected: (String value) {
+                          _ratingController.text = value;
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return [
+                            '6A',
+                            '10A',
+                            '16A',
+                            '20A',
+                            '25A',
+                            '32A',
+                            '40A',
+                            '50A',
+                            '63A',
+                            '80A'
+                          ].map((String choice) {
+                            return PopupMenuItem<String>(
+                              value: choice,
+                              child: Text(choice),
+                            );
+                          }).toList();
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -704,9 +729,23 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
                 Expanded(
                   child: TextField(
                     controller: _polesController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Полюса',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: PopupMenuButton<String>(
+                        icon: const Icon(Icons.arrow_drop_down),
+                        onSelected: (String value) {
+                          _polesController.text = value;
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return ['1P', '2P', '3P', '4P'].map((String choice) {
+                            return PopupMenuItem<String>(
+                              value: choice,
+                              child: Text(choice),
+                            );
+                          }).toList();
+                        },
+                      ),
                     ),
                   ),
                 ),
