@@ -62,7 +62,7 @@ final ledTemplatesProvider =
 );
 
 typedef LedTemplatesRef = AutoDisposeFutureProviderRef<List<LedTemplateModel>>;
-String _$shieldGroupsHash() => r'9121f5d16fb8b16ed9cd93742be054c524f19d42';
+String _$shieldGroupsHash() => r'0a3cb69ffc778d5b18c8b1f4a4537d5c3bcf09cd';
 
 /// Copied from Dart SDK
 class _SystemHash {

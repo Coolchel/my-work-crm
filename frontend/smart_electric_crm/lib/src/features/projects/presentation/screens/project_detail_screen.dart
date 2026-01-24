@@ -406,10 +406,10 @@ class _ShieldTab extends ConsumerWidget {
                         color: Colors.white, size: 20),
                   ),
                   title: Text(
-                    group.device,
+                    group.device, // Computed string from backend should be fine
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(group.zone),
+                  subtitle: Text("${group.zone} • ${group.modulesCount} мод."),
                   onTap: () => _showEditDialog(context, ref, group: group),
                   trailing: IconButton(
                     icon: const Icon(Icons.edit, size: 20, color: Colors.grey),
@@ -460,19 +460,48 @@ class _ShieldGroupDialog extends StatefulWidget {
 }
 
 class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
-  late TextEditingController _deviceController;
   late TextEditingController _zoneController;
+
+  String _selectedDeviceType = 'circuit_breaker';
+  String _selectedRating = '16A';
+  String _selectedPoles = '1P';
+
+  final Map<String, String> _deviceTypes = {
+    'circuit_breaker': 'Автомат',
+    'diff_breaker': 'Диф.автомат',
+    'rcd': 'УЗО',
+    'relay': 'Реле напряжения',
+    'contactor': 'Контактор',
+    'other': 'Другое',
+  };
+
+  final List<String> _ratings = [
+    '6A',
+    '10A',
+    '16A',
+    '20A',
+    '25A',
+    '32A',
+    '40A',
+    '50A',
+    '63A'
+  ];
+  final List<String> _poles = ['1P', '2P', '3P', '4P'];
 
   @override
   void initState() {
     super.initState();
-    _deviceController = TextEditingController(text: widget.group?.device ?? '');
     _zoneController = TextEditingController(text: widget.group?.zone ?? '');
+
+    if (widget.group != null) {
+      _selectedDeviceType = widget.group!.deviceType;
+      _selectedRating = widget.group!.rating;
+      _selectedPoles = widget.group!.poles;
+    }
   }
 
   @override
   void dispose() {
-    _deviceController.dispose();
     _zoneController.dispose();
     super.dispose();
   }
@@ -482,19 +511,56 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
     final isEdit = widget.group != null;
     return AlertDialog(
       title: Text(isEdit ? 'Редактировать группу' : 'Добавить группу'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _deviceController,
-            decoration:
-                const InputDecoration(labelText: 'Устройство (напр. Диф 16А)'),
-          ),
-          TextField(
-            controller: _zoneController,
-            decoration: const InputDecoration(labelText: 'Зона (напр. Кухня)'),
-          ),
-        ],
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              value: _deviceTypes.containsKey(_selectedDeviceType)
+                  ? _selectedDeviceType
+                  : 'circuit_breaker',
+              decoration: const InputDecoration(labelText: 'Тип устройства'),
+              items: _deviceTypes.entries.map((e) {
+                return DropdownMenuItem(value: e.key, child: Text(e.value));
+              }).toList(),
+              onChanged: (val) => setState(() => _selectedDeviceType = val!),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _ratings.contains(_selectedRating)
+                        ? _selectedRating
+                        : '16A',
+                    decoration: const InputDecoration(labelText: 'Номинал'),
+                    items: _ratings.map((e) {
+                      return DropdownMenuItem(value: e, child: Text(e));
+                    }).toList(),
+                    onChanged: (val) => setState(() => _selectedRating = val!),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value:
+                        _poles.contains(_selectedPoles) ? _selectedPoles : '1P',
+                    decoration: const InputDecoration(labelText: 'Полюса'),
+                    items: _poles.map((e) {
+                      return DropdownMenuItem(value: e, child: Text(e));
+                    }).toList(),
+                    onChanged: (val) => setState(() => _selectedPoles = val!),
+                  ),
+                ),
+              ],
+            ),
+            TextField(
+              controller: _zoneController,
+              decoration:
+                  const InputDecoration(labelText: 'Зона (напр. Кухня)'),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
@@ -505,24 +571,34 @@ class _ShieldGroupDialogState extends State<_ShieldGroupDialog> {
           builder: (context, ref, child) {
             return ElevatedButton(
               onPressed: () async {
-                final device = _deviceController.text;
                 final zone = _zoneController.text;
-                if (device.isEmpty || zone.isEmpty) return;
+                if (zone.isEmpty) return;
 
-                Navigator.pop(context); // Закрываем диалог сразу
+                Navigator.pop(context);
 
                 try {
                   if (isEdit) {
                     await ref
                         .read(shieldGroupsProvider(widget.projectId).notifier)
-                        .updateShieldGroup(widget.group!.id, device, zone);
+                        .updateShieldGroup(
+                          widget.group!.id,
+                          _selectedDeviceType,
+                          _selectedRating,
+                          _selectedPoles,
+                          zone,
+                        );
                   } else {
                     await ref
                         .read(shieldGroupsProvider(widget.projectId).notifier)
-                        .add(device, zone);
+                        .add(
+                          _selectedDeviceType,
+                          _selectedRating,
+                          _selectedPoles,
+                          zone,
+                        );
                   }
                 } catch (e) {
-                  // Обработка ошибок, если нужно
+                  // Обработка ошибок
                 }
               },
               child: const Text('Сохранить'),

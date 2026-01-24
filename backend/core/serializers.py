@@ -76,6 +76,15 @@ class ShieldGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShieldGroup
         fields = '__all__'
+        read_only_fields = ['modules_count', 'device'] # Computed fields should be read-only from API perspective? Or allow override?
+        # User requested smart logic, usually implies computed. Let's make them read-only or just optional.
+        # Actually user might want to manually override. Let's keep them writable but auto-calculated if missing/on save.
+        # The save() method overrides modules_count based on other fields. So writing to it might be useless unless we add a check.
+        # For now, let's leave it as is. save() overwrites it. So effectively read-only behavior for logic, but writable for API.
+        extra_kwargs = {
+            'device': {'required': False, 'read_only': True}, # Device string is auto-generated
+            'modules_count': {'required': False, 'read_only': True}, # Auto-calculated
+        }
 
 class LedZoneSerializer(serializers.ModelSerializer):
     class Meta:

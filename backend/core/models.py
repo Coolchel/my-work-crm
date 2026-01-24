@@ -229,17 +229,81 @@ class ShieldGroup(models.Model):
     """
     Группа щита.
     """
+    DEVICE_CHOICES = [
+        ('circuit_breaker', 'Автомат'),
+        ('diff_breaker', 'Диф.автомат'),
+        ('rcd', 'УЗО'),
+        ('relay', 'Реле напряжения'),
+        ('contactor', 'Контактор'),
+        ('other', 'Другое'),
+    ]
+    RATING_CHOICES = [
+        ('6A', '6A'),
+        ('10A', '10A'),
+        ('16A', '16A'),
+        ('20A', '20A'),
+        ('25A', '25A'),
+        ('32A', '32A'),
+        ('40A', '40A'),
+        ('50A', '50A'),
+        ('63A', '63A'),
+    ]
+    POLES_CHOICES = [
+        ('1P', '1P'),
+        ('2P', '2P'),
+        ('3P', '3P'),
+        ('4P', '4P'),
+    ]
+
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='shield_groups', verbose_name="Проект")
-    device = models.CharField(max_length=255, verbose_name="Устройство/Номинал")
+    
+    device_type = models.CharField(max_length=20, choices=DEVICE_CHOICES, default='circuit_breaker', verbose_name="Тип устройства")
+    rating = models.CharField(max_length=10, choices=RATING_CHOICES, default='16A', verbose_name="Номинал")
+    poles = models.CharField(max_length=5, choices=POLES_CHOICES, default='1P', verbose_name="Полюса")
+    
+    # Old field kept for compatibility, auto-generated in save()
+    device = models.CharField(max_length=255, verbose_name="Устройство (Авто)", blank=True)
+    
     zone = models.CharField(max_length=255, verbose_name="Зона/Потребитель")
+    modules_count = models.IntegerField(default=1, verbose_name="Кол-во модулей")
     catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
 
     class Meta:
         verbose_name = "Группа щита"
         verbose_name_plural = "Группы щита"
 
+    def save(self, *args, **kwargs):
+        # 1. Auto-calculate modules count if not manually set (or always overwrite?)
+        # Let's overwrite to ensure consistency based on type/poles
+        force_modules = False
+        
+        if self.device_type == 'circuit_breaker':
+            if self.poles == '1P':
+                self.modules_count = 1
+            elif self.poles == '2P':
+                self.modules_count = 2
+            elif self.poles == '3P':
+                self.modules_count = 3
+            elif self.poles == '4P':
+                self.modules_count = 4
+        elif self.device_type in ['diff_breaker', 'rcd']:
+            if self.poles in ['1P', '2P']: # Usually 2 modules (1P+N or 2P)
+                self.modules_count = 2
+            elif self.poles in ['3P', '4P']:
+                self.modules_count = 4
+        elif self.device_type == 'relay':
+            self.modules_count = 2 # Usually 2 or 3. Default to 2.
+        elif self.device_type == 'contactor':
+            self.modules_count = 2 # Default assumption
+        
+        # 2. Auto-generate device display name
+        d_display = dict(self.DEVICE_CHOICES).get(self.device_type, self.device_type)
+        self.device = f"{d_display} {self.rating} {self.poles}"
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.device} - {self.zone}"
+        return f"{self.device} - {self.zone} ({self.modules_count} mod)"
 
 
 class LedZone(models.Model):

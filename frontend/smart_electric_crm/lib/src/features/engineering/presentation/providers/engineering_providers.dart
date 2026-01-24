@@ -38,11 +38,14 @@ class ShieldGroups extends _$ShieldGroups {
     });
   }
 
-  Future<void> add(String device, String zone) async {
+  Future<void> add(
+      String deviceType, String rating, String poles, String zone) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await ref.read(engineeringRepositoryProvider).addShieldGroup(projectId, {
-        'device': device,
+        'device_type': deviceType,
+        'rating': rating,
+        'poles': poles,
         'zone': zone,
       });
       return ref
@@ -51,9 +54,12 @@ class ShieldGroups extends _$ShieldGroups {
     });
   }
 
-  Future<void> updateShieldGroup(int id, String device, String zone) async {
+  Future<void> updateShieldGroup(int id, String deviceType, String rating,
+      String poles, String zone) async {
     await ref.read(engineeringRepositoryProvider).updateShieldGroup(id, {
-      'device': device,
+      'device_type': deviceType,
+      'rating': rating,
+      'poles': poles,
       'zone': zone,
     });
     ref.invalidateSelf();
