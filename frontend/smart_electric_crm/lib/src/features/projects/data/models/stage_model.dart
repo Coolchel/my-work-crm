@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'estimate_item_model.dart';
 
 part 'stage_model.g.dart';
 
@@ -24,6 +25,10 @@ class StageModel {
   @JsonKey(name: 'ended_at')
   final DateTime? endedAt;
 
+  /// Пункты сметы
+  @JsonKey(name: 'estimate_items', defaultValue: [])
+  final List<EstimateItemModel> estimateItems;
+
   StageModel({
     required this.id,
     required this.title,
@@ -31,6 +36,7 @@ class StageModel {
     required this.isPaid,
     this.startedAt,
     this.endedAt,
+    this.estimateItems = const [],
   });
 
   /// Создает экземпляр из JSON
@@ -48,6 +54,7 @@ class StageModel {
     bool? isPaid,
     DateTime? startedAt,
     DateTime? endedAt,
+    List<EstimateItemModel>? estimateItems,
   }) {
     return StageModel(
       id: id ?? this.id,
@@ -56,6 +63,7 @@ class StageModel {
       isPaid: isPaid ?? this.isPaid,
       startedAt: startedAt ?? this.startedAt,
       endedAt: endedAt ?? this.endedAt,
+      estimateItems: estimateItems ?? this.estimateItems,
     );
   }
 }

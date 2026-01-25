@@ -4,6 +4,7 @@ import '../providers/project_providers.dart';
 import '../../data/models/project_model.dart';
 import 'add_project_screen.dart';
 import 'engineering_tab.dart';
+import 'estimate_screen.dart';
 
 class ProjectDetailScreen extends ConsumerWidget {
   final String projectId;
@@ -257,6 +258,17 @@ class _StagesTab extends ConsumerWidget {
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EstimateScreen(
+                        stage: stage,
+                        projectId: project.id.toString(),
+                      ),
+                    ),
+                  );
+                },
                 title: Text(_getStageTitleDisplay(stage.title)),
                 subtitle: Align(
                   alignment: Alignment.centerLeft,
@@ -269,7 +281,8 @@ class _StagesTab extends ConsumerWidget {
                           stage.id.toString(),
                           stage.status,
                           details.globalPosition),
-                      onTap: () {},
+                      onTap:
+                          () {}, // Для эффекта нажатия, но без действия (действие в onTapDown)
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         padding: const EdgeInsets.symmetric(

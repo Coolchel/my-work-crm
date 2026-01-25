@@ -19,7 +19,7 @@ class EstimateItemInline(admin.TabularInline):
     verbose_name = "Пункт сметы"
     verbose_name_plural = "Пункты сметы"
     autocomplete_fields = ['catalog_item']
-    fields = ('name', 'catalog_item', 'item_type', 'quantity', 'contractor_quantity', 'unit', 'price_per_unit', 'currency', 'is_preliminary')
+    fields = ('name', 'catalog_item', 'item_type', 'total_quantity', 'employer_quantity', 'unit', 'price_per_unit', 'currency', 'markup_percent', 'is_preliminary')
 
 class StageInline(admin.TabularInline):
     model = Stage
@@ -73,7 +73,7 @@ class CatalogCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(CatalogItem)
 class CatalogItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'item_type', 'default_price', 'unit')
+    list_display = ('name', 'category', 'item_type', 'default_price', 'default_currency', 'unit')
     list_filter = ('category', 'item_type')
     search_fields = ('name',)
 
@@ -112,16 +112,23 @@ class StageAdmin(admin.ModelAdmin):
 
 @admin.register(EstimateItem)
 class EstimateItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'stage', 'item_type', 'quantity', 'contractor_quantity', 'unit', 'price_per_unit', 'currency', 'total_price')
-    list_filter = ('item_type', 'is_preliminary', 'currency')
+    list_display = ('name', 'stage', 'item_type', 'total_quantity', 'employer_quantity', 'unit', 'price_per_unit', 'currency', 'markup_percent', 'is_extra', 'client_amount_display', 'my_amount_display')
+    list_filter = ('item_type', 'is_preliminary', 'is_extra', 'currency')
     search_fields = ('name', 'stage__project__address')
     autocomplete_fields = ['catalog_item']
+    readonly_fields = ('client_amount_display', 'employer_amount_display', 'my_amount_display')
     
-    def total_price(self, obj):
-        if obj.quantity and obj.price_per_unit:
-            return f"{obj.quantity * obj.price_per_unit} {obj.currency}"
-        return 0
-    total_price.short_description = "Итого"
+    def client_amount_display(self, obj):
+        return f"{obj.client_amount} {obj.currency}"
+    client_amount_display.short_description = "Итого (Клиент)"
+
+    def employer_amount_display(self, obj):
+        return f"{obj.employer_amount} {obj.currency}"
+    employer_amount_display.short_description = "Сумма (Работодатель)"
+
+    def my_amount_display(self, obj):
+        return f"{obj.my_amount} {obj.currency}"
+    my_amount_display.short_description = "Моя доля"
 
 @admin.register(ProjectFile)
 class ProjectFileAdmin(admin.ModelAdmin):

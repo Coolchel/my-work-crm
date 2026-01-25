@@ -27,11 +27,16 @@ class CatalogItem(models.Model):
         ('work', 'Работа'),
         ('material', 'Материал'),
     ]
+    CURRENCY_CHOICES = [
+        ('USD', 'USD'),
+        ('BYN', 'BYN'),
+    ]
 
     name = models.CharField(max_length=255, verbose_name="Название")
     category = models.ForeignKey(CatalogCategory, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Категория")
     unit = models.CharField(max_length=20, verbose_name="Ед. изм.")
     default_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Цена по умолчанию")
+    default_currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD', verbose_name="Валюта по умолчанию")
     item_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='material', verbose_name="Тип")
 
     class Meta:
@@ -39,7 +44,7 @@ class CatalogItem(models.Model):
         verbose_name_plural = "Справочник (Товары/Работы)"
 
     def __str__(self):
-        return f"{self.name} ({self.default_price} р.)"
+        return f"{self.name} ({self.default_price} {self.default_currency})"
 
 
 class EstimateTemplate(models.Model):
@@ -144,6 +149,113 @@ class Stage(models.Model):
     def __str__(self):
         return f"{self.get_title_display()} - {self.project.address}"
 
+    def generate_client_report(self):
+        """
+        Генерация отчета для клиента (как в примере Левина 7).
+        """
+        lines = []
+        total_usd = 0
+        total_byn = 0
+        
+        # Получаем все элементы этапа
+        items = self.estimate_items.all().order_by('is_extra', 'pk')
+        
+        counter = 1
+        
+        # Секция основных работ
+        for item in items:
+            # Формируем строку
+            prefix = "+ " if item.is_extra else f"{counter}) "
+            if not item.is_extra:
+                counter += 1
+            
+            # Расчет стоимости позиции
+            amount = item.client_amount
+            currency_symbol = '$' if item.currency == 'USD' else ' руб'
+            
+            line = f"{prefix}{item.name} - {item.total_quantity} {item.unit} * {item.price_per_unit}{currency_symbol}"
+            
+            # Если есть наценка на материалы, можно не показывать её явно клиенту в формуле, 
+            # но в примере клиента формула: кол-во * цена = сумма. 
+            # Если у нас наценка включена в цену или идет сверху?
+            # В модели client_amount = (qty * price) + markup.
+            # Если мы хотим показать красивую формулу, то price_per_unit должна быть уже с наценкой?
+            # Или просто выводим итоговую сумму строки.
+            # В ТЗ: "В одной строке работы есть total_quantity... Если объект свой, добавляется наценка".
+            # В примере: "400 м * 0.4$ = 160$". Это простая математика.
+            # Значит, для отчета лучше показывать "Итого" по строке.
+            
+            # Если есть наценка, то effective_price (цена для клиента) выше базовой.
+            # effective_price = (base_price + markup) / qty
+            effective_price = item.price_per_unit
+            if item.markup_percent > 0 and item.total_quantity > 0:
+                 total_markup = (item.total_quantity * item.price_per_unit) * (item.markup_percent / 100)
+                 effective_price += (total_markup / item.total_quantity)
+            
+            # Округлим цену для отображения
+            effective_price_str = f"{effective_price:.2f}".rstrip('0').rstrip('.')
+            
+            line += f" = {amount:.2f}{currency_symbol};"
+            lines.append(line)
+            
+            if item.currency == 'USD':
+                total_usd += amount
+            else:
+                total_byn += amount
+                
+        # Итоги
+        total_line = f"\nИтого: {total_usd:.2f}$"
+        if total_byn > 0:
+            total_line += f" + {total_byn:.2f} руб;"
+        else:
+            total_line += ";"
+            
+        lines.append(total_line)
+        return "\n".join(lines)
+
+    def generate_employer_report(self):
+        """
+        Отчет для работодателя (только то, что через него).
+        """
+        lines = []
+        employer_total_usd = 0
+        employer_total_byn = 0
+        
+        # Фильтруем только те, где volume > 0
+        items = self.estimate_items.filter(employer_quantity__gt=0)
+        
+        counter = 1
+        lines.append("Отчет для работодателя:\n")
+        
+        for item in items:
+            amount = item.employer_amount
+            currency_symbol = '$' if item.currency == 'USD' else ' руб'
+            
+            line = f"{counter}) {item.name} - {item.employer_quantity} {item.unit} * {item.price_per_unit}{currency_symbol} = {amount:.2f}{currency_symbol};"
+            lines.append(line)
+            counter += 1
+            
+            if item.currency == 'USD':
+                employer_total_usd += amount
+            else:
+                employer_total_byn += amount
+
+        lines.append(f"\nИтого работодатель: {employer_total_usd:.2f}$ | {employer_total_byn:.2f} руб")
+        
+        # Считаем "Моя доля" по всему этапу
+        # Это разница между Total Client Amount и Employer Amount
+        # Но нужно брать ВСЕ items этапа, а не только employer_items
+        all_items = self.estimate_items.all()
+        client_total_usd = sum(i.client_amount for i in all_items if i.currency == 'USD')
+        client_total_byn = sum(i.client_amount for i in all_items if i.currency == 'BYN')
+        
+        my_share_usd = client_total_usd - employer_total_usd
+        my_share_byn = client_total_byn - employer_total_byn
+        
+        lines.append(f"Моя доля (Чистая): {my_share_usd:.2f}$ | {my_share_byn:.2f} руб")
+        
+        return "\n".join(lines)
+
 
 class EstimateItem(models.Model):
     TYPE_CHOICES = [
@@ -160,13 +272,21 @@ class EstimateItem(models.Model):
 
     item_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name="Тип")
     is_preliminary = models.BooleanField(default=False, verbose_name="Это предпросчет?")
+    is_extra = models.BooleanField(default=False, verbose_name="Доп. работы")
     
     name = models.CharField(max_length=255, verbose_name="Наименование")
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Количество")
-    unit = models.CharField(max_length=20, verbose_name="Ед. изм.")
-    price_per_unit = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Цена за единицу", blank=True, null=True)
     
+    # Объемы
+    total_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Общий объем (для клиента)")
+    employer_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Объем работодателя")
+    
+    unit = models.CharField(max_length=20, verbose_name="Ед. изм.")
+    
+    # Цена и Валюта
+    price_per_unit = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Цена за единицу", blank=True, null=True)
     currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='USD', verbose_name="Валюта")
+    markup_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Наценка %")
+
     # is_subcontractor удалено, заменено на contractor_quantity
     contractor_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Кол-во подрядчика")
 
@@ -175,7 +295,37 @@ class EstimateItem(models.Model):
         verbose_name_plural = "Пункты сметы"
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.total_quantity} {self.unit})"
+
+    @property
+    def client_amount(self):
+        """
+        Полная стоимость для клиента: (Объем * Цена) + Наценка.
+        Наценка добавляется сверху к базовой стоимости.
+        """
+        if not self.total_quantity or not self.price_per_unit:
+            return 0
+        base_price = self.total_quantity * self.price_per_unit
+        markup_value = base_price * (self.markup_percent / 100)
+        return float(base_price + markup_value)
+
+    @property
+    def employer_amount(self):
+        """
+        Доля работодателя: Объем работодателя * Цена
+        Наценка работодателю не идет (она - моя прибыль).
+        """
+        if not self.employer_quantity or not self.price_per_unit:
+            return 0
+        return float(self.employer_quantity * self.price_per_unit)
+
+    @property
+    def my_amount(self):
+        """
+        Моя доля: Клиентская сумма - Доля работодателя
+        Включает мою работу + всю наценку на материалы.
+        """
+        return self.client_amount - self.employer_amount
 
     def save(self, *args, **kwargs):
         if self.catalog_item:
@@ -187,6 +337,9 @@ class EstimateItem(models.Model):
                 self.item_type = self.catalog_item.item_type
             if self.price_per_unit is None:
                 self.price_per_unit = self.catalog_item.default_price
+            # При первом сохранении валюту тоже подтягиваем
+            if not self.pk and not self.currency:
+                self.currency = self.catalog_item.default_currency
         super().save(*args, **kwargs)
 
 

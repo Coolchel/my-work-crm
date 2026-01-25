@@ -13,6 +13,10 @@ class ProjectFileSerializer(serializers.ModelSerializer):
         fields = ['id', 'file', 'description']
 
 class EstimateItemSerializer(serializers.ModelSerializer):
+    client_amount = serializers.ReadOnlyField()
+    employer_amount = serializers.ReadOnlyField()
+    my_amount = serializers.ReadOnlyField()
+
     class Meta:
         model = EstimateItem
         fields = '__all__'

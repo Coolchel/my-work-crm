@@ -17,6 +17,11 @@ StageModel _$StageModelFromJson(Map<String, dynamic> json) => StageModel(
       endedAt: json['ended_at'] == null
           ? null
           : DateTime.parse(json['ended_at'] as String),
+      estimateItems: (json['estimate_items'] as List<dynamic>?)
+              ?.map(
+                  (e) => EstimateItemModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
 
 Map<String, dynamic> _$StageModelToJson(StageModel instance) =>
@@ -27,4 +32,5 @@ Map<String, dynamic> _$StageModelToJson(StageModel instance) =>
       'is_paid': instance.isPaid,
       'started_at': instance.startedAt?.toIso8601String(),
       'ended_at': instance.endedAt?.toIso8601String(),
+      'estimate_items': instance.estimateItems,
     };

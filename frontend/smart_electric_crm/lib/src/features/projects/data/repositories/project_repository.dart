@@ -95,4 +95,29 @@ class ProjectRepository {
       rethrow;
     }
   }
+
+  /// Обновляет пункт сметы (кол-во, работодатель, и т.д.)
+  Future<void> updateEstimateItem(int itemId, Map<String, dynamic> data) async {
+    try {
+      await _dio.patch('/estimate-items/$itemId/', data: data);
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        debugPrint("❌ Update Estimate Item Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  /// Получает отчет по этапу
+  Future<Map<String, String>> fetchStageReport(int stageId) async {
+    try {
+      final response = await _dio.get('/stages/$stageId/get_report/');
+      return Map<String, String>.from(response.data);
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        debugPrint("❌ Fetch Report Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
 }
