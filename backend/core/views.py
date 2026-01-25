@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -17,8 +17,14 @@ class CatalogCategoryViewSet(viewsets.ModelViewSet):
 class CatalogItemViewSet(viewsets.ModelViewSet):
     queryset = CatalogItem.objects.all()
     serializer_class = CatalogItemSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['category']
+    filterset_fields = ['category', 'item_type']
+    
+    def get_queryset(self):
+        qs = super().get_queryset()
+        search_query = self.request.query_params.get('search')
+        if search_query:
+            qs = qs.filter(search_name__contains=search_query.lower())
+        return qs
 
 
 class ShieldViewSet(viewsets.ModelViewSet):
@@ -149,6 +155,27 @@ class EstimateItemViewSet(viewsets.ModelViewSet):
     serializer_class = EstimateItemSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['stage']
+    search_fields = ['name', 'catalog_item__name']
+
+    def perform_create(self, serializer):
+        # Если data не содержит каких-то полей, берем их из catalog_item
+        catalog_item = serializer.validated_data.get('catalog_item')
+        
+        # Подготовка данных для сохранения (если они не переданы явно)
+        # Note: serializer.save() вызовет model.save(), где у нас уже есть логика.
+        # Но здесь мы можем явно проставить значения, если validated_data пустые.
+        # Однако, validated_data уже очищены.
+        
+        # Просто вызываем save, так как логика enrichment уже перенесена в Model.save() 
+        # и усилена (default=0).
+        # Но пользователь просил добавить проверку здесь.
+        
+        instance = serializer.save()
+        
+        # Если вдруг цена осталась 0, а есть catalog_item - обновим (повторно, для гарантии)
+        if instance.catalog_item and instance.price_per_unit == 0:
+            instance.price_per_unit = instance.catalog_item.default_price
+            instance.save()
 
 class StageViewSet(viewsets.ModelViewSet):
     queryset = Stage.objects.all()
@@ -265,8 +292,11 @@ class StageViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def get_report(self, request, pk=None):
         stage = self.get_object()
-        client_report = stage.generate_client_report()
-        employer_report = stage.generate_employer_report()
+        report_type = request.query_params.get('type') # 'work', 'material' or None
+        
+        client_report = stage.generate_client_report(item_type=report_type)
+        employer_report = stage.generate_employer_report(item_type=report_type)
+        
         return Response({
             'client_report': client_report,
             'employer_report': employer_report

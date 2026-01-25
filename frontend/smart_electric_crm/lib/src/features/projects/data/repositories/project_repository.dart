@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../../data/models/estimate_template_model.dart';
 import '../../data/models/project_model.dart';
+import '../../data/models/stage_model.dart';
 
 class ProjectRepository {
   final Dio _dio;
@@ -60,6 +61,17 @@ class ProjectRepository {
     }
   }
 
+  /// Получает данные одного этапа (включая items)
+  Future<StageModel> fetchStage(int stageId) async {
+    try {
+      final response = await _dio.get('/stages/$stageId/');
+      return StageModel.fromJson(response.data);
+    } catch (e) {
+      debugPrint("❌ Fetch Stage Error: $e");
+      rethrow;
+    }
+  }
+
   /// Обновляет статус этапа.
   /// Используем PATCH, чтобы обновить только статус.
   Future<void> updateStageStatus(String stageId, String status) async {
@@ -109,10 +121,14 @@ class ProjectRepository {
     }
   }
 
-  /// Получает отчет по этапу
-  Future<Map<String, String>> fetchStageReport(int stageId) async {
+  /// Получает отчет по этапу, опционально фильтруя по типу ('work' or 'material')
+  Future<Map<String, String>> fetchStageReport(int stageId,
+      {String? type}) async {
     try {
-      final response = await _dio.get('/stages/$stageId/get_report/');
+      final response = await _dio.get(
+        '/stages/$stageId/get_report/',
+        queryParameters: type != null ? {'type': type} : null,
+      );
       return Map<String, String>.from(response.data);
     } catch (e) {
       if (e is DioException && e.response != null) {
@@ -129,6 +145,18 @@ class ProjectRepository {
     } catch (e) {
       if (e is DioException) {
         debugPrint("❌ Add Estimate Item Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  /// Удаляет пункт сметы
+  Future<void> deleteEstimateItem(int itemId) async {
+    try {
+      await _dio.delete('/estimate-items/$itemId/');
+    } catch (e) {
+      if (e is DioException) {
+        debugPrint("❌ Delete Estimate Item Error: ${e.response?.data}");
       }
       rethrow;
     }

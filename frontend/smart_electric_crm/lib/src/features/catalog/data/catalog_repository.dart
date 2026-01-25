@@ -45,10 +45,15 @@ class CatalogRepository {
         .toList();
   }
 
-  Future<List<CatalogItem>> searchItems(String query) async {
-    final response = await _client.get('/catalog-items/', queryParameters: {
-      'search': query,
-    });
+  Future<List<CatalogItem>> searchItems(String query,
+      {String? itemType}) async {
+    final queryParams = {'search': query};
+    if (itemType != null) {
+      queryParams['item_type'] = itemType;
+    }
+
+    final response =
+        await _client.get('/catalog-items/', queryParameters: queryParams);
     final List<dynamic> data = response.data as List<dynamic>;
     return data
         .map((e) => CatalogItem.fromJson(e as Map<String, dynamic>))

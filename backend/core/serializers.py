@@ -20,6 +20,14 @@ class EstimateItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = EstimateItem
         fields = '__all__'
+        extra_kwargs = {
+            'name': {'required': False, 'allow_blank': True},
+            'unit': {'required': False, 'allow_blank': True},
+            'item_type': {'required': False, 'allow_blank': True},
+            'price_per_unit': {'required': False},
+            'currency': {'required': False},
+            'total_quantity': {'required': False}, # Default is 0, so should be fine, but explicit is better
+        }
 
 class StageSerializer(serializers.ModelSerializer):
     estimate_items = EstimateItemSerializer(many=True, read_only=True)
