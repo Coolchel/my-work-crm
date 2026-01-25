@@ -152,6 +152,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                       const SnackBar(content: Text("Добавлено!")));
                   _refresh(); // Auto-refresh
                 } catch (e) {
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Ошибка добавления: $e")));
                 }
@@ -374,10 +375,11 @@ class _EstimateTab extends StatelessWidget {
     double totalUsd = 0;
     double totalByn = 0;
     for (var i in items) {
-      if (i.currency == 'USD')
+      if (i.currency == 'USD') {
         totalUsd += (i.clientAmount ?? 0);
-      else
+      } else {
         totalByn += (i.clientAmount ?? 0);
+      }
     }
 
     if (items.isEmpty) {
@@ -485,7 +487,7 @@ class _EstimateListTile extends StatelessWidget {
           if (showDetails) ...[
             const SizedBox(height: 2),
             Text(
-              "Общий итог: ${clientAmount.toStringAsFixed(2)}$currency | Моя доля: ${myAmount.toStringAsFixed(2)}$currency | Доля шефа: ${employerAmount.toStringAsFixed(2)}$currency",
+              "Общий итог: ${clientAmount.toStringAsFixed(2)}$currency | Наша доля: ${myAmount.toStringAsFixed(2)}$currency | Доля работодателя: ${employerAmount.toStringAsFixed(2)}$currency",
               style: const TextStyle(fontSize: 11, color: Colors.black54),
             ),
           ]
@@ -621,10 +623,13 @@ class _EditItemDialog extends StatefulWidget {
 class _EditItemDialogState extends State<_EditItemDialog> {
   late TextEditingController _totalQtyCtrl;
   late TextEditingController _empQtyCtrl;
+  late TextEditingController _myQtyCtrl;
 
   late TextEditingController _priceCtrl;
   late String _currency;
   bool _showEmployer = false;
+
+  bool _isUpdating = false; // Prevents infinite loops
 
   @override
   void initState() {
@@ -633,6 +638,11 @@ class _EditItemDialogState extends State<_EditItemDialog> {
         TextEditingController(text: widget.item.totalQuantity.toString());
     _empQtyCtrl =
         TextEditingController(text: widget.item.employerQuantity.toString());
+    _myQtyCtrl = TextEditingController(
+        text: (widget.item.totalQuantity - widget.item.employerQuantity)
+            .toStringAsFixed(2)
+            .replaceAll(RegExp(r'\.0+$'), '')); // Nice format
+
     _priceCtrl = TextEditingController(
         text: widget.item.pricePerUnit?.toString() ?? '0');
     _currency = widget.item.currency;
@@ -640,6 +650,59 @@ class _EditItemDialogState extends State<_EditItemDialog> {
     // Show if already has value or user expands it
     if (widget.item.employerQuantity > 0 && widget.item.itemType == 'work') {
       _showEmployer = true;
+    }
+
+    if (widget.item.itemType == 'work') {
+      _setupListeners();
+    }
+  }
+
+  void _setupListeners() {
+    _totalQtyCtrl.addListener(() {
+      if (_isUpdating) return;
+      _calculate('total');
+    });
+    _empQtyCtrl.addListener(() {
+      if (_isUpdating) return;
+      _calculate('emp');
+    });
+    _myQtyCtrl.addListener(() {
+      if (_isUpdating) return;
+      _calculate('my');
+    });
+  }
+
+  void _calculate(String source) {
+    _isUpdating = true;
+    try {
+      final total =
+          double.tryParse(_totalQtyCtrl.text.replaceAll(',', '.')) ?? 0;
+      final emp = double.tryParse(_empQtyCtrl.text.replaceAll(',', '.')) ?? 0;
+      final my = double.tryParse(_myQtyCtrl.text.replaceAll(',', '.')) ?? 0;
+
+      if (source == 'total') {
+        // Edit Total -> My = Total - Emp
+        _myQtyCtrl.text =
+            (total - emp).toStringAsFixed(2).replaceAll(RegExp(r'\.0+$'), '');
+      } else if (source == 'my') {
+        // Edit My -> Total = My + Emp
+        _totalQtyCtrl.text =
+            (my + emp).toStringAsFixed(2).replaceAll(RegExp(r'\.0+$'), '');
+      } else if (source == 'emp') {
+        // Edit Emp -> My = Total - Emp (Split logic)
+        // Wait, user requirement 3: "If I change Emp with fixed Total -> My reclaculates"
+        // But user requirement 1: "If I change Emp -> Total recalculates"
+        // Applying "Split" logic as primary "Calculator" usage for sub-contracting.
+        // Assuming "Fixed Total" means "I didn't just type in Total".
+
+        // HOWEVER, to be safe and match the "Sum" expectation if starting from scratch:
+        // Let's rely on the fact that usually you set Total first.
+        // If I decide to change Emp, I usually mean "My share is less".
+        _myQtyCtrl.text =
+            (total - emp).toStringAsFixed(2).replaceAll(RegExp(r'\.0+$'), '');
+      }
+    } finally {
+      _isUpdating = false;
     }
   }
 
@@ -666,17 +729,53 @@ class _EditItemDialogState extends State<_EditItemDialog> {
                             _showEmployer = !_showEmployer;
                             if (!_showEmployer) {
                               _empQtyCtrl.text = '0';
+                              // Trigger recalculation to reset 'My Share' to Total
+                              _calculate('emp');
+                            } else {
+                              // Start with 0 if opening
+                              if (_empQtyCtrl.text.isEmpty ||
+                                  _empQtyCtrl.text == '0.0') {
+                                _empQtyCtrl.text = '0';
+                              }
                             }
                           });
                         },
-                        tooltip: "Добавить объем работодателя",
+                        tooltip:
+                            "Добавить объем работодателя/Показать калькулятор",
                       )
                     : null,
               ),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
             ),
-            if (_showEmployer && widget.item.itemType == 'work') ...[
+            if (widget.item.itemType == 'work' && _showEmployer) ...[
+              const SizedBox(height: 10),
+              // Interactive Fields Layout
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _myQtyCtrl,
+                      decoration: const InputDecoration(
+                          labelText: "Наш объем (Мастер)"),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _empQtyCtrl,
+                      decoration: const InputDecoration(
+                          labelText: "Объем работодателя"),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                    ),
+                  ),
+                ],
+              ),
+            ] else if (_showEmployer) ...[
+              // Material simple view (hidden mainly, but kept structure if needed)
               const SizedBox(height: 10),
               TextField(
                 controller: _empQtyCtrl,
