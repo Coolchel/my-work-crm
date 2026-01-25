@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
+import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
+import 'package:smart_electric_crm/src/features/projects/data/models/estimate_template_model.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/stage_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_provider.dart';
-import 'package:flutter/services.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
   final StageModel stage;
@@ -17,16 +20,12 @@ class EstimateScreen extends ConsumerStatefulWidget {
 }
 
 class _EstimateScreenState extends ConsumerState<EstimateScreen> {
-  // Локальный стейт с товарами, чтобы быстро обновлять UI без лишних запросов
-  // (хотя правильнее через provider, но для скорости редактирования можно так)
   late List<EstimateItemModel> _items;
 
   @override
   void initState() {
     super.initState();
     _items = List.from(widget.stage.estimateItems);
-    // Сортировка: сначала обычные, потом доп работы? Или как в БД?
-    // Пока оставим как есть.
   }
 
   // Расчет итогов для Sticky Header
@@ -41,12 +40,20 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddItemDialog,
+        child: const Icon(Icons.add),
+      ),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             title: Text("Смета: ${widget.stage.title}"),
             pinned: true,
             actions: [
+              IconButton(
+                  onPressed: _showTemplatesDialog,
+                  icon: const Icon(Icons.file_copy_outlined),
+                  tooltip: "Шаблоны"),
               PopupMenuButton<String>(
                 onSelected: (value) async {
                   if (value == 'client') _copyReport('client');
@@ -66,7 +73,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                   onPressed: _showReport, icon: const Icon(Icons.description)),
             ],
           ),
-          // Sticky Header с итогами
           SliverPersistentHeader(
             delegate: _EstimateHeaderDelegate(
               totalUsd: _totalUsd,
@@ -74,7 +80,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
             ),
             pinned: true,
           ),
-          // Список элементов
+          if (_items.isEmpty)
+            const SliverFillRemaining(
+                child: Center(child: Text("Смета пуста"))),
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
@@ -87,52 +95,124 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
               childCount: _items.length,
             ),
           ),
+          const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
         ],
       ),
     );
   }
 
-  void _updateItem(int index, EstimateItemModel updatedItem) async {
-    // Оптимистичное обновление UI
-    setState(() {
-      _items[index] = updatedItem;
-    });
+  // --- Logic ---
 
+  Future<void> _refresh() async {
+    // В реальном приложении лучше использовать stream provider,
+    // но здесь мы просто обновим список при возврате на экран проекта.
+    // Пока оставим так.
+  }
+
+  void _updateItem(int index, EstimateItemModel updatedItem) async {
+    setState(() => _items[index] = updatedItem);
     try {
-      // Отправка на сервер
-      // Формируем payload. Важно отправлять только измененные поля или все?
-      // Отправим ключевые
       final data = {
         'total_quantity': updatedItem.totalQuantity,
         'employer_quantity': updatedItem.employerQuantity,
         'is_extra': updatedItem.isExtra,
         'currency': updatedItem.currency,
-        // Можно добавить и markup_percent
+        'price_per_unit': updatedItem.pricePerUnit,
       };
-
       final repo = ref.read(projectRepositoryProvider);
       await repo.updateEstimateItem(updatedItem.id, data);
-
-      // В идеале - перезапросить проект, чтобы пересчитались client_amount на бэке,
-      // если мы их тут сами не считаем.
-      // Но у нас clientAmount - read-only поле с сервера.
-      // Поэтому лучше перезагрузить список или проект.
-      // Но для плавности пока так. Можно вручную пересчитать clientAmount локально для item.
-      // ... (локальный пересчет опустим для краткости, полагаемся на refresh при выходе или pull-to-refresh)
     } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Ошибка сохранения: $e")));
+    }
+  }
+
+  void _showAddItemDialog() {
+    showDialog(
+        context: context,
+        builder: (_) => _AddItemDialog(onAdd: (catalogItem) async {
+              try {
+                final repo = ref.read(projectRepositoryProvider);
+                await repo.addEstimateItem({
+                  'stage': widget.stage.id,
+                  'catalog_item': catalogItem.id,
+                  'total_quantity': 1, // Default
+                  // Backend should handle defaults for price/name if sending catalog_item only?
+                  // Or we send them explicitly. Let's rely on backend signal or send basic defaults.
+                  // Based on backend imports, catalog_item triggers defaults unless overridden.
+                });
+                if (!mounted) return;
+                Navigator.pop(context); // Close dialog
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Добавлено! Обновите экран.")));
+                // TODO: Add to _items locally or refresh?
+                // For now ask user to refresh or implement refresh logic
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Ошибка добавления: $e")));
+              }
+            }));
+  }
+
+  void _showTemplatesDialog() async {
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+      final templates = await repo.fetchEstimateTemplates();
+
+      if (!mounted) return;
+      showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+                title: const Text("Применить шаблон"),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: templates.length,
+                    itemBuilder: (ctx, i) {
+                      final t = templates[i];
+                      return ListTile(
+                        title: Text(t.name),
+                        subtitle: Text(t.description ?? ''),
+                        onTap: () async {
+                          Navigator.pop(ctx);
+                          await _applyTemplate(t.id);
+                        },
+                      );
+                    },
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text("Отмена"))
+                ],
+              ));
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
+    }
+  }
+
+  Future<void> _applyTemplate(int templateId) async {
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+      await repo.applyTemplate(widget.stage.id, templateId);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Ошибка сохранения: $e")),
-      );
+          const SnackBar(content: Text("Шаблон применен! Обновите экран.")));
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Ошибка применения: $e")));
     }
   }
 
   void _showReport() async {
+    // (Same as before)
     try {
       final repo = ref.read(projectRepositoryProvider);
       final reports = await repo.fetchStageReport(widget.stage.id);
-
       if (!mounted) return;
-
       showDialog(
           context: context,
           builder: (context) {
@@ -167,19 +247,18 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   }
 
   void _copyReport(String type) async {
+    // (Same as before)
     try {
       final repo = ref.read(projectRepositoryProvider);
       final reports = await repo.fetchStageReport(widget.stage.id);
       final text = type == 'client'
           ? reports['client_report']
           : reports['employer_report'];
-
       if (text != null) {
         await Clipboard.setData(ClipboardData(text: text));
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Отчет ($type) скопирован!")),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Отчет ($type) скопирован!")));
       }
     } catch (e) {
       if (!mounted) return;
@@ -188,6 +267,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     }
   }
 }
+
+// --- Delegates & Widgets ---
 
 class _EstimateHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double totalUsd;
@@ -217,12 +298,11 @@ class _EstimateHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   double get minExtent => 60.0;
   @override
-  bool shouldRebuild(_EstimateHeaderDelegate oldDelegate) {
-    return oldDelegate.totalUsd != totalUsd || oldDelegate.totalByn != totalByn;
-  }
+  bool shouldRebuild(_EstimateHeaderDelegate oldDelegate) =>
+      oldDelegate.totalUsd != totalUsd || oldDelegate.totalByn != totalByn;
 }
 
-class _EstimateListTile extends StatefulWidget {
+class _EstimateListTile extends StatelessWidget {
   final EstimateItemModel item;
   final Function(EstimateItemModel) onUpdate;
 
@@ -231,17 +311,7 @@ class _EstimateListTile extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<_EstimateListTile> createState() => _EstimateListTileState();
-}
-
-class _EstimateListTileState extends State<_EstimateListTile> {
-  // Контроллеры не обязательно, если редактировать через диалог,
-  // Но пользователь просил "быстро менять". Сделаем +/- или ввод.
-  // Для простоты сделаем Dialog при клике.
-
-  @override
   Widget build(BuildContext context) {
-    final item = widget.item;
     final currency = item.currency == 'USD' ? '\$' : ' руб';
 
     return ListTile(
@@ -249,134 +319,212 @@ class _EstimateListTileState extends State<_EstimateListTile> {
           ? const Icon(Icons.add_circle, color: Colors.orange)
           : const Icon(Icons.build, color: Colors.blue),
       title: Text(item.name),
-      subtitle: Text(
-          "${item.totalQuantity} ${item.unit} * ${item.pricePerUnit}$currency"),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("${item.clientAmount?.toStringAsFixed(2) ?? '0'}$currency",
-              style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+              "${item.totalQuantity} ${item.unit} * ${item.pricePerUnit}$currency = ${(item.clientAmount ?? 0).toStringAsFixed(2)}$currency"),
           if (item.employerQuantity > 0)
-            Text("Работодатель: ${item.employerQuantity}",
-                style: const TextStyle(fontSize: 10, color: Colors.grey)),
-          if (item.isExtra)
-            const Text("EXTRA",
-                style: TextStyle(
-                    fontSize: 9,
-                    color: Colors.orange,
-                    fontWeight: FontWeight.bold)),
+            Text(
+                "Работодатель: ${item.employerQuantity} ${item.unit} (${(item.employerAmount ?? 0).toStringAsFixed(2)}$currency)",
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
         ],
       ),
-      onTap: _editItem,
+      trailing: item.isExtra
+          ? const Text("EXTRA",
+              style:
+                  TextStyle(color: Colors.orange, fontWeight: FontWeight.bold))
+          : null,
+      onTap: () async {
+        final updated = await showModalBottomSheet<EstimateItemModel>(
+            context: context,
+            isScrollControlled: true,
+            builder: (_) => _EditItemSheet(item: item));
+        if (updated != null) onUpdate(updated);
+      },
     );
-  }
-
-  void _editItem() async {
-    final updatedItem = await showDialog<EstimateItemModel>(
-      context: context,
-      builder: (context) => _EditItemDialog(item: widget.item),
-    );
-
-    if (updatedItem != null) {
-      widget.onUpdate(updatedItem);
-    }
   }
 }
 
-class _EditItemDialog extends StatefulWidget {
-  final EstimateItemModel item;
-
-  const _EditItemDialog({required this.item});
+class _AddItemDialog extends ConsumerStatefulWidget {
+  final Function(CatalogItem) onAdd;
+  const _AddItemDialog({required this.onAdd});
 
   @override
-  State<_EditItemDialog> createState() => _EditItemDialogState();
+  ConsumerState<_AddItemDialog> createState() => _AddItemDialogState();
 }
 
-class _EditItemDialogState extends State<_EditItemDialog> {
-  late TextEditingController _totalQtyController;
-  late TextEditingController _employerQtyController;
+class _AddItemDialogState extends ConsumerState<_AddItemDialog> {
+  final _searchController = TextEditingController();
+  List<CatalogItem> _results = [];
+  bool _loading = false;
+
+  void _search(String query) async {
+    if (query.isEmpty) return;
+    setState(() => _loading = true);
+    try {
+      final repo = ref.read(catalogRepositoryProvider);
+      final items = await repo.searchItems(query);
+      setState(() => _results = items);
+    } catch (e) {
+      // ignore error
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+        child: SizedBox(
+            height: 400,
+            child: Column(children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    labelText: "Поиск (напр. кабель)",
+                    suffixIcon: IconButton(
+                        icon: const Icon(Icons.search),
+                        onPressed: () => _search(_searchController.text)),
+                  ),
+                  onSubmitted: _search,
+                ),
+              ),
+              Expanded(
+                  child: _loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ListView.builder(
+                          itemCount: _results.length,
+                          itemBuilder: (ctx, i) {
+                            final item = _results[i];
+                            return ListTile(
+                              title: Text(item.name),
+                              subtitle: Text(
+                                  "${item.defaultPrice} ${item.defaultCurrency}"),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.add),
+                                onPressed: () => widget.onAdd(item),
+                              ),
+                            );
+                          },
+                        ))
+            ])));
+  }
+}
+
+class _EditItemSheet extends StatefulWidget {
+  final EstimateItemModel item;
+  const _EditItemSheet({required this.item});
+
+  @override
+  State<_EditItemSheet> createState() => _EditItemSheetState();
+}
+
+class _EditItemSheetState extends State<_EditItemSheet> {
+  late TextEditingController _totalQtyCtrl;
+  late TextEditingController _empQtyCtrl;
+  late TextEditingController _priceCtrl;
   late bool _isExtra;
   late String _currency;
 
   @override
   void initState() {
     super.initState();
-    _totalQtyController =
+    _totalQtyCtrl =
         TextEditingController(text: widget.item.totalQuantity.toString());
-    _employerQtyController =
+    _empQtyCtrl =
         TextEditingController(text: widget.item.employerQuantity.toString());
+    _priceCtrl = TextEditingController(
+        text: widget.item.pricePerUnit?.toString() ?? '0');
     _isExtra = widget.item.isExtra;
     _currency = widget.item.currency;
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text("Редактирование: ${widget.item.name}"),
-      content: SingleChildScrollView(
+    return Padding(
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Text("Редактирование: ${widget.item.name}",
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
             TextField(
-              controller: _totalQtyController,
-              decoration:
-                  const InputDecoration(labelText: "Общий объем (Клиент)"),
+              controller: _totalQtyCtrl,
+              decoration: const InputDecoration(labelText: "Общий объем"),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             TextField(
-              controller: _employerQtyController,
+              controller: _empQtyCtrl,
               decoration:
                   const InputDecoration(labelText: "Объем работодателя"),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
+            _priceRow(),
+            const SizedBox(height: 8),
             SwitchListTile(
               title: const Text("Доп. работа (Extra)"),
               value: _isExtra,
               onChanged: (val) => setState(() => _isExtra = val),
             ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              value: _currency,
-              decoration: const InputDecoration(labelText: "Валюта"),
-              items: const [
-                DropdownMenuItem(value: 'USD', child: Text("USD")),
-                DropdownMenuItem(value: 'BYN', child: Text("BYN")),
-              ],
-              onChanged: (val) {
-                if (val != null) setState(() => _currency = val);
-              },
-            )
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: _save,
+              child: const Text("Сохранить"),
+            ),
+            const SizedBox(height: 16),
           ],
+        ));
+  }
+
+  Widget _priceRow() {
+    return Row(children: [
+      Expanded(
+        child: TextField(
+          controller: _priceCtrl,
+          decoration: const InputDecoration(labelText: "Цена за ед."),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
         ),
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Отмена")),
-        TextButton(
-            onPressed: () {
-              final totalQty = double.tryParse(
-                      _totalQtyController.text.replaceAll(',', '.')) ??
-                  0;
-              final empQty = double.tryParse(
-                      _employerQtyController.text.replaceAll(',', '.')) ??
-                  0;
+      const SizedBox(width: 16),
+      DropdownButton<String>(
+          value: _currency,
+          items: const [
+            DropdownMenuItem(value: 'USD', child: Text('USD')),
+            DropdownMenuItem(value: 'BYN', child: Text('BYN')),
+          ],
+          onChanged: (val) {
+            if (val != null) setState(() => _currency = val);
+          })
+    ]);
+  }
 
-              final newItem = widget.item.copyWith(
-                totalQuantity: totalQty,
-                employerQuantity: empQty,
-                isExtra: _isExtra,
-                currency: _currency,
-              );
-              Navigator.pop(context, newItem);
-            },
-            child: const Text("Сохранить")),
-      ],
-    );
+  void _save() {
+    final totalFn =
+        double.tryParse(_totalQtyCtrl.text.replaceAll(',', '.')) ?? 0;
+    final empFn = double.tryParse(_empQtyCtrl.text.replaceAll(',', '.')) ?? 0;
+    final priceFn = double.tryParse(_priceCtrl.text.replaceAll(',', '.')) ?? 0;
+
+    Navigator.pop(
+        context,
+        widget.item.copyWith(
+          totalQuantity: totalFn,
+          employerQuantity: empFn,
+          pricePerUnit: priceFn,
+          isExtra: _isExtra,
+          currency: _currency,
+        ));
   }
 }

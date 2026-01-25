@@ -11,6 +11,9 @@ class CatalogItem {
   @JsonKey(name: 'default_price', fromJson: _priceFromJson)
   final double defaultPrice;
 
+  @JsonKey(name: 'default_currency', defaultValue: 'USD')
+  final String defaultCurrency;
+
   @JsonKey(name: 'item_type')
   final String itemType;
 
@@ -21,6 +24,7 @@ class CatalogItem {
     this.name = '',
     this.unit = '',
     this.defaultPrice = 0.0,
+    this.defaultCurrency = 'USD',
     this.itemType = 'material',
     this.category,
   });

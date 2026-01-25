@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../../data/models/estimate_template_model.dart';
 import '../../data/models/project_model.dart';
 
 class ProjectRepository {
@@ -116,6 +117,44 @@ class ProjectRepository {
     } catch (e) {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Fetch Report Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  /// Добавляет позицию в смету
+  Future<void> addEstimateItem(Map<String, dynamic> data) async {
+    try {
+      await _dio.post('/estimate-items/', data: data);
+    } catch (e) {
+      if (e is DioException) {
+        debugPrint("❌ Add Estimate Item Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  /// Получает шаблоны смет
+  Future<List<EstimateTemplateModel>> fetchEstimateTemplates() async {
+    try {
+      final response = await _dio.get('/estimate-templates/');
+      final data = response.data as List<dynamic>;
+      return data.map((json) => EstimateTemplateModel.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint("❌ Fetch Templates Error: $e");
+      rethrow;
+    }
+  }
+
+  /// Применяет шаблон к этапу
+  Future<void> applyTemplate(int stageId, int templateId) async {
+    try {
+      await _dio.post('/stages/$stageId/apply_template/', data: {
+        'template_id': templateId,
+      });
+    } catch (e) {
+      if (e is DioException) {
+        debugPrint("❌ Apply Template Error: ${e.response?.data}");
       }
       rethrow;
     }
