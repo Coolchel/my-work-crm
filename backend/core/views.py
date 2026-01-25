@@ -17,6 +17,7 @@ class CatalogCategoryViewSet(viewsets.ModelViewSet):
 class CatalogItemViewSet(viewsets.ModelViewSet):
     queryset = CatalogItem.objects.all()
     serializer_class = CatalogItemSerializer
+    filter_backends = [DjangoFilterBackend]
     filterset_fields = ['category', 'item_type']
     
     def get_queryset(self):
