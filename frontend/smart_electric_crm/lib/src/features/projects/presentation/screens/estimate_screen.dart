@@ -6,7 +6,7 @@ import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/stage_model.dart';
-import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_provider.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart'; // Import for invalidation and repository
 
 class EstimateScreen extends ConsumerStatefulWidget {
   final StageModel stage;
@@ -26,18 +26,29 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   void initState() {
     super.initState();
     _items = List.from(widget.stage.estimateItems);
+    // Force refresh on init to ensure data is fresh (even if passed from stale parent)
+    _refresh();
   }
 
   Future<void> _refresh() async {
     try {
       final repo = ref.read(projectRepositoryProvider);
+      // Invalidate provider to force potential background update if using Riverpod for caching
+      // ref.invalidate(stageProvider(widget.stage.id)); // Assuming such provider exists, or manual repo fetch is enough.
+      // Since we fetch manually here, we just need to ensure fetchStage gets fresh data (usually it does).
+
       final updatedStage = await repo.fetchStage(widget.stage.id);
       if (!mounted) return;
       setState(() {
         _items = updatedStage.estimateItems;
       });
+
+      // Invalidate parent providers so they refetch fresh data when we return
+      ref.invalidate(projectListProvider);
+      ref.invalidate(projectByIdProvider(widget.projectId));
     } catch (e) {
       if (!mounted) return;
+      debugPrint("Refresh error: $e");
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Ошибка обновления: $e")));
     }
@@ -120,7 +131,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
               onAdd: (catalogItem) async {
                 final quantities = await showDialog<Map<String, double>>(
                     context: context,
-                    builder: (_) => _QuantityInputDialog(item: catalogItem));
+                    builder: (_) => _QuantityInputDialog(
+                          item: catalogItem,
+                          itemType: itemType,
+                        ));
 
                 if (quantities == null) return;
 
@@ -460,30 +474,41 @@ class _EstimateListTile extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 1. Главная цифра: Полный итог для клиента
           Text(
-              "${item.totalQuantity} ${item.unit} * ${item.pricePerUnit}$currency = ${clientAmount.toStringAsFixed(2)}$currency"),
+              "${item.totalQuantity} ${item.unit} * ${item.pricePerUnit}$currency = ${clientAmount.toStringAsFixed(2)}$currency",
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: Colors.black87)),
+          // 2. Детализация (если есть доля шефа)
           if (showDetails) ...[
             const SizedBox(height: 2),
             Text(
               "Общий итог: ${clientAmount.toStringAsFixed(2)}$currency | Моя доля: ${myAmount.toStringAsFixed(2)}$currency | Доля шефа: ${employerAmount.toStringAsFixed(2)}$currency",
-              style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black54),
+              style: const TextStyle(fontSize: 11, color: Colors.black54),
             ),
           ]
         ],
+      ),
+      trailing: IconButton(
+        icon: const Icon(Icons.delete_outline, color: Colors.grey),
+        onPressed: onDelete,
       ),
       onTap: () async {
         final result = await showDialog<dynamic>(
             context: context, builder: (_) => _EditItemDialog(item: item));
 
         if (result == 'delete') {
+          // handled by dialog return, but since we have trailing icon now, dialog might not need delete button?
+          // Keeping it for consistency or standard behavior.
           onDelete();
         } else if (result is EstimateItemModel) {
           onUpdate(result);
         }
       },
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+      visualDensity: VisualDensity.compact,
     );
   }
 }
@@ -599,6 +624,7 @@ class _EditItemDialogState extends State<_EditItemDialog> {
 
   late TextEditingController _priceCtrl;
   late String _currency;
+  bool _showEmployer = false;
 
   @override
   void initState() {
@@ -610,6 +636,11 @@ class _EditItemDialogState extends State<_EditItemDialog> {
     _priceCtrl = TextEditingController(
         text: widget.item.pricePerUnit?.toString() ?? '0');
     _currency = widget.item.currency;
+
+    // Show if already has value or user expands it
+    if (widget.item.employerQuantity > 0 && widget.item.itemType == 'work') {
+      _showEmployer = true;
+    }
   }
 
   @override
@@ -622,19 +653,39 @@ class _EditItemDialogState extends State<_EditItemDialog> {
           children: [
             TextField(
               controller: _totalQtyCtrl,
-              decoration:
-                  const InputDecoration(labelText: "Общий объем (Клиент)"),
+              decoration: InputDecoration(
+                labelText: "Общий объем (Клиент)",
+                suffixIcon: widget.item.itemType == 'work'
+                    ? IconButton(
+                        icon: Icon(Icons.person_add_alt,
+                            color: _showEmployer
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey),
+                        onPressed: () {
+                          setState(() {
+                            _showEmployer = !_showEmployer;
+                            if (!_showEmployer) {
+                              _empQtyCtrl.text = '0';
+                            }
+                          });
+                        },
+                        tooltip: "Добавить объем работодателя",
+                      )
+                    : null,
+              ),
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _empQtyCtrl,
-              decoration:
-                  const InputDecoration(labelText: "Объем работодателя"),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-            ),
+            if (_showEmployer && widget.item.itemType == 'work') ...[
+              const SizedBox(height: 10),
+              TextField(
+                controller: _empQtyCtrl,
+                decoration:
+                    const InputDecoration(labelText: "Объем работодателя"),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+              ),
+            ],
             const SizedBox(height: 10),
             Row(children: [
               Expanded(
@@ -681,6 +732,15 @@ class _EditItemDialogState extends State<_EditItemDialog> {
     final totalFn =
         double.tryParse(_totalQtyCtrl.text.replaceAll(',', '.')) ?? 0;
     final empFn = double.tryParse(_empQtyCtrl.text.replaceAll(',', '.')) ?? 0;
+
+    // VALIDATION
+    if (empFn > totalFn) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              "Ошибка: Доля работодателя не может быть больше общего объема!")));
+      return;
+    }
+
     final priceFn = double.tryParse(_priceCtrl.text.replaceAll(',', '.')) ?? 0;
 
     Navigator.pop(
@@ -696,7 +756,8 @@ class _EditItemDialogState extends State<_EditItemDialog> {
 
 class _QuantityInputDialog extends StatefulWidget {
   final CatalogItem item;
-  const _QuantityInputDialog({required this.item});
+  final String itemType;
+  const _QuantityInputDialog({required this.item, required this.itemType});
 
   @override
   State<_QuantityInputDialog> createState() => _QuantityInputDialogState();
@@ -705,6 +766,7 @@ class _QuantityInputDialog extends StatefulWidget {
 class _QuantityInputDialogState extends State<_QuantityInputDialog> {
   late TextEditingController _totalCtrl;
   late TextEditingController _empCtrl;
+  bool _showEmployer = false;
 
   @override
   void initState() {
@@ -720,12 +782,32 @@ class _QuantityInputDialogState extends State<_QuantityInputDialog> {
       content: Column(mainAxisSize: MainAxisSize.min, children: [
         TextField(
             controller: _totalCtrl,
-            decoration: const InputDecoration(labelText: "Общее кол-во"),
+            decoration: InputDecoration(
+              labelText: "Общее кол-во",
+              suffixIcon: widget.itemType == 'work'
+                  ? IconButton(
+                      icon: Icon(Icons.person_add_alt,
+                          color: _showEmployer
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          _showEmployer = !_showEmployer;
+                          if (!_showEmployer) _empCtrl.text = '0';
+                        });
+                      },
+                      tooltip: "Добавить объем работодателя",
+                    )
+                  : null,
+            ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-        TextField(
-            controller: _empCtrl,
-            decoration: const InputDecoration(labelText: "Кол-во работодателя"),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+        if (_showEmployer && widget.itemType == 'work')
+          TextField(
+              controller: _empCtrl,
+              decoration:
+                  const InputDecoration(labelText: "Кол-во работодателя"),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true)),
       ]),
       actions: [
         TextButton(
@@ -737,6 +819,14 @@ class _QuantityInputDialogState extends State<_QuantityInputDialog> {
                   double.tryParse(_totalCtrl.text.replaceAll(',', '.')) ?? 0;
               final e =
                   double.tryParse(_empCtrl.text.replaceAll(',', '.')) ?? 0;
+
+              if (e > t) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content:
+                        Text("Ошибка: Доля работодателя > Общего объема")));
+                return;
+              }
+
               Navigator.pop(context, {'total': t, 'employer': e});
             },
             child: const Text("Добавить"))
