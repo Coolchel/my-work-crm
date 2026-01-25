@@ -213,7 +213,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       final data = {
         'total_quantity': updatedItem.totalQuantity,
         'employer_quantity': updatedItem.employerQuantity,
-        'is_extra': updatedItem.isExtra,
         'currency': updatedItem.currency,
         'price_per_unit': updatedItem.pricePerUnit,
       };
@@ -454,11 +453,9 @@ class _EstimateListTile extends StatelessWidget {
     final showDetails = employerAmount > 0;
 
     return ListTile(
-      leading: item.isExtra
-          ? const Icon(Icons.add_circle, color: Colors.orange)
-          : (item.itemType == 'work'
-              ? const Icon(Icons.build, color: Colors.blue)
-              : const Icon(Icons.inventory_2, color: Colors.green)),
+      leading: item.itemType == 'work'
+          ? const Icon(Icons.build, color: Colors.blue)
+          : const Icon(Icons.inventory_2, color: Colors.green),
       title: Text(item.name),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -477,11 +474,6 @@ class _EstimateListTile extends StatelessWidget {
           ]
         ],
       ),
-      trailing: item.isExtra
-          ? const Text("EXTRA",
-              style:
-                  TextStyle(color: Colors.orange, fontWeight: FontWeight.bold))
-          : null,
       onTap: () async {
         final result = await showDialog<dynamic>(
             context: context, builder: (_) => _EditItemDialog(item: item));
@@ -604,8 +596,8 @@ class _EditItemDialog extends StatefulWidget {
 class _EditItemDialogState extends State<_EditItemDialog> {
   late TextEditingController _totalQtyCtrl;
   late TextEditingController _empQtyCtrl;
+
   late TextEditingController _priceCtrl;
-  late bool _isExtra;
   late String _currency;
 
   @override
@@ -617,7 +609,6 @@ class _EditItemDialogState extends State<_EditItemDialog> {
         TextEditingController(text: widget.item.employerQuantity.toString());
     _priceCtrl = TextEditingController(
         text: widget.item.pricePerUnit?.toString() ?? '0');
-    _isExtra = widget.item.isExtra;
     _currency = widget.item.currency;
   }
 
@@ -666,11 +657,7 @@ class _EditItemDialogState extends State<_EditItemDialog> {
                   })
             ]),
             const SizedBox(height: 10),
-            SwitchListTile(
-              title: const Text("Доп. работа (Extra)"),
-              value: _isExtra,
-              onChanged: (val) => setState(() => _isExtra = val),
-            ),
+            const SizedBox(height: 10),
           ],
         ),
       ),
@@ -702,7 +689,6 @@ class _EditItemDialogState extends State<_EditItemDialog> {
           totalQuantity: totalFn,
           employerQuantity: empFn,
           pricePerUnit: priceFn,
-          isExtra: _isExtra,
           currency: _currency,
         ));
   }

@@ -171,16 +171,15 @@ class Stage(models.Model):
         if item_type:
             qs = qs.filter(item_type=item_type)
             
-        items = qs.order_by('is_extra', 'pk')
+        items = qs.order_by('pk')
         
         counter = 1
         
         # Секция основных работ
         for item in items:
             # Формируем строку
-            prefix = "+ " if item.is_extra else f"{counter}) "
-            if not item.is_extra:
-                counter += 1
+            prefix = f"{counter}) "
+            counter += 1
             
             # Расчет стоимости позиции
             amount = item.client_amount
@@ -282,7 +281,8 @@ class EstimateItem(models.Model):
 
     item_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name="Тип")
     is_preliminary = models.BooleanField(default=False, verbose_name="Это предпросчет?")
-    is_extra = models.BooleanField(default=False, verbose_name="Доп. работы")
+    is_preliminary = models.BooleanField(default=False, verbose_name="Это предпросчет?")
+    # is_extra удалено (теперь через отдельный этап)
     
     name = models.CharField(max_length=255, verbose_name="Наименование")
     

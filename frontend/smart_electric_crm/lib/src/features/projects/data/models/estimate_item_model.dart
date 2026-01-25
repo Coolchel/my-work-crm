@@ -43,10 +43,6 @@ class EstimateItemModel {
   @JsonKey(name: 'markup_percent', defaultValue: 0.0)
   final double markupPercent;
 
-  /// Доп. работы?
-  @JsonKey(name: 'is_extra', defaultValue: false)
-  final bool isExtra;
-
   /// Предпросчет?
   @JsonKey(name: 'is_preliminary', defaultValue: false)
   final bool isPreliminary;
@@ -73,7 +69,6 @@ class EstimateItemModel {
     this.pricePerUnit,
     this.currency = 'USD',
     this.markupPercent = 0.0,
-    this.isExtra = false,
     this.isPreliminary = false,
     this.clientAmount,
     this.employerAmount,
@@ -97,7 +92,6 @@ class EstimateItemModel {
     double? pricePerUnit,
     String? currency,
     double? markupPercent,
-    bool? isExtra,
     bool? isPreliminary,
   }) {
     return EstimateItemModel(
@@ -112,7 +106,7 @@ class EstimateItemModel {
       pricePerUnit: pricePerUnit ?? this.pricePerUnit,
       currency: currency ?? this.currency,
       markupPercent: markupPercent ?? this.markupPercent,
-      isExtra: isExtra ?? this.isExtra,
+
       isPreliminary: isPreliminary ?? this.isPreliminary,
       clientAmount:
           this.clientAmount, // Не обновляем calculation fields при копировании

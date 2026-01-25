@@ -112,8 +112,8 @@ class StageAdmin(admin.ModelAdmin):
 
 @admin.register(EstimateItem)
 class EstimateItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'stage', 'item_type', 'total_quantity', 'employer_quantity', 'unit', 'price_per_unit', 'currency', 'markup_percent', 'is_extra', 'client_amount_display', 'my_amount_display')
-    list_filter = ('item_type', 'is_preliminary', 'is_extra', 'currency')
+    list_display = ('name', 'stage', 'item_type', 'total_quantity', 'employer_quantity', 'unit', 'price_per_unit', 'currency', 'markup_percent', 'client_amount_display', 'my_amount_display')
+    list_filter = ('item_type', 'is_preliminary', 'currency')
     search_fields = ('name', 'stage__project__address')
     autocomplete_fields = ['catalog_item']
     readonly_fields = ('client_amount_display', 'employer_amount_display', 'my_amount_display')

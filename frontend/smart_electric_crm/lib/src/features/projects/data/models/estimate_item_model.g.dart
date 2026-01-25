@@ -20,7 +20,6 @@ EstimateItemModel _$EstimateItemModelFromJson(Map<String, dynamic> json) =>
       pricePerUnit: (json['price_per_unit'] as num?)?.toDouble(),
       currency: json['currency'] as String? ?? 'USD',
       markupPercent: (json['markup_percent'] as num?)?.toDouble() ?? 0.0,
-      isExtra: json['is_extra'] as bool? ?? false,
       isPreliminary: json['is_preliminary'] as bool? ?? false,
       clientAmount: (json['client_amount'] as num?)?.toDouble(),
       employerAmount: (json['employer_amount'] as num?)?.toDouble(),
@@ -40,7 +39,6 @@ Map<String, dynamic> _$EstimateItemModelToJson(EstimateItemModel instance) {
     'price_per_unit': instance.pricePerUnit,
     'currency': instance.currency,
     'markup_percent': instance.markupPercent,
-    'is_extra': instance.isExtra,
     'is_preliminary': instance.isPreliminary,
   };
 
