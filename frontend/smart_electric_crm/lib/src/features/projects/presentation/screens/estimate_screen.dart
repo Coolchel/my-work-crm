@@ -1384,6 +1384,7 @@ class _EditItemDialogState extends State<_EditItemDialog> {
             Theme.of(context).colorScheme.copyWith(primary: themeColor),
       ),
       child: AlertDialog(
+        actionsAlignment: MainAxisAlignment.center,
         title: isNewManual
             ? const Text("Новая позиция")
             : (widget.item.name.length > 25
@@ -1396,7 +1397,11 @@ class _EditItemDialogState extends State<_EditItemDialog> {
               if (isNewManual || widget.item.name.isEmpty) ...[
                 TextField(
                   controller: _nameCtrl,
-                  decoration: const InputDecoration(labelText: "Название"),
+                  decoration: InputDecoration(
+                    labelText: "Название",
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    hintText: isWork ? "Штроба" : "Кабель",
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -1508,16 +1513,17 @@ class _EditItemDialogState extends State<_EditItemDialog> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, 'delete'),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text("Удалить")),
-          TextButton(
               onPressed: () => Navigator.pop(context),
               style: TextButton.styleFrom(foregroundColor: Colors.black87),
               child: const Text("Отмена")),
+          if (!isNewManual)
+            TextButton(
+                onPressed: () => Navigator.pop(context, 'delete'),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text("Удалить")),
           FilledButton(
             onPressed: _save,
-            child: const Text("Изменить"),
+            child: Text(isNewManual ? "Добавить" : "Изменить"),
           ),
         ],
       ),
@@ -1640,6 +1646,7 @@ class _QuantityInputDialogState extends State<_QuantityInputDialog> {
             Theme.of(context).colorScheme.copyWith(primary: themeColor),
       ),
       child: AlertDialog(
+        actionsAlignment: MainAxisAlignment.center,
         title: widget.item.name.length > 25
             ? _MarqueeText(text: widget.item.name)
             : Text(widget.item.name),
