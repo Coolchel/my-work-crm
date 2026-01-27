@@ -220,7 +220,7 @@ class Stage(models.Model):
 
     def generate_employer_report(self, item_type=None):
         """
-        Отчет для работодателя (только то, что через него).
+        Отчет для контрагента (только то, что через него).
         """
         lines = []
         employer_total_usd = 0
@@ -234,7 +234,7 @@ class Stage(models.Model):
         items = qs
         
         counter = 1
-        lines.append("Отчет для работодателя:\n")
+        lines.append("Отчет для контрагента:\n")
         
         for item in items:
             amount = item.employer_amount
@@ -249,10 +249,10 @@ class Stage(models.Model):
             else:
                 employer_total_byn += amount
 
-        lines.append(f"\nИтого работодатель: {employer_total_usd:.2f}$ | {employer_total_byn:.2f} руб")
+        lines.append(f"\nИтого контрагент: {employer_total_usd:.2f}$ | {employer_total_byn:.2f} руб")
         
         # Считаем "Моя доля" по всему этапу (с учетом фильтра типа, если нужно, но обычно доля считается от всего)
-        # Если просят "Копировать работы (расчет с шефом)", то наверное нужна доля только по работам.
+        # Если просят "Копировать работы (расчет с контрагентом)", то наверное нужна доля только по работам.
         
         all_items_qs = self.estimate_items.all()
         if item_type:
@@ -291,7 +291,7 @@ class EstimateItem(models.Model):
     
     # Объемы
     total_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Общий объем (для клиента)")
-    employer_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Объем работодателя")
+    employer_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Объем контрагента")
     
     unit = models.CharField(max_length=20, verbose_name="Ед. изм.")
     
@@ -328,8 +328,8 @@ class EstimateItem(models.Model):
     @property
     def employer_amount(self):
         """
-        Доля работодателя: Объем работодателя * Цена
-        Наценка работодателю не идет (она - моя прибыль).
+        Доля контрагента: Объем контрагента * Цена
+        Наценка контрагенту не идет (она - моя прибыль).
         """
         from decimal import Decimal
         if self.price_per_unit is None:

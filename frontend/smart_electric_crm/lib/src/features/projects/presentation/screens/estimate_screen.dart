@@ -727,7 +727,7 @@ class _TotalDashboard extends StatelessWidget {
         children: [
           // Header with background
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: primaryColor.withOpacity(0.05),
               borderRadius: const BorderRadius.only(
@@ -746,7 +746,7 @@ class _TotalDashboard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Итоги по разделу',
+                  isWorkTab ? 'Итого (работа)' : 'Итого (материал)',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -755,7 +755,7 @@ class _TotalDashboard extends StatelessWidget {
                 ),
                 const Spacer(),
                 if (hasUsd) _label('USD (\$)', primaryColor),
-                if (hasUsd && hasByn) const SizedBox(width: 25),
+                if (hasUsd && hasByn) const SizedBox(width: 15),
                 if (hasByn) _label('BYN (р)', Colors.deepPurple),
               ],
             ),
@@ -771,7 +771,7 @@ class _TotalDashboard extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 4),
                     child: Divider(height: 1, thickness: 0.5),
                   ),
-                  _row('Шеф', employerUsd, employerByn, Colors.orange),
+                  _row('Контрагент', employerUsd, employerByn, Colors.orange),
                   const SizedBox(height: 6),
                   _row('Наши', ourUsd, ourByn, primaryColor),
                 ],
@@ -791,8 +791,8 @@ class _TotalDashboard extends StatelessWidget {
         textAlign: TextAlign.right,
         style: TextStyle(
           fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: color.withOpacity(0.6),
+          fontWeight: FontWeight.bold,
+          color: color.withOpacity(0.8),
         ),
       ),
     );
@@ -816,7 +816,10 @@ class _TotalDashboard extends StatelessWidget {
         const Spacer(),
         if (hasUsd) _amount(usd, color, isBold, show: usd > 0),
         if (hasUsd && hasByn) const SizedBox(width: 15),
-        if (hasByn) _amount(byn, Colors.deepPurple, isBold, show: byn > 0),
+        if (hasByn)
+          _amount(
+              byn, label == 'Контрагент' ? color : Colors.deepPurple, isBold,
+              show: byn > 0),
       ],
     );
   }
@@ -946,7 +949,7 @@ class _EstimateListTile extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            'Шеф ${employerAmount.toStringAsFixed(0)}$currencySymbol',
+                            'Контрагент ${employerAmount.toStringAsFixed(0)}$currencySymbol',
                             style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w500,

@@ -23,7 +23,7 @@ class EstimateItemModel {
   @JsonKey(name: 'total_quantity')
   final double totalQuantity;
 
-  /// Объем работодателя
+  /// Объем контрагента
   @JsonKey(name: 'employer_quantity', defaultValue: 0.0)
   final double employerQuantity;
 

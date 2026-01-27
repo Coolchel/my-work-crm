@@ -124,7 +124,7 @@ class EstimateItemAdmin(admin.ModelAdmin):
 
     def employer_amount_display(self, obj):
         return f"{obj.employer_amount} {obj.currency}"
-    employer_amount_display.short_description = "Сумма (Работодатель)"
+    employer_amount_display.short_description = "Сумма (Контрагент)"
 
     def my_amount_display(self, obj):
         return f"{obj.my_amount} {obj.currency}"
