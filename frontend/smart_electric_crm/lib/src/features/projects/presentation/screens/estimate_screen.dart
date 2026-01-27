@@ -40,8 +40,8 @@ class _DecimalInputFormatter extends TextInputFormatter {
 /// Simple marquee widget for long titles - constrains width and scrolls text
 class _MarqueeText extends StatefulWidget {
   final String text;
-  final double maxWidth;
-  const _MarqueeText({required this.text, this.maxWidth = 250});
+
+  const _MarqueeText({required this.text});
 
   @override
   State<_MarqueeText> createState() => _MarqueeTextState();
@@ -83,7 +83,7 @@ class _MarqueeTextState extends State<_MarqueeText> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: widget.maxWidth,
+      width: 250,
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         controller: _scrollController,
@@ -107,8 +107,8 @@ class EstimateScreen extends ConsumerStatefulWidget {
   final StageModel stage;
   final String projectId;
 
-  const EstimateScreen({Key? key, required this.stage, required this.projectId})
-      : super(key: key);
+  const EstimateScreen(
+      {super.key, required this.stage, required this.projectId});
 
   @override
   ConsumerState<EstimateScreen> createState() => _EstimateScreenState();
@@ -290,12 +290,12 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                     'price_per_unit': quantities['price'],
                     'currency': quantities['currency'],
                   });
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Добавлено!")));
                   _refresh();
                 } catch (e) {
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Ошибка добавления: $e")));
                 }
@@ -514,7 +514,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         await Clipboard.setData(ClipboardData(text: text));
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Отчет скопирован!")),
+          const SnackBar(content: Text("Отчет скопирован!")),
         );
       }
     } catch (e) {
@@ -978,12 +978,10 @@ class _EstimateListTile extends StatelessWidget {
   final Color primaryColor;
 
   const _EstimateListTile(
-      {Key? key,
-      required this.item,
+      {required this.item,
       required this.onUpdate,
       required this.onDelete,
-      required this.primaryColor})
-      : super(key: key);
+      required this.primaryColor});
 
   IconData get _icon =>
       item.itemType == 'work' ? Icons.engineering : Icons.inventory_2_outlined;
@@ -1588,9 +1586,8 @@ class _QuantityInputDialogState extends State<_QuantityInputDialog> {
     _myCtrl = TextEditingController(text: '1');
     _priceCtrl = TextEditingController(
         text: widget.item.defaultPrice
-                ?.toStringAsFixed(2)
-                .replaceAll(RegExp(r'\.?0+$'), '') ??
-            '0');
+            .toStringAsFixed(2)
+            .replaceAll(RegExp(r'\.?0+$'), ''));
     _currency = 'USD';
 
     if (widget.itemType == 'work') {
@@ -1780,10 +1777,9 @@ class _GroupHeader extends StatelessWidget {
   final Color color;
 
   const _GroupHeader({
-    Key? key,
     required this.title,
     required this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

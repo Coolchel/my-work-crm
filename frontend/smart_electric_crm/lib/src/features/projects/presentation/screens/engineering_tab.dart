@@ -204,7 +204,12 @@ class _ShieldCard extends ConsumerWidget {
                 label: const Text('Удалить щит',
                     style: TextStyle(color: Colors.grey)),
               ),
-              // TODO: Edit shield (rename/mounting)
+              TextButton.icon(
+                onPressed: () => _showEditShieldDialog(context, ref, shield),
+                icon: const Icon(Icons.edit, size: 16, color: Colors.blue),
+                label: const Text('Изменить',
+                    style: TextStyle(color: Colors.blue)),
+              ),
             ],
           )
         ],
@@ -249,6 +254,15 @@ class _ShieldCard extends ConsumerWidget {
       default:
         return type;
     }
+  }
+
+  void _showEditShieldDialog(
+      BuildContext context, WidgetRef ref, ShieldModel shield) {
+    showDialog(
+      context: context,
+      builder: (context) =>
+          _EditShieldDialog(shield: shield, projectId: projectId),
+    );
   }
 }
 
@@ -1213,6 +1227,94 @@ class _ApplyTemplateDialog extends ConsumerWidget {
         TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Отмена')),
+      ],
+    );
+  }
+}
+
+
+class _EditShieldDialog extends StatefulWidget {
+  final ShieldModel shield;
+  final String projectId;
+  const _EditShieldDialog({required this.shield, required this.projectId});
+
+  @override
+  State<_EditShieldDialog> createState() => _EditShieldDialogState();
+}
+
+class _EditShieldDialogState extends State<_EditShieldDialog> {
+  late TextEditingController _nameController;
+  late String _mounting;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.shield.name);
+    _mounting = widget.shield.mounting; // 'internal' or 'external'
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Редактировать щит'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(labelText: 'Название щита'),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            value: _mounting,
+            items: const [
+              DropdownMenuItem(value: 'internal', child: Text('Внутренний')),
+              DropdownMenuItem(value: 'external', child: Text('Наружный')),
+            ],
+            onChanged: (v) => setState(() => _mounting = v!),
+            decoration: const InputDecoration(labelText: 'Монтаж'),
+          ),
+        ],
+      ),
+      actions: [
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Отмена'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Consumer(builder: (context, ref, _) {
+                return FilledButton(
+                  onPressed: () async {
+                    if (_nameController.text.isEmpty) return;
+                    try {
+                      await ref
+                          .read(engineeringRepositoryProvider)
+                          .updateShield(widget.shield.id, {
+                        'name': _nameController.text,
+                        'mounting': _mounting,
+                      });
+                      ref.invalidate(projectListProvider);
+                      // Force refresh project
+                      ref.invalidate(projectByIdProvider(widget.projectId));
+                      if (context.mounted) Navigator.pop(context);
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Ошибка обновления: $e')));
+                      }
+                    }
+                  },
+                  child: const Text('Сохранить'),
+                );
+              }),
+            ),
+          ],
+        )
       ],
     );
   }

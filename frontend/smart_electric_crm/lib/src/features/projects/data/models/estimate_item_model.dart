@@ -115,9 +115,9 @@ class EstimateItemModel {
 
       isPreliminary: isPreliminary ?? this.isPreliminary,
       clientAmount:
-          this.clientAmount, // Не обновляем calculation fields при копировании
-      employerAmount: this.employerAmount,
-      myAmount: this.myAmount,
+          clientAmount, // Не обновляем calculation fields при копировании
+      employerAmount: employerAmount,
+      myAmount: myAmount,
       categoryName: categoryName ?? this.categoryName,
     );
   }
