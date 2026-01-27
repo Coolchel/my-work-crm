@@ -11,6 +11,7 @@ class TotalDashboard extends StatelessWidget {
   final Color primaryColor;
   final Color primaryColorLight;
   final bool isWorkTab;
+  final bool isMarkupActive;
 
   const TotalDashboard({
     super.key,
@@ -23,6 +24,7 @@ class TotalDashboard extends StatelessWidget {
     required this.primaryColor,
     required this.primaryColorLight,
     required this.isWorkTab,
+    this.isMarkupActive = false,
   });
 
   @override
@@ -33,12 +35,17 @@ class TotalDashboard extends StatelessWidget {
     final hasUsd = totalUsd > 0 || employerUsd > 0 || ourUsd > 0;
     final hasByn = totalByn > 0 || employerByn > 0 || ourByn > 0;
 
+    // Determine colors based on markup state - only border changes with markup
+    final effectiveBorderColor = isMarkupActive
+        ? Colors.orange.shade400
+        : primaryColor.withOpacity(0.12);
+
     return Container(
       margin: const EdgeInsets.fromLTRB(8, 4, 8, 8),
       decoration: BoxDecoration(
         color: primaryColorLight.withOpacity(0.5),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: primaryColor.withOpacity(0.12)),
+        border: Border.all(color: effectiveBorderColor, width: 0.8),
       ),
       child: Column(
         children: [
@@ -63,7 +70,11 @@ class TotalDashboard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isWorkTab ? 'Итого (работа)' : 'Итого (материал)',
+                  isWorkTab
+                      ? 'Итого (работа)'
+                      : (isMarkupActive
+                          ? 'Итого (с наценкой)'
+                          : 'Итого (материал)'),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -141,11 +152,16 @@ class TotalDashboard extends StatelessWidget {
   }
 
   Widget _amount(double value, Color color, bool isBold, {required bool show}) {
+    // Show 2 decimal places for materials, 0 for works
+    final formattedValue = isWorkTab
+        ? value.toStringAsFixed(0)
+        : value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
+
     return SizedBox(
-      width: 65,
+      width: 70,
       child: show
           ? Text(
-              value.toStringAsFixed(0),
+              formattedValue,
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 13,

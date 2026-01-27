@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/utils/decimal_input_formatter.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_list_tile.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/group_header.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/total_dashboard.dart';
@@ -70,7 +71,10 @@ class _EstimateTabState extends State<EstimateTab> {
       return widget.items.map((item) {
         final boostedPrice =
             (item.pricePerUnit ?? 0) * (1 + (widget.markupPercent / 100));
-        return item.copyWith(pricePerUnit: boostedPrice);
+        // Recalculate clientAmount with boosted price
+        final newClientAmount = item.totalQuantity * boostedPrice;
+        return item.copyWith(
+            pricePerUnit: boostedPrice, clientAmount: newClientAmount);
       }).toList();
     }
     return widget.items;
@@ -104,102 +108,118 @@ class _EstimateTabState extends State<EstimateTab> {
   }
 
   Widget _buildMarkupControl() {
+    final hasMarkup = widget.markupPercent > 0;
+    // Match TotalDashboard styling when no markup
+    final bgColor =
+        hasMarkup ? Colors.blue.shade50 : _primaryColorLight.withOpacity(0.5);
+    final borderColor =
+        hasMarkup ? Colors.orange.shade300 : _primaryColor.withOpacity(0.12);
+    final iconColor =
+        hasMarkup ? Colors.orange.shade800 : _primaryColor.withOpacity(0.8);
+    final textColor =
+        hasMarkup ? Colors.orange.shade900 : _primaryColor.withOpacity(0.9);
+    final textWeight = hasMarkup ? FontWeight.bold : FontWeight.w500;
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.orange.shade50,
+        color: bgColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange.shade200),
+        border: Border.all(color: borderColor, width: 0.8),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          leading: Icon(Icons.trending_up, color: Colors.orange.shade800),
+          childrenPadding: EdgeInsets.zero,
+          leading: Icon(Icons.trending_up, color: iconColor, size: 20),
           title: Row(
             children: [
               Text(
                 "Наценка: ",
                 style: TextStyle(
-                    color: Colors.orange.shade900, fontWeight: FontWeight.bold),
+                    color: textColor, fontWeight: textWeight, fontSize: 14),
               ),
               Text(
-                "${widget.markupPercent.toStringAsFixed(1)}%",
+                "${widget.markupPercent.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '')}%",
                 style: TextStyle(
-                    color: Colors.orange.shade900, fontWeight: FontWeight.bold),
+                    color: textColor, fontWeight: textWeight, fontSize: 14),
               ),
             ],
           ),
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Column(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: Colors.orange,
-                            inactiveTrackColor: Colors.orange.shade100,
-                            thumbColor: Colors.orange.shade800,
-                            trackHeight: 4,
-                          ),
-                          child: Slider(
-                            value: widget.markupPercent,
-                            min: 0,
-                            max: 100,
-                            divisions: 100,
-                            label:
-                                "${widget.markupPercent.toStringAsFixed(0)}%",
-                            onChanged: widget.onMarkupChanged,
-                          ),
-                        ),
+                  Expanded(
+                    child: SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: Colors.orange,
+                        inactiveTrackColor: Colors.orange.shade100,
+                        thumbColor: Colors.orange.shade800,
+                        trackHeight: 4,
+                        overlayShape:
+                            const RoundSliderOverlayShape(overlayRadius: 16),
                       ),
-                      const SizedBox(width: 12),
-                      SizedBox(
-                        width: 60,
-                        child: TextField(
-                          controller: TextEditingController(
-                              text: widget.markupPercent.toStringAsFixed(1))
-                            ..selection = TextSelection.collapsed(
-                                offset: widget.markupPercent
-                                    .toStringAsFixed(1)
-                                    .length),
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            contentPadding: EdgeInsets.all(8),
-                            border: OutlineInputBorder(),
-                            suffixText: '%',
-                            counterText: '',
-                          ),
-                          style: const TextStyle(fontSize: 13),
-                          onSubmitted: (val) {
-                            final parsed = double.tryParse(val) ?? 0;
-                            if (widget.onMarkupChanged != null) {
-                              widget.onMarkupChanged!(parsed.clamp(0.0, 100.0));
-                            }
-                          },
-                        ),
+                      child: Slider(
+                        value: widget.markupPercent,
+                        min: 0,
+                        max: 100,
+                        divisions: 200,
+                        label: "${widget.markupPercent.toStringAsFixed(1)}%",
+                        onChanged: widget.onMarkupChanged,
                       ),
-                    ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 65,
+                    height: 32,
+                    child: TextField(
+                      controller: TextEditingController(
+                          text: widget.markupPercent
+                              .toStringAsFixed(2)
+                              .replaceAll(RegExp(r'\.?0+$'), ''))
+                        ..selection = TextSelection.collapsed(
+                            offset: widget.markupPercent
+                                .toStringAsFixed(2)
+                                .replaceAll(RegExp(r'\.?0+$'), '')
+                                .length),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [DecimalInputFormatter()],
+                      decoration: const InputDecoration(
+                        isDense: true,
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        border: OutlineInputBorder(),
+                        suffixText: '%',
+                        counterText: '',
+                      ),
+                      style: const TextStyle(fontSize: 13),
+                      onSubmitted: (val) {
+                        final parsed =
+                            double.tryParse(val.replaceAll(',', '.')) ?? 0;
+                        if (widget.onMarkupChanged != null) {
+                          widget.onMarkupChanged!(parsed.clamp(0.0, 100.0));
+                        }
+                      },
+                    ),
                   ),
                   if (widget.markupPercent != 0)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton.icon(
-                        onPressed: () {
-                          if (widget.onMarkupChanged != null) {
-                            widget.onMarkupChanged!(0.0);
-                          }
-                        },
-                        icon: const Icon(Icons.refresh, size: 16),
-                        label: const Text("Сброс"),
-                        style: TextButton.styleFrom(
-                            foregroundColor: Colors.orange.shade900),
-                      ),
+                    IconButton(
+                      onPressed: () {
+                        if (widget.onMarkupChanged != null) {
+                          widget.onMarkupChanged!(0.0);
+                        }
+                      },
+                      icon: Icon(Icons.refresh,
+                          size: 18, color: Colors.orange.shade800),
+                      tooltip: "Сброс",
+                      padding: EdgeInsets.zero,
+                      constraints:
+                          const BoxConstraints(minWidth: 32, minHeight: 32),
                     ),
                 ],
               ),
@@ -309,6 +329,7 @@ class _EstimateTabState extends State<EstimateTab> {
             primaryColor: _primaryColor,
             primaryColorLight: _primaryColorLight,
             isWorkTab: _isWorkTab,
+            isMarkupActive: !_isWorkTab && widget.markupPercent > 0,
           ),
         ),
 

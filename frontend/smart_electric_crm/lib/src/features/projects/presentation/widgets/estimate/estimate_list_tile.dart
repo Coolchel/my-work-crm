@@ -95,8 +95,15 @@ class EstimateListTile extends StatelessWidget {
                   // Compact stats row + Контрагент/Наши badges
                   Row(
                     children: [
+                      // Quantity part - always grey
                       Text(
-                        '${item.totalQuantity.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")} ${item.unit} × ${item.pricePerUnit?.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "") ?? "0"}$currencySymbol',
+                        '${item.totalQuantity.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")} ${item.unit} ',
+                        style: TextStyle(
+                            fontSize: 11, color: Colors.grey.shade600),
+                      ),
+                      // Price part - orange when markup active
+                      Text(
+                        '× ${item.pricePerUnit?.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "") ?? "0"}$currencySymbol',
                         style: TextStyle(
                             fontSize: 11,
                             color: isMarkupActive
@@ -156,13 +163,16 @@ class EstimateListTile extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Main amount badge
+                // Main amount badge - only border is orange when markup is active
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                   decoration: BoxDecoration(
                     color: amountBgColor,
                     borderRadius: BorderRadius.circular(5),
+                    border: isMarkupActive
+                        ? Border.all(color: Colors.orange.shade300, width: 0.8)
+                        : null,
                   ),
                   child: Text(
                     '${clientAmount.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")}$currencySymbol',

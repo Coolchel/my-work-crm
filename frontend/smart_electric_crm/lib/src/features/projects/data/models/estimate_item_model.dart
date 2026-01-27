@@ -99,6 +99,9 @@ class EstimateItemModel {
     double? markupPercent,
     bool? isPreliminary,
     String? categoryName,
+    double? clientAmount,
+    double? employerAmount,
+    double? myAmount,
   }) {
     return EstimateItemModel(
       id: id ?? this.id,
@@ -112,12 +115,10 @@ class EstimateItemModel {
       pricePerUnit: pricePerUnit ?? this.pricePerUnit,
       currency: currency ?? this.currency,
       markupPercent: markupPercent ?? this.markupPercent,
-
       isPreliminary: isPreliminary ?? this.isPreliminary,
-      clientAmount:
-          clientAmount, // Не обновляем calculation fields при копировании
-      employerAmount: employerAmount,
-      myAmount: myAmount,
+      clientAmount: clientAmount ?? this.clientAmount,
+      employerAmount: employerAmount ?? this.employerAmount,
+      myAmount: myAmount ?? this.myAmount,
       categoryName: categoryName ?? this.categoryName,
     );
   }
