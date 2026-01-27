@@ -118,6 +118,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   late List<EstimateItemModel> _items;
   late StageModel _stage;
   bool _isLoading = true;
+  double _markupPercent = 0.0;
 
   @override
   void initState() {
@@ -140,6 +141,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         _stage = updatedStage;
         _items = updatedStage.estimateItems;
         _isLoading = false;
+        // Don't reset markup on simple refresh, only if you want to. For now, keep it.
       });
 
       // Invalidate parent providers so they refetch fresh data when we return
@@ -210,6 +212,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                         title: "Материалы",
                         note: _stage.materialNotes,
                         onSaveNote: (val) => _saveNotes('material', val),
+                        markupPercent: _markupPercent,
+                        onMarkupChanged: (val) =>
+                            setState(() => _markupPercent = val),
                       ),
                       _EstimateTab(
                         key: ValueKey('works_tab_${_stage.workNotes.hashCode}'),
@@ -337,11 +342,83 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         PopupMenuItem(
             child: const Text("Копировать РАБОТЫ (Для Шефа)"),
             onTap: () => _copyReport('employer', itemType: 'work')),
+        const PopupMenuItem<String>(
+          value: 'markup',
+          child: Text("Копировать МАТЕРИАЛЫ (С наценкой)"),
+        ),
         PopupMenuItem(
             child: const Text("Копировать Список МАТЕРИАЛОВ"),
             onTap: () => _copyReport('client', itemType: 'material')),
       ],
+      onSelected: (value) {
+        if (value == 'markup') {
+          _copyReportWithMarkup();
+        }
+      },
     );
+  }
+
+  void _copyReportWithMarkup() async {
+    try {
+      final buffer = StringBuffer();
+      buffer.writeln(
+          "Список материалов (с наценкой ${_markupPercent.toStringAsFixed(1)}%):");
+
+      // Calculate displayed items with markup
+      List<EstimateItemModel> itemsToCopy = _materials;
+      if (_markupPercent > 0) {
+        itemsToCopy = _materials.map((item) {
+          final boostedPrice =
+              (item.pricePerUnit ?? 0) * (1 + (_markupPercent / 100));
+          return item.copyWith(pricePerUnit: boostedPrice);
+        }).toList();
+      }
+
+      // Group by category
+      final Map<String, List<EstimateItemModel>> grouped = {};
+      for (var item in itemsToCopy) {
+        final cat = item.categoryName ?? 'Разное';
+        if (!grouped.containsKey(cat)) grouped[cat] = [];
+        grouped[cat]!.add(item);
+      }
+
+      final sortedCats = grouped.keys.toList()..sort();
+      if (sortedCats.contains('Разное')) {
+        sortedCats.remove('Разное');
+        sortedCats.add('Разное');
+      }
+
+      double totalSum = 0;
+
+      for (var cat in sortedCats) {
+        buffer.writeln("\n--- $cat ---");
+        for (var item in grouped[cat]!) {
+          final price = item.pricePerUnit ?? 0;
+          final sum = (item.totalQuantity) * price;
+          totalSum += sum;
+          final currency = item.currency == 'USD' ? '\$' : 'р';
+
+          // Clean format
+          String fmt(double v) =>
+              v.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "");
+
+          buffer.writeln(
+              "- ${item.name}: ${fmt(item.totalQuantity)} ${item.unit} x ${fmt(price)}$currency = ${fmt(sum)}$currency");
+        }
+      }
+
+      buffer.writeln("\nИТОГО: ${totalSum.toStringAsFixed(2)}");
+
+      await Clipboard.setData(ClipboardData(text: buffer.toString()));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Скопировано с учетом наценки!")),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
+    }
   }
 
   void _updateItemFromTab(EstimateItemModel updatedItem) {
@@ -563,22 +640,30 @@ class _EstimateTab extends StatefulWidget {
   final String note;
   final Future<void> Function(String) onSaveNote;
 
-  const _EstimateTab(
-      {super.key,
-      required this.items,
-      required this.onUpdate,
-      required this.onDelete,
-      required this.title,
-      required this.note,
-      required this.onSaveNote});
+  // Markup props
+  final double markupPercent;
+  final ValueChanged<double>? onMarkupChanged;
+
+  const _EstimateTab({
+    super.key,
+    required this.items,
+    required this.onUpdate,
+    required this.onDelete,
+    required this.title,
+    required this.note,
+    required this.onSaveNote,
+    this.markupPercent = 0.0,
+    this.onMarkupChanged,
+  });
 
   @override
   State<_EstimateTab> createState() => _EstimateTabState();
 }
 
+// ... (imports remain)
+
 class _EstimateTabState extends State<_EstimateTab> {
   late TextEditingController _noteCtrl;
-  // Timer? _debounce;
   bool _saving = false;
   String? _lastSavedValue;
   bool _hasUnsavedChanges = false;
@@ -590,6 +675,8 @@ class _EstimateTabState extends State<_EstimateTab> {
     _noteCtrl = TextEditingController(text: widget.note);
     _lastSavedValue = widget.note;
   }
+
+  // ... (didUpdateWidget, dispose, _saveNote, _onNoteChanged remain)
 
   @override
   void didUpdateWidget(_EstimateTab oldWidget) {
@@ -606,9 +693,20 @@ class _EstimateTabState extends State<_EstimateTab> {
     }
   }
 
+  // Helper to get items with markup applied
+  List<EstimateItemModel> get _displayedItems {
+    if (!_isWorkTab && widget.markupPercent > 0) {
+      return widget.items.map((item) {
+        final boostedPrice =
+            (item.pricePerUnit ?? 0) * (1 + (widget.markupPercent / 100));
+        return item.copyWith(pricePerUnit: boostedPrice);
+      }).toList();
+    }
+    return widget.items;
+  }
+
   @override
   void dispose() {
-    // _debounce?.cancel(); // Removed
     _noteCtrl.dispose();
     super.dispose();
   }
@@ -634,6 +732,113 @@ class _EstimateTabState extends State<_EstimateTab> {
     });
   }
 
+  Widget _buildMarkupControl() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          leading: Icon(Icons.trending_up, color: Colors.orange.shade800),
+          title: Row(
+            children: [
+              Text(
+                "Наценка: ",
+                style: TextStyle(
+                    color: Colors.orange.shade900, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                "${widget.markupPercent.toStringAsFixed(1)}%",
+                style: TextStyle(
+                    color: Colors.orange.shade900, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: Colors.orange,
+                            inactiveTrackColor: Colors.orange.shade100,
+                            thumbColor: Colors.orange.shade800,
+                            trackHeight: 4,
+                          ),
+                          child: Slider(
+                            value: widget.markupPercent,
+                            min: 0,
+                            max: 100,
+                            divisions: 100,
+                            label:
+                                "${widget.markupPercent.toStringAsFixed(0)}%",
+                            onChanged: widget.onMarkupChanged,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 60,
+                        child: TextField(
+                          controller: TextEditingController(
+                              text: widget.markupPercent.toStringAsFixed(1))
+                            ..selection = TextSelection.collapsed(
+                                offset: widget.markupPercent
+                                    .toStringAsFixed(1)
+                                    .length),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.all(8),
+                            border: OutlineInputBorder(),
+                            suffixText: '%',
+                            counterText: '',
+                          ),
+                          style: const TextStyle(fontSize: 13),
+                          onSubmitted: (val) {
+                            final parsed = double.tryParse(val) ?? 0;
+                            if (widget.onMarkupChanged != null) {
+                              widget.onMarkupChanged!(parsed.clamp(0.0, 100.0));
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (widget.markupPercent != 0)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () {
+                          if (widget.onMarkupChanged != null) {
+                            widget.onMarkupChanged!(0.0);
+                          }
+                        },
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: const Text("Сброс"),
+                        style: TextButton.styleFrom(
+                            foregroundColor: Colors.orange.shade900),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // Color theming based on tab type
   bool get _isWorkTab => widget.title == "Работы";
   Color get _primaryColor => _isWorkTab ? Colors.green : Colors.blue;
@@ -642,13 +847,16 @@ class _EstimateTabState extends State<_EstimateTab> {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate all totals
+    // 1. Calculate Displayed Items (Apply Markup if Materials)
+    final displayedItems = _displayedItems;
+
+    // 2. Calculate Totals based on DISPLAYED items
     double totalUsd = 0;
     double totalByn = 0;
     double employerUsd = 0;
     double employerByn = 0;
 
-    for (var i in widget.items) {
+    for (var i in displayedItems) {
       final clientAmount = i.clientAmount ?? 0;
       final employerAmount = i.employerAmount ?? 0;
 
@@ -665,9 +873,9 @@ class _EstimateTabState extends State<_EstimateTab> {
     final ourUsd = totalUsd - employerUsd;
     final ourByn = totalByn - employerByn;
 
-    // Group items by category
+    // Group items by category (Using displayedItems)
     final Map<String, List<EstimateItemModel>> groupedItems = {};
-    for (var item in widget.items) {
+    for (var item in displayedItems) {
       final category = item.categoryName ?? 'Разное';
       if (!groupedItems.containsKey(category)) {
         groupedItems[category] = [];
@@ -685,7 +893,6 @@ class _EstimateTabState extends State<_EstimateTab> {
     return CustomScrollView(
       primary: false,
       slivers: [
-        // Items list grouped
         if (widget.items.isEmpty)
           const SliverToBoxAdapter(
               child: Padding(
@@ -709,6 +916,7 @@ class _EstimateTabState extends State<_EstimateTab> {
                       onUpdate: widget.onUpdate,
                       onDelete: () => widget.onDelete(item),
                       primaryColor: _primaryColor,
+                      isMarkupActive: widget.markupPercent > 0,
                     );
                   },
                   childCount: groupedItems[category]!.length,
@@ -732,6 +940,12 @@ class _EstimateTabState extends State<_EstimateTab> {
             isWorkTab: _isWorkTab,
           ),
         ),
+
+        // Markup Control (Spoiler style)
+        if (!_isWorkTab)
+          SliverToBoxAdapter(
+            child: _buildMarkupControl(),
+          ),
 
         // Notes Section - at the bottom
         SliverToBoxAdapter(
@@ -976,12 +1190,15 @@ class _EstimateListTile extends StatelessWidget {
   final Function(EstimateItemModel) onUpdate;
   final VoidCallback onDelete;
   final Color primaryColor;
+  final bool isMarkupActive;
 
-  const _EstimateListTile(
-      {required this.item,
-      required this.onUpdate,
-      required this.onDelete,
-      required this.primaryColor});
+  const _EstimateListTile({
+    required this.item,
+    required this.onUpdate,
+    required this.onDelete,
+    required this.primaryColor,
+    this.isMarkupActive = false,
+  });
 
   IconData get _icon =>
       item.itemType == 'work' ? Icons.engineering : Icons.inventory_2_outlined;
@@ -1062,7 +1279,13 @@ class _EstimateListTile extends StatelessWidget {
                       Text(
                         '${item.totalQuantity.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")} ${item.unit} × ${item.pricePerUnit?.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "") ?? "0"}$currencySymbol',
                         style: TextStyle(
-                            fontSize: 11, color: Colors.grey.shade600),
+                            fontSize: 11,
+                            color: isMarkupActive
+                                ? Colors.deepOrange
+                                : Colors.grey.shade600,
+                            fontWeight: isMarkupActive
+                                ? FontWeight.bold
+                                : FontWeight.normal),
                       ),
                       if (hasEmployer) ...[
                         const SizedBox(width: 6),
