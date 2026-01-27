@@ -8,6 +8,105 @@ import 'package:smart_electric_crm/src/features/projects/data/models/estimate_it
 import 'package:smart_electric_crm/src/features/projects/data/models/stage_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart'; // Import for invalidation and repository
 
+/// Custom formatter: replaces commas with dots, limits to 2 decimal places, no negatives
+class _DecimalInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    // Replace comma with dot
+    String text = newValue.text.replaceAll(',', '.');
+
+    // Only allow digits and one dot
+    text = text.replaceAll(RegExp(r'[^0-9.]'), '');
+
+    // Ensure only one dot
+    final parts = text.split('.');
+    if (parts.length > 2) {
+      text = '${parts[0]}.${parts.sublist(1).join('')}';
+    }
+
+    // Limit to 2 decimal places
+    if (parts.length == 2 && parts[1].length > 2) {
+      text = '${parts[0]}.${parts[1].substring(0, 2)}';
+    }
+
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+}
+
+/// Simple marquee widget for long titles - constrains width and scrolls text
+class _MarqueeText extends StatefulWidget {
+  final String text;
+  final double maxWidth;
+  const _MarqueeText({required this.text, this.maxWidth = 250});
+
+  @override
+  State<_MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<_MarqueeText> {
+  late ScrollController _scrollController;
+  Timer? _timer;
+  bool _forward = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startScroll());
+  }
+
+  void _startScroll() {
+    _timer = Timer.periodic(const Duration(milliseconds: 40), (timer) {
+      if (_scrollController.hasClients) {
+        final maxScroll = _scrollController.position.maxScrollExtent;
+        final currentScroll = _scrollController.offset;
+
+        if (_forward) {
+          if (currentScroll >= maxScroll) {
+            _forward = false;
+          } else {
+            _scrollController.jumpTo(currentScroll + 2);
+          }
+        } else {
+          if (currentScroll <= 0) {
+            _forward = true;
+          } else {
+            _scrollController.jumpTo(currentScroll - 2);
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: widget.maxWidth,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        controller: _scrollController,
+        physics: const NeverScrollableScrollPhysics(),
+        child: Text(
+          widget.text,
+          style: Theme.of(context).textTheme.titleLarge,
+          maxLines: 1,
+        ),
+      ),
+    );
+  }
+}
+
 class EstimateScreen extends ConsumerStatefulWidget {
   final StageModel stage;
   final String projectId;
@@ -85,8 +184,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                   forceElevated: innerBoxIsScrolled,
                   bottom: const TabBar(
                     tabs: [
-                      Tab(text: "Работы"),
                       Tab(text: "Материалы"),
+                      Tab(text: "Работы"),
                     ],
                   ),
                   actions: [
@@ -107,15 +206,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                 : TabBarView(
                     children: [
                       _EstimateTab(
-                        key: ValueKey('works_tab_${_stage.workNotes.hashCode}'),
-                        items: _works,
-                        onUpdate: _updateItemFromTab,
-                        onDelete: _deleteItemFromTab,
-                        title: "Работы",
-                        note: _stage.workNotes,
-                        onSaveNote: (val) => _saveNotes('work', val),
-                      ),
-                      _EstimateTab(
                         key: ValueKey(
                             'materials_tab_${_stage.materialNotes.hashCode}'),
                         items: _materials,
@@ -124,6 +214,15 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                         title: "Материалы",
                         note: _stage.materialNotes,
                         onSaveNote: (val) => _saveNotes('material', val),
+                      ),
+                      _EstimateTab(
+                        key: ValueKey('works_tab_${_stage.workNotes.hashCode}'),
+                        items: _works,
+                        onUpdate: _updateItemFromTab,
+                        onDelete: _deleteItemFromTab,
+                        title: "Работы",
+                        note: _stage.workNotes,
+                        onSaveNote: (val) => _saveNotes('work', val),
                       ),
                     ],
                   ),
@@ -136,7 +235,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   void _showAddItemDialog(BuildContext context) {
     final tabController = DefaultTabController.of(context);
     final index = tabController.index;
-    final itemType = index == 0 ? 'work' : 'material';
+    final itemType = index == 0 ? 'material' : 'work';
 
     showDialog(
         context: context,
@@ -174,7 +273,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
 
                 Navigator.pop(context); // Close search dialog
 
-                final quantities = await showDialog<Map<String, double>>(
+                final quantities = await showDialog<Map<String, dynamic>>(
                     context: context,
                     builder: (_) => _QuantityInputDialog(
                           item: catalogItem,
@@ -192,6 +291,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                     'item_type': catalogItem.itemType,
                     'total_quantity': quantities['total'],
                     'employer_quantity': quantities['employer'],
+                    'price_per_unit': quantities['price'],
+                    'currency': quantities['currency'],
                   });
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -647,11 +748,13 @@ class _EstimateTabState extends State<_EstimateTab> {
               Row(
                 children: [
                   Icon(Icons.sticky_note_2_outlined,
-                      size: 14, color: Colors.grey.shade500),
+                      size: 14, color: _primaryColor.withOpacity(0.8)),
                   const SizedBox(width: 6),
                   Text("Заметки",
-                      style:
-                          TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: _primaryColor,
+                          fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 6),
@@ -670,7 +773,8 @@ class _EstimateTabState extends State<_EstimateTab> {
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
-                    borderSide: BorderSide(color: Colors.grey.shade200),
+                    borderSide:
+                        BorderSide(color: _primaryColor.withOpacity(0.2)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
@@ -694,9 +798,8 @@ class _EstimateTabState extends State<_EstimateTab> {
                             _hasUnsavedChanges
                                 ? Icons.save_as
                                 : Icons.check_circle_outline,
-                            color: _hasUnsavedChanges
-                                ? _primaryColor
-                                : Colors.grey.shade400,
+                            color: _primaryColor
+                                .withOpacity(_hasUnsavedChanges ? 1.0 : 0.6),
                           ),
                           tooltip: "Сохранить заметку",
                         ),
@@ -1196,17 +1299,22 @@ class _EditItemDialogState extends State<_EditItemDialog> {
   @override
   void initState() {
     super.initState();
-    _totalQtyCtrl =
-        TextEditingController(text: widget.item.totalQuantity.toString());
-    _empQtyCtrl =
-        TextEditingController(text: widget.item.employerQuantity.toString());
-    _myQtyCtrl = TextEditingController(
-        text: (widget.item.totalQuantity - widget.item.employerQuantity)
-            .toStringAsFixed(2)
-            .replaceAll(RegExp(r'\.0+\$'), '')); // Nice format
 
-    _priceCtrl = TextEditingController(
-        text: widget.item.pricePerUnit?.toString() ?? '0');
+    String formatNum(double val) {
+      final str = val.toStringAsFixed(1);
+      return str.endsWith('.0') ? str.substring(0, str.length - 2) : str;
+    }
+
+    _totalQtyCtrl =
+        TextEditingController(text: formatNum(widget.item.totalQuantity));
+    _empQtyCtrl =
+        TextEditingController(text: formatNum(widget.item.employerQuantity));
+    _myQtyCtrl = TextEditingController(
+        text: formatNum(
+            widget.item.totalQuantity - widget.item.employerQuantity));
+
+    _priceCtrl =
+        TextEditingController(text: formatNum(widget.item.pricePerUnit ?? 0));
 
     _nameCtrl = TextEditingController(text: widget.item.name); // New
     _unitCtrl = TextEditingController(text: widget.item.unit); // New
@@ -1246,26 +1354,18 @@ class _EditItemDialogState extends State<_EditItemDialog> {
       final emp = double.tryParse(_empQtyCtrl.text.replaceAll(',', '.')) ?? 0;
       final my = double.tryParse(_myQtyCtrl.text.replaceAll(',', '.')) ?? 0;
 
-      if (source == 'total') {
-        // Edit Total -> My = Total - Emp
-        _myQtyCtrl.text =
-            (total - emp).toStringAsFixed(2).replaceAll(RegExp(r'\.0+\$'), '');
-      } else if (source == 'my') {
-        // Edit My -> Total = My + Emp
-        _totalQtyCtrl.text =
-            (my + emp).toStringAsFixed(2).replaceAll(RegExp(r'\.0+\$'), '');
-      } else if (source == 'emp') {
-        // Edit Emp -> My = Total - Emp (Split logic)
-        // Wait, user requirement 3: "If I change Emp with fixed Total -> My reclaculates"
-        // But user requirement 1: "If I change Emp -> Total recalculates"
-        // Applying "Split" logic as primary "Calculator" usage for sub-contracting.
-        // Assuming "Fixed Total" means "I didn't just type in Total".
+      String formatNum(double val) {
+        if (val < 0) val = 0; // No negative values
+        final str = val.toStringAsFixed(1);
+        return str.endsWith('.0') ? str.substring(0, str.length - 2) : str;
+      }
 
-        // HOWEVER, to be safe and match the "Sum" expectation if starting from scratch:
-        // Let's rely on the fact that usually you set Total first.
-        // If I decide to change Emp, I usually mean "My share is less".
-        _myQtyCtrl.text =
-            (total - emp).toStringAsFixed(2).replaceAll(RegExp(r'\.0+\$'), '');
+      if (source == 'total') {
+        _myQtyCtrl.text = formatNum(total - emp);
+      } else if (source == 'my') {
+        _totalQtyCtrl.text = formatNum(my + emp);
+      } else if (source == 'emp') {
+        _myQtyCtrl.text = formatNum(total - emp);
       }
     } finally {
       _isUpdating = false;
@@ -1274,146 +1374,153 @@ class _EditItemDialogState extends State<_EditItemDialog> {
 
   @override
   Widget build(BuildContext context) {
-    // Determine if manual item (id=0 means new manual, or check if we have flag catalogItem=null in real model but model doesn't store it explicitly efficiently yet without query)
-    // Actually, if it's a new item (id=0), we DEFINITELY allow editing Name/Unit.
-    // If it's existing item, we usually block it IF it's linked to catalog.
-    // But our EstimateItemModel doesn't store catalog link explicitly in fields list I saw earlier (it was missing).
-    // Assuming for now we allow editing Name/Unit always OR if Id=0.
-    // Optimization: Let's allow editing Name/Unit always for flexibility or only if it looks manual.
-    // Given the task: "Edit dialog... but with empty fields for Name/Unit".
-
     final isNewManual = widget.item.id == 0;
+    final isWork = widget.item.itemType == 'work';
+    final themeColor = isWork ? Colors.green : Colors.blue;
 
-    return AlertDialog(
-      title: Text(isNewManual
-          ? "Новая позиция"
-          : "Редактирование: ${widget.item.name}"),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isNewManual || widget.item.name.isEmpty) ...[
+    return Theme(
+      data: Theme.of(context).copyWith(
+        colorScheme:
+            Theme.of(context).colorScheme.copyWith(primary: themeColor),
+      ),
+      child: AlertDialog(
+        title: isNewManual
+            ? const Text("Новая позиция")
+            : (widget.item.name.length > 25
+                ? _MarqueeText(text: widget.item.name)
+                : Text(widget.item.name)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isNewManual || widget.item.name.isEmpty) ...[
+                TextField(
+                  controller: _nameCtrl,
+                  decoration: const InputDecoration(labelText: "Название"),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _unitCtrl,
+                  decoration: const InputDecoration(labelText: "Ед. изм."),
+                ),
+                const SizedBox(height: 8),
+              ],
               TextField(
-                controller: _nameCtrl,
-                decoration: const InputDecoration(labelText: "Название"),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _unitCtrl,
-                decoration: const InputDecoration(labelText: "Ед. изм."),
-              ),
-              const SizedBox(height: 8),
-            ],
-            TextField(
-              controller: _totalQtyCtrl,
-              decoration: InputDecoration(
-                labelText: "Общий объем (Клиент)",
-                suffixIcon: widget.item.itemType == 'work'
-                    ? IconButton(
-                        icon: Icon(Icons.person_add_alt,
-                            color: _showEmployer
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey),
-                        onPressed: () {
-                          setState(() {
-                            _showEmployer = !_showEmployer;
-                            if (!_showEmployer) {
-                              _empQtyCtrl.text = '0';
-                              // Trigger recalculation to reset 'My Share' to Total
-                              _calculate('emp');
-                            } else {
-                              // Start with 0 if opening
-                              if (_empQtyCtrl.text.isEmpty ||
-                                  _empQtyCtrl.text == '0.0') {
+                controller: _totalQtyCtrl,
+                decoration: InputDecoration(
+                  labelText: "Общий объем",
+                  suffixIcon: isWork
+                      ? IconButton(
+                          icon: Icon(Icons.person_add_alt,
+                              color: _showEmployer ? themeColor : Colors.grey),
+                          onPressed: () {
+                            setState(() {
+                              _showEmployer = !_showEmployer;
+                              if (!_showEmployer) {
                                 _empQtyCtrl.text = '0';
+                                _calculate('emp');
+                              } else {
+                                if (_empQtyCtrl.text.isEmpty ||
+                                    _empQtyCtrl.text == '0.0') {
+                                  _empQtyCtrl.text = '0';
+                                }
                               }
-                            }
-                          });
-                        },
-                        tooltip:
-                            "Добавить объем работодателя/Показать калькулятор",
-                      )
-                    : null,
-              ),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-            ),
-            if (widget.item.itemType == 'work' && _showEmployer) ...[
-              const SizedBox(height: 10),
-              // Interactive Fields Layout
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _myQtyCtrl,
-                      decoration: const InputDecoration(
-                          labelText: "Наш объем (Мастер)"),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _empQtyCtrl,
-                      decoration: const InputDecoration(
-                          labelText: "Объем работодателя"),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                    ),
-                  ),
-                ],
-              ),
-            ] else if (_showEmployer) ...[
-              // Material simple view (hidden mainly, but kept structure if needed)
-              const SizedBox(height: 10),
-              TextField(
-                controller: _empQtyCtrl,
-                decoration:
-                    const InputDecoration(labelText: "Объем работодателя"),
+                            });
+                          },
+                          tooltip: "Показать калькулятор",
+                        )
+                      : null,
+                ),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [_DecimalInputFormatter()],
               ),
-            ],
-            const SizedBox(height: 10),
-            Row(children: [
-              Expanded(
-                child: TextField(
-                  controller: _priceCtrl,
-                  decoration: const InputDecoration(labelText: "Цена"),
+              if (widget.item.itemType == 'work' && _showEmployer) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _myQtyCtrl,
+                        decoration: const InputDecoration(labelText: "Мы"),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [_DecimalInputFormatter()],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: _empQtyCtrl,
+                        decoration:
+                            const InputDecoration(labelText: "Контрагент"),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [_DecimalInputFormatter()],
+                      ),
+                    ),
+                  ],
+                ),
+              ] else if (_showEmployer) ...[
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _empQtyCtrl,
+                  decoration: const InputDecoration(labelText: "Контрагент"),
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [_DecimalInputFormatter()],
+                ),
+              ],
+              const SizedBox(height: 10),
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: _priceCtrl,
+                    decoration: const InputDecoration(labelText: "Цена"),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [_DecimalInputFormatter()],
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 12),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'USD', label: Text('USD')),
+                  ButtonSegment(value: 'BYN', label: Text('BYN')),
+                ],
+                selected: {_currency},
+                onSelectionChanged: (val) =>
+                    setState(() => _currency = val.first),
+                style: ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  backgroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return themeColor.withOpacity(0.15);
+                    }
+                    return null;
+                  }),
                 ),
               ),
-              const SizedBox(width: 8),
-              DropdownButton<String>(
-                  value: _currency,
-                  items: const [
-                    DropdownMenuItem(value: 'USD', child: Text('USD')),
-                    DropdownMenuItem(value: 'BYN', child: Text('BYN')),
-                  ],
-                  onChanged: (val) {
-                    if (val != null) setState(() => _currency = val);
-                  })
-            ]),
-            const SizedBox(height: 10),
-            const SizedBox(height: 10),
-          ],
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, 'delete'),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text("Удалить")),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(foregroundColor: Colors.black87),
+              child: const Text("Отмена")),
+          FilledButton(
+            onPressed: _save,
+            child: const Text("Изменить"),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context, 'delete'),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text("Удалить")),
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Отмена")),
-        FilledButton(
-          onPressed: _save,
-          child: const Text("Сохранить"),
-        ),
-      ],
     );
   }
 
@@ -1426,7 +1533,7 @@ class _EditItemDialogState extends State<_EditItemDialog> {
     if (empFn > totalFn) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text(
-              "Ошибка: Доля работодателя не может быть больше общего объема!")));
+              "Ошибка: Доля контрагента не может быть больше общего объема!")));
       return;
     }
 
@@ -1457,71 +1564,197 @@ class _QuantityInputDialog extends StatefulWidget {
 class _QuantityInputDialogState extends State<_QuantityInputDialog> {
   late TextEditingController _totalCtrl;
   late TextEditingController _empCtrl;
+  late TextEditingController _myCtrl;
+  late TextEditingController _priceCtrl;
+  late String _currency;
   bool _showEmployer = false;
+  bool _isUpdating = false;
 
   @override
   void initState() {
     super.initState();
     _totalCtrl = TextEditingController(text: '1');
     _empCtrl = TextEditingController(text: '0');
+    _myCtrl = TextEditingController(text: '1');
+    _priceCtrl = TextEditingController(
+        text: widget.item.defaultPrice
+                ?.toStringAsFixed(2)
+                .replaceAll(RegExp(r'\.?0+$'), '') ??
+            '0');
+    _currency = 'USD';
+
+    if (widget.itemType == 'work') {
+      _setupListeners();
+    }
+  }
+
+  void _setupListeners() {
+    _totalCtrl.addListener(() {
+      if (_isUpdating) return;
+      _calculate('total');
+    });
+    _myCtrl.addListener(() {
+      if (_isUpdating) return;
+      _calculate('my');
+    });
+    _empCtrl.addListener(() {
+      if (_isUpdating) return;
+      _calculate('emp');
+    });
+  }
+
+  void _calculate(String source) {
+    if (_isUpdating) return;
+    _isUpdating = true;
+    try {
+      final total = double.tryParse(_totalCtrl.text.replaceAll(',', '.')) ?? 0;
+      final my = double.tryParse(_myCtrl.text.replaceAll(',', '.')) ?? 0;
+      final emp = double.tryParse(_empCtrl.text.replaceAll(',', '.')) ?? 0;
+
+      String formatNum(double val) {
+        if (val < 0) val = 0;
+        final str = val.toStringAsFixed(1);
+        return str.endsWith('.0') ? str.substring(0, str.length - 2) : str;
+      }
+
+      if (source == 'total') {
+        _myCtrl.text = formatNum(total - emp);
+      } else if (source == 'my') {
+        _totalCtrl.text = formatNum(my + emp);
+      } else if (source == 'emp') {
+        _myCtrl.text = formatNum(total - emp);
+      }
+    } finally {
+      _isUpdating = false;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text("Добавление: ${widget.item.name}"),
-      content: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextField(
-            controller: _totalCtrl,
-            decoration: InputDecoration(
-              labelText: "Общее кол-во",
-              suffixIcon: widget.itemType == 'work'
-                  ? IconButton(
-                      icon: Icon(Icons.person_add_alt,
-                          color: _showEmployer
-                              ? Theme.of(context).primaryColor
-                              : Colors.grey),
-                      onPressed: () {
-                        setState(() {
-                          _showEmployer = !_showEmployer;
-                          if (!_showEmployer) _empCtrl.text = '0';
-                        });
-                      },
-                      tooltip: "Добавить объем работодателя",
-                    )
-                  : null,
+    final isWork = widget.itemType == 'work';
+    final themeColor = isWork ? Colors.green : Colors.blue;
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        colorScheme:
+            Theme.of(context).colorScheme.copyWith(primary: themeColor),
+      ),
+      child: AlertDialog(
+        title: widget.item.name.length > 25
+            ? _MarqueeText(text: widget.item.name)
+            : Text(widget.item.name),
+        content: SingleChildScrollView(
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            TextField(
+                controller: _totalCtrl,
+                decoration: InputDecoration(
+                  labelText: "Общий объем",
+                  suffixIcon: isWork
+                      ? IconButton(
+                          icon: Icon(Icons.person_add_alt,
+                              color: _showEmployer ? themeColor : Colors.grey),
+                          onPressed: () {
+                            setState(() {
+                              _showEmployer = !_showEmployer;
+                              if (!_showEmployer) {
+                                _empCtrl.text = '0';
+                                _calculate('emp');
+                              }
+                            });
+                          },
+                          tooltip: "Показать калькулятор",
+                        )
+                      : null,
+                ),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [_DecimalInputFormatter()]),
+            if (_showEmployer && isWork) ...[
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _myCtrl,
+                      decoration: const InputDecoration(labelText: "Мы"),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [_DecimalInputFormatter()],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _empCtrl,
+                      decoration:
+                          const InputDecoration(labelText: "Контрагент"),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [_DecimalInputFormatter()],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 10),
+            TextField(
+                controller: _priceCtrl,
+                decoration: const InputDecoration(labelText: "Цена"),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [_DecimalInputFormatter()]),
+            const SizedBox(height: 12),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'USD', label: Text('USD')),
+                ButtonSegment(value: 'BYN', label: Text('BYN')),
+              ],
+              selected: {_currency},
+              onSelectionChanged: (val) =>
+                  setState(() => _currency = val.first),
+              style: ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                backgroundColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return themeColor.withOpacity(0.15);
+                  }
+                  return null;
+                }),
+              ),
             ),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true)),
-        if (_showEmployer && widget.itemType == 'work')
-          TextField(
-              controller: _empCtrl,
-              decoration:
-                  const InputDecoration(labelText: "Кол-во работодателя"),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true)),
-      ]),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Отмена")),
-        FilledButton(
-            onPressed: () {
-              final t =
-                  double.tryParse(_totalCtrl.text.replaceAll(',', '.')) ?? 0;
-              final e =
-                  double.tryParse(_empCtrl.text.replaceAll(',', '.')) ?? 0;
+          ]),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(foregroundColor: Colors.black87),
+              child: const Text("Отмена")),
+          FilledButton(
+              onPressed: () {
+                final t =
+                    double.tryParse(_totalCtrl.text.replaceAll(',', '.')) ?? 0;
+                final e =
+                    double.tryParse(_empCtrl.text.replaceAll(',', '.')) ?? 0;
+                final p =
+                    double.tryParse(_priceCtrl.text.replaceAll(',', '.')) ?? 0;
 
-              if (e > t) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content:
-                        Text("Ошибка: Доля работодателя > Общего объема")));
-                return;
-              }
+                if (e > t) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content:
+                          Text("Ошибка: Доля контрагента > Общего объема")));
+                  return;
+                }
 
-              Navigator.pop(context, {'total': t, 'employer': e});
-            },
-            child: const Text("Добавить"))
-      ],
+                Navigator.pop(context, {
+                  'total': t,
+                  'employer': e,
+                  'price': p,
+                  'currency': _currency,
+                });
+              },
+              child: const Text("Добавить"))
+        ],
+      ),
     );
   }
 }
