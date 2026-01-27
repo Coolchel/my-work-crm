@@ -72,6 +72,18 @@ class ProjectRepository {
     }
   }
 
+  /// Обновляет данные этапа (например, заметки)
+  Future<void> updateStage(int stageId, Map<String, dynamic> data) async {
+    try {
+      await _dio.patch('/stages/$stageId/', data: data);
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        debugPrint("❌ Update Stage Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
   /// Обновляет статус этапа.
   /// Используем PATCH, чтобы обновить только статус.
   Future<void> updateStageStatus(String stageId, String status) async {

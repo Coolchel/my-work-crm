@@ -150,6 +150,9 @@ class Stage(models.Model):
     started_at = models.DateField(null=True, blank=True, verbose_name="Дата начала")
     ended_at = models.DateField(null=True, blank=True, verbose_name="Дата конца")
 
+    work_notes = models.TextField(blank=True, verbose_name="Заметки по работам")
+    material_notes = models.TextField(blank=True, verbose_name="Заметки по материалам")
+
     class Meta:
         verbose_name = "Этап"
         verbose_name_plural = "Этапы"

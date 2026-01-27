@@ -21,10 +21,13 @@ class EstimateScreen extends ConsumerStatefulWidget {
 
 class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   late List<EstimateItemModel> _items;
+  late StageModel _stage;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _stage = widget.stage;
     _items = List.from(widget.stage.estimateItems);
     // Force refresh on init to ensure data is fresh (even if passed from stale parent)
     _refresh();
@@ -33,14 +36,15 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   Future<void> _refresh() async {
     try {
       final repo = ref.read(projectRepositoryProvider);
-      // Invalidate provider to force potential background update if using Riverpod for caching
-      // ref.invalidate(stageProvider(widget.stage.id)); // Assuming such provider exists, or manual repo fetch is enough.
-      // Since we fetch manually here, we just need to ensure fetchStage gets fresh data (usually it does).
-
+      debugPrint("📝 Fetching stage ID: ${widget.stage.id}");
       final updatedStage = await repo.fetchStage(widget.stage.id);
+      debugPrint(
+          "📝 Loaded notes for stage ${updatedStage.id}: work='${updatedStage.workNotes}', material='${updatedStage.materialNotes}'");
       if (!mounted) return;
       setState(() {
+        _stage = updatedStage;
         _items = updatedStage.estimateItems;
+        _isLoading = false;
       });
 
       // Invalidate parent providers so they refetch fresh data when we return
@@ -49,6 +53,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     } catch (e) {
       if (!mounted) return;
       debugPrint("Refresh error: $e");
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Ошибка обновления: $e")));
     }
@@ -74,7 +79,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
             headerSliverBuilder: (context, innerBoxIsScrolled) {
               return [
                 SliverAppBar(
-                  title: Text("Смета: ${widget.stage.title}"),
+                  title: Text("Смета: ${_stage.title}"),
                   pinned: true,
                   floating: true,
                   forceElevated: innerBoxIsScrolled,
@@ -97,22 +102,31 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                 ),
               ];
             },
-            body: TabBarView(
-              children: [
-                _EstimateTab(
-                  items: _works,
-                  onUpdate: _updateItemFromTab,
-                  onDelete: _deleteItemFromTab,
-                  title: "Работы",
-                ),
-                _EstimateTab(
-                  items: _materials,
-                  onUpdate: _updateItemFromTab,
-                  onDelete: _deleteItemFromTab,
-                  title: "Материалы",
-                ),
-              ],
-            ),
+            body: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : TabBarView(
+                    children: [
+                      _EstimateTab(
+                        key: ValueKey('works_tab_${_stage.workNotes.hashCode}'),
+                        items: _works,
+                        onUpdate: _updateItemFromTab,
+                        onDelete: _deleteItemFromTab,
+                        title: "Работы",
+                        note: _stage.workNotes,
+                        onSaveNote: (val) => _saveNotes('work', val),
+                      ),
+                      _EstimateTab(
+                        key: ValueKey(
+                            'materials_tab_${_stage.materialNotes.hashCode}'),
+                        items: _materials,
+                        onUpdate: _updateItemFromTab,
+                        onDelete: _deleteItemFromTab,
+                        title: "Материалы",
+                        note: _stage.materialNotes,
+                        onSaveNote: (val) => _saveNotes('material', val),
+                      ),
+                    ],
+                  ),
           ),
         );
       }),
@@ -129,6 +143,37 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         builder: (_) => _AddItemDialog(
               itemType: itemType,
               onAdd: (catalogItem) async {
+                // If ID == 0, it's manual. We need to ASK for Name/Unit/Price immediately.
+                // Reusing _EditItemDialog is best, but _EditItemDialog takes EstimateItemModel.
+                // Let's create a temporary EstimateItemModel.
+
+                if (catalogItem.id == 0) {
+                  Navigator.pop(context); // Close Add Dialog
+
+                  final tempItem = EstimateItemModel(
+                    id: 0,
+                    stage: widget.stage.id,
+                    itemType: itemType,
+                    name: '',
+                    unit: 'шт',
+                    totalQuantity: 1,
+                    pricePerUnit: 0,
+                  );
+
+                  // Open Edit Dialog directly
+                  final result = await showDialog<dynamic>(
+                      context: context,
+                      builder: (_) => _EditItemDialog(item: tempItem));
+
+                  if (result is EstimateItemModel) {
+                    // Save New Manual Item
+                    _saveNewItem(result, null);
+                  }
+                  return;
+                }
+
+                Navigator.pop(context); // Close search dialog
+
                 final quantities = await showDialog<Map<String, double>>(
                     context: context,
                     builder: (_) => _QuantityInputDialog(
@@ -138,6 +183,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
 
                 if (quantities == null) return;
 
+                // Add Catalog Item
                 try {
                   final repo = ref.read(projectRepositoryProvider);
                   await repo.addEstimateItem({
@@ -150,7 +196,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Добавлено!")));
-                  _refresh(); // Auto-refresh
+                  _refresh();
                 } catch (e) {
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -158,6 +204,30 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                 }
               },
             ));
+  }
+
+  Future<void> _saveNewItem(EstimateItemModel item, int? catalogItemId) async {
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+      // If catalogItemId is null, we send fields manually.
+      await repo.addEstimateItem({
+        'stage': widget.stage.id,
+        'catalog_item': catalogItemId, // null if manual
+        'item_type': item.itemType,
+        'name': item.name,
+        'unit': item.unit,
+        'price_per_unit': item.pricePerUnit,
+        'currency': item.currency,
+        'total_quantity': item.totalQuantity,
+        'employer_quantity': item.employerQuantity,
+      });
+      if (!mounted) return;
+      _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
+    }
   }
 
   Widget _buildCopyMenu() {
@@ -356,25 +426,117 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           .showSnackBar(SnackBar(content: Text("Ошибка копирования: $e")));
     }
   }
+
+  Future<void> _saveNotes(String type, String value) async {
+    debugPrint("💾 Saving note: type='$type', value='$value'");
+
+    // Optimistic update
+    setState(() {
+      if (type == 'work') {
+        _stage = _stage.copyWith(workNotes: value);
+      } else {
+        _stage = _stage.copyWith(materialNotes: value);
+      }
+    });
+
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+      final data =
+          type == 'work' ? {'work_notes': value} : {'material_notes': value};
+
+      await repo.updateStage(widget.stage.id, data);
+      debugPrint("✅ Note saved successfully");
+
+      // Optimistic update already applied, no need to refresh
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Ошибка сохранения заметки: $e")));
+    }
+  }
 }
 
-class _EstimateTab extends StatelessWidget {
+class _EstimateTab extends StatefulWidget {
   final List<EstimateItemModel> items;
   final Function(EstimateItemModel) onUpdate;
   final Function(EstimateItemModel) onDelete;
   final String title;
 
+  // Note props
+  final String note;
+  final Future<void> Function(String) onSaveNote;
+
   const _EstimateTab(
-      {required this.items,
+      {super.key,
+      required this.items,
       required this.onUpdate,
       required this.onDelete,
-      required this.title});
+      required this.title,
+      required this.note,
+      required this.onSaveNote});
+
+  @override
+  State<_EstimateTab> createState() => _EstimateTabState();
+}
+
+class _EstimateTabState extends State<_EstimateTab> {
+  late TextEditingController _noteCtrl;
+  Timer? _debounce;
+  bool _saving = false;
+  String? _lastSavedValue;
+
+  @override
+  void initState() {
+    super.initState();
+    debugPrint("📝 _EstimateTabState.initState: note='${widget.note}'");
+    _noteCtrl = TextEditingController(text: widget.note);
+    _lastSavedValue = widget.note;
+  }
+
+  @override
+  void didUpdateWidget(_EstimateTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.note != oldWidget.note) {
+      debugPrint(
+          "📝 _EstimateTabState.didUpdateWidget: old='${oldWidget.note}', new='${widget.note}'");
+      // Parent sent new data - sync if not actively typing
+      bool isTyping = _debounce?.isActive ?? false;
+      if (!isTyping) {
+        _noteCtrl.text = widget.note;
+        _lastSavedValue = widget.note;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    // Save on exit if there are unsaved changes
+    if (_noteCtrl.text != _lastSavedValue) {
+      widget.onSaveNote(_noteCtrl.text);
+    }
+    _noteCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onNoteChanged(String value) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(seconds: 1), () async {
+      setState(() => _saving = true);
+      try {
+        await widget.onSaveNote(value);
+        if (mounted) _lastSavedValue = value;
+      } finally {
+        if (mounted) setState(() => _saving = false);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     double totalUsd = 0;
     double totalByn = 0;
-    for (var i in items) {
+    for (var i in widget.items) {
       if (i.currency == 'USD') {
         totalUsd += (i.clientAmount ?? 0);
       } else {
@@ -382,34 +544,76 @@ class _EstimateTab extends StatelessWidget {
       }
     }
 
-    if (items.isEmpty) {
-      return CustomScrollView(slivers: [
-        SliverFillRemaining(
-            child: Center(child: Text("Нет позиций в '$title'")))
-      ]);
-    }
-
     return CustomScrollView(
+      primary:
+          false, // Prevent conflict with NestedScrollView's scroll controller
       slivers: [
         SliverPersistentHeader(
           delegate:
               _EstimateHeaderDelegate(totalUsd: totalUsd, totalByn: totalByn),
           pinned: true,
         ),
+        if (widget.items.isEmpty)
+          SliverToBoxAdapter(
+              child: Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(child: Text("Нет позиций")))),
+
         SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) {
-              final item = items[index];
+              final item = widget.items[index];
               return _EstimateListTile(
                 item: item,
-                onUpdate: onUpdate,
-                onDelete: () => onDelete(item),
+                onUpdate: widget.onUpdate,
+                onDelete: () => widget.onDelete(item),
               );
             },
-            childCount: items.length,
+            childCount: widget.items.length,
           ),
         ),
-        const SliverPadding(padding: EdgeInsets.only(bottom: 80)),
+
+        // Notes Section at the bottom - now inline
+        SliverToBoxAdapter(
+            child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Divider(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Заметки (${widget.title})",
+                      style: Theme.of(context).textTheme.titleSmall),
+                  if (_saving)
+                    const SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                  else
+                    Icon(Icons.check_circle_outline,
+                        size: 16,
+                        color: _noteCtrl.text == _lastSavedValue
+                            ? Colors.green
+                            : Colors.grey),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _noteCtrl,
+                maxLines: 4,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: "Дополнительная информация...",
+                ),
+                onChanged: _onNoteChanged,
+              ),
+            ],
+          ),
+        )),
+
+        const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
       ],
     );
   }
@@ -468,49 +672,84 @@ class _EstimateListTile extends StatelessWidget {
     final employerAmount = item.employerAmount ?? 0;
     final showDetails = employerAmount > 0;
 
-    return ListTile(
-      leading: item.itemType == 'work'
-          ? const Icon(Icons.build, color: Colors.blue)
-          : const Icon(Icons.inventory_2, color: Colors.green),
-      title: Text(item.name),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Главная цифра: Полный итог для клиента
-          Text(
-              "${item.totalQuantity} ${item.unit} * ${item.pricePerUnit}$currency = ${clientAmount.toStringAsFixed(2)}$currency",
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: Colors.black87)),
-          // 2. Детализация (если есть доля шефа)
-          if (showDetails) ...[
-            const SizedBox(height: 2),
-            Text(
-              "Общий итог: ${clientAmount.toStringAsFixed(2)}$currency | Наша доля: ${myAmount.toStringAsFixed(2)}$currency | Доля работодателя: ${employerAmount.toStringAsFixed(2)}$currency",
-              style: const TextStyle(fontSize: 11, color: Colors.black54),
-            ),
-          ]
-        ],
-      ),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete_outline, color: Colors.grey),
-        onPressed: onDelete,
-      ),
-      onTap: () async {
-        final result = await showDialog<dynamic>(
-            context: context, builder: (_) => _EditItemDialog(item: item));
+    return Card(
+      margin: const EdgeInsets.symmetric(
+          horizontal: 8, vertical: 2), // Compact margin
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(color: Colors.grey.shade200)),
+      child: ListTile(
+        dense: true, // Key for compactness
+        visualDensity: const VisualDensity(
+            horizontal: -4, vertical: -4), // Max compactness
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
 
-        if (result == 'delete') {
-          // handled by dialog return, but since we have trailing icon now, dialog might not need delete button?
-          // Keeping it for consistency or standard behavior.
-          onDelete();
-        } else if (result is EstimateItemModel) {
-          onUpdate(result);
-        }
-      },
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-      visualDensity: VisualDensity.compact,
+        // Leading: Icon indicating type (Work/Material)
+        leading: Icon(item.itemType == 'work' ? Icons.build : Icons.inventory_2,
+            size: 20,
+            color: item.itemType == 'work'
+                ? Colors.blue.shade700
+                : Colors.green.shade700),
+
+        // Title: Name
+        title: Text(
+          item.name,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+
+        // Subtitle: Calculation stats
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 2),
+            // Main Row: Qty * Price = Total
+            Text(
+                "${item.totalQuantity} ${item.unit} x ${item.pricePerUnit}$currency = ${clientAmount.toStringAsFixed(2)}$currency",
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.black87)),
+            // Details Row (Employer Share etc)
+            if (showDetails)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  // Compact string
+                  "Шеф: ${employerAmount.toStringAsFixed(2)}$currency  |  Мои: ${myAmount.toStringAsFixed(2)}$currency",
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                ),
+              )
+          ],
+        ),
+
+        // Trailing: Delete button (small)
+        trailing: SizedBox(
+          width: 30,
+          height: 30,
+          child: IconButton(
+            icon:
+                const Icon(Icons.delete_outline, size: 18, color: Colors.grey),
+            padding: EdgeInsets.zero,
+            onPressed: onDelete,
+            tooltip: "Удалить",
+          ),
+        ),
+
+        onTap: () async {
+          final result = await showDialog<dynamic>(
+              context: context, builder: (_) => _EditItemDialog(item: item));
+
+          if (result == 'delete') {
+            onDelete();
+          } else if (result is EstimateItemModel) {
+            onUpdate(result);
+          }
+        },
+      ),
     );
   }
 }
@@ -606,7 +845,26 @@ class _AddItemDialogState extends ConsumerState<_AddItemDialog> {
                     onTap: () => _onItemAdded(item),
                   );
                 },
-              ))
+              )),
+              const Divider(),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextButton.icon(
+                    onPressed: () {
+                      // Manual Add: Create dummy item
+                      final dummy = CatalogItem(
+                          id: 0, // 0 signals manual
+                          name: '',
+                          category: 0,
+                          unit: 'шт',
+                          defaultPrice: 0,
+                          defaultCurrency: 'USD',
+                          itemType: widget.itemType);
+                      widget.onAdd(dummy);
+                    },
+                    icon: const Icon(Icons.edit),
+                    label: const Text("Добавить вручную (Свободная позиция)")),
+              )
             ])));
   }
 }
@@ -626,6 +884,9 @@ class _EditItemDialogState extends State<_EditItemDialog> {
   late TextEditingController _myQtyCtrl;
 
   late TextEditingController _priceCtrl;
+  late TextEditingController _nameCtrl; // New
+  late TextEditingController _unitCtrl; // New
+
   late String _currency;
   bool _showEmployer = false;
 
@@ -641,10 +902,14 @@ class _EditItemDialogState extends State<_EditItemDialog> {
     _myQtyCtrl = TextEditingController(
         text: (widget.item.totalQuantity - widget.item.employerQuantity)
             .toStringAsFixed(2)
-            .replaceAll(RegExp(r'\.0+$'), '')); // Nice format
+            .replaceAll(RegExp(r'\.0+\$'), '')); // Nice format
 
     _priceCtrl = TextEditingController(
         text: widget.item.pricePerUnit?.toString() ?? '0');
+
+    _nameCtrl = TextEditingController(text: widget.item.name); // New
+    _unitCtrl = TextEditingController(text: widget.item.unit); // New
+
     _currency = widget.item.currency;
 
     // Show if already has value or user expands it
@@ -683,11 +948,11 @@ class _EditItemDialogState extends State<_EditItemDialog> {
       if (source == 'total') {
         // Edit Total -> My = Total - Emp
         _myQtyCtrl.text =
-            (total - emp).toStringAsFixed(2).replaceAll(RegExp(r'\.0+$'), '');
+            (total - emp).toStringAsFixed(2).replaceAll(RegExp(r'\.0+\$'), '');
       } else if (source == 'my') {
         // Edit My -> Total = My + Emp
         _totalQtyCtrl.text =
-            (my + emp).toStringAsFixed(2).replaceAll(RegExp(r'\.0+$'), '');
+            (my + emp).toStringAsFixed(2).replaceAll(RegExp(r'\.0+\$'), '');
       } else if (source == 'emp') {
         // Edit Emp -> My = Total - Emp (Split logic)
         // Wait, user requirement 3: "If I change Emp with fixed Total -> My reclaculates"
@@ -699,7 +964,7 @@ class _EditItemDialogState extends State<_EditItemDialog> {
         // Let's rely on the fact that usually you set Total first.
         // If I decide to change Emp, I usually mean "My share is less".
         _myQtyCtrl.text =
-            (total - emp).toStringAsFixed(2).replaceAll(RegExp(r'\.0+$'), '');
+            (total - emp).toStringAsFixed(2).replaceAll(RegExp(r'\.0+\$'), '');
       }
     } finally {
       _isUpdating = false;
@@ -708,12 +973,36 @@ class _EditItemDialogState extends State<_EditItemDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine if manual item (id=0 means new manual, or check if we have flag catalogItem=null in real model but model doesn't store it explicitly efficiently yet without query)
+    // Actually, if it's a new item (id=0), we DEFINITELY allow editing Name/Unit.
+    // If it's existing item, we usually block it IF it's linked to catalog.
+    // But our EstimateItemModel doesn't store catalog link explicitly in fields list I saw earlier (it was missing).
+    // Assuming for now we allow editing Name/Unit always OR if Id=0.
+    // Optimization: Let's allow editing Name/Unit always for flexibility or only if it looks manual.
+    // Given the task: "Edit dialog... but with empty fields for Name/Unit".
+
+    final isNewManual = widget.item.id == 0;
+
     return AlertDialog(
-      title: Text("Редактирование: ${widget.item.name}"),
+      title: Text(isNewManual
+          ? "Новая позиция"
+          : "Редактирование: ${widget.item.name}"),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (isNewManual || widget.item.name.isEmpty) ...[
+              TextField(
+                controller: _nameCtrl,
+                decoration: const InputDecoration(labelText: "Название"),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _unitCtrl,
+                decoration: const InputDecoration(labelText: "Ед. изм."),
+              ),
+              const SizedBox(height: 8),
+            ],
             TextField(
               controller: _totalQtyCtrl,
               decoration: InputDecoration(
@@ -849,6 +1138,8 @@ class _EditItemDialogState extends State<_EditItemDialog> {
           employerQuantity: empFn,
           pricePerUnit: priceFn,
           currency: _currency,
+          name: _nameCtrl.text, // Updated
+          unit: _unitCtrl.text, // Updated
         ));
   }
 }

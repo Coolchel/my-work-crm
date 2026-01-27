@@ -35,6 +35,10 @@ class StageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stage
         fields = '__all__'
+        extra_kwargs = {
+            'work_notes': {'required': False, 'allow_blank': True},
+            'material_notes': {'required': False, 'allow_blank': True},
+        }
 
 class ShieldGroupSerializer(serializers.ModelSerializer):
     class Meta:

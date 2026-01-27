@@ -25,6 +25,12 @@ class StageModel {
   @JsonKey(name: 'ended_at')
   final DateTime? endedAt;
 
+  @JsonKey(name: 'work_notes', defaultValue: '')
+  final String workNotes;
+
+  @JsonKey(name: 'material_notes', defaultValue: '')
+  final String materialNotes;
+
   /// Пункты сметы
   @JsonKey(name: 'estimate_items', defaultValue: [])
   final List<EstimateItemModel> estimateItems;
@@ -37,6 +43,8 @@ class StageModel {
     this.startedAt,
     this.endedAt,
     this.estimateItems = const [],
+    this.workNotes = '',
+    this.materialNotes = '',
   });
 
   /// Создает экземпляр из JSON
@@ -55,6 +63,8 @@ class StageModel {
     DateTime? startedAt,
     DateTime? endedAt,
     List<EstimateItemModel>? estimateItems,
+    String? workNotes,
+    String? materialNotes,
   }) {
     return StageModel(
       id: id ?? this.id,
@@ -64,6 +74,8 @@ class StageModel {
       startedAt: startedAt ?? this.startedAt,
       endedAt: endedAt ?? this.endedAt,
       estimateItems: estimateItems ?? this.estimateItems,
+      workNotes: workNotes ?? this.workNotes,
+      materialNotes: materialNotes ?? this.materialNotes,
     );
   }
 }
