@@ -50,7 +50,6 @@ class _MarqueeText extends StatefulWidget {
 class _MarqueeTextState extends State<_MarqueeText> {
   late ScrollController _scrollController;
   Timer? _timer;
-  bool _forward = true;
 
   @override
   void initState() {
@@ -65,18 +64,10 @@ class _MarqueeTextState extends State<_MarqueeText> {
         final maxScroll = _scrollController.position.maxScrollExtent;
         final currentScroll = _scrollController.offset;
 
-        if (_forward) {
-          if (currentScroll >= maxScroll) {
-            _forward = false;
-          } else {
-            _scrollController.jumpTo(currentScroll + 2);
-          }
+        if (currentScroll >= maxScroll) {
+          _scrollController.jumpTo(0);
         } else {
-          if (currentScroll <= 0) {
-            _forward = true;
-          } else {
-            _scrollController.jumpTo(currentScroll - 2);
-          }
+          _scrollController.jumpTo(currentScroll + 1.5);
         }
       }
     });
@@ -97,10 +88,15 @@ class _MarqueeTextState extends State<_MarqueeText> {
         scrollDirection: Axis.horizontal,
         controller: _scrollController,
         physics: const NeverScrollableScrollPhysics(),
-        child: Text(
-          widget.text,
-          style: Theme.of(context).textTheme.titleLarge,
-          maxLines: 1,
+        child: Row(
+          children: [
+            Text(
+              widget.text,
+              style: Theme.of(context).textTheme.titleLarge,
+              maxLines: 1,
+            ),
+            const SizedBox(width: 50), // Gap before restart
+          ],
         ),
       ),
     );
@@ -366,7 +362,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     final confirm = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-              title: const Text("Удалить позицию?"),
+              title: const Center(child: Text("Удалить позицию?")),
               content: const Text(
                   "Вы уверены, что хотите удалить эту позицию из сметы?"),
               actions: [
@@ -422,7 +418,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-                title: const Text("Применить шаблон"),
+                title: const Center(child: Text("Применить шаблон")),
                 content: SizedBox(
                   width: double.maxFinite,
                   child: ListView.builder(
@@ -476,7 +472,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           context: context,
           builder: (context) {
             return AlertDialog(
-              title: const Text("Отчеты"),
+              title: const Center(child: Text("Отчеты")),
               content: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1066,7 +1062,7 @@ class _EstimateListTile extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        '${item.totalQuantity} ${item.unit} × ${item.pricePerUnit}$currencySymbol',
+                        '${item.totalQuantity.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")} ${item.unit} × ${item.pricePerUnit?.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "") ?? "0"}$currencySymbol',
                         style: TextStyle(
                             fontSize: 11, color: Colors.grey.shade600),
                       ),
@@ -1081,7 +1077,7 @@ class _EstimateListTile extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            'Контрагент ${employerAmount.toStringAsFixed(0)}$currencySymbol',
+                            'Контрагент ${employerAmount.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")}$currencySymbol',
                             style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w500,
@@ -1100,7 +1096,7 @@ class _EstimateListTile extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            'Наши ${myAmount.toStringAsFixed(0)}$currencySymbol',
+                            'Наши ${myAmount.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")}$currencySymbol',
                             style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w500,
@@ -1129,7 +1125,7 @@ class _EstimateListTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: Text(
-                    '${clientAmount.toStringAsFixed(0)}$currencySymbol',
+                    '${clientAmount.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")}$currencySymbol',
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -1301,8 +1297,11 @@ class _EditItemDialogState extends State<_EditItemDialog> {
     super.initState();
 
     String formatNum(double val) {
-      final str = val.toStringAsFixed(1);
-      return str.endsWith('.0') ? str.substring(0, str.length - 2) : str;
+      if (val == val.toInt()) return val.toInt().toString();
+      final str = val.toStringAsFixed(2);
+      if (str.endsWith('.00')) return str.substring(0, str.length - 3);
+      if (str.endsWith('0')) return str.substring(0, str.length - 1);
+      return str;
     }
 
     _totalQtyCtrl =
@@ -1356,8 +1355,11 @@ class _EditItemDialogState extends State<_EditItemDialog> {
 
       String formatNum(double val) {
         if (val < 0) val = 0; // No negative values
-        final str = val.toStringAsFixed(1);
-        return str.endsWith('.0') ? str.substring(0, str.length - 2) : str;
+        if (val == val.toInt()) return val.toInt().toString();
+        final str = val.toStringAsFixed(2);
+        if (str.endsWith('.00')) return str.substring(0, str.length - 3);
+        if (str.endsWith('0')) return str.substring(0, str.length - 1);
+        return str;
       }
 
       if (source == 'total') {
@@ -1386,10 +1388,12 @@ class _EditItemDialogState extends State<_EditItemDialog> {
       child: AlertDialog(
         actionsAlignment: MainAxisAlignment.center,
         title: isNewManual
-            ? const Text("Новая позиция")
-            : (widget.item.name.length > 25
-                ? _MarqueeText(text: widget.item.name)
-                : Text(widget.item.name)),
+            ? const Center(child: Text("Новая позиция"))
+            : Center(
+                child: widget.item.name.length > 25
+                    ? _MarqueeText(text: widget.item.name)
+                    : Text(widget.item.name),
+              ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1619,8 +1623,11 @@ class _QuantityInputDialogState extends State<_QuantityInputDialog> {
 
       String formatNum(double val) {
         if (val < 0) val = 0;
-        final str = val.toStringAsFixed(1);
-        return str.endsWith('.0') ? str.substring(0, str.length - 2) : str;
+        if (val == val.toInt()) return val.toInt().toString();
+        final str = val.toStringAsFixed(2);
+        if (str.endsWith('.00')) return str.substring(0, str.length - 3);
+        if (str.endsWith('0')) return str.substring(0, str.length - 1);
+        return str;
       }
 
       if (source == 'total') {
@@ -1647,9 +1654,11 @@ class _QuantityInputDialogState extends State<_QuantityInputDialog> {
       ),
       child: AlertDialog(
         actionsAlignment: MainAxisAlignment.center,
-        title: widget.item.name.length > 25
-            ? _MarqueeText(text: widget.item.name)
-            : Text(widget.item.name),
+        title: Center(
+          child: widget.item.name.length > 25
+              ? _MarqueeText(text: widget.item.name)
+              : Text(widget.item.name),
+        ),
         content: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             TextField(
