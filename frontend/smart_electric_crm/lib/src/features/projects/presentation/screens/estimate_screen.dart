@@ -663,92 +663,161 @@ class _EstimateListTile extends StatelessWidget {
       required this.onDelete})
       : super(key: key);
 
+  Color get _iconColor =>
+      item.itemType == 'work' ? Colors.blue.shade600 : Colors.teal.shade600;
+
+  IconData get _icon =>
+      item.itemType == 'work' ? Icons.engineering : Icons.inventory_2_outlined;
+
   @override
   Widget build(BuildContext context) {
-    final currency = item.currency == 'USD' ? '\$' : ' руб';
-
+    final currencySymbol = item.currency == 'USD' ? '\$' : 'р';
     final clientAmount = item.clientAmount ?? 0;
-    final myAmount = item.myAmount ?? 0;
     final employerAmount = item.employerAmount ?? 0;
-    final showDetails = employerAmount > 0;
+    final myAmount = item.myAmount ?? 0;
+    final hasEmployer = employerAmount > 0;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(
-          horizontal: 8, vertical: 2), // Compact margin
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: Colors.grey.shade200)),
-      child: ListTile(
-        dense: true, // Key for compactness
-        visualDensity: const VisualDensity(
-            horizontal: -4, vertical: -4), // Max compactness
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+    return InkWell(
+      onTap: () async {
+        final result = await showDialog<dynamic>(
+            context: context, builder: (_) => _EditItemDialog(item: item));
 
-        // Leading: Icon indicating type (Work/Material)
-        leading: Icon(item.itemType == 'work' ? Icons.build : Icons.inventory_2,
-            size: 20,
-            color: item.itemType == 'work'
-                ? Colors.blue.shade700
-                : Colors.green.shade700),
-
-        // Title: Name
-        title: Text(
-          item.name,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+        if (result == 'delete') {
+          onDelete();
+        } else if (result is EstimateItemModel) {
+          onUpdate(result);
+        }
+      },
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.grey.withOpacity(0.15)),
         ),
-
-        // Subtitle: Calculation stats
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            const SizedBox(height: 2),
-            // Main Row: Qty * Price = Total
-            Text(
-                "${item.totalQuantity} ${item.unit} x ${item.pricePerUnit}$currency = ${clientAmount.toStringAsFixed(2)}$currency",
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: Colors.black87)),
-            // Details Row (Employer Share etc)
-            if (showDetails)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  // Compact string
-                  "Шеф: ${employerAmount.toStringAsFixed(2)}$currency  |  Мои: ${myAmount.toStringAsFixed(2)}$currency",
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+            // Leading: Colored circular icon
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: _iconColor.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(_icon, size: 16, color: _iconColor),
+            ),
+            const SizedBox(width: 10),
+
+            // Middle: Name + compact info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Name
+                  Text(
+                    item.name,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w500, fontSize: 13, height: 1.2),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  // Compact stats row
+                  Row(
+                    children: [
+                      Text(
+                        '${item.totalQuantity} ${item.unit}',
+                        style: TextStyle(
+                            fontSize: 11, color: Colors.grey.shade600),
+                      ),
+                      Text(' × ',
+                          style: TextStyle(
+                              fontSize: 11, color: Colors.grey.shade400)),
+                      Text(
+                        '${item.pricePerUnit}$currencySymbol',
+                        style: TextStyle(
+                            fontSize: 11, color: Colors.grey.shade600),
+                      ),
+                      if (hasEmployer) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Шеф: ${employerAmount.toStringAsFixed(0)}$currencySymbol',
+                            style: TextStyle(
+                                fontSize: 9, color: Colors.orange.shade700),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Trailing: Amount badge + delete
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Amount badge
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: hasEmployer
+                        ? Colors.amber.shade50
+                        : Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${clientAmount.toStringAsFixed(0)}$currencySymbol',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: hasEmployer
+                              ? Colors.amber.shade800
+                              : Colors.green.shade700,
+                        ),
+                      ),
+                      if (hasEmployer)
+                        Text(
+                          'мои: ${myAmount.toStringAsFixed(0)}$currencySymbol',
+                          style: TextStyle(
+                              fontSize: 9, color: Colors.green.shade600),
+                        ),
+                    ],
+                  ),
                 ),
-              )
+                const SizedBox(width: 4),
+                // Delete button
+                SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: IconButton(
+                    icon: Icon(Icons.close,
+                        size: 14, color: Colors.grey.shade400),
+                    padding: EdgeInsets.zero,
+                    onPressed: onDelete,
+                    tooltip: "Удалить",
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
-
-        // Trailing: Delete button (small)
-        trailing: SizedBox(
-          width: 30,
-          height: 30,
-          child: IconButton(
-            icon:
-                const Icon(Icons.delete_outline, size: 18, color: Colors.grey),
-            padding: EdgeInsets.zero,
-            onPressed: onDelete,
-            tooltip: "Удалить",
-          ),
-        ),
-
-        onTap: () async {
-          final result = await showDialog<dynamic>(
-              context: context, builder: (_) => _EditItemDialog(item: item));
-
-          if (result == 'delete') {
-            onDelete();
-          } else if (result is EstimateItemModel) {
-            onUpdate(result);
-          }
-        },
       ),
     );
   }
