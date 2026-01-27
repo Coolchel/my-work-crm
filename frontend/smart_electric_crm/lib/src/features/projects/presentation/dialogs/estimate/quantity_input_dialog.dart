@@ -7,8 +7,12 @@ import 'package:smart_electric_crm/src/features/projects/presentation/widgets/es
 class QuantityInputDialog extends StatefulWidget {
   final CatalogItem item;
   final String itemType;
+  final bool hidePrices;
   const QuantityInputDialog(
-      {super.key, required this.item, required this.itemType});
+      {super.key,
+      required this.item,
+      required this.itemType,
+      this.hidePrices = false});
 
   @override
   State<QuantityInputDialog> createState() => _QuantityInputDialogState();
@@ -154,32 +158,34 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
                 ],
               ),
             ],
-            const SizedBox(height: 10),
-            TextField(
-                controller: _priceCtrl,
-                decoration: const InputDecoration(labelText: "Цена"),
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [DecimalInputFormatter()]),
-            const SizedBox(height: 12),
-            SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'USD', label: Text('USD')),
-                ButtonSegment(value: 'BYN', label: Text('BYN')),
-              ],
-              selected: {_currency},
-              onSelectionChanged: (val) =>
-                  setState(() => _currency = val.first),
-              style: ButtonStyle(
-                visualDensity: VisualDensity.compact,
-                backgroundColor: WidgetStateProperty.resolveWith((states) {
-                  if (states.contains(WidgetState.selected)) {
-                    return themeColor.withOpacity(0.15);
-                  }
-                  return null;
-                }),
+            if (!widget.hidePrices) ...[
+              const SizedBox(height: 10),
+              TextField(
+                  controller: _priceCtrl,
+                  decoration: const InputDecoration(labelText: "Цена"),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [DecimalInputFormatter()]),
+              const SizedBox(height: 12),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'USD', label: Text('USD')),
+                  ButtonSegment(value: 'BYN', label: Text('BYN')),
+                ],
+                selected: {_currency},
+                onSelectionChanged: (val) =>
+                    setState(() => _currency = val.first),
+                style: ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  backgroundColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return themeColor.withOpacity(0.15);
+                    }
+                    return null;
+                  }),
+                ),
               ),
-            ),
+            ],
           ]),
         ),
         actions: [

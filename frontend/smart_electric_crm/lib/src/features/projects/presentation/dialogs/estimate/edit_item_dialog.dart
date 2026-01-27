@@ -6,8 +6,10 @@ import 'package:smart_electric_crm/src/features/projects/presentation/widgets/es
 /// Dialog for editing an estimate item
 class EditItemDialog extends StatefulWidget {
   final EstimateItemModel item;
+  final bool hidePrices;
 
-  const EditItemDialog({super.key, required this.item});
+  const EditItemDialog(
+      {super.key, required this.item, this.hidePrices = false});
 
   @override
   State<EditItemDialog> createState() => _EditItemDialogState();
@@ -215,38 +217,40 @@ class _EditItemDialogState extends State<EditItemDialog> {
                   inputFormatters: [DecimalInputFormatter()],
                 ),
               ],
-              const SizedBox(height: 10),
-              Row(children: [
-                Expanded(
-                  child: TextField(
-                    controller: _priceCtrl,
-                    decoration: const InputDecoration(labelText: "Цена"),
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [DecimalInputFormatter()],
+              if (!widget.hidePrices) ...[
+                const SizedBox(height: 10),
+                Row(children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _priceCtrl,
+                      decoration: const InputDecoration(labelText: "Цена"),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [DecimalInputFormatter()],
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(value: 'USD', label: Text('USD')),
+                    ButtonSegment(value: 'BYN', label: Text('BYN')),
+                  ],
+                  selected: {_currency},
+                  onSelectionChanged: (val) =>
+                      setState(() => _currency = val.first),
+                  style: ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return themeColor.withOpacity(0.15);
+                      }
+                      return null;
+                    }),
                   ),
                 ),
-              ]),
-              const SizedBox(height: 12),
-              SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'USD', label: Text('USD')),
-                  ButtonSegment(value: 'BYN', label: Text('BYN')),
-                ],
-                selected: {_currency},
-                onSelectionChanged: (val) =>
-                    setState(() => _currency = val.first),
-                style: ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                  backgroundColor: WidgetStateProperty.resolveWith((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return themeColor.withOpacity(0.15);
-                    }
-                    return null;
-                  }),
-                ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
+              ],
             ],
           ),
         ),

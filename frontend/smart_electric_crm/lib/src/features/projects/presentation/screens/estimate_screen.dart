@@ -143,11 +143,15 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     final tabController = DefaultTabController.of(context);
     final index = tabController.index;
     final itemType = index == 0 ? 'material' : 'work';
+    // Logic: if Work tab, always show prices. If Material, check provider.
+    final showPrices = itemType == 'work' ? true : ref.read(showPricesProvider);
+    final hidePrices = !showPrices;
 
     showDialog(
         context: context,
         builder: (_) => AddItemDialog(
               itemType: itemType,
+              hidePrices: hidePrices,
               onAdd: (catalogItem) async {
                 // If ID == 0, it's manual. We need to ASK for Name/Unit/Price immediately.
                 // Reusing EditItemDialog is best, but EditItemDialog takes EstimateItemModel.
@@ -169,7 +173,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                   // Open Edit Dialog directly
                   final result = await showDialog<dynamic>(
                       context: context,
-                      builder: (_) => EditItemDialog(item: tempItem));
+                      builder: (_) => EditItemDialog(
+                          item: tempItem, hidePrices: hidePrices));
 
                   if (result is EstimateItemModel) {
                     // Save New Manual Item
@@ -185,6 +190,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                     builder: (_) => QuantityInputDialog(
                           item: catalogItem,
                           itemType: itemType,
+                          hidePrices: hidePrices,
                         ));
 
                 if (quantities == null) return;

@@ -9,6 +9,7 @@ class EstimateListTile extends StatelessWidget {
   final VoidCallback onDelete;
   final Color primaryColor;
   final bool isMarkupActive;
+  final bool hidePrices;
 
   const EstimateListTile({
     super.key,
@@ -17,6 +18,7 @@ class EstimateListTile extends StatelessWidget {
     required this.onDelete,
     required this.primaryColor,
     this.isMarkupActive = false,
+    this.hidePrices = false,
   });
 
   IconData get _icon =>
@@ -46,7 +48,8 @@ class EstimateListTile extends StatelessWidget {
     return InkWell(
       onTap: () async {
         final result = await showDialog<dynamic>(
-            context: context, builder: (_) => EditItemDialog(item: item));
+            context: context,
+            builder: (_) => EditItemDialog(item: item, hidePrices: hidePrices));
 
         if (result == 'delete') {
           onDelete();
@@ -101,18 +104,21 @@ class EstimateListTile extends StatelessWidget {
                         style: TextStyle(
                             fontSize: 11, color: Colors.grey.shade600),
                       ),
-                      // Price part - orange when markup active
-                      Text(
-                        '× ${item.pricePerUnit?.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "") ?? "0"}$currencySymbol',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: isMarkupActive
-                                ? Colors.deepOrange
-                                : Colors.grey.shade600,
-                            fontWeight: isMarkupActive
-                                ? FontWeight.bold
-                                : FontWeight.normal),
-                      ),
+                      if (!hidePrices) ...[
+                        const SizedBox(width: 4), // Spacer
+                        // Price part - orange when markup active
+                        Text(
+                          '× ${item.pricePerUnit?.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "") ?? "0"}$currencySymbol',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: isMarkupActive
+                                  ? Colors.deepOrange
+                                  : Colors.grey.shade600,
+                              fontWeight: isMarkupActive
+                                  ? FontWeight.bold
+                                  : FontWeight.normal),
+                        ),
+                      ],
                       if (hasEmployer) ...[
                         const SizedBox(width: 6),
                         // Контрагент mini badge (horizontal)
@@ -164,24 +170,26 @@ class EstimateListTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Main amount badge - only border is orange when markup is active
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: amountBgColor,
-                    borderRadius: BorderRadius.circular(5),
-                    border: isMarkupActive
-                        ? Border.all(color: Colors.orange.shade300, width: 0.8)
-                        : null,
+                if (!hidePrices)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: amountBgColor,
+                      borderRadius: BorderRadius.circular(5),
+                      border: isMarkupActive
+                          ? Border.all(
+                              color: Colors.orange.shade300, width: 0.8)
+                          : null,
+                    ),
+                    child: Text(
+                      '${clientAmount.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")}$currencySymbol',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: amountTextColor),
+                    ),
                   ),
-                  child: Text(
-                    '${clientAmount.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")}$currencySymbol',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: amountTextColor),
-                  ),
-                ),
                 const SizedBox(width: 4),
                 // Delete button
                 SizedBox(

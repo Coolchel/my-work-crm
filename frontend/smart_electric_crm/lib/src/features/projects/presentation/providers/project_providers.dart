@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/models/project_model.dart';
@@ -80,9 +81,11 @@ class ProjectList extends _$ProjectList {
   }
 }
 
-/// Провайдер одного проекта по ID
 @riverpod
 Future<ProjectModel> projectById(ProjectByIdRef ref, String id) async {
   final repository = ref.watch(projectRepositoryProvider);
   return repository.fetchProject(id);
 }
+
+/// Провайдер для управления отображением цен (для режима "Без цен")
+final showPricesProvider = StateProvider<bool>((ref) => true);

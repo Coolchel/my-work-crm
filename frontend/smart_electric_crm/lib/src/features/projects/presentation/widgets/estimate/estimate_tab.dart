@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/utils/decimal_input_formatter.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_list_tile.dart';
@@ -6,7 +8,7 @@ import 'package:smart_electric_crm/src/features/projects/presentation/widgets/es
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/total_dashboard.dart';
 
 /// Tab widget for displaying estimate items (Materials or Works)
-class EstimateTab extends StatefulWidget {
+class EstimateTab extends ConsumerStatefulWidget {
   final List<EstimateItemModel> items;
   final Function(EstimateItemModel) onUpdate;
   final Function(EstimateItemModel) onDelete;
@@ -33,10 +35,10 @@ class EstimateTab extends StatefulWidget {
   });
 
   @override
-  State<EstimateTab> createState() => _EstimateTabState();
+  ConsumerState<EstimateTab> createState() => _EstimateTabState();
 }
 
-class _EstimateTabState extends State<EstimateTab> {
+class _EstimateTabState extends ConsumerState<EstimateTab> {
   late TextEditingController _noteCtrl;
   bool _saving = false;
   String? _lastSavedValue;
@@ -281,9 +283,44 @@ class _EstimateTabState extends State<EstimateTab> {
       sortedCategories.add('Разное');
     }
 
+    final showPrices = _isWorkTab ? true : ref.watch(showPricesProvider);
+
     return CustomScrollView(
       primary: false,
       slivers: [
+        // Toggle for Hide Prices (Only in Materials tab)
+        if (!_isWorkTab)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    showPrices ? "Цены отображаются" : "Цены скрыты",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: showPrices ? Colors.green : Colors.grey,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Switch(
+                    value: !showPrices,
+                    onChanged: (val) {
+                      ref.read(showPricesProvider.notifier).state = !val;
+                    },
+                    activeColor: Colors.blue,
+                  ),
+                  const SizedBox(width: 4),
+                  const Text("Скрыть цены",
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13))
+                ],
+              ),
+            ),
+          ),
+
         if (widget.items.isEmpty)
           const SliverToBoxAdapter(
               child: Padding(
@@ -308,6 +345,7 @@ class _EstimateTabState extends State<EstimateTab> {
                       onDelete: () => widget.onDelete(item),
                       primaryColor: _primaryColor,
                       isMarkupActive: widget.markupPercent > 0,
+                      hidePrices: !showPrices,
                     );
                   },
                   childCount: groupedItems[category]!.length,
@@ -317,24 +355,25 @@ class _EstimateTabState extends State<EstimateTab> {
             const SliverToBoxAdapter(child: SizedBox(height: 4)),
           ],
 
-        // Total Section - Detailed Dashboard
-        SliverToBoxAdapter(
-          child: TotalDashboard(
-            totalUsd: totalUsd,
-            totalByn: totalByn,
-            employerUsd: employerUsd,
-            employerByn: employerByn,
-            ourUsd: ourUsd,
-            ourByn: ourByn,
-            primaryColor: _primaryColor,
-            primaryColorLight: _primaryColorLight,
-            isWorkTab: _isWorkTab,
-            isMarkupActive: !_isWorkTab && widget.markupPercent > 0,
+        // Total Section - Detailed Dashboard (Hidden if prices hidden)
+        if (showPrices)
+          SliverToBoxAdapter(
+            child: TotalDashboard(
+              totalUsd: totalUsd,
+              totalByn: totalByn,
+              employerUsd: employerUsd,
+              employerByn: employerByn,
+              ourUsd: ourUsd,
+              ourByn: ourByn,
+              primaryColor: _primaryColor,
+              primaryColorLight: _primaryColorLight,
+              isWorkTab: _isWorkTab,
+              isMarkupActive: !_isWorkTab && widget.markupPercent > 0,
+            ),
           ),
-        ),
 
-        // Markup Control (Spoiler style)
-        if (!_isWorkTab)
+        // Markup Control (Spoiler style) - Hidden if prices hidden
+        if (!_isWorkTab && showPrices)
           SliverToBoxAdapter(
             child: _buildMarkupControl(),
           ),

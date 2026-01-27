@@ -8,8 +8,13 @@ import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart
 class AddItemDialog extends ConsumerStatefulWidget {
   final Function(CatalogItem) onAdd;
   final String itemType;
+  final bool hidePrices;
 
-  const AddItemDialog({super.key, required this.onAdd, required this.itemType});
+  const AddItemDialog(
+      {super.key,
+      required this.onAdd,
+      required this.itemType,
+      this.hidePrices = false});
 
   @override
   ConsumerState<AddItemDialog> createState() => _AddItemDialogState();
@@ -87,8 +92,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                   final item = _results[i];
                   return ListTile(
                     title: Text(item.name),
-                    subtitle:
-                        Text("${item.defaultPrice} ${item.defaultCurrency}"),
+                    subtitle: widget.hidePrices
+                        ? null
+                        : Text("${item.defaultPrice} ${item.defaultCurrency}"),
                     trailing: IconButton(
                       icon: const Icon(Icons.add),
                       onPressed: () => _onItemAdded(item),
