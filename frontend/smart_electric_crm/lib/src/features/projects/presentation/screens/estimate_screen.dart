@@ -543,15 +543,28 @@ class _EstimateTabState extends State<_EstimateTab> {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate all totals
     double totalUsd = 0;
     double totalByn = 0;
+    double employerUsd = 0;
+    double employerByn = 0;
+
     for (var i in widget.items) {
+      final clientAmount = i.clientAmount ?? 0;
+      final employerAmount = i.employerAmount ?? 0;
+
       if (i.currency == 'USD') {
-        totalUsd += (i.clientAmount ?? 0);
+        totalUsd += clientAmount;
+        employerUsd += employerAmount;
       } else {
-        totalByn += (i.clientAmount ?? 0);
+        totalByn += clientAmount;
+        employerByn += employerAmount;
       }
     }
+
+    // Our share = total - employer
+    final ourUsd = totalUsd - employerUsd;
+    final ourByn = totalByn - employerByn;
 
     return CustomScrollView(
       primary: false,
@@ -583,75 +596,18 @@ class _EstimateTabState extends State<_EstimateTab> {
             ),
           ),
 
-        // Total Section - more prominent
+        // Total Section - Detailed Dashboard
         SliverToBoxAdapter(
-          child: Container(
-            margin: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: _primaryColorLight,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _primaryColor.withOpacity(0.15)),
-            ),
-            child: Row(
-              children: [
-                // Different icon for Total (not same as list items)
-                Icon(
-                  _isWorkTab
-                      ? Icons.calculate_outlined
-                      : Icons.summarize_outlined,
-                  size: 18,
-                  color: _primaryColor.withOpacity(0.7),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Итого:',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: _primaryColor.withOpacity(0.8),
-                  ),
-                ),
-                const Spacer(),
-                // USD amount
-                if (totalUsd > 0)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _primaryColor,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '${totalUsd.toStringAsFixed(0)} \$',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                if (totalUsd > 0 && totalByn > 0) const SizedBox(width: 6),
-                // BYN amount (purple theme)
-                if (totalByn > 0)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.deepPurple.shade400,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      '${totalByn.toStringAsFixed(0)} р',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+          child: _TotalDashboard(
+            totalUsd: totalUsd,
+            totalByn: totalByn,
+            employerUsd: employerUsd,
+            employerByn: employerByn,
+            ourUsd: ourUsd,
+            ourByn: ourByn,
+            primaryColor: _primaryColor,
+            primaryColorLight: _primaryColorLight,
+            isWorkTab: _isWorkTab,
           ),
         ),
 
@@ -724,6 +680,162 @@ class _EstimateTabState extends State<_EstimateTab> {
         // Extra padding at bottom
         const SliverPadding(padding: EdgeInsets.only(bottom: 8)),
       ],
+    );
+  }
+}
+
+// Comprehensive dashboard for summary totals
+class _TotalDashboard extends StatelessWidget {
+  final double totalUsd;
+  final double totalByn;
+  final double employerUsd;
+  final double employerByn;
+  final double ourUsd;
+  final double ourByn;
+  final Color primaryColor;
+  final Color primaryColorLight;
+  final bool isWorkTab;
+
+  const _TotalDashboard({
+    required this.totalUsd,
+    required this.totalByn,
+    required this.employerUsd,
+    required this.employerByn,
+    required this.ourUsd,
+    required this.ourByn,
+    required this.primaryColor,
+    required this.primaryColorLight,
+    required this.isWorkTab,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (totalUsd == 0 && totalByn == 0) return const SizedBox.shrink();
+
+    final hasEmployer = employerUsd > 0 || employerByn > 0;
+    final hasUsd = totalUsd > 0 || employerUsd > 0 || ourUsd > 0;
+    final hasByn = totalByn > 0 || employerByn > 0 || ourByn > 0;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+      decoration: BoxDecoration(
+        color: primaryColorLight.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: primaryColor.withOpacity(0.12)),
+      ),
+      child: Column(
+        children: [
+          // Header with background
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: primaryColor.withOpacity(0.05),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(10),
+                topRight: Radius.circular(10),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isWorkTab
+                      ? Icons.calculate_outlined
+                      : Icons.summarize_outlined,
+                  size: 16,
+                  color: primaryColor.withOpacity(0.8),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Итоги по разделу',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: primaryColor.withOpacity(0.9),
+                  ),
+                ),
+                const Spacer(),
+                if (hasUsd) _label('USD (\$)', primaryColor),
+                if (hasUsd && hasByn) const SizedBox(width: 25),
+                if (hasByn) _label('BYN (р)', Colors.deepPurple),
+              ],
+            ),
+          ),
+          // Table Content
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              children: [
+                _row('Всего', totalUsd, totalByn, primaryColor, isBold: true),
+                if (hasEmployer) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4),
+                    child: Divider(height: 1, thickness: 0.5),
+                  ),
+                  _row('Шеф', employerUsd, employerByn, Colors.orange),
+                  const SizedBox(height: 6),
+                  _row('Наши', ourUsd, ourByn, primaryColor),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _label(String text, Color color) {
+    return SizedBox(
+      width: 65,
+      child: Text(
+        text,
+        textAlign: TextAlign.right,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: color.withOpacity(0.6),
+        ),
+      ),
+    );
+  }
+
+  Widget _row(String label, double usd, double byn, Color color,
+      {bool isBold = false}) {
+    final hasUsd = totalUsd > 0 || employerUsd > 0 || ourUsd > 0;
+    final hasByn = totalByn > 0 || employerByn > 0 || ourByn > 0;
+
+    return Row(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+            color: isBold ? color : Colors.grey.shade700,
+          ),
+        ),
+        const Spacer(),
+        if (hasUsd) _amount(usd, color, isBold, show: usd > 0),
+        if (hasUsd && hasByn) const SizedBox(width: 15),
+        if (hasByn) _amount(byn, Colors.deepPurple, isBold, show: byn > 0),
+      ],
+    );
+  }
+
+  Widget _amount(double value, Color color, bool isBold, {required bool show}) {
+    return SizedBox(
+      width: 65,
+      child: show
+          ? Text(
+              value.toStringAsFixed(0),
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+                color: isBold ? color : color.withOpacity(0.8),
+              ),
+            )
+          : const Text('—',
+              textAlign: TextAlign.right, style: TextStyle(color: Colors.grey)),
     );
   }
 }
