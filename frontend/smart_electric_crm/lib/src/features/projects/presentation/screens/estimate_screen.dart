@@ -481,9 +481,10 @@ class _EstimateTab extends StatefulWidget {
 
 class _EstimateTabState extends State<_EstimateTab> {
   late TextEditingController _noteCtrl;
-  Timer? _debounce;
+  // Timer? _debounce;
   bool _saving = false;
   String? _lastSavedValue;
+  bool _hasUnsavedChanges = false;
 
   @override
   void initState() {
@@ -499,39 +500,40 @@ class _EstimateTabState extends State<_EstimateTab> {
     if (widget.note != oldWidget.note) {
       debugPrint(
           "📝 _EstimateTabState.didUpdateWidget: old='${oldWidget.note}', new='${widget.note}'");
-      // Parent sent new data - sync if not actively typing
-      bool isTyping = _debounce?.isActive ?? false;
-      if (!isTyping) {
+      // Parent sent new data - sync
+      if (widget.note != _lastSavedValue) {
         _noteCtrl.text = widget.note;
         _lastSavedValue = widget.note;
+        _hasUnsavedChanges = false;
       }
     }
   }
 
   @override
   void dispose() {
-    _debounce?.cancel();
-    // Save on exit if there are unsaved changes (deferred to avoid tree lock)
-    if (_noteCtrl.text != _lastSavedValue) {
-      final valueToSave = _noteCtrl.text;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onSaveNote(valueToSave);
-      });
-    }
+    // _debounce?.cancel(); // Removed
     _noteCtrl.dispose();
     super.dispose();
   }
 
-  void _onNoteChanged(String value) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(seconds: 1), () async {
-      setState(() => _saving = true);
-      try {
-        await widget.onSaveNote(value);
-        if (mounted) _lastSavedValue = value;
-      } finally {
-        if (mounted) setState(() => _saving = false);
+  Future<void> _saveNote() async {
+    setState(() => _saving = true);
+    try {
+      await widget.onSaveNote(_noteCtrl.text);
+      if (mounted) {
+        setState(() {
+          _lastSavedValue = _noteCtrl.text;
+          _hasUnsavedChanges = false;
+        });
       }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _onNoteChanged(String value) {
+    setState(() {
+      _hasUnsavedChanges = value != _lastSavedValue;
     });
   }
 
@@ -616,7 +618,7 @@ class _EstimateTabState extends State<_EstimateTab> {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+            const SliverToBoxAdapter(child: SizedBox(height: 4)),
           ],
 
         // Total Section - Detailed Dashboard
@@ -650,21 +652,6 @@ class _EstimateTabState extends State<_EstimateTab> {
                   Text("Заметки",
                       style:
                           TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                  const Spacer(),
-                  if (_saving)
-                    const SizedBox(
-                        width: 10,
-                        height: 10,
-                        child: CircularProgressIndicator(strokeWidth: 1.5))
-                  else
-                    Icon(
-                        _noteCtrl.text == _lastSavedValue
-                            ? Icons.cloud_done_outlined
-                            : Icons.cloud_upload_outlined,
-                        size: 14,
-                        color: _noteCtrl.text == _lastSavedValue
-                            ? Colors.green.shade400
-                            : Colors.grey.shade400),
                 ],
               ),
               const SizedBox(height: 6),
@@ -693,6 +680,26 @@ class _EstimateTabState extends State<_EstimateTab> {
                   hintText: "Дополнительная информация...",
                   hintStyle:
                       TextStyle(fontSize: 12, color: Colors.grey.shade400),
+                  suffixIcon: _saving
+                      ? const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2)),
+                        )
+                      : IconButton(
+                          onPressed: _hasUnsavedChanges ? _saveNote : null,
+                          icon: Icon(
+                            _hasUnsavedChanges
+                                ? Icons.save_as
+                                : Icons.check_circle_outline,
+                            color: _hasUnsavedChanges
+                                ? _primaryColor
+                                : Colors.grey.shade400,
+                          ),
+                          tooltip: "Сохранить заметку",
+                        ),
                 ),
                 onChanged: _onNoteChanged,
               ),
@@ -794,9 +801,10 @@ class _TotalDashboard extends StatelessWidget {
                     padding: EdgeInsets.symmetric(vertical: 4),
                     child: Divider(height: 1, thickness: 0.5),
                   ),
-                  _row('Контрагент', employerUsd, employerByn, Colors.orange),
+                  _row('Контрагент', employerUsd, employerByn, Colors.orange,
+                      isBold: true),
                   const SizedBox(height: 6),
-                  _row('Наши', ourUsd, ourByn, primaryColor),
+                  _row('Наши', ourUsd, ourByn, Colors.green, isBold: true),
                 ],
               ],
             ),
@@ -831,8 +839,6 @@ class _TotalDashboard extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: 12,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
             color: isBold ? color : Colors.grey.shade700,
           ),
         ),
@@ -1533,7 +1539,7 @@ class _GroupHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       alignment: Alignment.centerLeft,
       child: Row(
         children: [
@@ -1549,7 +1555,7 @@ class _GroupHeader extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
               color: color.withOpacity(0.8),
             ),

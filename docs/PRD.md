@@ -24,7 +24,9 @@
 - **Stages:** Flexible configuration. Can include Stage 1, 2, 3, Extra, or custom combinations.
 - **Engineering Map:** Distinct module (ShieldGroups, LedZones, Multimedia) for technical documentation.
 - **Automation:** Engineering data must be linkable to CatalogItems for automatic estimate generation.
-- **Financials:** Dual view (Client view vs. Contractor "Internal" view with profit calculation).
+- **Financials:** Dual view (Client view vs. Internal view for calculations with **Partner (Контрагент)**).
+- **Grouped Estimates:** Items in estimates must be grouped by their **Catalog Category** (e.g., "Cables", "Installation") for better readability.
+- **Manual Data Entry:** Important text fields like **Notes** use manual save via a button to prevent data loss or accidental overwrites during synchronization.
 
 ## Rules for AI:
 - Follow PEP8.
