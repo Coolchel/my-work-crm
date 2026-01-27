@@ -511,9 +511,12 @@ class _EstimateTabState extends State<_EstimateTab> {
   @override
   void dispose() {
     _debounce?.cancel();
-    // Save on exit if there are unsaved changes
+    // Save on exit if there are unsaved changes (deferred to avoid tree lock)
     if (_noteCtrl.text != _lastSavedValue) {
-      widget.onSaveNote(_noteCtrl.text);
+      final valueToSave = _noteCtrl.text;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onSaveNote(valueToSave);
+      });
     }
     _noteCtrl.dispose();
     super.dispose();
@@ -532,6 +535,12 @@ class _EstimateTabState extends State<_EstimateTab> {
     });
   }
 
+  // Color theming based on tab type
+  bool get _isWorkTab => widget.title == "Работы";
+  Color get _primaryColor => _isWorkTab ? Colors.green : Colors.blue;
+  Color get _primaryColorLight =>
+      _isWorkTab ? Colors.green.shade50 : Colors.blue.shade50;
+
   @override
   Widget build(BuildContext context) {
     double totalUsd = 0;
@@ -545,67 +554,166 @@ class _EstimateTabState extends State<_EstimateTab> {
     }
 
     return CustomScrollView(
-      primary:
-          false, // Prevent conflict with NestedScrollView's scroll controller
+      primary: false,
       slivers: [
-        SliverPersistentHeader(
-          delegate:
-              _EstimateHeaderDelegate(totalUsd: totalUsd, totalByn: totalByn),
-          pinned: true,
-        ),
+        // Items list
         if (widget.items.isEmpty)
-          SliverToBoxAdapter(
+          const SliverToBoxAdapter(
               child: Padding(
                   padding: EdgeInsets.all(32),
-                  child: Center(child: Text("Нет позиций")))),
+                  child: Center(
+                      child: Text("Нет позиций",
+                          style: TextStyle(color: Colors.grey)))))
+        else
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final item = widget.items[index];
+                  return _EstimateListTile(
+                    item: item,
+                    onUpdate: widget.onUpdate,
+                    onDelete: () => widget.onDelete(item),
+                    primaryColor: _primaryColor,
+                  );
+                },
+                childCount: widget.items.length,
+              ),
+            ),
+          ),
 
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final item = widget.items[index];
-              return _EstimateListTile(
-                item: item,
-                onUpdate: widget.onUpdate,
-                onDelete: () => widget.onDelete(item),
-              );
-            },
-            childCount: widget.items.length,
+        // Total Section - more prominent
+        SliverToBoxAdapter(
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: _primaryColorLight,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: _primaryColor.withOpacity(0.15)),
+            ),
+            child: Row(
+              children: [
+                // Different icon for Total (not same as list items)
+                Icon(
+                  _isWorkTab
+                      ? Icons.calculate_outlined
+                      : Icons.summarize_outlined,
+                  size: 18,
+                  color: _primaryColor.withOpacity(0.7),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Итого:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: _primaryColor.withOpacity(0.8),
+                  ),
+                ),
+                const Spacer(),
+                // USD amount
+                if (totalUsd > 0)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _primaryColor,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '${totalUsd.toStringAsFixed(0)} \$',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                if (totalUsd > 0 && totalByn > 0) const SizedBox(width: 6),
+                // BYN amount (purple theme)
+                if (totalByn > 0)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple.shade400,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '${totalByn.toStringAsFixed(0)} р',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
 
-        // Notes Section at the bottom - now inline
+        // Notes Section - at the bottom
         SliverToBoxAdapter(
             child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Divider(),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Заметки (${widget.title})",
-                      style: Theme.of(context).textTheme.titleSmall),
+                  Icon(Icons.sticky_note_2_outlined,
+                      size: 14, color: Colors.grey.shade500),
+                  const SizedBox(width: 6),
+                  Text("Заметки",
+                      style:
+                          TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                  const Spacer(),
                   if (_saving)
                     const SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(strokeWidth: 2))
+                        width: 10,
+                        height: 10,
+                        child: CircularProgressIndicator(strokeWidth: 1.5))
                   else
-                    Icon(Icons.check_circle_outline,
-                        size: 16,
+                    Icon(
+                        _noteCtrl.text == _lastSavedValue
+                            ? Icons.cloud_done_outlined
+                            : Icons.cloud_upload_outlined,
+                        size: 14,
                         color: _noteCtrl.text == _lastSavedValue
-                            ? Colors.green
-                            : Colors.grey),
+                            ? Colors.green.shade400
+                            : Colors.grey.shade400),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               TextField(
                 controller: _noteCtrl,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+                minLines: 2,
+                maxLines: null,
+                style: const TextStyle(fontSize: 13),
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide:
+                        BorderSide(color: _primaryColor.withOpacity(0.5)),
+                  ),
                   hintText: "Дополнительная информация...",
+                  hintStyle:
+                      TextStyle(fontSize: 12, color: Colors.grey.shade400),
                 ),
                 onChanged: _onNoteChanged,
               ),
@@ -613,69 +721,50 @@ class _EstimateTabState extends State<_EstimateTab> {
           ),
         )),
 
-        const SliverPadding(padding: EdgeInsets.only(bottom: 16)),
+        // Extra padding at bottom
+        const SliverPadding(padding: EdgeInsets.only(bottom: 8)),
       ],
     );
   }
-}
-
-class _EstimateHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final double totalUsd;
-  final double totalByn;
-
-  _EstimateHeaderDelegate({required this.totalUsd, required this.totalByn});
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: Theme.of(context).colorScheme.surfaceVariant,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      alignment: Alignment.centerLeft,
-      child: Text(
-        "Итого: ${totalUsd.toStringAsFixed(2)}\$ | ${totalByn.toStringAsFixed(2)} руб",
-        style: Theme.of(context)
-            .textTheme
-            .titleLarge
-            ?.copyWith(fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  @override
-  double get maxExtent => 60.0;
-  @override
-  double get minExtent => 60.0;
-  @override
-  bool shouldRebuild(_EstimateHeaderDelegate oldDelegate) =>
-      oldDelegate.totalUsd != totalUsd || oldDelegate.totalByn != totalByn;
 }
 
 class _EstimateListTile extends StatelessWidget {
   final EstimateItemModel item;
   final Function(EstimateItemModel) onUpdate;
   final VoidCallback onDelete;
+  final Color primaryColor;
 
   const _EstimateListTile(
       {Key? key,
       required this.item,
       required this.onUpdate,
-      required this.onDelete})
+      required this.onDelete,
+      required this.primaryColor})
       : super(key: key);
-
-  Color get _iconColor =>
-      item.itemType == 'work' ? Colors.blue.shade600 : Colors.teal.shade600;
 
   IconData get _icon =>
       item.itemType == 'work' ? Icons.engineering : Icons.inventory_2_outlined;
 
   @override
   Widget build(BuildContext context) {
-    final currencySymbol = item.currency == 'USD' ? '\$' : 'р';
+    final isUsd = item.currency == 'USD';
+    final currencySymbol = isUsd ? '\$' : 'р';
     final clientAmount = item.clientAmount ?? 0;
     final employerAmount = item.employerAmount ?? 0;
     final myAmount = item.myAmount ?? 0;
     final hasEmployer = employerAmount > 0;
+
+    // Amount badge colors based on currency
+    Color amountBgColor;
+    Color amountTextColor;
+    if (isUsd) {
+      amountBgColor = primaryColor.withOpacity(0.1);
+      amountTextColor = primaryColor;
+    } else {
+      // BYN - purple theme
+      amountBgColor = Colors.deepPurple.shade50;
+      amountTextColor = Colors.deepPurple.shade600;
+    }
 
     return InkWell(
       onTap: () async {
@@ -690,8 +779,8 @@ class _EstimateListTile extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(6),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(6),
@@ -699,19 +788,19 @@ class _EstimateListTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Leading: Colored circular icon
+            // Leading: Colored circular icon (uses primaryColor)
             Container(
-              width: 32,
-              height: 32,
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
-                color: _iconColor.withOpacity(0.12),
+                color: primaryColor.withOpacity(0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(_icon, size: 16, color: _iconColor),
+              child: Icon(_icon, size: 16, color: primaryColor),
             ),
             const SizedBox(width: 10),
 
-            // Middle: Name + compact info
+            // Middle: Name + compact info + Шеф/Наши badges
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -726,24 +815,17 @@ class _EstimateListTile extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
-                  // Compact stats row
+                  // Compact stats row + Шеф/Наши badges
                   Row(
                     children: [
                       Text(
-                        '${item.totalQuantity} ${item.unit}',
-                        style: TextStyle(
-                            fontSize: 11, color: Colors.grey.shade600),
-                      ),
-                      Text(' × ',
-                          style: TextStyle(
-                              fontSize: 11, color: Colors.grey.shade400)),
-                      Text(
-                        '${item.pricePerUnit}$currencySymbol',
+                        '${item.totalQuantity} ${item.unit} × ${item.pricePerUnit}$currencySymbol',
                         style: TextStyle(
                             fontSize: 11, color: Colors.grey.shade600),
                       ),
                       if (hasEmployer) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
+                        // Шеф mini badge (horizontal)
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 4, vertical: 1),
@@ -752,9 +834,32 @@ class _EstimateListTile extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            'Шеф: ${employerAmount.toStringAsFixed(0)}$currencySymbol',
+                            'Шеф ${employerAmount.toStringAsFixed(0)}$currencySymbol',
                             style: TextStyle(
-                                fontSize: 9, color: Colors.orange.shade700),
+                                fontSize: 9,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.orange.shade600),
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        // Наши mini badge (horizontal) - purple when BYN
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: isUsd
+                                ? primaryColor.withOpacity(0.1)
+                                : Colors.deepPurple.shade50,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Наши ${myAmount.toStringAsFixed(0)}$currencySymbol',
+                            style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w500,
+                                color: isUsd
+                                    ? primaryColor
+                                    : Colors.deepPurple.shade500),
                           ),
                         ),
                       ],
@@ -764,41 +869,24 @@ class _EstimateListTile extends StatelessWidget {
               ),
             ),
 
-            // Trailing: Amount badge + delete
+            // Trailing: Main amount + delete
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Amount badge
+                // Main amount badge
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                   decoration: BoxDecoration(
-                    color: hasEmployer
-                        ? Colors.amber.shade50
-                        : Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(6),
+                    color: amountBgColor,
+                    borderRadius: BorderRadius.circular(5),
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${clientAmount.toStringAsFixed(0)}$currencySymbol',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: hasEmployer
-                              ? Colors.amber.shade800
-                              : Colors.green.shade700,
-                        ),
-                      ),
-                      if (hasEmployer)
-                        Text(
-                          'мои: ${myAmount.toStringAsFixed(0)}$currencySymbol',
-                          style: TextStyle(
-                              fontSize: 9, color: Colors.green.shade600),
-                        ),
-                    ],
+                  child: Text(
+                    '${clientAmount.toStringAsFixed(0)}$currencySymbol',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: amountTextColor),
                   ),
                 ),
                 const SizedBox(width: 4),
