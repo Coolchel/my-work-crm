@@ -34,7 +34,7 @@ Map<String, dynamic> _$StageModelToJson(StageModel instance) =>
       'is_paid': instance.isPaid,
       'started_at': instance.startedAt?.toIso8601String(),
       'ended_at': instance.endedAt?.toIso8601String(),
-      'estimate_items': instance.estimateItems,
       'work_notes': instance.workNotes,
       'material_notes': instance.materialNotes,
+      'estimate_items': instance.estimateItems,
     };

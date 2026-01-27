@@ -566,10 +566,27 @@ class _EstimateTabState extends State<_EstimateTab> {
     final ourUsd = totalUsd - employerUsd;
     final ourByn = totalByn - employerByn;
 
+    // Group items by category
+    final Map<String, List<EstimateItemModel>> groupedItems = {};
+    for (var item in widget.items) {
+      final category = item.categoryName ?? 'Разное';
+      if (!groupedItems.containsKey(category)) {
+        groupedItems[category] = [];
+      }
+      groupedItems[category]!.add(item);
+    }
+
+    // Sort categories: specific ones first, 'Разное' last
+    final sortedCategories = groupedItems.keys.toList()..sort();
+    if (sortedCategories.contains('Разное')) {
+      sortedCategories.remove('Разное');
+      sortedCategories.add('Разное');
+    }
+
     return CustomScrollView(
       primary: false,
       slivers: [
-        // Items list
+        // Items list grouped
         if (widget.items.isEmpty)
           const SliverToBoxAdapter(
               child: Padding(
@@ -578,23 +595,29 @@ class _EstimateTabState extends State<_EstimateTab> {
                       child: Text("Нет позиций",
                           style: TextStyle(color: Colors.grey)))))
         else
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final item = widget.items[index];
-                  return _EstimateListTile(
-                    item: item,
-                    onUpdate: widget.onUpdate,
-                    onDelete: () => widget.onDelete(item),
-                    primaryColor: _primaryColor,
-                  );
-                },
-                childCount: widget.items.length,
+          for (var category in sortedCategories) ...[
+            SliverToBoxAdapter(
+              child: _GroupHeader(title: category, color: _primaryColor),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final item = groupedItems[category]![index];
+                    return _EstimateListTile(
+                      item: item,
+                      onUpdate: widget.onUpdate,
+                      onDelete: () => widget.onDelete(item),
+                      primaryColor: _primaryColor,
+                    );
+                  },
+                  childCount: groupedItems[category]!.length,
+                ),
               ),
             ),
-          ),
+            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          ],
 
         // Total Section - Detailed Dashboard
         SliverToBoxAdapter(
@@ -1493,6 +1516,53 @@ class _QuantityInputDialogState extends State<_QuantityInputDialog> {
             },
             child: const Text("Добавить"))
       ],
+    );
+  }
+}
+
+class _GroupHeader extends StatelessWidget {
+  final String title;
+  final Color color;
+
+  const _GroupHeader({
+    Key? key,
+    required this.title,
+    required this.color,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      alignment: Alignment.centerLeft,
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 14,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: color.withOpacity(0.8),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Divider(
+              color: color.withOpacity(0.1),
+              thickness: 1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

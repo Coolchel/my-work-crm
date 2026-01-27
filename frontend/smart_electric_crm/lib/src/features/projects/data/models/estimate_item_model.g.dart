@@ -24,6 +24,7 @@ EstimateItemModel _$EstimateItemModelFromJson(Map<String, dynamic> json) =>
       clientAmount: (json['client_amount'] as num?)?.toDouble(),
       employerAmount: (json['employer_amount'] as num?)?.toDouble(),
       myAmount: (json['my_amount'] as num?)?.toDouble(),
+      categoryName: json['category_name'] as String?,
     );
 
 Map<String, dynamic> _$EstimateItemModelToJson(EstimateItemModel instance) {
@@ -51,5 +52,6 @@ Map<String, dynamic> _$EstimateItemModelToJson(EstimateItemModel instance) {
   writeNotNull('client_amount', instance.clientAmount);
   writeNotNull('employer_amount', instance.employerAmount);
   writeNotNull('my_amount', instance.myAmount);
+  writeNotNull('category_name', instance.categoryName);
   return val;
 }

@@ -57,6 +57,10 @@ class EstimateItemModel {
   @JsonKey(name: 'my_amount', includeIfNull: false)
   final double? myAmount;
 
+  /// Название категории (из каталога)
+  @JsonKey(name: 'category_name', includeIfNull: false)
+  final String? categoryName;
+
   EstimateItemModel({
     required this.id,
     required this.stage,
@@ -73,6 +77,7 @@ class EstimateItemModel {
     this.clientAmount,
     this.employerAmount,
     this.myAmount,
+    this.categoryName,
   });
 
   factory EstimateItemModel.fromJson(Map<String, dynamic> json) =>
@@ -93,6 +98,7 @@ class EstimateItemModel {
     String? currency,
     double? markupPercent,
     bool? isPreliminary,
+    String? categoryName,
   }) {
     return EstimateItemModel(
       id: id ?? this.id,
@@ -112,6 +118,7 @@ class EstimateItemModel {
           this.clientAmount, // Не обновляем calculation fields при копировании
       employerAmount: this.employerAmount,
       myAmount: this.myAmount,
+      categoryName: categoryName ?? this.categoryName,
     );
   }
 }

@@ -16,6 +16,7 @@ class EstimateItemSerializer(serializers.ModelSerializer):
     client_amount = serializers.ReadOnlyField()
     employer_amount = serializers.ReadOnlyField()
     my_amount = serializers.ReadOnlyField()
+    category_name = serializers.ReadOnlyField(source='catalog_item.category.name')
 
     class Meta:
         model = EstimateItem
