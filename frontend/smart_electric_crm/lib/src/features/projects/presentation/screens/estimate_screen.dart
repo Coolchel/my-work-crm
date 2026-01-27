@@ -1516,15 +1516,15 @@ class _EditItemDialogState extends State<_EditItemDialog> {
           ),
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: TextButton.styleFrom(foregroundColor: Colors.black87),
-              child: const Text("Отмена")),
           if (!isNewManual)
             TextButton(
                 onPressed: () => Navigator.pop(context, 'delete'),
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
                 child: const Text("Удалить")),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(foregroundColor: Colors.black87),
+              child: const Text("Отмена")),
           FilledButton(
             onPressed: _save,
             child: Text(isNewManual ? "Добавить" : "Изменить"),
