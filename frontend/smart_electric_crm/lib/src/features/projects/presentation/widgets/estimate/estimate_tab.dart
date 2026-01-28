@@ -24,6 +24,7 @@ class EstimateTab extends ConsumerStatefulWidget {
   // Show Prices props
   final bool showPrices;
   final ValueChanged<bool>? onShowPricesChanged;
+  final bool isDisabled;
 
   const EstimateTab({
     super.key,
@@ -37,6 +38,7 @@ class EstimateTab extends ConsumerStatefulWidget {
     this.onMarkupChanged,
     this.showPrices = true,
     this.onShowPricesChanged,
+    this.isDisabled = false,
   });
 
   @override
@@ -165,24 +167,17 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     }
     if (_hasUnsavedChanges) {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        padding: const EdgeInsets.only(right: 8),
         child: SizedBox(
-          height: 22, // Minimal height
-          child: ElevatedButton.icon(
-            onPressed: _saveNote,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _primaryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              textStyle:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
-               visualDensity: VisualDensity.compact,
-               elevation: 0,
-               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-               minimumSize: Size.zero, 
-            ),
-            icon: const Icon(Icons.save, size: 12),
-            label: const Text("СОХРАНИТЬ"),
+          width: 24,
+          height: 24,
+          child: IconButton(
+            onPressed: widget.isDisabled ? null : _saveNote,
+            icon: Icon(Icons.save, color: _primaryColor, size: 20),
+            padding: EdgeInsets.zero,
+            tooltip: "Сохранить",
+            constraints: const BoxConstraints(),
+            style: IconButton.styleFrom(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
           ),
         ),
       );
@@ -852,6 +847,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                 keyboardType: TextInputType.multiline,
                 style: const TextStyle(fontSize: 13),
                 onChanged: _onNoteChanged,
+                readOnly: widget.isDisabled,
                 decoration: InputDecoration(
                   hintText: "Добавить заметку...",
                   hintStyle: TextStyle(color: Colors.grey.withOpacity(0.6)),
@@ -863,16 +859,16 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300)),
+                      borderSide: BorderSide.none),
                   enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       // Soft border
-                      borderSide: BorderSide(color: Colors.grey.shade300)),
+                      borderSide: BorderSide.none),
                   focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
                           color: _primaryColor, 
-                          width: 1.5)),
+                          width: 1.0)),
                   suffixIcon: _buildNoteSuffix(),
                 ),
               ),

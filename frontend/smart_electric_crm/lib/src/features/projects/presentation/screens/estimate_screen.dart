@@ -183,7 +183,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                         onMarkupChanged: _saveMarkup,
                         showPrices: _showPrices,
                         onShowPricesChanged: _saveShowPrices,
+                        isDisabled: _isFabExpanded,
                       ),
+
                     ],
                   ),
           ),
@@ -191,10 +193,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           // Backdrop / Scrim
           if (_isFabExpanded)
             Positioned.fill(
-              child: GestureDetector(
-                onTap: () => setState(() => _isFabExpanded = false),
+              child: IgnorePointer(
                 child: Container(
-                  color: Colors.black.withOpacity(0.15), // Slightly more visible
+                  color: Colors.black.withOpacity(0.15),
                 ),
               ),
             ),
@@ -307,11 +308,11 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
             onPressed: () => Navigator.pop(ctx, true), 
             child: const Text("Удалить всё", style: TextStyle(color: Colors.red))
           ),
-          // Cancel button (Prominent Blue)
+          // Cancel button (Prominent)
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, false),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.shade600, // Blue background
+              backgroundColor: isWork ? Colors.green : Colors.blue, // Contextual color
               foregroundColor: Colors.white,
               elevation: 0,
             ),

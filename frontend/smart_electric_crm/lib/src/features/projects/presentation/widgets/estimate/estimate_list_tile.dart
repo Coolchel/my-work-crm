@@ -10,6 +10,7 @@ class EstimateListTile extends StatelessWidget {
   final Color primaryColor;
   final bool isMarkupActive;
   final bool hidePrices;
+  final bool isDisabled;
 
   const EstimateListTile({
     super.key,
@@ -19,6 +20,7 @@ class EstimateListTile extends StatelessWidget {
     required this.primaryColor,
     this.isMarkupActive = false,
     this.hidePrices = false,
+    this.isDisabled = false,
   });
 
   IconData get _icon =>
@@ -46,17 +48,20 @@ class EstimateListTile extends StatelessWidget {
     }
 
     return InkWell(
-      onTap: () async {
-        final result = await showDialog<dynamic>(
-            context: context,
-            builder: (_) => EditItemDialog(item: item, hidePrices: hidePrices));
+      onTap: isDisabled
+          ? null
+          : () async {
+              final result = await showDialog<dynamic>(
+                  context: context,
+                  builder: (_) =>
+                      EditItemDialog(item: item, hidePrices: hidePrices));
 
-        if (result == 'delete') {
-          onDelete();
-        } else if (result is EstimateItemModel) {
-          onUpdate(result);
-        }
-      },
+              if (result == 'delete') {
+                onDelete();
+              } else if (result is EstimateItemModel) {
+                onUpdate(result);
+              }
+            },
       borderRadius: BorderRadius.circular(6),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -200,7 +205,7 @@ class EstimateListTile extends StatelessWidget {
                     icon: Icon(Icons.close,
                         size: 14, color: Colors.grey.shade400),
                     padding: EdgeInsets.zero,
-                    onPressed: onDelete,
+                    onPressed: isDisabled ? null : onDelete,
                     tooltip: "Удалить",
                   ),
                 ),
