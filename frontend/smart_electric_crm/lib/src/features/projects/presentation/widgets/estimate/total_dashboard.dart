@@ -41,7 +41,7 @@ class TotalDashboard extends StatelessWidget {
         : primaryColor.withOpacity(0.12);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       decoration: BoxDecoration(
         color: primaryColorLight.withOpacity(0.5),
         borderRadius: BorderRadius.circular(10),

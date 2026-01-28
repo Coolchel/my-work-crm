@@ -25,6 +25,7 @@ class EstimateTab extends ConsumerStatefulWidget {
   final bool showPrices;
   final ValueChanged<bool>? onShowPricesChanged;
   final bool isDisabled;
+  final VoidCallback? onDismissRequest;
 
   const EstimateTab({
     super.key,
@@ -39,6 +40,7 @@ class EstimateTab extends ConsumerStatefulWidget {
     this.showPrices = true,
     this.onShowPricesChanged,
     this.isDisabled = false,
+    this.onDismissRequest,
   });
 
   @override
@@ -206,7 +208,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     final textWeight = hasMarkup ? FontWeight.bold : FontWeight.w500;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: headerColor,
         borderRadius: BorderRadius.circular(8),
@@ -222,7 +224,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
         child: ExpansionTile(
           backgroundColor: headerColor,
           collapsedBackgroundColor: headerColor,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
           childrenPadding: EdgeInsets.zero,
           leading: Icon(Icons.trending_up, color: iconColor, size: 20),
           title: Row(
@@ -751,13 +753,19 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     // Use passed prop instead of provider
     final showPrices = _isWorkTab ? true : widget.showPrices;
 
-    return CustomScrollView(
-      primary: false,
+    return GestureDetector(
+      onTap: widget.isDisabled ? widget.onDismissRequest : null,
+      behavior: HitTestBehavior.translucent,
+      child: CustomScrollView(
+        primary: false,
       slivers: [
         // Toggle for Hide Prices (Only in Materials tab)
         if (!_isWorkTab)
           SliverToBoxAdapter(
-            child: _buildViewModeToggleSegmented(showPrices),
+            child: AbsorbPointer(
+              absorbing: widget.isDisabled,
+              child: _buildViewModeToggleSegmented(showPrices),
+            ),
           ),
 
         if (widget.items.isEmpty)
@@ -770,10 +778,13 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
         else
           for (var category in sortedCategories) ...[
             SliverToBoxAdapter(
-              child: GroupHeader(title: category, color: _primaryColor),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: GroupHeader(title: category, color: _primaryColor),
+              ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
@@ -783,8 +794,9 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                       onUpdate: widget.onUpdate,
                       onDelete: () => widget.onDelete(item),
                       primaryColor: _primaryColor,
-                      isMarkupActive: widget.markupPercent > 0,
-                      hidePrices: !showPrices,
+                      isMarkupActive: (widget.markupPercent > 0) == true,
+                      hidePrices: (!showPrices) == true,
+                      isDisabled: widget.isDisabled == true,
                     );
                   },
                   childCount: groupedItems[category]!.length,
@@ -814,13 +826,16 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
         // Markup Control (Spoiler style) - Hidden if prices hidden
         if (!_isWorkTab && showPrices)
           SliverToBoxAdapter(
-            child: _buildMarkupControl(),
+            child: AbsorbPointer(
+              absorbing: widget.isDisabled,
+              child: _buildMarkupControl(),
+            ),
           ),
 
         // Notes Section - at the bottom
         SliverToBoxAdapter(
             child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -864,7 +879,8 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                   enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       // Soft border matching Total
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.5), width: 1.5)),
+                      borderSide: BorderSide(
+                          color: _primaryColor.withOpacity(0.12), width: 0.8)),
                   focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
@@ -881,6 +897,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
         const SliverToBoxAdapter(child: SizedBox(height: 100)),
 
       ],
+      ),
     );
   }
 }

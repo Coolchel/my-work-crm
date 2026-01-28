@@ -131,15 +131,21 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                     pinned: true,
                     floating: true,
                   forceElevated: innerBoxIsScrolled,
-                  bottom: TabBar(
-                    controller: _tabController,
-                    indicatorColor: _activeColor,
-                    labelColor: _activeColor,
-                    unselectedLabelColor: Colors.grey,
-                    tabs: const [
-                      Tab(text: "Работы"),
-                      Tab(text: "Материалы"),
-                    ],
+                  bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(kTextTabBarHeight),
+                    child: AbsorbPointer(
+                      absorbing: _isFabExpanded,
+                      child: TabBar(
+                        controller: _tabController,
+                        indicatorColor: _activeColor,
+                        labelColor: _activeColor,
+                        unselectedLabelColor: Colors.grey,
+                        tabs: const [
+                          Tab(text: "Работы"),
+                          Tab(text: "Материалы"),
+                        ],
+                      ),
+                    ),
                   ),
                   actions: [
                     Container(
@@ -148,12 +154,15 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                         color: _activeColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: IconButton(
-                        onPressed: () => _showActionsDialog(context),
-                        icon: Icon(Icons.widgets_outlined, color: _activeColor),
-                        tooltip: "Меню действий",
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                      child: AbsorbPointer(
+                        absorbing: _isFabExpanded,
+                        child: IconButton(
+                          onPressed: () => _showActionsDialog(context),
+                          icon: Icon(Icons.widgets_outlined, color: _activeColor),
+                          tooltip: "Меню действий",
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                        ),
                       ),
                     ),
                   ],
@@ -166,17 +175,18 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                     controller: _tabController,
                     children: [
                       EstimateTab(
-                        key: ValueKey('works_tab_${_stage.workNotes.hashCode}'),
+                        key: const ValueKey('works_tab'),
                         items: _works,
                         onUpdate: _updateItemFromTab,
                         onDelete: _deleteItemFromTab,
                         title: "Работы",
                         note: _stage.workNotes,
                         onSaveNote: (val) => _saveNotes('work', val),
+                        isDisabled: _isFabExpanded,
+                        onDismissRequest: () => setState(() => _isFabExpanded = false),
                       ),
                       EstimateTab(
-                        key: ValueKey(
-                            'materials_tab_${_stage.materialNotes.hashCode}'),
+                        key: const ValueKey('materials_tab'),
                         items: _materials,
                         onUpdate: _updateItemFromTab,
                         onDelete: _deleteItemFromTab,
@@ -188,6 +198,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                         showPrices: _showPrices,
                         onShowPricesChanged: _saveShowPrices,
                         isDisabled: _isFabExpanded,
+                        onDismissRequest: () => setState(() => _isFabExpanded = false),
                       ),
 
                     ],
