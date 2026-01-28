@@ -857,13 +857,14 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                   isDense: true,
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  // Glassmorphic border (Offline state)
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none),
+                      borderSide: BorderSide(color: Colors.white.withOpacity(0.5), width: 1.5)),
                   enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      // Soft border
-                      borderSide: BorderSide.none),
+                      // Soft border matching Total
+                      borderSide: BorderSide(color: Colors.white.withOpacity(0.5), width: 1.5)),
                   focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(

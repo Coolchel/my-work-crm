@@ -119,13 +119,17 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       floatingActionButton: _buildSpeedDial(context),
       body: Stack(
         children: [
-          NestedScrollView(
-            headerSliverBuilder: (context, innerBoxIsScrolled) {
-              return [
-                SliverAppBar(
-                  title: Text("Смета: ${_stage.title}"),
-                  pinned: true,
-                  floating: true,
+          GestureDetector(
+            onTap: _isFabExpanded
+                ? () => setState(() => _isFabExpanded = false)
+                : null,
+            child: NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return [
+                  SliverAppBar(
+                    title: Text("Смета: ${_stage.title}"),
+                    pinned: true,
+                    floating: true,
                   forceElevated: innerBoxIsScrolled,
                   bottom: TabBar(
                     controller: _tabController,
@@ -188,6 +192,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
                     ],
                   ),
+            ),
           ),
           
           // Backdrop / Scrim
