@@ -242,91 +242,102 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  SizedBox(
-                    width: 65, // Slightly wider to accommodate suffix better
-                    height: 42, // Slightly more compact but still easy to hit
-                    child: TextField(
-                      controller: _markupCtrl,
-                      focusNode: _markupFocus,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [DecimalInputFormatter()],
-                      textInputAction: TextInputAction.done,
-                      textAlign: TextAlign.center,
-                      textAlignVertical: TextAlignVertical.center,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.9),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 4),
-                        suffixText: '%',
-                        suffixStyle: TextStyle(
-                          fontSize: 12,
-                          color: hasMarkup
-                              ? Colors.orange.shade700
-                              : Colors.blue.shade300,
-                          fontWeight: FontWeight.bold,
+                  // Vertical arrangement for Input and Reset
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 65,
+                        height:
+                            38, // Slightly more compact for vertical stacking
+                        child: TextField(
+                          controller: _markupCtrl,
+                          focusNode: _markupFocus,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          inputFormatters: [DecimalInputFormatter()],
+                          textInputAction: TextInputAction.done,
+                          textAlign: TextAlign.center,
+                          textAlignVertical: TextAlignVertical.center,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.9),
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 4),
+                            suffixText: '%',
+                            suffixStyle: TextStyle(
+                              fontSize: 12,
+                              color: hasMarkup
+                                  ? Colors.orange.shade700
+                                  : Colors.blue.shade300,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                  color: borderColor.withOpacity(0.5)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                  color: borderColor.withOpacity(0.3)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide:
+                                  BorderSide(color: borderColor, width: 1.5),
+                            ),
+                            counterText: '',
+                          ),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: hasMarkup
+                                ? Colors.orange.shade900
+                                : Colors.blue.shade900,
+                          ),
+                          onTap: () {
+                            _markupCtrl.selection = TextSelection(
+                                baseOffset: 0,
+                                extentOffset: _markupCtrl.text.length);
+                          },
+                          onSubmitted: (val) {
+                            _submitMarkup(val);
+                            _markupFocus.unfocus();
+                          },
+                          onEditingComplete: () {
+                            _submitMarkup(_markupCtrl.text);
+                            _markupFocus.unfocus();
+                          },
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              BorderSide(color: borderColor.withOpacity(0.5)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              BorderSide(color: borderColor.withOpacity(0.3)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              BorderSide(color: borderColor, width: 1.5),
-                        ),
-                        counterText: '',
                       ),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: hasMarkup
-                            ? Colors.orange.shade900
-                            : Colors.blue.shade900,
+                      const SizedBox(height: 0),
+                      // Reset button below input
+                      SizedBox(
+                        height: 26, // Slightly more compact
+                        width: 26,
+                        child: IconButton(
+                          onPressed: widget.markupPercent > 0
+                              ? () {
+                                  if (widget.onMarkupChanged != null) {
+                                    widget.onMarkupChanged!(0.0);
+                                  }
+                                  _markupCtrl.text = "0";
+                                }
+                              : null,
+                          icon: Icon(Icons.refresh,
+                              size:
+                                  18, // Increased icon size for better visibility
+                              color: widget.markupPercent > 0
+                                  ? Colors.orange.shade800
+                                  : Colors.grey.withOpacity(0.3)),
+                          tooltip: "Сброс",
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
                       ),
-                      onTap: () {
-                        _markupCtrl.selection = TextSelection(
-                            baseOffset: 0,
-                            extentOffset: _markupCtrl.text.length);
-                      },
-                      onSubmitted: (val) {
-                        _submitMarkup(val);
-                        _markupFocus.unfocus();
-                      },
-                      onEditingComplete: () {
-                        _submitMarkup(_markupCtrl.text);
-                        _markupFocus.unfocus();
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  // Always show button to maintain layout alignment, disable if 0
-                  IconButton(
-                    onPressed: widget.markupPercent > 0
-                        ? () {
-                            if (widget.onMarkupChanged != null) {
-                              widget.onMarkupChanged!(0.0);
-                            }
-                            _markupCtrl.text = "0";
-                          }
-                        : null,
-                    icon: Icon(Icons.refresh,
-                        size: 22, // Slightly larger icon
-                        color: widget.markupPercent > 0
-                            ? Colors.orange.shade800
-                            : Colors.grey.withOpacity(0.3)),
-                    tooltip: "Сброс",
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                        minWidth: 40, minHeight: 40), // Sufficient target size
+                    ],
                   ),
                 ],
               ),
