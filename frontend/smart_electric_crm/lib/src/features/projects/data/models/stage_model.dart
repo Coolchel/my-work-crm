@@ -31,6 +31,12 @@ class StageModel {
   @JsonKey(name: 'material_notes', defaultValue: '')
   final String materialNotes;
 
+  @JsonKey(name: 'markup_percent', defaultValue: 0.0)
+  final double markupPercent;
+
+  @JsonKey(name: 'show_prices', defaultValue: false)
+  final bool showPrices;
+
   /// Пункты сметы
   @JsonKey(name: 'estimate_items', defaultValue: [])
   final List<EstimateItemModel> estimateItems;
@@ -45,6 +51,8 @@ class StageModel {
     this.estimateItems = const [],
     this.workNotes = '',
     this.materialNotes = '',
+    this.markupPercent = 0.0,
+    this.showPrices = false,
   });
 
   /// Создает экземпляр из JSON
@@ -65,6 +73,8 @@ class StageModel {
     List<EstimateItemModel>? estimateItems,
     String? workNotes,
     String? materialNotes,
+    double? markupPercent,
+    bool? showPrices,
   }) {
     return StageModel(
       id: id ?? this.id,
@@ -76,6 +86,8 @@ class StageModel {
       estimateItems: estimateItems ?? this.estimateItems,
       workNotes: workNotes ?? this.workNotes,
       materialNotes: materialNotes ?? this.materialNotes,
+      markupPercent: markupPercent ?? this.markupPercent,
+      showPrices: showPrices ?? this.showPrices,
     );
   }
 }

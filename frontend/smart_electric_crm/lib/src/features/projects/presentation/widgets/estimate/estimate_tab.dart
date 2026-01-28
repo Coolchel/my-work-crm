@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/utils/decimal_input_formatter.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_list_tile.dart';
@@ -22,6 +21,10 @@ class EstimateTab extends ConsumerStatefulWidget {
   final double markupPercent;
   final ValueChanged<double>? onMarkupChanged;
 
+  // Show Prices props
+  final bool showPrices;
+  final ValueChanged<bool>? onShowPricesChanged;
+
   const EstimateTab({
     super.key,
     required this.items,
@@ -32,6 +35,8 @@ class EstimateTab extends ConsumerStatefulWidget {
     required this.onSaveNote,
     this.markupPercent = 0.0,
     this.onMarkupChanged,
+    this.showPrices = true,
+    this.onShowPricesChanged,
   });
 
   @override
@@ -241,7 +246,11 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
           _buildMinimalItem(
             "ПОДРОБНО",
             showPrices,
-            () => ref.read(showPricesProvider.notifier).state = true,
+            () {
+              if (widget.onShowPricesChanged != null) {
+                widget.onShowPricesChanged!(true);
+              }
+            },
           ),
           Container(
             height: 12,
@@ -252,7 +261,11 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
           _buildMinimalItem(
             "ТОЛЬКО КОЛ-ВО",
             !showPrices,
-            () => ref.read(showPricesProvider.notifier).state = false,
+            () {
+              if (widget.onShowPricesChanged != null) {
+                widget.onShowPricesChanged!(false);
+              }
+            },
           ),
         ],
       ),
@@ -311,13 +324,21 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                   "С ценами",
                   showPrices,
                   Icons.payments_outlined,
-                  () => ref.read(showPricesProvider.notifier).state = true,
+                  () {
+                    if (widget.onShowPricesChanged != null) {
+                      widget.onShowPricesChanged!(true);
+                    }
+                  },
                 ),
                 _buildToggleItemPill(
                   "Без цен",
                   !showPrices,
                   Icons.visibility_off_outlined,
-                  () => ref.read(showPricesProvider.notifier).state = false,
+                  () {
+                    if (widget.onShowPricesChanged != null) {
+                      widget.onShowPricesChanged!(false);
+                    }
+                  },
                 ),
               ],
             ),
@@ -401,13 +422,21 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                   "Цены",
                   showPrices,
                   Icons.receipt_long_outlined,
-                  () => ref.read(showPricesProvider.notifier).state = true,
+                  () {
+                    if (widget.onShowPricesChanged != null) {
+                      widget.onShowPricesChanged!(true);
+                    }
+                  },
                 ),
                 _buildGlassItem(
                   "Кол-во",
                   !showPrices,
                   Icons.unarchive_outlined,
-                  () => ref.read(showPricesProvider.notifier).state = false,
+                  () {
+                    if (widget.onShowPricesChanged != null) {
+                      widget.onShowPricesChanged!(false);
+                    }
+                  },
                 ),
               ],
             ),
@@ -491,7 +520,9 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             ],
             selected: {showPrices},
             onSelectionChanged: (newSelection) {
-              ref.read(showPricesProvider.notifier).state = newSelection.first;
+              if (widget.onShowPricesChanged != null) {
+                widget.onShowPricesChanged!(newSelection.first);
+              }
             },
             showSelectedIcon: false,
             style: ButtonStyle(
@@ -574,7 +605,8 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       sortedCategories.add('Разное');
     }
 
-    final showPrices = _isWorkTab ? true : ref.watch(showPricesProvider);
+    // Use passed prop instead of provider
+    final showPrices = _isWorkTab ? true : widget.showPrices;
 
     return CustomScrollView(
       primary: false,

@@ -47,24 +47,16 @@ class _SystemHash {
   }
 }
 
-/// Провайдер одного проекта по ID
-///
-/// Copied from [projectById].
+/// See also [projectById].
 @ProviderFor(projectById)
 const projectByIdProvider = ProjectByIdFamily();
 
-/// Провайдер одного проекта по ID
-///
-/// Copied from [projectById].
+/// See also [projectById].
 class ProjectByIdFamily extends Family<AsyncValue<ProjectModel>> {
-  /// Провайдер одного проекта по ID
-  ///
-  /// Copied from [projectById].
+  /// See also [projectById].
   const ProjectByIdFamily();
 
-  /// Провайдер одного проекта по ID
-  ///
-  /// Copied from [projectById].
+  /// See also [projectById].
   ProjectByIdProvider call(
     String id,
   ) {
@@ -97,13 +89,9 @@ class ProjectByIdFamily extends Family<AsyncValue<ProjectModel>> {
   String? get name => r'projectByIdProvider';
 }
 
-/// Провайдер одного проекта по ID
-///
-/// Copied from [projectById].
+/// See also [projectById].
 class ProjectByIdProvider extends AutoDisposeFutureProvider<ProjectModel> {
-  /// Провайдер одного проекта по ID
-  ///
-  /// Copied from [projectById].
+  /// See also [projectById].
   ProjectByIdProvider(
     String id,
   ) : this._internal(

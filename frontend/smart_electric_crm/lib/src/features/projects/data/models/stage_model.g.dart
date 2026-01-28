@@ -24,6 +24,8 @@ StageModel _$StageModelFromJson(Map<String, dynamic> json) => StageModel(
           [],
       workNotes: json['work_notes'] as String? ?? '',
       materialNotes: json['material_notes'] as String? ?? '',
+      markupPercent: (json['markup_percent'] as num?)?.toDouble() ?? 0.0,
+      showPrices: json['show_prices'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$StageModelToJson(StageModel instance) =>
@@ -36,5 +38,7 @@ Map<String, dynamic> _$StageModelToJson(StageModel instance) =>
       'ended_at': instance.endedAt?.toIso8601String(),
       'work_notes': instance.workNotes,
       'material_notes': instance.materialNotes,
+      'markup_percent': instance.markupPercent,
+      'show_prices': instance.showPrices,
       'estimate_items': instance.estimateItems,
     };

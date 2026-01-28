@@ -153,6 +153,10 @@ class Stage(models.Model):
     work_notes = models.TextField(blank=True, verbose_name="Заметки по работам")
     material_notes = models.TextField(blank=True, verbose_name="Заметки по материалам")
 
+    # Настройки отображения
+    markup_percent = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="Наценка %")
+    show_prices = models.BooleanField(default=False, verbose_name="Показывать цены?")
+
     class Meta:
         verbose_name = "Этап"
         verbose_name_plural = "Этапы"

@@ -25,13 +25,17 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   late StageModel _stage;
   bool _isLoading = true;
   double _markupPercent = 0.0;
+  bool _showPrices = false;
 
   @override
   void initState() {
     super.initState();
     _stage = widget.stage;
     _items = List.from(widget.stage.estimateItems);
-    // Force refresh on init to ensure data is fresh (even if passed from stale parent)
+    _markupPercent = widget.stage.markupPercent;
+    _showPrices = widget.stage.showPrices;
+
+    // Force refresh on init to ensure data is fresh
     _refresh();
   }
 
@@ -40,17 +44,18 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       final repo = ref.read(projectRepositoryProvider);
       debugPrint("📝 Fetching stage ID: ${widget.stage.id}");
       final updatedStage = await repo.fetchStage(widget.stage.id);
-      debugPrint(
-          "📝 Loaded notes for stage ${updatedStage.id}: work='${updatedStage.workNotes}', material='${updatedStage.materialNotes}'");
+
       if (!mounted) return;
       setState(() {
         _stage = updatedStage;
         _items = updatedStage.estimateItems;
         _isLoading = false;
-        // Don't reset markup on simple refresh, only if you want to. For now, keep it.
+        // Also sync settings if they changed on backend
+        _markupPercent = updatedStage.markupPercent;
+        _showPrices = updatedStage.showPrices;
       });
 
-      // Invalidate parent providers so they refetch fresh data when we return
+      // Invalidate parent providers
       ref.invalidate(projectListProvider);
       ref.invalidate(projectByIdProvider(widget.projectId));
     } catch (e) {
@@ -67,6 +72,26 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       _items.where((i) => i.itemType == 'work').toList();
   List<EstimateItemModel> get _materials =>
       _items.where((i) => i.itemType == 'material').toList();
+
+  Future<void> _saveMarkup(double val) async {
+    setState(() => _markupPercent = val);
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+      await repo.updateStage(widget.stage.id, {'markup_percent': val});
+    } catch (e) {
+      debugPrint("Error saving markup: $e");
+    }
+  }
+
+  Future<void> _saveShowPrices(bool val) async {
+    setState(() => _showPrices = val);
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+      await repo.updateStage(widget.stage.id, {'show_prices': val});
+    } catch (e) {
+      debugPrint("Error saving showPrices: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,8 +144,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                         note: _stage.materialNotes,
                         onSaveNote: (val) => _saveNotes('material', val),
                         markupPercent: _markupPercent,
-                        onMarkupChanged: (val) =>
-                            setState(() => _markupPercent = val),
+                        onMarkupChanged: _saveMarkup,
+                        showPrices: _showPrices,
+                        onShowPricesChanged: _saveShowPrices,
                       ),
                       EstimateTab(
                         key: ValueKey('works_tab_${_stage.workNotes.hashCode}'),
@@ -143,8 +169,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     final tabController = DefaultTabController.of(context);
     final index = tabController.index;
     final itemType = index == 0 ? 'material' : 'work';
-    // Logic: if Work tab, always show prices. If Material, check provider.
-    final showPrices = itemType == 'work' ? true : ref.read(showPricesProvider);
+    // Logic: if Work tab, always show prices. If Material, check local state.
+    final showPrices = itemType == 'work' ? true : _showPrices;
     final hidePrices = !showPrices;
 
     showDialog(
