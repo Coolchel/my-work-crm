@@ -153,6 +153,41 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     });
   }
 
+  Widget? _buildNoteSuffix() {
+    if (_saving) {
+      return const Padding(
+        padding: EdgeInsets.all(12.0),
+        child: SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+    if (_hasUnsavedChanges) {
+      return Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: ElevatedButton.icon(
+          onPressed: _saveNote,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.orange.shade600,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            textStyle:
+                const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+             visualDensity: VisualDensity.compact,
+             elevation: 2,
+          ),
+          icon: const Icon(Icons.save, size: 14),
+          label: const Text("СОХРАНИТЬ"),
+        ),
+      );
+    }
+    // If saved, maybe show a small checkmark or nothing?
+    // User wants "obvious save state necessity".
+    // When saved, it's fine to show nothing or a subtle check.
+    return Icon(Icons.check_circle, color: Colors.green.shade200, size: 18);
+  }
+
   Widget _buildMarkupControl() {
     final hasMarkup = widget.markupPercent > 0;
 
@@ -798,68 +833,61 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                   Icon(Icons.sticky_note_2_outlined,
                       size: 14, color: _primaryColor.withOpacity(0.8)),
                   const SizedBox(width: 6),
-                  Text("Заметки",
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: _primaryColor,
-                          fontWeight: FontWeight.bold)),
+                  Text(
+                    "Заметки для ${_isWorkTab ? 'работ' : 'закупки'}",
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: _primaryColor.withOpacity(0.8)),
+                  ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               TextField(
                 controller: _noteCtrl,
-                minLines: 2,
                 maxLines: null,
+                minLines: 1,
+                keyboardType: TextInputType.multiline,
                 style: const TextStyle(fontSize: 13),
+                onChanged: _onNoteChanged,
                 decoration: InputDecoration(
+                  hintText: "Добавить заметку...",
+                  hintStyle: TextStyle(color: Colors.grey.withOpacity(0.6)),
+                  filled: true,
+                  // Duller, more visible background
+                  fillColor: _hasUnsavedChanges 
+                      ? Colors.orange.shade50 
+                      : Colors.grey.shade100,
                   isDense: true,
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
+                      borderRadius: BorderRadius.circular(8),
+                      // Default border
+                      borderSide: BorderSide(color: Colors.grey.shade300)),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6),
-                    borderSide:
-                        BorderSide(color: _primaryColor.withOpacity(0.2)),
-                  ),
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                          color: _hasUnsavedChanges 
+                              ? Colors.orange.shade300 
+                              : Colors.grey.shade300)),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(6),
-                    borderSide:
-                        BorderSide(color: _primaryColor.withOpacity(0.5)),
-                  ),
-                  hintText: "Дополнительная информация...",
-                  hintStyle:
-                      TextStyle(fontSize: 12, color: Colors.grey.shade400),
-                  suffixIcon: _saving
-                      ? const Padding(
-                          padding: EdgeInsets.all(10),
-                          child: SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2)),
-                        )
-                      : IconButton(
-                          onPressed: _hasUnsavedChanges ? _saveNote : null,
-                          icon: Icon(
-                            _hasUnsavedChanges
-                                ? Icons.save_as
-                                : Icons.check_circle_outline,
-                            color: _primaryColor
-                                .withOpacity(_hasUnsavedChanges ? 1.0 : 0.6),
-                          ),
-                          tooltip: "Сохранить заметку",
-                        ),
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                          color: _hasUnsavedChanges 
+                              ? Colors.orange 
+                              : _primaryColor, 
+                          width: 1.5)),
+                  suffixIcon: _buildNoteSuffix(),
                 ),
-                onChanged: _onNoteChanged,
               ),
             ],
           ),
         )),
+        
+        // Bottom Padding for FAB
+        const SliverToBoxAdapter(child: SizedBox(height: 100)),
 
-        // Extra padding at bottom
-        const SliverPadding(padding: EdgeInsets.only(bottom: 8)),
       ],
     );
   }

@@ -20,13 +20,15 @@ class EstimateScreen extends ConsumerStatefulWidget {
   ConsumerState<EstimateScreen> createState() => _EstimateScreenState();
 }
 
-class _EstimateScreenState extends ConsumerState<EstimateScreen> {
+class _EstimateScreenState extends ConsumerState<EstimateScreen>
+    with SingleTickerProviderStateMixin {
   late List<EstimateItemModel> _items;
   late StageModel _stage;
   bool _isLoading = true;
   double _markupPercent = 0.0;
   bool _showPrices = false;
   bool _isFabExpanded = false;
+  late TabController _tabController;
 
   @override
   void initState() {
@@ -35,9 +37,23 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     _items = List.from(widget.stage.estimateItems);
     _markupPercent = widget.stage.markupPercent;
     _showPrices = widget.stage.showPrices;
+    
+    // Explicit controller for FAB color sync
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging || _tabController.animation != null) {
+        setState(() {}); // Rebuild to update FAB color
+      }
+    });
 
     // Force refresh on init to ensure data is fresh
     _refresh();
+  }
+  
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _refresh() async {
@@ -93,15 +109,17 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       debugPrint("Error saving showPrices: $e");
     }
   }
+  
+  Color get _activeColor =>
+      _tabController.index == 0 ? Colors.green.shade600 : Colors.blue.shade600;
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Builder(builder: (context) {
-        return Scaffold(
-          floatingActionButton: _buildSpeedDial(context),
-          body: NestedScrollView(
+    return Scaffold(
+      floatingActionButton: _buildSpeedDial(context),
+      body: Stack(
+        children: [
+          NestedScrollView(
             headerSliverBuilder: (context, innerBoxIsScrolled) {
               return [
                 SliverAppBar(
@@ -109,17 +127,30 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                   pinned: true,
                   floating: true,
                   forceElevated: innerBoxIsScrolled,
-                  bottom: const TabBar(
-                    tabs: [
+                  bottom: TabBar(
+                    controller: _tabController,
+                    indicatorColor: _activeColor,
+                    labelColor: _activeColor,
+                    unselectedLabelColor: Colors.grey,
+                    tabs: const [
                       Tab(text: "Работы"),
                       Tab(text: "Материалы"),
                     ],
                   ),
                   actions: [
-                    IconButton(
-                      onPressed: () => _showActionsSheet(context),
-                      icon: const Icon(Icons.more_vert),
-                      tooltip: "Действия",
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _activeColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        onPressed: () => _showActionsDialog(context),
+                        icon: Icon(Icons.widgets_outlined, color: _activeColor),
+                        tooltip: "Меню действий",
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                      ),
                     ),
                   ],
                 ),
@@ -128,6 +159,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
             body: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : TabBarView(
+                    controller: _tabController,
                     children: [
                       EstimateTab(
                         key: ValueKey('works_tab_${_stage.workNotes.hashCode}'),
@@ -155,174 +187,228 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                     ],
                   ),
           ),
-        );
-      }),
+          
+          // Backdrop / Scrim
+          if (_isFabExpanded)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => setState(() => _isFabExpanded = false),
+                child: Container(
+                  color: Colors.black.withOpacity(0.4),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
   Widget _buildSpeedDial(BuildContext context) {
+    final themeColor = _activeColor;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (_isFabExpanded) ...[
-          _buildFabOption(
+          _buildExtendedFab(
+            icon: Icons.delete_forever,
+            label: "Очистить смету",
+            color: Colors.red.shade700,
+            onTap: _deleteAllItems,
+          ),
+          const SizedBox(height: 12),
+          _buildExtendedFab(
             icon: Icons.file_copy_outlined,
             label: "Шаблоны",
+            color: themeColor,
             onTap: _showTemplatesDialog,
           ),
           const SizedBox(height: 12),
-          _buildFabOption(
+          _buildExtendedFab(
             icon: Icons.edit_outlined,
             label: "Вручную",
+            color: themeColor,
             onTap: () => _showManualAddDialog(context),
           ),
           const SizedBox(height: 12),
-          _buildFabOption(
+          _buildExtendedFab(
             icon: Icons.search,
             label: "Поиск",
+            color: themeColor,
             onTap: () => _showAddItemDialog(context),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
         ],
         FloatingActionButton(
           onPressed: () {
             setState(() => _isFabExpanded = !_isFabExpanded);
           },
           heroTag: 'main_fab',
+          backgroundColor: themeColor,
           child: Icon(_isFabExpanded ? Icons.close : Icons.add),
         ),
       ],
     );
   }
 
-  Widget _buildFabOption(
+  Widget _buildExtendedFab(
       {required IconData icon,
       required String label,
+      required Color color,
       required VoidCallback onTap}) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(4),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2))
-            ],
-          ),
-          child:
-              Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        ),
-        const SizedBox(width: 8),
-        FloatingActionButton.small(
-          onPressed: () {
-            setState(() => _isFabExpanded = false);
-            onTap();
-          },
-          heroTag: label,
-          child: Icon(icon),
-        ),
-      ],
+    return SizedBox(
+      width: 170, // Fixed width for uniformity
+      child: FloatingActionButton.extended(
+        onPressed: () {
+          setState(() => _isFabExpanded = false);
+          onTap();
+        },
+        heroTag: label,
+        backgroundColor: Colors.white,
+        foregroundColor: color,
+        elevation: 4,
+        icon: Icon(icon, size: 20),
+        label: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+      ),
     );
   }
 
-  void _showActionsSheet(BuildContext context) {
-    showModalBottomSheet(
+  Future<void> _deleteAllItems() async {
+    final isWork = _tabController.index == 0;
+    final typeName = isWork ? "РАБОТЫ" : "МАТЕРИАЛЫ";
+    
+    final confirm = await showDialog<bool>(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-      ),
+      builder: (ctx) => AlertDialog(
+        title: Text("Очистить раздел $typeName?"),
+        content: const Text("Вы действительно хотите удалить ВСЕ позиции из этого раздела? Это действие необратимо."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Отмена")),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true), 
+            child: const Text("Удалить всё", style: TextStyle(color: Colors.red))
+          ),
+        ],
+      )
+    );
+    
+    if (confirm == true) {
+      try {
+        final repo = ref.read(projectRepositoryProvider);
+        // We need to delete items one by one or have a bulk delete endpoint.
+        // Assuming no bulk delete, we iterate. Efficient? No. Working? Yes.
+        // Actually, let's filter the current list.
+        final itemsToDelete = isWork ? _works : _materials;
+        
+        // Show loading
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Удаление...")));
+        
+        for (var item in itemsToDelete) {
+          await repo.deleteEstimateItem(item.id);
+        }
+        
+        _refresh();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Раздел очищен")));
+
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Ошибка удаления: $e")));
+      }
+    }
+  }
+
+  void _showActionsDialog(BuildContext context) {
+    final themeColor = _activeColor;
+    
+    showDialog(
+      context: context,
       builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 10),
-                  child: Text("Действия",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.description_outlined),
-                  title: const Text("Просмотреть отчеты"),
-                  onTap: () {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                   Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text("Действия",
+                        style: TextStyle(
+                            fontSize: 20, 
+                            fontWeight: FontWeight.bold,
+                            color: themeColor)),
+                  ),
+                  _buildActionTile(context, Icons.description_outlined, "Просмотреть отчеты", () {
                     Navigator.pop(context);
                     _showReport();
-                  },
-                ),
-                ExpansionTile(
-                  leading: const Icon(Icons.copy),
-                  title: const Text("Копировать"),
-                  children: [
-                    ListTile(
-                      title: const Text("РАБОТЫ (Клиент)"),
-                      contentPadding: const EdgeInsets.only(left: 72),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _copyReport('client', itemType: 'work');
-                      },
-                    ),
-                    ListTile(
-                      title: const Text("РАБОТЫ (Для Шефа)"),
-                      contentPadding: const EdgeInsets.only(left: 72),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _copyReport('employer', itemType: 'work');
-                      },
-                    ),
-                    ListTile(
-                      title: const Text("МАТЕРИАЛЫ (С наценкой)"),
-                      contentPadding: const EdgeInsets.only(left: 72),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _copyReportWithMarkup();
-                      },
-                    ),
-                    ListTile(
-                      title: const Text("МАТЕРИАЛЫ (Список)"),
-                      contentPadding: const EdgeInsets.only(left: 72),
-                      onTap: () {
-                        Navigator.pop(context);
-                        _copyReport('client', itemType: 'material');
-                      },
-                    ),
-                  ],
-                ),
-                ListTile(
-                  leading: const Icon(Icons.picture_as_pdf_outlined),
-                  title: const Text("Экспорт в PDF"),
-                  subtitle: const Text("Скоро"),
-                  enabled: false,
-                  onTap: () {},
-                ),
-                ListTile(
-                  leading: const Icon(Icons.share_outlined),
-                  title: const Text("Поделиться"),
-                  subtitle: const Text("Скоро"),
-                  enabled: false,
-                  onTap: () {},
-                ),
-              ],
+                  }),
+                  const Divider(indent: 16, endIndent: 16),
+                  
+                  // Copy Sub-menu simulation (Expanded in dialog is tricky, let's use section)
+                  _buildSectionHeader("Копировать"),
+                  _buildActionTile(context, Icons.copy_all, "РАБОТЫ (Клиент)", () {
+                     Navigator.pop(context);
+                    _copyReport('client', itemType: 'work');
+                  }, dense: true),
+                  _buildActionTile(context, Icons.copy_all, "РАБОТЫ (Для Шефа)", () {
+                    Navigator.pop(context);
+                    _copyReport('employer', itemType: 'work');
+                  }, dense: true),
+                   _buildActionTile(context, Icons.copy_all, "МАТЕРИАЛЫ (С наценкой)", () {
+                    Navigator.pop(context);
+                    _copyReportWithMarkup();
+                  }, dense: true),
+                   _buildActionTile(context, Icons.copy_all, "МАТЕРИАЛЫ (Список)", () {
+                    Navigator.pop(context);
+                    _copyReport('client', itemType: 'material');
+                  }, dense: true),
+
+                  const Divider(indent: 16, endIndent: 16),
+                  _buildActionTile(context, Icons.picture_as_pdf_outlined, "Экспорт в PDF (Скоро)", () {}, enabled: false),
+                  _buildActionTile(context, Icons.share_outlined, "Поделиться (Скоро)", () {}, enabled: false),
+                  
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Закрыть", style: TextStyle(color: Colors.grey)),
+                  )
+                ],
+              ),
             ),
           ),
         );
       },
     );
   }
+  
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey.shade600))),
+      );
+  }
+  
+  Widget _buildActionTile(BuildContext context, IconData icon, String title, VoidCallback onTap, {bool dense = false, bool enabled = true}) {
+    return ListTile(
+      leading: Icon(icon, color: enabled ? Colors.grey.shade700 : Colors.grey.shade300, size: dense ? 20 : 24),
+      title: Text(title, style: TextStyle(fontSize: dense ? 14 : 16, color: enabled ? Colors.black87 : Colors.grey.shade300)),
+      onTap: enabled ? onTap : null,
+      dense: dense,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+      horizontalTitleGap: 12,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    );
+  }
 
   void _showManualAddDialog(BuildContext context) async {
-    final tabController = DefaultTabController.of(context);
-    final index = tabController.index;
+    final index = _tabController.index;
     final itemType = index == 0 ? 'work' : 'material';
     final showPrices = itemType == 'work' ? true : _showPrices;
     final hidePrices = !showPrices;
@@ -349,8 +435,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   }
 
   void _showAddItemDialog(BuildContext context) {
-    final tabController = DefaultTabController.of(context);
-    final index = tabController.index;
+    final index = _tabController.index;
     final itemType = index == 0 ? 'work' : 'material';
     final showPrices = itemType == 'work' ? true : _showPrices;
     final hidePrices = !showPrices;
