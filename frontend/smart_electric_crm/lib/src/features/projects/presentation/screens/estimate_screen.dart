@@ -221,9 +221,15 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
 
   Widget _buildSpeedDial(BuildContext context) {
-    // Pastel colors for Main FAB
-    final themeColor = _activeColor; 
+    // Pastel colors for Main FAB based on active tab
+    final isWorks = _tabController.index == 0;
+    final mainFabColor = isWorks ? Colors.green.shade200 : Colors.blue.shade200;
     
+    // Contextual soft colors for SpeedDial buttons
+    // Using shade50 for a very light pastel background
+    final actionBtnColor = isWorks ? Colors.green.shade50 : Colors.blue.shade50;
+    final actionBtnTextColor = isWorks ? Colors.green.shade800 : Colors.blue.shade800;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -232,8 +238,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           _buildExtendedFab(
             icon: Icons.delete_forever,
             label: "Очистить",
-            // White BG, Red Text (Clean)
-            color: Colors.white, 
+            // Red style for destructive action
+            color: Colors.red.shade50, 
             textColor: Colors.red,
             onTap: _deleteAllItems,
           ),
@@ -241,24 +247,24 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           _buildExtendedFab(
             icon: Icons.file_copy_outlined,
             label: "Шаблоны",
-            color: Colors.white, 
-            textColor: Colors.black87,
+            color: actionBtnColor, 
+            textColor: actionBtnTextColor,
             onTap: _showTemplatesDialog,
           ),
           const SizedBox(height: 8),
           _buildExtendedFab(
             icon: Icons.edit_outlined,
             label: "Вручную",
-            color: Colors.white,
-            textColor: Colors.black87,
+            color: actionBtnColor, 
+            textColor: actionBtnTextColor,
             onTap: () => _showManualAddDialog(context),
           ),
           const SizedBox(height: 8),
           _buildExtendedFab(
             icon: Icons.search,
             label: "Поиск",
-            color: Colors.white,
-            textColor: Colors.black87,
+            color: actionBtnColor, 
+            textColor: actionBtnTextColor,
             onTap: () => _showAddItemDialog(context),
           ),
           const SizedBox(height: 16),
@@ -269,7 +275,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           },
           heroTag: 'main_fab',
           // Pastel Main FAB
-          backgroundColor: themeColor, 
+          backgroundColor: mainFabColor, 
+          foregroundColor: Colors.black87, // Ensure icon is visible on pastel
           elevation: 2,
           child: Icon(_isFabExpanded ? Icons.close : Icons.add),
         ),
