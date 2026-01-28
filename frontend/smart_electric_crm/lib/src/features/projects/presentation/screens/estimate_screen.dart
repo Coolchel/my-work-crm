@@ -113,8 +113,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                   forceElevated: innerBoxIsScrolled,
                   bottom: const TabBar(
                     tabs: [
-                      Tab(text: "Материалы"),
                       Tab(text: "Работы"),
+                      Tab(text: "Материалы"),
                     ],
                   ),
                   actions: [
@@ -135,6 +135,15 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                 : TabBarView(
                     children: [
                       EstimateTab(
+                        key: ValueKey('works_tab_${_stage.workNotes.hashCode}'),
+                        items: _works,
+                        onUpdate: _updateItemFromTab,
+                        onDelete: _deleteItemFromTab,
+                        title: "Работы",
+                        note: _stage.workNotes,
+                        onSaveNote: (val) => _saveNotes('work', val),
+                      ),
+                      EstimateTab(
                         key: ValueKey(
                             'materials_tab_${_stage.materialNotes.hashCode}'),
                         items: _materials,
@@ -148,15 +157,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                         showPrices: _showPrices,
                         onShowPricesChanged: _saveShowPrices,
                       ),
-                      EstimateTab(
-                        key: ValueKey('works_tab_${_stage.workNotes.hashCode}'),
-                        items: _works,
-                        onUpdate: _updateItemFromTab,
-                        onDelete: _deleteItemFromTab,
-                        title: "Работы",
-                        note: _stage.workNotes,
-                        onSaveNote: (val) => _saveNotes('work', val),
-                      ),
                     ],
                   ),
           ),
@@ -168,7 +168,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   void _showAddItemDialog(BuildContext context) {
     final tabController = DefaultTabController.of(context);
     final index = tabController.index;
-    final itemType = index == 0 ? 'material' : 'work';
+    final itemType = index == 0 ? 'work' : 'material';
     // Logic: if Work tab, always show prices. If Material, check local state.
     final showPrices = itemType == 'work' ? true : _showPrices;
     final hidePrices = !showPrices;

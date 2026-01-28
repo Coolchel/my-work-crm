@@ -45,6 +45,8 @@ class EstimateTab extends ConsumerStatefulWidget {
 
 class _EstimateTabState extends ConsumerState<EstimateTab> {
   late TextEditingController _noteCtrl;
+  late TextEditingController _markupCtrl;
+  late FocusNode _markupFocus;
   bool _saving = false;
   String? _lastSavedValue;
   bool _hasUnsavedChanges = false;
@@ -54,6 +56,10 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     super.initState();
     debugPrint("📝 _EstimateTabState.initState: note='${widget.note}'");
     _noteCtrl = TextEditingController(text: widget.note);
+    _markupCtrl =
+        TextEditingController(text: _formatMarkup(widget.markupPercent));
+    _markupFocus = FocusNode();
+    _markupFocus.addListener(_onMarkupFocusChange);
     _lastSavedValue = widget.note;
   }
 
@@ -70,6 +76,37 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
         _hasUnsavedChanges = false;
       }
     }
+    if (widget.markupPercent != oldWidget.markupPercent) {
+      // Sync only if not focused to avoid fighting user input
+      if (!_markupFocus.hasFocus) {
+        final newText = _formatMarkup(widget.markupPercent);
+        if (_markupCtrl.text != newText && newText != "0" && newText != "0.0") {
+          _markupCtrl.text = newText;
+        }
+      }
+    }
+  }
+
+  void _onMarkupFocusChange() {
+    if (!_markupFocus.hasFocus) {
+      // Create a submission when focus is lost
+      _submitMarkup(_markupCtrl.text);
+    }
+  }
+
+  void _submitMarkup(String val) {
+    if (val.isEmpty) return;
+    final parsed = double.tryParse(val.replaceAll(',', '.')) ?? 0;
+    if (widget.onMarkupChanged != null) {
+      // Prevent redundant updates if value works out to same
+      if ((parsed - widget.markupPercent).abs() > 0.01) {
+        widget.onMarkupChanged!(parsed.clamp(0.0, 100.0));
+      }
+    }
+  }
+
+  String _formatMarkup(double val) {
+    return val.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
   }
 
   // Helper to get items with markup applied
@@ -90,6 +127,8 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   @override
   void dispose() {
     _noteCtrl.dispose();
+    _markupCtrl.dispose();
+    _markupFocus.dispose();
     super.dispose();
   }
 
@@ -116,9 +155,16 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
 
   Widget _buildMarkupControl() {
     final hasMarkup = widget.markupPercent > 0;
-    // Match TotalDashboard styling when no markup
-    final bgColor =
-        hasMarkup ? Colors.blue.shade50 : _primaryColorLight.withOpacity(0.5);
+
+    // Header Color: Very soft, almost white blue
+    final headerColor = hasMarkup
+        ? Colors.blue.shade50.withOpacity(0.3)
+        : _primaryColorLight.withOpacity(0.5);
+
+    // Body Color: Even paler blue
+    final bodyColor =
+        hasMarkup ? Colors.blue.shade50.withOpacity(0.15) : Colors.transparent;
+
     final borderColor =
         hasMarkup ? Colors.orange.shade300 : _primaryColor.withOpacity(0.12);
     final iconColor =
@@ -130,13 +176,20 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: headerColor,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: borderColor, width: 0.8),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+        ),
         child: ExpansionTile(
+          backgroundColor: headerColor,
+          collapsedBackgroundColor: headerColor,
           tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           childrenPadding: EdgeInsets.zero,
           leading: Icon(Icons.trending_up, color: iconColor, size: 20),
@@ -148,16 +201,18 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                     color: textColor, fontWeight: textWeight, fontSize: 14),
               ),
               Text(
-                "${widget.markupPercent.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '')}%",
+                "${_formatMarkup(widget.markupPercent)}%",
                 style: TextStyle(
                     color: textColor, fontWeight: textWeight, fontSize: 14),
               ),
             ],
           ),
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            Container(
+              color: bodyColor,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: SliderTheme(
@@ -167,7 +222,9 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                         thumbColor: Colors.orange.shade800,
                         trackHeight: 4,
                         overlayShape:
-                            const RoundSliderOverlayShape(overlayRadius: 16),
+                            const RoundSliderOverlayShape(overlayRadius: 18),
+                        thumbShape:
+                            const RoundSliderThumbShape(enabledThumbRadius: 7),
                       ),
                       child: Slider(
                         value: widget.markupPercent,
@@ -175,59 +232,102 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                         max: 100,
                         divisions: 200,
                         label: "${widget.markupPercent.toStringAsFixed(1)}%",
-                        onChanged: widget.onMarkupChanged,
+                        onChanged: (val) {
+                          if (widget.onMarkupChanged != null) {
+                            widget.onMarkupChanged!(val);
+                          }
+                          _markupCtrl.text = _formatMarkup(val);
+                        },
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   SizedBox(
-                    width: 65,
-                    height: 32,
+                    width: 65, // Slightly wider to accommodate suffix better
+                    height: 42, // Slightly more compact but still easy to hit
                     child: TextField(
-                      controller: TextEditingController(
-                          text: widget.markupPercent
-                              .toStringAsFixed(2)
-                              .replaceAll(RegExp(r'\.?0+$'), ''))
-                        ..selection = TextSelection.collapsed(
-                            offset: widget.markupPercent
-                                .toStringAsFixed(2)
-                                .replaceAll(RegExp(r'\.?0+$'), '')
-                                .length),
+                      controller: _markupCtrl,
+                      focusNode: _markupFocus,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [DecimalInputFormatter()],
-                      decoration: const InputDecoration(
+                      textInputAction: TextInputAction.done,
+                      textAlign: TextAlign.center,
+                      textAlignVertical: TextAlignVertical.center,
+                      decoration: InputDecoration(
                         isDense: true,
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.9),
                         contentPadding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                        border: OutlineInputBorder(),
+                            const EdgeInsets.symmetric(horizontal: 4),
                         suffixText: '%',
+                        suffixStyle: TextStyle(
+                          fontSize: 12,
+                          color: hasMarkup
+                              ? Colors.orange.shade700
+                              : Colors.blue.shade300,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide:
+                              BorderSide(color: borderColor.withOpacity(0.5)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide:
+                              BorderSide(color: borderColor.withOpacity(0.3)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide:
+                              BorderSide(color: borderColor, width: 1.5),
+                        ),
                         counterText: '',
                       ),
-                      style: const TextStyle(fontSize: 13),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: hasMarkup
+                            ? Colors.orange.shade900
+                            : Colors.blue.shade900,
+                      ),
+                      onTap: () {
+                        _markupCtrl.selection = TextSelection(
+                            baseOffset: 0,
+                            extentOffset: _markupCtrl.text.length);
+                      },
                       onSubmitted: (val) {
-                        final parsed =
-                            double.tryParse(val.replaceAll(',', '.')) ?? 0;
-                        if (widget.onMarkupChanged != null) {
-                          widget.onMarkupChanged!(parsed.clamp(0.0, 100.0));
-                        }
+                        _submitMarkup(val);
+                        _markupFocus.unfocus();
+                      },
+                      onEditingComplete: () {
+                        _submitMarkup(_markupCtrl.text);
+                        _markupFocus.unfocus();
                       },
                     ),
                   ),
-                  if (widget.markupPercent != 0)
-                    IconButton(
-                      onPressed: () {
-                        if (widget.onMarkupChanged != null) {
-                          widget.onMarkupChanged!(0.0);
-                        }
-                      },
-                      icon: Icon(Icons.refresh,
-                          size: 18, color: Colors.orange.shade800),
-                      tooltip: "Сброс",
-                      padding: EdgeInsets.zero,
-                      constraints:
-                          const BoxConstraints(minWidth: 32, minHeight: 32),
-                    ),
+                  const SizedBox(width: 4),
+                  // Always show button to maintain layout alignment, disable if 0
+                  IconButton(
+                    onPressed: widget.markupPercent > 0
+                        ? () {
+                            if (widget.onMarkupChanged != null) {
+                              widget.onMarkupChanged!(0.0);
+                            }
+                            _markupCtrl.text = "0";
+                          }
+                        : null,
+                    icon: Icon(Icons.refresh,
+                        size: 22, // Slightly larger icon
+                        color: widget.markupPercent > 0
+                            ? Colors.orange.shade800
+                            : Colors.grey.withOpacity(0.3)),
+                    tooltip: "Сброс",
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                        minWidth: 40, minHeight: 40), // Sufficient target size
+                  ),
                 ],
               ),
             ),

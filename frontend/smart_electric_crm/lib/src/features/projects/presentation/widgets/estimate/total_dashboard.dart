@@ -93,17 +93,17 @@ class TotalDashboard extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             child: Column(
               children: [
-                _row('Всего', totalUsd, totalByn, primaryColor, isBold: true),
                 if (hasEmployer) ...[
+                  _row('Наши', ourUsd, ourByn, Colors.green, isBold: true),
+                  const SizedBox(height: 6),
+                  _row('Контрагент', employerUsd, employerByn, Colors.orange,
+                      isBold: true),
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 4),
                     child: Divider(height: 1, thickness: 0.5),
                   ),
-                  _row('Контрагент', employerUsd, employerByn, Colors.orange,
-                      isBold: true),
-                  const SizedBox(height: 6),
-                  _row('Наши', ourUsd, ourByn, Colors.green, isBold: true),
                 ],
+                _row('Всего', totalUsd, totalByn, primaryColor, isBold: true),
               ],
             ),
           ),
