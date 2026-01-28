@@ -95,7 +95,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
                 color: _lightColor,
                 borderRadius: const BorderRadius.only(
@@ -112,7 +112,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                       Text(
                         "Добавить ${widget.itemType == 'work' ? 'работу' : 'материал'}",
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: themeColor.withOpacity(0.8),
                         ),
@@ -121,41 +121,46 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                         onPressed: () => Navigator.of(context).pop(),
                         icon: Icon(Icons.close, color: themeColor),
                         tooltip: "Закрыть",
+                        iconSize: 20,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       )
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _searchController,
                     autofocus: true,
-                    style: const TextStyle(fontSize: 15),
+                    style: const TextStyle(fontSize: 14),
                     decoration: InputDecoration(
                       hintText: "Начните вводить название...",
-                      prefixIcon: Icon(Icons.search, color: themeColor),
+                      prefixIcon:
+                          Icon(Icons.search, color: themeColor, size: 20),
                       filled: true,
                       fillColor: Colors.white,
                       isDense: true,
-                      contentPadding: const EdgeInsets.all(12),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide:
                             BorderSide(color: themeColor.withOpacity(0.2)),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide:
                             BorderSide(color: themeColor.withOpacity(0.2)),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide(color: themeColor, width: 2),
                       ),
                       suffixIcon: _loading
                           ? Padding(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(10),
                               child: SizedBox(
-                                width: 20,
-                                height: 20,
+                                width: 16,
+                                height: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor:
@@ -181,19 +186,20 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.search_off,
-                              size: 48, color: Colors.grey.shade300),
-                          const SizedBox(height: 12),
+                              size: 40, color: Colors.grey.shade300),
+                          const SizedBox(height: 8),
                           Text(
                             "Ничего не найдено",
-                            style: TextStyle(color: Colors.grey.shade500),
+                            style: TextStyle(
+                                color: Colors.grey.shade500, fontSize: 13),
                           ),
                         ],
                       ),
                     )
                   : ListView.separated(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(12),
                       itemCount: _results.length,
-                      separatorBuilder: (ctx, i) => const SizedBox(height: 8),
+                      separatorBuilder: (ctx, i) => const SizedBox(height: 6),
                       itemBuilder: (ctx, i) {
                         final item = _results[i];
                         return _buildItemCard(item, themeColor);
@@ -203,7 +209,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
 
             // Footer (Manual Add)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 border: Border(top: BorderSide(color: Colors.grey.shade100)),
               ),
@@ -222,15 +228,16 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                         itemType: widget.itemType);
                     widget.onAdd(dummy);
                   },
-                  icon: const Icon(Icons.add_circle_outline),
-                  label: const Text("Добавить свободную позицию (Вручную)"),
+                  icon: const Icon(Icons.add_circle_outline, size: 20),
+                  label: const Text("Добавить свободную позицию (Вручную)",
+                      style: TextStyle(fontSize: 13)),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     backgroundColor: themeColor.withOpacity(0.1),
                     foregroundColor: themeColor,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
@@ -245,32 +252,32 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
   Widget _buildItemCard(CatalogItem item, Color themeColor) {
     return InkWell(
       onTap: () => _onItemAdded(item),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade200),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           color: Colors.white,
         ),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
                 color: themeColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Icon(
                 widget.itemType == 'work'
                     ? Icons.handyman_outlined
                     : Icons.inventory_2_outlined,
                 color: themeColor,
-                size: 20,
+                size: 18,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,23 +286,23 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                     item.name,
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      fontSize: 13,
                     ),
                   ),
                   if (!widget.hidePrices) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       "${item.defaultPrice} ${item.defaultCurrency} / ${item.unit}",
                       style: TextStyle(
                         color: Colors.grey.shade600,
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
                     ),
                   ],
                 ],
               ),
             ),
-            Icon(Icons.add, color: Colors.grey.shade400),
+            Icon(Icons.add, color: Colors.grey.shade400, size: 20),
           ],
         ),
       ),
