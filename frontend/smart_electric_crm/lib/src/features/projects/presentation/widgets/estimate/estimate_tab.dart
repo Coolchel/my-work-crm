@@ -232,6 +232,85 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     );
   }
 
+  Widget _buildViewModeToggle(bool showPrices) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.grey.shade300, width: 0.5),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildToggleItem(
+                  "С ценами",
+                  showPrices,
+                  Icons.payments_outlined,
+                  () => ref.read(showPricesProvider.notifier).state = true,
+                ),
+                _buildToggleItem(
+                  "Без цен",
+                  !showPrices,
+                  Icons.visibility_off_outlined,
+                  () => ref.read(showPricesProvider.notifier).state = false,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleItem(
+      String label, bool isActive, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isActive ? Colors.blue.shade700 : Colors.grey.shade500,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive ? Colors.blue.shade900 : Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // Color theming based on tab type
   bool get _isWorkTab => widget.title == "Работы";
   Color get _primaryColor => _isWorkTab ? Colors.green : Colors.blue;
@@ -291,34 +370,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
         // Toggle for Hide Prices (Only in Materials tab)
         if (!_isWorkTab)
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    showPrices ? "Цены отображаются" : "Цены скрыты",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: showPrices ? Colors.green : Colors.grey,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Switch(
-                    value: !showPrices,
-                    onChanged: (val) {
-                      ref.read(showPricesProvider.notifier).state = !val;
-                    },
-                    activeColor: Colors.blue,
-                  ),
-                  const SizedBox(width: 4),
-                  const Text("Скрыть цены",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13))
-                ],
-              ),
-            ),
+            child: _buildViewModeToggle(showPrices),
           ),
 
         if (widget.items.isEmpty)

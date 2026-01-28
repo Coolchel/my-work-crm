@@ -24,7 +24,8 @@
 - **Stages:** Flexible configuration. Can include Stage 1, 2, 3, Extra, or custom combinations.
 - **Engineering Map:** Distinct module (ShieldGroups, LedZones, Multimedia) for technical documentation.
 - **Automation:** Engineering data must be linkable to CatalogItems for automatic estimate generation.
-- **Financials:** Dual view (Client view vs. Internal view for calculations with **Partner (Контрагент)**).
+- **Financials:** Dual view (Client view vs. Internal view for calculations with **Partner (Контрагент)**). "Контрагент" is the standard term across the app.
+- **Numerical Formatting:** All amounts, quantities, and percentages must be formatted to a maximum of 2 decimal places, with trailing zeros removed (e.g., `10.00` becomes `10`, `10.50` becomes `10.5`). <!-- id: prd_formatting -->
 - **Grouped Estimates:** Items in estimates must be grouped by their **Catalog Category** (e.g., "Cables", "Installation") for better readability.
 - **Manual Data Entry:** Important text fields like **Notes** use manual save via a button to prevent data loss or accidental overwrites during synchronization.
 
