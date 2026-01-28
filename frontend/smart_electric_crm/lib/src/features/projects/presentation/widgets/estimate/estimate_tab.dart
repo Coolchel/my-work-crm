@@ -158,34 +158,36 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       return const Padding(
         padding: EdgeInsets.all(12.0),
         child: SizedBox(
-            width: 16,
-            height: 16,
+            width: 14,
+            height: 14,
             child: CircularProgressIndicator(strokeWidth: 2)),
       );
     }
     if (_hasUnsavedChanges) {
       return Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: ElevatedButton.icon(
-          onPressed: _saveNote,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange.shade600,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            textStyle:
-                const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-             visualDensity: VisualDensity.compact,
-             elevation: 2,
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: SizedBox(
+          height: 22, // Minimal height
+          child: ElevatedButton.icon(
+            onPressed: _saveNote,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primaryColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              textStyle:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+               visualDensity: VisualDensity.compact,
+               elevation: 0,
+               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+               minimumSize: Size.zero, 
+            ),
+            icon: const Icon(Icons.save, size: 12),
+            label: const Text("СОХРАНИТЬ"),
           ),
-          icon: const Icon(Icons.save, size: 14),
-          label: const Text("СОХРАНИТЬ"),
         ),
       );
     }
-    // If saved, maybe show a small checkmark or nothing?
-    // User wants "obvious save state necessity".
-    // When saved, it's fine to show nothing or a subtle check.
-    return Icon(Icons.check_circle, color: Colors.green.shade200, size: 18);
+    return Icon(Icons.check_circle, color: _primaryColor.withOpacity(0.5), size: 18);
   }
 
   Widget _buildMarkupControl() {
@@ -854,29 +856,22 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                   hintText: "Добавить заметку...",
                   hintStyle: TextStyle(color: Colors.grey.withOpacity(0.6)),
                   filled: true,
-                  // Duller, more visible background
-                  fillColor: _hasUnsavedChanges 
-                      ? Colors.orange.shade50 
-                      : Colors.grey.shade100,
+                  // Match TotalDashboard background (primary shade50)
+                  fillColor: _primaryColorLight,
                   isDense: true,
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      // Default border
                       borderSide: BorderSide(color: Colors.grey.shade300)),
                   enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                          color: _hasUnsavedChanges 
-                              ? Colors.orange.shade300 
-                              : Colors.grey.shade300)),
+                      // Soft border
+                      borderSide: BorderSide(color: Colors.grey.shade300)),
                   focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                          color: _hasUnsavedChanges 
-                              ? Colors.orange 
-                              : _primaryColor, 
+                          color: _primaryColor, 
                           width: 1.5)),
                   suffixIcon: _buildNoteSuffix(),
                 ),

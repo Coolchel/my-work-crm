@@ -96,7 +96,11 @@ class EstimateListTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   // Compact stats row + Контрагент/Наши badges
-                  Row(
+                  // Compact stats row + Контрагент/Наши badges
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 6,
+                    runSpacing: 2,
                     children: [
                       // Quantity part - always grey
                       Text(
@@ -105,7 +109,6 @@ class EstimateListTile extends StatelessWidget {
                             fontSize: 11, color: Colors.grey.shade600),
                       ),
                       if (!hidePrices) ...[
-                        const SizedBox(width: 4), // Spacer
                         // Price part - orange when markup active
                         Text(
                           '× ${item.pricePerUnit?.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "") ?? "0"}$currencySymbol',
@@ -120,7 +123,6 @@ class EstimateListTile extends StatelessWidget {
                         ),
                       ],
                       if (hasEmployer) ...[
-                        const SizedBox(width: 6),
                         // Контрагент mini badge (horizontal)
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -137,7 +139,6 @@ class EstimateListTile extends StatelessWidget {
                                 color: Colors.orange.shade600),
                           ),
                         ),
-                        const SizedBox(width: 3),
                         // Наши mini badge (horizontal) - purple when BYN
                         Container(
                           padding: const EdgeInsets.symmetric(

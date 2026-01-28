@@ -111,7 +111,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
   
   Color get _activeColor =>
-      _tabController.index == 0 ? Colors.green.shade600 : Colors.blue.shade600;
+      _tabController.index == 0 ? Colors.green.shade400 : Colors.blue.shade400;
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +194,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               child: GestureDetector(
                 onTap: () => setState(() => _isFabExpanded = false),
                 child: Container(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withOpacity(0.15), // Slightly more visible
                 ),
               ),
             ),
@@ -204,8 +204,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
 
   Widget _buildSpeedDial(BuildContext context) {
-    final themeColor = _activeColor;
-
+    // Pastel colors for Main FAB
+    final themeColor = _activeColor; 
+    
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -213,29 +214,34 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         if (_isFabExpanded) ...[
           _buildExtendedFab(
             icon: Icons.delete_forever,
-            label: "Очистить смету",
-            color: Colors.red.shade700,
+            label: "Очистить",
+            // White BG, Red Text (Clean)
+            color: Colors.white, 
+            textColor: Colors.red,
             onTap: _deleteAllItems,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8), 
           _buildExtendedFab(
             icon: Icons.file_copy_outlined,
             label: "Шаблоны",
-            color: themeColor,
+            color: Colors.white, 
+            textColor: Colors.black87,
             onTap: _showTemplatesDialog,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           _buildExtendedFab(
             icon: Icons.edit_outlined,
             label: "Вручную",
-            color: themeColor,
+            color: Colors.white,
+            textColor: Colors.black87,
             onTap: () => _showManualAddDialog(context),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           _buildExtendedFab(
             icon: Icons.search,
             label: "Поиск",
-            color: themeColor,
+            color: Colors.white,
+            textColor: Colors.black87,
             onTap: () => _showAddItemDialog(context),
           ),
           const SizedBox(height: 16),
@@ -245,7 +251,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
             setState(() => _isFabExpanded = !_isFabExpanded);
           },
           heroTag: 'main_fab',
-          backgroundColor: themeColor,
+          // Pastel Main FAB
+          backgroundColor: themeColor, 
+          elevation: 2,
           child: Icon(_isFabExpanded ? Icons.close : Icons.add),
         ),
       ],
@@ -255,21 +263,28 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   Widget _buildExtendedFab(
       {required IconData icon,
       required String label,
-      required Color color,
+      required Color color, // This will be the pastel background
+      Color? textColor,
       required VoidCallback onTap}) {
+      
+    final fgColor = textColor ?? Colors.black87;
+    
     return SizedBox(
-      width: 170, // Fixed width for uniformity
+      width: 135, // Smaller width
+      height: 36, // Smaller height
       child: FloatingActionButton.extended(
         onPressed: () {
           setState(() => _isFabExpanded = false);
           onTap();
         },
         heroTag: label,
-        backgroundColor: Colors.white,
-        foregroundColor: color,
-        elevation: 4,
-        icon: Icon(icon, size: 20),
-        label: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+        // Solid Background
+        backgroundColor: color, 
+        foregroundColor: fgColor, 
+        elevation: 2,
+        hoverColor: Colors.grey.shade100, // Explicit hover for standard feel
+        icon: Icon(icon, size: 18), // Smaller icon
+        label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)), // Smaller text
       ),
     );
   }
@@ -281,27 +296,37 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text("Очистить раздел $typeName?"),
-        content: const Text("Вы действительно хотите удалить ВСЕ позиции из этого раздела? Это действие необратимо."),
+        title: Text("Очистить раздел $typeName?", style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Container(
+          constraints: const BoxConstraints(maxWidth: 300), // Narrow width
+          child: const Text("Вы действительно хотите удалить ВСЕ позиции из этого раздела? Это действие необратимо."),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Отмена")),
+          // Delete button (Less prominent)
           TextButton(
             onPressed: () => Navigator.pop(ctx, true), 
             child: const Text("Удалить всё", style: TextStyle(color: Colors.red))
           ),
+          // Cancel button (Prominent Blue)
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade600, // Blue background
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
+            child: const Text("Отмена"),
+          ),
         ],
+        actionsAlignment: MainAxisAlignment.spaceBetween,
       )
     );
     
     if (confirm == true) {
       try {
         final repo = ref.read(projectRepositoryProvider);
-        // We need to delete items one by one or have a bulk delete endpoint.
-        // Assuming no bulk delete, we iterate. Efficient? No. Working? Yes.
-        // Actually, let's filter the current list.
         final itemsToDelete = isWork ? _works : _materials;
         
-        // Show loading
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Удаление...")));
         
@@ -319,6 +344,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       }
     }
   }
+
+
 
   void _showActionsDialog(BuildContext context) {
     final themeColor = _activeColor;
