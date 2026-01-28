@@ -232,7 +232,66 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     );
   }
 
-  Widget _buildViewModeToggle(bool showPrices) {
+  Widget _buildViewModeToggleMinimal(bool showPrices) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          _buildMinimalItem(
+            "ПОДРОБНО",
+            showPrices,
+            () => ref.read(showPricesProvider.notifier).state = true,
+          ),
+          Container(
+            height: 12,
+            width: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            color: Colors.grey.shade300,
+          ),
+          _buildMinimalItem(
+            "ТОЛЬКО КОЛ-ВО",
+            !showPrices,
+            () => ref.read(showPricesProvider.notifier).state = false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMinimalItem(String label, bool isActive, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              letterSpacing: 1.2,
+              fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
+              color: isActive ? Colors.blue.shade800 : Colors.grey.shade500,
+            ),
+          ),
+          const SizedBox(height: 2),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 2,
+            width: isActive ? 12 : 0,
+            decoration: BoxDecoration(
+              color: Colors.blue.shade600,
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildViewModeTogglePill(bool showPrices) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -248,13 +307,13 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildToggleItem(
+                _buildToggleItemPill(
                   "С ценами",
                   showPrices,
                   Icons.payments_outlined,
                   () => ref.read(showPricesProvider.notifier).state = true,
                 ),
-                _buildToggleItem(
+                _buildToggleItemPill(
                   "Без цен",
                   !showPrices,
                   Icons.visibility_off_outlined,
@@ -268,7 +327,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     );
   }
 
-  Widget _buildToggleItem(
+  Widget _buildToggleItemPill(
       String label, bool isActive, IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
@@ -307,6 +366,159 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildViewModeToggleGlass(bool showPrices) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              // Semi-transparent background (Glassmorphic)
+              color: Colors.white.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.shade100.withOpacity(0.5),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                )
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildGlassItem(
+                  "Цены",
+                  showPrices,
+                  Icons.receipt_long_outlined,
+                  () => ref.read(showPricesProvider.notifier).state = true,
+                ),
+                _buildGlassItem(
+                  "Кол-во",
+                  !showPrices,
+                  Icons.unarchive_outlined,
+                  () => ref.read(showPricesProvider.notifier).state = false,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlassItem(
+      String label, bool isActive, IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: isActive
+              ? LinearGradient(
+                  colors: [
+                    Colors.blue.shade400,
+                    Colors.blue.shade600,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: Colors.blue.shade600.withOpacity(0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  )
+                ]
+              : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isActive ? Colors.white : Colors.blue.shade400,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isActive ? Colors.white : Colors.blue.shade700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildViewModeToggleSegmented(bool showPrices) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment<bool>(
+                value: true,
+                label: Text('С ценами', style: TextStyle(fontSize: 11)),
+                icon: Icon(Icons.payments_outlined, size: 14),
+              ),
+              ButtonSegment<bool>(
+                value: false,
+                label: Text('Без цен', style: TextStyle(fontSize: 11)),
+                icon: Icon(Icons.visibility_off_outlined, size: 14),
+              ),
+            ],
+            selected: {showPrices},
+            onSelectionChanged: (newSelection) {
+              ref.read(showPricesProvider.notifier).state = newSelection.first;
+            },
+            showSelectedIcon: false,
+            style: ButtonStyle(
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: MaterialStateProperty.all(
+                const EdgeInsets.symmetric(horizontal: 12),
+              ),
+              // Theming to match Project/Materials blue
+              side: MaterialStateProperty.all(
+                BorderSide(color: Colors.blue.shade100),
+              ),
+              backgroundColor: MaterialStateProperty.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return Colors.blue.shade50;
+                }
+                return Colors.transparent;
+              }),
+              foregroundColor: MaterialStateProperty.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return Colors.blue.shade900;
+                }
+                return Colors.blue.shade300;
+              }),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -370,7 +582,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
         // Toggle for Hide Prices (Only in Materials tab)
         if (!_isWorkTab)
           SliverToBoxAdapter(
-            child: _buildViewModeToggle(showPrices),
+            child: _buildViewModeToggleSegmented(showPrices),
           ),
 
         if (widget.items.isEmpty)
