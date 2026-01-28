@@ -26,6 +26,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   bool _isLoading = true;
   double _markupPercent = 0.0;
   bool _showPrices = false;
+  bool _isFabExpanded = false;
 
   @override
   void initState() {
@@ -99,10 +100,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       length: 2,
       child: Builder(builder: (context) {
         return Scaffold(
-          floatingActionButton: FloatingActionButton(
-            onPressed: () => _showAddItemDialog(context),
-            child: const Icon(Icons.add),
-          ),
+          floatingActionButton: _buildSpeedDial(context),
           body: NestedScrollView(
             headerSliverBuilder: (context, innerBoxIsScrolled) {
               return [
@@ -119,13 +117,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                   ),
                   actions: [
                     IconButton(
-                        onPressed: _showTemplatesDialog,
-                        icon: const Icon(Icons.file_copy_outlined),
-                        tooltip: "Шаблоны"),
-                    _buildCopyMenu(),
-                    IconButton(
-                        onPressed: _showReport,
-                        icon: const Icon(Icons.description)),
+                      onPressed: () => _showActionsSheet(context),
+                      icon: const Icon(Icons.more_vert),
+                      tooltip: "Действия",
+                    ),
                   ],
                 ),
               ];
@@ -165,11 +160,198 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     );
   }
 
+  Widget _buildSpeedDial(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (_isFabExpanded) ...[
+          _buildFabOption(
+            icon: Icons.file_copy_outlined,
+            label: "Шаблоны",
+            onTap: _showTemplatesDialog,
+          ),
+          const SizedBox(height: 12),
+          _buildFabOption(
+            icon: Icons.edit_outlined,
+            label: "Вручную",
+            onTap: () => _showManualAddDialog(context),
+          ),
+          const SizedBox(height: 12),
+          _buildFabOption(
+            icon: Icons.search,
+            label: "Поиск",
+            onTap: () => _showAddItemDialog(context),
+          ),
+          const SizedBox(height: 12),
+        ],
+        FloatingActionButton(
+          onPressed: () {
+            setState(() => _isFabExpanded = !_isFabExpanded);
+          },
+          heroTag: 'main_fab',
+          child: Icon(_isFabExpanded ? Icons.close : Icons.add),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFabOption(
+      {required IconData icon,
+      required String label,
+      required VoidCallback onTap}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2))
+            ],
+          ),
+          child:
+              Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        const SizedBox(width: 8),
+        FloatingActionButton.small(
+          onPressed: () {
+            setState(() => _isFabExpanded = false);
+            onTap();
+          },
+          heroTag: label,
+          child: Icon(icon),
+        ),
+      ],
+    );
+  }
+
+  void _showActionsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 10),
+                  child: Text("Действия",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.description_outlined),
+                  title: const Text("Просмотреть отчеты"),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showReport();
+                  },
+                ),
+                ExpansionTile(
+                  leading: const Icon(Icons.copy),
+                  title: const Text("Копировать"),
+                  children: [
+                    ListTile(
+                      title: const Text("РАБОТЫ (Клиент)"),
+                      contentPadding: const EdgeInsets.only(left: 72),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _copyReport('client', itemType: 'work');
+                      },
+                    ),
+                    ListTile(
+                      title: const Text("РАБОТЫ (Для Шефа)"),
+                      contentPadding: const EdgeInsets.only(left: 72),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _copyReport('employer', itemType: 'work');
+                      },
+                    ),
+                    ListTile(
+                      title: const Text("МАТЕРИАЛЫ (С наценкой)"),
+                      contentPadding: const EdgeInsets.only(left: 72),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _copyReportWithMarkup();
+                      },
+                    ),
+                    ListTile(
+                      title: const Text("МАТЕРИАЛЫ (Список)"),
+                      contentPadding: const EdgeInsets.only(left: 72),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _copyReport('client', itemType: 'material');
+                      },
+                    ),
+                  ],
+                ),
+                ListTile(
+                  leading: const Icon(Icons.picture_as_pdf_outlined),
+                  title: const Text("Экспорт в PDF"),
+                  subtitle: const Text("Скоро"),
+                  enabled: false,
+                  onTap: () {},
+                ),
+                ListTile(
+                  leading: const Icon(Icons.share_outlined),
+                  title: const Text("Поделиться"),
+                  subtitle: const Text("Скоро"),
+                  enabled: false,
+                  onTap: () {},
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showManualAddDialog(BuildContext context) async {
+    final tabController = DefaultTabController.of(context);
+    final index = tabController.index;
+    final itemType = index == 0 ? 'work' : 'material';
+    final showPrices = itemType == 'work' ? true : _showPrices;
+    final hidePrices = !showPrices;
+
+    final tempItem = EstimateItemModel(
+      id: 0,
+      stage: widget.stage.id,
+      itemType: itemType,
+      name: '',
+      unit: 'шт',
+      totalQuantity: 1,
+      pricePerUnit: 0,
+    );
+
+    // Open Edit Dialog directly
+    final result = await showDialog<dynamic>(
+        context: context,
+        builder: (_) => EditItemDialog(item: tempItem, hidePrices: hidePrices));
+
+    if (result is EstimateItemModel) {
+      // Save New Manual Item
+      _saveNewItem(result, null);
+    }
+  }
+
   void _showAddItemDialog(BuildContext context) {
     final tabController = DefaultTabController.of(context);
     final index = tabController.index;
     final itemType = index == 0 ? 'work' : 'material';
-    // Logic: if Work tab, always show prices. If Material, check local state.
     final showPrices = itemType == 'work' ? true : _showPrices;
     final hidePrices = !showPrices;
 
@@ -179,33 +361,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
               itemType: itemType,
               hidePrices: hidePrices,
               onAdd: (catalogItem) async {
-                // If ID == 0, it's manual. We need to ASK for Name/Unit/Price immediately.
-                // Reusing EditItemDialog is best, but EditItemDialog takes EstimateItemModel.
-                // Let's create a temporary EstimateItemModel.
-
+                // If ID == 0, it's manual.
                 if (catalogItem.id == 0) {
                   Navigator.pop(context); // Close Add Dialog
-
-                  final tempItem = EstimateItemModel(
-                    id: 0,
-                    stage: widget.stage.id,
-                    itemType: itemType,
-                    name: '',
-                    unit: 'шт',
-                    totalQuantity: 1,
-                    pricePerUnit: 0,
-                  );
-
-                  // Open Edit Dialog directly
-                  final result = await showDialog<dynamic>(
-                      context: context,
-                      builder: (_) => EditItemDialog(
-                          item: tempItem, hidePrices: hidePrices));
-
-                  if (result is EstimateItemModel) {
-                    // Save New Manual Item
-                    _saveNewItem(result, null);
-                  }
+                  _showManualAddDialog(context);
                   return;
                 }
 
@@ -268,32 +427,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
     }
-  }
-
-  Widget _buildCopyMenu() {
-    return PopupMenuButton<String>(
-      icon: const Icon(Icons.copy),
-      itemBuilder: (context) => [
-        PopupMenuItem(
-            child: const Text("Копировать РАБОТЫ (Клиент)"),
-            onTap: () => _copyReport('client', itemType: 'work')),
-        PopupMenuItem(
-            child: const Text("Копировать РАБОТЫ (Для Шефа)"),
-            onTap: () => _copyReport('employer', itemType: 'work')),
-        const PopupMenuItem<String>(
-          value: 'markup',
-          child: Text("Копировать МАТЕРИАЛЫ (С наценкой)"),
-        ),
-        PopupMenuItem(
-            child: const Text("Копировать Список МАТЕРИАЛОВ"),
-            onTap: () => _copyReport('client', itemType: 'material')),
-      ],
-      onSelected: (value) {
-        if (value == 'markup') {
-          _copyReportWithMarkup();
-        }
-      },
-    );
   }
 
   void _copyReportWithMarkup() async {
