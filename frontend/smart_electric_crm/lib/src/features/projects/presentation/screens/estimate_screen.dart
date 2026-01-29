@@ -37,7 +37,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     _items = List.from(widget.stage.estimateItems);
     _markupPercent = widget.stage.markupPercent;
     _showPrices = widget.stage.showPrices;
-    
+
     // Explicit controller for FAB color sync
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
@@ -49,7 +49,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     // Force refresh on init to ensure data is fresh
     _refresh();
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -109,7 +109,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       debugPrint("Error saving showPrices: $e");
     }
   }
-  
+
   Color get _activeColor =>
       _tabController.index == 0 ? Colors.green.shade400 : Colors.blue.shade400;
 
@@ -130,82 +130,86 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                     title: Text("Смета: ${_stage.title}"),
                     pinned: true,
                     floating: true,
-                  forceElevated: innerBoxIsScrolled,
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(kTextTabBarHeight),
-                    child: AbsorbPointer(
-                      absorbing: _isFabExpanded,
-                      child: TabBar(
-                        controller: _tabController,
-                        indicatorColor: _activeColor,
-                        labelColor: _activeColor,
-                        unselectedLabelColor: Colors.grey,
-                        tabs: const [
-                          Tab(text: "Работы"),
-                          Tab(text: "Материалы"),
-                        ],
-                      ),
-                    ),
-                  ),
-                  actions: [
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: _activeColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                    forceElevated: innerBoxIsScrolled,
+                    bottom: PreferredSize(
+                      preferredSize: const Size.fromHeight(kTextTabBarHeight),
                       child: AbsorbPointer(
                         absorbing: _isFabExpanded,
-                        child: IconButton(
-                          onPressed: () => _showActionsDialog(context),
-                          icon: Icon(Icons.widgets_outlined, color: _activeColor),
-                          tooltip: "Меню действий",
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                        child: TabBar(
+                          controller: _tabController,
+                          indicatorColor: _activeColor,
+                          labelColor: _activeColor,
+                          unselectedLabelColor: Colors.grey,
+                          tabs: const [
+                            Tab(text: "Работы"),
+                            Tab(text: "Материалы"),
+                          ],
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ];
-            },
-            body: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      EstimateTab(
-                        key: const ValueKey('works_tab'),
-                        items: _works,
-                        onUpdate: _updateItemFromTab,
-                        onDelete: _deleteItemFromTab,
-                        title: "Работы",
-                        note: _stage.workNotes,
-                        onSaveNote: (val) => _saveNotes('work', val),
-                        isDisabled: _isFabExpanded,
-                        onDismissRequest: () => setState(() => _isFabExpanded = false),
+                    actions: [
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _activeColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: AbsorbPointer(
+                          absorbing: _isFabExpanded,
+                          child: IconButton(
+                            onPressed: () => _showActionsDialog(context),
+                            icon: Icon(Icons.widgets_outlined,
+                                color: _activeColor),
+                            tooltip: "Меню действий",
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                                minWidth: 40, minHeight: 40),
+                          ),
+                        ),
                       ),
-                      EstimateTab(
-                        key: const ValueKey('materials_tab'),
-                        items: _materials,
-                        onUpdate: _updateItemFromTab,
-                        onDelete: _deleteItemFromTab,
-                        title: "Материалы",
-                        note: _stage.materialNotes,
-                        onSaveNote: (val) => _saveNotes('material', val),
-                        markupPercent: _markupPercent,
-                        onMarkupChanged: _saveMarkup,
-                        showPrices: _showPrices,
-                        onShowPricesChanged: _saveShowPrices,
-                        isDisabled: _isFabExpanded,
-                        onDismissRequest: () => setState(() => _isFabExpanded = false),
-                      ),
-
                     ],
                   ),
+                ];
+              },
+              body: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        EstimateTab(
+                          key: const ValueKey('works_tab'),
+                          items: _works,
+                          onUpdate: _updateItemFromTab,
+                          onDelete: _deleteItemFromTab,
+                          title: "Работы",
+                          note: _stage.workNotes,
+                          onSaveNote: (val) => _saveNotes('work', val),
+                          isDisabled: _isFabExpanded,
+                          onDismissRequest: () =>
+                              setState(() => _isFabExpanded = false),
+                        ),
+                        EstimateTab(
+                          key: const ValueKey('materials_tab'),
+                          items: _materials,
+                          onUpdate: _updateItemFromTab,
+                          onDelete: _deleteItemFromTab,
+                          title: "Материалы",
+                          note: _stage.materialNotes,
+                          onSaveNote: (val) => _saveNotes('material', val),
+                          markupPercent: _markupPercent,
+                          onMarkupChanged: _saveMarkup,
+                          showPrices: _showPrices,
+                          onShowPricesChanged: _saveShowPrices,
+                          isDisabled: _isFabExpanded,
+                          onDismissRequest: () =>
+                              setState(() => _isFabExpanded = false),
+                        ),
+                      ],
+                    ),
             ),
           ),
-          
+
           // Backdrop / Scrim
           if (_isFabExpanded)
             Positioned.fill(
@@ -224,11 +228,12 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     // Pastel colors for Main FAB based on active tab
     final isWorks = _tabController.index == 0;
     final mainFabColor = isWorks ? Colors.green.shade200 : Colors.blue.shade200;
-    
+
     // Contextual soft colors for SpeedDial buttons
     // Using shade50 for a very light pastel background
     final actionBtnColor = isWorks ? Colors.green.shade50 : Colors.blue.shade50;
-    final actionBtnTextColor = isWorks ? Colors.green.shade800 : Colors.blue.shade800;
+    final actionBtnTextColor =
+        isWorks ? Colors.green.shade800 : Colors.blue.shade800;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -239,15 +244,15 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
             icon: Icons.delete_forever,
             label: "Очистить",
             // Red style for destructive action
-            color: Colors.red.shade50, 
+            color: Colors.red.shade50,
             textColor: Colors.red,
             onTap: _deleteAllItems,
           ),
-          const SizedBox(height: 8), 
+          const SizedBox(height: 8),
           _buildExtendedFab(
             icon: Icons.file_copy_outlined,
             label: "Шаблоны",
-            color: actionBtnColor, 
+            color: actionBtnColor,
             textColor: actionBtnTextColor,
             onTap: _showTemplatesDialog,
           ),
@@ -255,7 +260,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           _buildExtendedFab(
             icon: Icons.edit_outlined,
             label: "Вручную",
-            color: actionBtnColor, 
+            color: actionBtnColor,
             textColor: actionBtnTextColor,
             onTap: () => _showManualAddDialog(context),
           ),
@@ -263,7 +268,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           _buildExtendedFab(
             icon: Icons.search,
             label: "Поиск",
-            color: actionBtnColor, 
+            color: actionBtnColor,
             textColor: actionBtnTextColor,
             onTap: () => _showAddItemDialog(context),
           ),
@@ -275,7 +280,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           },
           heroTag: 'main_fab',
           // Pastel Main FAB
-          backgroundColor: mainFabColor, 
+          backgroundColor: mainFabColor,
           foregroundColor: Colors.black87, // Ensure icon is visible on pastel
           elevation: 2,
           child: Icon(_isFabExpanded ? Icons.close : Icons.add),
@@ -290,9 +295,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       required Color color, // This will be the pastel background
       Color? textColor,
       required VoidCallback onTap}) {
-      
     final fgColor = textColor ?? Colors.black87;
-    
+
     return SizedBox(
       width: 135, // Smaller width
       height: 36, // Smaller height
@@ -303,12 +307,14 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         },
         heroTag: label,
         // Solid Background
-        backgroundColor: color, 
-        foregroundColor: fgColor, 
+        backgroundColor: color,
+        foregroundColor: fgColor,
         elevation: 2,
         hoverColor: Colors.grey.shade100, // Explicit hover for standard feel
         icon: Icon(icon, size: 18), // Smaller icon
-        label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)), // Smaller text
+        label: Text(label,
+            style: const TextStyle(
+                fontSize: 12, fontWeight: FontWeight.bold)), // Smaller text
       ),
     );
   }
@@ -316,69 +322,73 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   Future<void> _deleteAllItems() async {
     final isWork = _tabController.index == 0;
     final typeName = isWork ? "РАБОТЫ" : "МАТЕРИАЛЫ";
-    
+
     final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text("Очистить раздел $typeName?", style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Container(
-          constraints: const BoxConstraints(maxWidth: 300), // Narrow width
-          child: const Text("Вы действительно хотите удалить ВСЕ позиции из этого раздела? Это действие необратимо."),
-        ),
-        actions: [
-          // Delete button (Less prominent)
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true), 
-            child: const Text("Удалить всё", style: TextStyle(color: Colors.red))
-          ),
-          // Cancel button (Prominent)
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isWork ? Colors.green : Colors.blue, // Contextual color
-              foregroundColor: Colors.white,
-              elevation: 0,
-            ),
-            child: const Text("Отмена"),
-          ),
-        ],
-        actionsAlignment: MainAxisAlignment.spaceBetween,
-      )
-    );
-    
+        context: context,
+        builder: (ctx) => AlertDialog(
+              title: Text("Очистить раздел $typeName?",
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              content: Container(
+                constraints:
+                    const BoxConstraints(maxWidth: 300), // Narrow width
+                child: const Text(
+                    "Вы действительно хотите удалить ВСЕ позиции из этого раздела? Это действие необратимо."),
+              ),
+              actions: [
+                // Delete button (Less prominent)
+                TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text("Удалить всё",
+                        style: TextStyle(color: Colors.red))),
+                // Cancel button (Prominent)
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        isWork ? Colors.green : Colors.blue, // Contextual color
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                  ),
+                  child: const Text("Отмена"),
+                ),
+              ],
+              actionsAlignment: MainAxisAlignment.spaceBetween,
+            ));
+
     if (confirm == true) {
       try {
         final repo = ref.read(projectRepositoryProvider);
         final itemsToDelete = isWork ? _works : _materials;
-        
+
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Удаление...")));
-        
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Удаление...")));
+
         for (var item in itemsToDelete) {
           await repo.deleteEstimateItem(item.id);
         }
-        
+
         _refresh();
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Раздел очищен")));
-
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Раздел очищен")));
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Ошибка удаления: $e")));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Ошибка удаления: $e")));
       }
     }
   }
 
-
-
   void _showActionsDialog(BuildContext context) {
     final themeColor = _activeColor;
-    
+
     showDialog(
       context: context,
       builder: (context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
             child: SingleChildScrollView(
@@ -386,67 +396,97 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                   Padding(
+                  Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Text("Действия",
                         style: TextStyle(
-                            fontSize: 20, 
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: themeColor)),
                   ),
-                  _buildActionTile(context, Icons.description_outlined, "Просмотреть отчеты", () {
+                  _buildActionTile(
+                      context, Icons.description_outlined, "Просмотреть отчеты",
+                      () {
                     Navigator.pop(context);
                     _showReport();
                   }),
                   const Divider(indent: 16, endIndent: 16),
-                  
                   _buildSectionHeader("Копировать"),
-                  _buildActionTile(context, Icons.copy_all, "РАБОТЫ (Для заказчика)", () async {
-                     Navigator.pop(context);
-                     final project = await ref.read(projectByIdProvider(widget.projectId).future);
-                     final stageTitle = await _formatStageTitle(widget.stage.title);
-                     final title = "${project.address} - Работы - $stageTitle";
-                     
-                     final text = _generateReportText(_works, title, showPrices: true, quantityType: 'total');
-                     _copyText(text);
-                  }, dense: true),
-                  _buildActionTile(context, Icons.copy_all, "РАБОТЫ (Для Контрагента)", () async {
+                  _buildActionTile(
+                      context, Icons.copy_all, "РАБОТЫ (Для заказчика)",
+                      () async {
                     Navigator.pop(context);
-                     final project = await ref.read(projectByIdProvider(widget.projectId).future);
-                     final stageTitle = await _formatStageTitle(widget.stage.title);
-                     final title = "${project.address} - Работы - $stageTitle";
+                    final project = await ref
+                        .read(projectByIdProvider(widget.projectId).future);
+                    final stageTitle =
+                        await _formatStageTitle(widget.stage.title);
+                    final title = "${project.address} - Работы - $stageTitle";
 
-                    final text = _generateReportText(_works, title, showPrices: true, quantityType: 'employer');
+                    final text = _generateReportText(_works, title,
+                        showPrices: true, quantityType: 'total');
                     _copyText(text);
                   }, dense: true),
-                   _buildActionTile(context, Icons.copy_all, "МАТЕРИАЛЫ (С наценкой)", () async {
+                  _buildActionTile(
+                      context, Icons.copy_all, "РАБОТЫ (Для Контрагента)",
+                      () async {
                     Navigator.pop(context);
-                     final project = await ref.read(projectByIdProvider(widget.projectId).future);
-                     final stageTitle = await _formatStageTitle(widget.stage.title);
-                     final title = "${project.address} - Материалы - $stageTitle";
+                    final project = await ref
+                        .read(projectByIdProvider(widget.projectId).future);
+                    final stageTitle =
+                        await _formatStageTitle(widget.stage.title);
+                    final title = "${project.address} - Работы - $stageTitle";
 
-                    final text = _generateReportText(_materials, title, showPrices: true, markup: _markupPercent, quantityType: 'total');
+                    final text = _generateReportText(_works, title,
+                        showPrices: true, quantityType: 'employer');
                     _copyText(text);
                   }, dense: true),
-                   _buildActionTile(context, Icons.copy_all, "МАТЕРИАЛЫ (Текущий вид)", () async {
+                  _buildActionTile(
+                      context, Icons.copy_all, "МАТЕРИАЛЫ (С наценкой)",
+                      () async {
                     Navigator.pop(context);
-                     final project = await ref.read(projectByIdProvider(widget.projectId).future);
-                     final stageTitle = await _formatStageTitle(widget.stage.title);
-                    
-                    final title = "${project.address} - Материалы - $stageTitle";
+                    final project = await ref
+                        .read(projectByIdProvider(widget.projectId).future);
+                    final stageTitle =
+                        await _formatStageTitle(widget.stage.title);
+                    final title =
+                        "${project.address} - Материалы - $stageTitle";
 
-                    final text = _generateReportText(_materials, title, showPrices: _showPrices, markup: _markupPercent, quantityType: 'total');
+                    final text = _generateReportText(_materials, title,
+                        showPrices: true,
+                        markup: _markupPercent,
+                        quantityType: 'total');
                     _copyText(text);
                   }, dense: true),
+                  _buildActionTile(
+                      context, Icons.copy_all, "МАТЕРИАЛЫ (Текущий вид)",
+                      () async {
+                    Navigator.pop(context);
+                    final project = await ref
+                        .read(projectByIdProvider(widget.projectId).future);
+                    final stageTitle =
+                        await _formatStageTitle(widget.stage.title);
 
+                    final title =
+                        "${project.address} - Материалы - $stageTitle";
+
+                    final text = _generateReportText(_materials, title,
+                        showPrices: _showPrices,
+                        markup: _markupPercent,
+                        quantityType: 'total');
+                    _copyText(text);
+                  }, dense: true),
                   const Divider(indent: 16, endIndent: 16),
-                  _buildActionTile(context, Icons.picture_as_pdf_outlined, "Экспорт в PDF (Скоро)", () {}, enabled: false),
-                  _buildActionTile(context, Icons.share_outlined, "Поделиться (Скоро)", () {}, enabled: false),
-                  
+                  _buildActionTile(context, Icons.picture_as_pdf_outlined,
+                      "Экспорт в PDF (Скоро)", () {},
+                      enabled: false),
+                  _buildActionTile(context, Icons.share_outlined,
+                      "Поделиться (Скоро)", () {},
+                      enabled: false),
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text("Закрыть", style: TextStyle(color: Colors.grey)),
+                    child: const Text("Закрыть",
+                        style: TextStyle(color: Colors.grey)),
                   )
                 ],
               ),
@@ -458,26 +498,37 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
 
   Future<void> _copyText(String text) async {
-      await Clipboard.setData(ClipboardData(text: text));
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Скопировано в буфер обмена!")),
-      );
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Скопировано в буфер обмена!")),
+    );
   }
-  
+
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
       child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey.shade600))),
-      );
+          alignment: Alignment.centerLeft,
+          child: Text(title,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade600))),
+    );
   }
-  
-  Widget _buildActionTile(BuildContext context, IconData icon, String title, VoidCallback onTap, {bool dense = false, bool enabled = true}) {
+
+  Widget _buildActionTile(
+      BuildContext context, IconData icon, String title, VoidCallback onTap,
+      {bool dense = false, bool enabled = true}) {
     return ListTile(
-      leading: Icon(icon, color: enabled ? Colors.grey.shade700 : Colors.grey.shade300, size: dense ? 20 : 24),
-      title: Text(title, style: TextStyle(fontSize: dense ? 14 : 16, color: enabled ? Colors.black87 : Colors.grey.shade300)),
+      leading: Icon(icon,
+          color: enabled ? Colors.grey.shade700 : Colors.grey.shade300,
+          size: dense ? 20 : 24),
+      title: Text(title,
+          style: TextStyle(
+              fontSize: dense ? 14 : 16,
+              color: enabled ? Colors.black87 : Colors.grey.shade300)),
       onTap: enabled ? onTap : null,
       dense: dense,
       contentPadding: const EdgeInsets.symmetric(horizontal: 24),
@@ -783,10 +834,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     } else if (title.startsWith('additional_')) {
       title = title.replaceAll('additional_', 'Доп. работы ');
     } else if (title.startsWith('pre_') || title.contains('preliminary')) {
-       title = title.replaceAll('pre_', 'Предпросчет ');
-       if (!title.contains('ориентировочно')) {
-         title += " (ориентировочно)";
-       }
+      title = title.replaceAll('pre_', 'Предпросчет ');
+      if (!title.contains('ориентировочно')) {
+        title += " (ориентировочно)";
+      }
     }
     return title;
   }
@@ -803,30 +854,30 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     // 1. Process items (Filter & Markup)
     double totalUsd = 0;
     double totalByn = 0;
-    
+
     // For formulae and "Ours" calculation
     final List<double> usdParts = [];
     final List<double> bynParts = [];
     double totalClientUsd = 0;
     double totalClientByn = 0;
-    
+
     // Pre-calculate Total Client Amount (Whole Stage) for "Ours" calc
     // This allows "Ours" = "Total Stage" - "Contractor Share"
     // even if some items are not assigned to contractor at all.
     for (var item in items) {
-       double p = item.pricePerUnit ?? 0;
-       if (markup > 0) p = p * (1 + (markup / 100));
-       
-       // Accumulate for all items that have > 0 total quantity
-       if (item.totalQuantity > 0.001) {
-          if (item.currency == 'USD') {
-             totalClientUsd += item.totalQuantity * p;
-          } else {
-             totalClientByn += item.totalQuantity * p;
-          }
-       }
+      double p = item.pricePerUnit ?? 0;
+      if (markup > 0) p = p * (1 + (markup / 100));
+
+      // Accumulate for all items that have > 0 total quantity
+      if (item.totalQuantity > 0.001) {
+        if (item.currency == 'USD') {
+          totalClientUsd += item.totalQuantity * p;
+        } else {
+          totalClientByn += item.totalQuantity * p;
+        }
+      }
     }
-    
+
     // We want a flat list, no categories.
     // Just filter and process.
     List<EstimateItemModel> finalItems = [];
@@ -849,13 +900,11 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       if (markup > 0) {
         price = price * (1 + (markup / 100));
       }
-      
-      final processedItem = item.copyWith(
-          totalQuantity: quantity, 
-          pricePerUnit: price
-      );
+
+      final processedItem =
+          item.copyWith(totalQuantity: quantity, pricePerUnit: price);
       finalItems.add(processedItem);
-      
+
       final sum = quantity * price;
 
       // Calculate displayed totals
@@ -874,195 +923,228 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     }
 
     // 2. Output Flat List
-  String fmt(double v) =>
-      v.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "");
+    String fmt(double v) =>
+        v.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "");
 
-  // Split into groups
-  final usdItems = finalItems.where((i) => i.currency == 'USD').toList();
-  final otherItems = finalItems.where((i) => i.currency != 'USD').toList();
-  
-  int globalIndex = 0;
+    // Split into groups
+    final usdItems = finalItems.where((i) => i.currency == 'USD').toList();
+    final otherItems = finalItems.where((i) => i.currency != 'USD').toList();
 
-  void writeItems(List<EstimateItemModel> groupItems) {
-    for (var item in groupItems) {
-      globalIndex++;
-      final q = item.totalQuantity;
-      final p = item.pricePerUnit ?? 0;
-      final sum = q * p;
-      final currencySymbol = item.currency == 'USD' ? '\$' : 'р';
-      
-      buffer.write("${globalIndex}. ${item.name}: ${fmt(q)} ${item.unit}");
-      
-      if (showPrices) {
-        buffer.write(" x ${fmt(p)}$currencySymbol = ${fmt(sum)}$currencySymbol");
-      }
-      
-      if (!item.name.trim().endsWith('.')) {
-         buffer.write(";");
-      }
-      buffer.writeln("");
-    }
-  }
+    int globalIndex = 0;
 
-  // Write USD items
-  if (usdItems.isNotEmpty) {
-    writeItems(usdItems);
-  }
+    void writeItems(List<EstimateItemModel> groupItems) {
+      for (var item in groupItems) {
+        globalIndex++;
+        final q = item.totalQuantity;
+        final p = item.pricePerUnit ?? 0;
+        final sum = q * p;
+        final currencySymbol = item.currency == 'USD' ? '\$' : 'р';
 
-  // Separator if needed
-  if (usdItems.isNotEmpty && otherItems.isNotEmpty) {
-    buffer.writeln(""); // Empty line
-  }
+        buffer.write("${globalIndex}. ${item.name}: ${fmt(q)} ${item.unit}");
 
-  // Write Other items
-  if (otherItems.isNotEmpty) {
-    writeItems(otherItems);
-  }
-  
-  buffer.writeln("----------------------------------------");
-  
-  // 3. Totals
-  if (showPrices) {
-    if (quantityType == 'employer') {
-      // --- CONTRACTOR REPORT FORMAT ---
-      
-      // I. YOURS (Contractor)
-      final yoursParts = <String>[];
-      
-      // USD Formula
-      if (usdParts.isNotEmpty) {
-        final formula = usdParts.map((e) => "${fmt(e)}\$").join(" + ");
-        yoursParts.add("$formula = ${fmt(totalUsd)}\$");
-      }
-      // BYN Formula
-      if (bynParts.isNotEmpty) {
-        final formula = bynParts.map((e) => "${fmt(e)}р").join(" + ");
-        yoursParts.add("$formula = ${fmt(totalByn)}р");
-      }
-      
-      if (yoursParts.isNotEmpty) {
-         buffer.writeln("Итого Твои: ${yoursParts.join("; ")}");
-      } else {
-         buffer.writeln("Итого Твои: 0");
-      }
+        if (showPrices) {
+          buffer.write(
+              " x ${fmt(p)}$currencySymbol = ${fmt(sum)}$currencySymbol");
+        }
 
-      // II. OURS (Calculated: Total Client - Yours)
-      final oursParts = <String>[];
-      final totalOursUsd = totalClientUsd - totalUsd;
-      final totalOursByn = totalClientByn - totalByn;
-
-      // USD Calc
-      // Only show if there was any client amount involved.
-      if (totalClientUsd > 0.001 || totalUsd > 0.001) {
-         oursParts.add("${fmt(totalClientUsd)}\$ - ${fmt(totalUsd)}\$ = ${fmt(totalOursUsd)}\$");
-      }
-
-      // BYN Calc
-      if (totalClientByn > 0.001 || totalByn > 0.001) {
-         oursParts.add("${fmt(totalClientByn)}р - ${fmt(totalByn)}р = ${fmt(totalOursByn)}р");
-      }
-      
-      if (oursParts.isNotEmpty) {
-        buffer.writeln("Итого Наши: ${oursParts.join("; ")}");
-      }
-
-    } else {
-      // --- STANDARD FORMAT ---
-      final parts = <String>[];
-      // Rounding logic: <0.5 down, >=0.5 up (standard .round())
-      if (totalUsd > 0.4) parts.add("${totalUsd.round()}\$");
-      if (totalByn > 0.4) parts.add("${totalByn.round()}р");
-      
-      if (parts.isNotEmpty) {
-        buffer.writeln("Итого: ${parts.join(" + ")}");
-      } else {
-        buffer.writeln("Итого: 0");
+        if (!item.name.trim().endsWith('.')) {
+          buffer.write(";");
+        }
+        buffer.writeln("");
       }
     }
-  }
 
-  return buffer.toString();
-}
+    // Write USD items
+    if (usdItems.isNotEmpty) {
+      writeItems(usdItems);
+    }
+
+    // Separator if needed
+    if (usdItems.isNotEmpty && otherItems.isNotEmpty) {
+      buffer.writeln(""); // Empty line
+    }
+
+    // Write Other items
+    if (otherItems.isNotEmpty) {
+      writeItems(otherItems);
+    }
+
+    buffer.writeln("----------------------------------------");
+
+    // 3. Totals
+    if (showPrices) {
+      if (quantityType == 'employer') {
+        // --- CONTRACTOR REPORT FORMAT ---
+
+        // I. YOURS (Contractor)
+        final yoursParts = <String>[];
+
+        // USD Formula
+        if (usdParts.isNotEmpty) {
+          if (usdParts.length > 1) {
+            final formula = usdParts.map((e) => "${fmt(e)}\$").join(" + ");
+            yoursParts.add("$formula = ${fmt(totalUsd)}\$");
+          } else {
+            yoursParts.add("${fmt(totalUsd)}\$");
+          }
+        }
+        // BYN Formula
+        if (bynParts.isNotEmpty) {
+          if (bynParts.length > 1) {
+            final formula = bynParts.map((e) => "${fmt(e)}р").join(" + ");
+            yoursParts.add("$formula = ${fmt(totalByn)}р");
+          } else {
+            yoursParts.add("${fmt(totalByn)}р");
+          }
+        }
+
+        if (yoursParts.isNotEmpty) {
+          buffer.writeln("Итого Твои: ${yoursParts.join("; ")}");
+        } else {
+          buffer.writeln("Итого Твои: 0");
+        }
+
+        // II. OURS (Calculated: Total Client - Yours)
+        final oursParts = <String>[];
+        final totalOursUsd = totalClientUsd - totalUsd;
+        final totalOursByn = totalClientByn - totalByn;
+
+        // USD Calc
+        // Only show if there was any client amount involved.
+        if (totalClientUsd > 0.001 || totalUsd > 0.001) {
+          oursParts.add(
+              "${fmt(totalClientUsd)}\$ - ${fmt(totalUsd)}\$ = ${fmt(totalOursUsd)}\$");
+        }
+
+        // BYN Calc logic
+        // 1. If Ours BYN is effectively 0 (Client == Contractor) -> Do not write anything.
+        if (totalOursByn > 0.001) {
+          // 2. If Contractor BYN is 0 -> Write "+np" (e.g. "+ 45р")
+          if (totalByn < 0.001) {
+            oursParts.add("+ ${fmt(totalOursByn)}р");
+          } else {
+            // 3. Standard Formula
+            oursParts.add(
+                "${fmt(totalClientByn)}р - ${fmt(totalByn)}р = ${fmt(totalOursByn)}р");
+          }
+        }
+
+        if (oursParts.isNotEmpty) {
+          // Smart join: if the second part starts with "+", use space separator, otherwise "; "
+          final bufferParts = StringBuffer();
+          bufferParts.write(oursParts[0]);
+
+          for (int i = 1; i < oursParts.length; i++) {
+            final p = oursParts[i];
+            if (p.trim().startsWith('+')) {
+              bufferParts.write(" $p");
+            } else {
+              bufferParts.write("; $p");
+            }
+          }
+
+          buffer.writeln("Итого Наши: ${bufferParts.toString()}");
+        }
+      } else {
+        // --- STANDARD FORMAT ---
+        final parts = <String>[];
+        // Rounding logic: <0.5 down, >=0.5 up (standard .round())
+        if (totalUsd > 0.4) parts.add("${totalUsd.round()}\$");
+        if (totalByn > 0.4) parts.add("${totalByn.round()}р");
+
+        if (parts.isNotEmpty) {
+          buffer.writeln("Итого: ${parts.join(" + ")}");
+        } else {
+          buffer.writeln("Итого: 0");
+        }
+      }
+    }
+
+    return buffer.toString();
+  }
 
   Future<void> _showReport() async {
     try {
-      final project = await ref.read(projectByIdProvider(widget.projectId).future);
+      final project =
+          await ref.read(projectByIdProvider(widget.projectId).future);
       final address = project.address;
       final rawStageTitle = widget.stage.title;
       final formattedStage = await _formatStageTitle(rawStageTitle);
-      
+
       final List<_ReportTabInfo> tabs = [];
-      
+
       final matBaseTitle = "$address - Материалы - $formattedStage";
       final workBaseTitle = "$address - Работы - $formattedStage";
-      
+
       // --- ORDER: Works First, then Materials (V6) ---
 
       // 1. WORKS
       tabs.add(_ReportTabInfo(
-        title: "Наши", 
-        text: _generateReportText(_works, workBaseTitle, showPrices: true, quantityType: 'our'),
-        color: Colors.green
-      ));
-      
-      tabs.add(_ReportTabInfo(
-        title: "Контрагент", 
-        // ADDED: " - ТВОИ" suffix
-        text: _generateReportText(_works, "$workBaseTitle - ТВОИ", showPrices: true, quantityType: 'employer'),
-        color: Colors.green
-      ));
+          title: "Наши",
+          text: _generateReportText(_works, workBaseTitle,
+              showPrices: true, quantityType: 'our'),
+          color: Colors.green));
 
       tabs.add(_ReportTabInfo(
-        title: "Заказчик", 
-        text: _generateReportText(_works, workBaseTitle, showPrices: true, quantityType: 'total'),
-        color: Colors.green
-      ));
-      
+          title: "Контрагент",
+          // ADDED: " - ТВОИ" suffix
+          text: _generateReportText(_works, "$workBaseTitle - ТВОИ",
+              showPrices: true, quantityType: 'employer'),
+          color: Colors.green));
+
+      tabs.add(_ReportTabInfo(
+          title: "Заказчик",
+          text: _generateReportText(_works, workBaseTitle,
+              showPrices: true, quantityType: 'total'),
+          color: Colors.green));
+
       // 2. MATERIALS
       if (_showPrices) {
-         // Case 1: With Prices
-         
-         // No Prices (Renamed V6: Материал)
-         tabs.add(_ReportTabInfo(
-            title: "Материал", 
-            text: _generateReportText(_materials, matBaseTitle, showPrices: false, markup: 0, quantityType: 'total'),
-             color: Colors.blue
-         )); 
+        // Case 1: With Prices
 
-         // Base Prices (Renamed V6: Материал с ценами)
-         tabs.add(_ReportTabInfo(
-            title: "Материал с ценами", 
-            text: _generateReportText(_materials, matBaseTitle, showPrices: true, markup: 0, quantityType: 'total'),
-            color: Colors.blue
-         ));
-         
-         if (_markupPercent > 0) {
-            // Renamed V6: Материал с + %
-            tabs.add(_ReportTabInfo(
-              title: "Материал с + %", 
-              text: _generateReportText(_materials, matBaseTitle, showPrices: true, markup: _markupPercent, quantityType: 'total'),
-              color: Colors.blue
-            ));
-         }
+        // No Prices (Renamed V6: Материал)
+        tabs.add(_ReportTabInfo(
+            title: "Материал",
+            text: _generateReportText(_materials, matBaseTitle,
+                showPrices: false, markup: 0, quantityType: 'total'),
+            color: Colors.blue));
 
+        // Base Prices (Renamed V6: Материал с ценами)
+        tabs.add(_ReportTabInfo(
+            title: "Материал с ценами",
+            text: _generateReportText(_materials, matBaseTitle,
+                showPrices: true, markup: 0, quantityType: 'total'),
+            color: Colors.blue));
+
+        if (_markupPercent > 0) {
+          // Renamed V6: Материал с + %
+          tabs.add(_ReportTabInfo(
+              title: "Материал с + %",
+              text: _generateReportText(_materials, matBaseTitle,
+                  showPrices: true,
+                  markup: _markupPercent,
+                  quantityType: 'total'),
+              color: Colors.blue));
+        }
       } else {
         // Case 2: Only No Prices
         tabs.add(_ReportTabInfo(
-           title: "Материал", 
-           text: _generateReportText(_materials, matBaseTitle, showPrices: false, markup: 0, quantityType: 'total'),
-           color: Colors.blue
-        ));
+            title: "Материал",
+            text: _generateReportText(_materials, matBaseTitle,
+                showPrices: false, markup: 0, quantityType: 'total'),
+            color: Colors.blue));
       }
 
       if (!mounted) return;
-      
+
       showDialog(
           context: context,
           builder: (context) {
             return AlertDialog(
               title: const Center(child: Text("Отчеты")),
               contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               content: SizedBox(
                 width: double.maxFinite,
                 height: 500,
@@ -1079,11 +1161,12 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Ошибка подготовки отчета: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Ошибка подготовки отчета: $e")));
     }
   }
 
-  // Legacy copy placeholder to keep code compiling if referenced elsewhere, 
+  // Legacy copy placeholder to keep code compiling if referenced elsewhere,
   // though we removed references in _showActionsDialog.
   void _copyReport(String type) async {}
 
@@ -1121,12 +1204,13 @@ class _ReportTabInfo {
   final String text;
   final MaterialColor color;
 
-  _ReportTabInfo({required this.title, required this.text, required this.color});
+  _ReportTabInfo(
+      {required this.title, required this.text, required this.color});
 }
 
 class _ReportDialogContent extends StatefulWidget {
   final List<_ReportTabInfo> tabs;
-  
+
   const _ReportDialogContent({super.key, required this.tabs});
 
   @override
@@ -1155,7 +1239,7 @@ class _ReportDialogContentState extends State<_ReportDialogContent> {
               final isSelected = index == _currentIndex;
               // Use color from the tab
               final color = tab.color;
-              
+
               return ChoiceChip(
                 label: Text(tab.title),
                 selected: isSelected,
@@ -1165,8 +1249,10 @@ class _ReportDialogContentState extends State<_ReportDialogContent> {
                   }
                 },
                 // V6 & V7: Pastel styling & Colored unselected
-                selectedColor: color.shade100, // Slightly darker for selected to distinguish
-                backgroundColor: color.withOpacity(0.15), // V7.1: Increased saturation (was 0.05)
+                selectedColor: color
+                    .shade100, // Slightly darker for selected to distinguish
+                backgroundColor: color
+                    .withOpacity(0.15), // V7.1: Increased saturation (was 0.05)
                 labelStyle: TextStyle(
                   color: isSelected ? color.shade900 : Colors.black87,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -1176,39 +1262,42 @@ class _ReportDialogContentState extends State<_ReportDialogContent> {
                   color: isSelected ? color.shade300 : Colors.grey.shade300,
                   width: 0.5,
                 ),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
               );
             }),
           ),
         ),
         const SizedBox(height: 12),
         // V7: Colored divider
-        Divider(color: activeColor.shade200, thickness: 1), // V7.1: Increased saturation (was shade100)
+        Divider(
+            color: activeColor.shade200,
+            thickness: 1), // V7.1: Increased saturation (was shade100)
         const SizedBox(height: 8),
-        
+
         // Content
         Expanded(
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             child: SingleChildScrollView(
-              child: SelectableText(
-                currentTab.text, 
-                style: const TextStyle(fontSize: 13, fontFamily: 'Courier', height: 1.2)
-              ),
+              child: SelectableText(currentTab.text,
+                  style: const TextStyle(
+                      fontSize: 13, fontFamily: 'Courier', height: 1.2)),
             ),
           ),
         ),
-        
+
         const SizedBox(height: 12),
         // Action Button
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: () async {
-               await Clipboard.setData(ClipboardData(text: currentTab.text));
-               if(!mounted) return;
-               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Скопировано!")));
+              await Clipboard.setData(ClipboardData(text: currentTab.text));
+              if (!mounted) return;
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text("Скопировано!")));
             },
             icon: const Icon(Icons.copy, size: 18),
             // V6: Removed "отчет"
