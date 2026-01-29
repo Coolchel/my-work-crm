@@ -851,6 +851,30 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     buffer.writeln(fullTitle);
     buffer.writeln("----------------------------------------");
 
+    // DETECT REPORT TYPE (Work vs Material)
+    // We assume the list is homogeneous. Check the first item.
+    bool isWorkReport = false;
+    if (items.isNotEmpty) {
+      isWorkReport = items.first.itemType == 'work';
+    }
+
+    // FORMATTERS
+    // 1. Quantity: Always remove trailing zeros, up to 3 decimals (or as string)
+    String fmtQty(double v) =>
+        v.toStringAsFixed(3).replaceAll(RegExp(r"\.?0+$"), "");
+
+    // 2. Money:
+    //    - Works: Integer (Round)
+    //    - Materials: 2 decimals, remove trailing zeros
+    String fmtMoney(double v) {
+      if (isWorkReport) {
+        return v.round().toString();
+      } else {
+        // Materials: standard rounding to 2 decimals
+        return v.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "");
+      }
+    }
+
     // 1. Process items (Filter & Markup)
     double totalUsd = 0;
     double totalByn = 0;
@@ -923,9 +947,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     }
 
     // 2. Output Flat List
-    String fmt(double v) =>
-        v.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "");
-
     // Split into groups
     final usdItems = finalItems.where((i) => i.currency == 'USD').toList();
     final otherItems = finalItems.where((i) => i.currency != 'USD').toList();
@@ -940,11 +961,11 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         final sum = q * p;
         final currencySymbol = item.currency == 'USD' ? '\$' : 'р';
 
-        buffer.write("${globalIndex}. ${item.name}: ${fmt(q)} ${item.unit}");
+        buffer.write("${globalIndex}. ${item.name}: ${fmtQty(q)} ${item.unit}");
 
         if (showPrices) {
           buffer.write(
-              " x ${fmt(p)}$currencySymbol = ${fmt(sum)}$currencySymbol");
+              " x ${fmtMoney(p)}$currencySymbol = ${fmtMoney(sum)}$currencySymbol");
         }
 
         if (!item.name.trim().endsWith('.')) {
@@ -979,58 +1000,106 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         // I. YOURS (Contractor)
         final yoursParts = <String>[];
 
+        double displayedTotalUsd = 0;
+        double displayedTotalByn = 0;
+
         // USD Formula
         if (usdParts.isNotEmpty) {
           if (usdParts.length > 1) {
-            final formula = usdParts.map((e) => "${fmt(e)}\$").join(" + ");
-            yoursParts.add("$formula = ${fmt(totalUsd)}\$");
+            final formula = usdParts.map((e) {
+              double val;
+              if (isWorkReport) {
+                val = e.roundToDouble();
+              } else {
+                // Standard round to 2 decimals for summation
+                val = (e * 100).round() / 100;
+              }
+              displayedTotalUsd += val;
+              return "${fmtMoney(val)}\$";
+            }).join(" + ");
+            yoursParts.add("$formula = ${fmtMoney(displayedTotalUsd)}\$");
           } else {
-            yoursParts.add("${fmt(totalUsd)}\$");
+            double val;
+            if (isWorkReport)
+              val = usdParts.first.roundToDouble();
+            else
+              val = (usdParts.first * 100).round() / 100;
+
+            displayedTotalUsd = val;
+            yoursParts.add("${fmtMoney(val)}\$");
           }
         }
+
         // BYN Formula
         if (bynParts.isNotEmpty) {
           if (bynParts.length > 1) {
-            final formula = bynParts.map((e) => "${fmt(e)}р").join(" + ");
-            yoursParts.add("$formula = ${fmt(totalByn)}р");
+            final formula = bynParts.map((e) {
+              double val;
+              if (isWorkReport) {
+                val = e.roundToDouble();
+              } else {
+                val = (e * 100).round() / 100;
+              }
+              displayedTotalByn += val;
+              return "${fmtMoney(val)}р";
+            }).join(" + ");
+            yoursParts.add("$formula = ${fmtMoney(displayedTotalByn)}р");
           } else {
-            yoursParts.add("${fmt(totalByn)}р");
+            double val;
+            if (isWorkReport)
+              val = bynParts.first.roundToDouble();
+            else
+              val = (bynParts.first * 100).round() / 100;
+
+            displayedTotalByn = val;
+            yoursParts.add("${fmtMoney(val)}р");
           }
         }
 
         if (yoursParts.isNotEmpty) {
-          buffer.writeln("Итого Твои: ${yoursParts.join("; ")}");
+          // Logic: Join with " + " only if ONLY 1 position in second currency (BYN).
+          String separator = "; ";
+          if (usdParts.isNotEmpty && bynParts.length == 1) {
+            separator = " + ";
+          }
+          buffer.writeln("Итого Твои: ${yoursParts.join(separator)}.");
         } else {
-          buffer.writeln("Итого Твои: 0");
+          buffer.writeln("Итого Твои: 0.");
         }
 
-        // II. OURS (Calculated: Total Client - Yours)
+        // II. OURS
         final oursParts = <String>[];
-        final totalOursUsd = totalClientUsd - totalUsd;
-        final totalOursByn = totalClientByn - totalByn;
+
+        // Calculate Totals using SAME rounding logic for Client side
+        double calcClientTotal(double rawSum) {
+          if (isWorkReport) return rawSum.roundToDouble();
+          return (rawSum * 100).round() / 100;
+        }
+
+        final dClientUsd = calcClientTotal(totalClientUsd);
+        final dClientByn = calcClientTotal(totalClientByn);
+
+        final dOursUsd = dClientUsd - displayedTotalUsd;
+        final dOursByn = dClientByn - displayedTotalByn;
 
         // USD Calc
-        // Only show if there was any client amount involved.
-        if (totalClientUsd > 0.001 || totalUsd > 0.001) {
+        if (dClientUsd > 0.001 || displayedTotalUsd > 0.001) {
           oursParts.add(
-              "${fmt(totalClientUsd)}\$ - ${fmt(totalUsd)}\$ = ${fmt(totalOursUsd)}\$");
+              "${fmtMoney(dClientUsd)}\$ - ${fmtMoney(displayedTotalUsd)}\$ = ${fmtMoney(dOursUsd)}\$");
         }
 
         // BYN Calc logic
-        // 1. If Ours BYN is effectively 0 (Client == Contractor) -> Do not write anything.
-        if (totalOursByn > 0.001) {
-          // 2. If Contractor BYN is 0 -> Write "+np" (e.g. "+ 45р")
-          if (totalByn < 0.001) {
-            oursParts.add("+ ${fmt(totalOursByn)}р");
+        if (dOursByn.abs() > 0.001) {
+          if (displayedTotalByn == 0) {
+            oursParts.add("+ ${fmtMoney(dOursByn)}р");
           } else {
-            // 3. Standard Formula
             oursParts.add(
-                "${fmt(totalClientByn)}р - ${fmt(totalByn)}р = ${fmt(totalOursByn)}р");
+                "${fmtMoney(dClientByn)}р - ${fmtMoney(displayedTotalByn)}р = ${fmtMoney(dOursByn)}р");
           }
         }
 
         if (oursParts.isNotEmpty) {
-          // Smart join: if the second part starts with "+", use space separator, otherwise "; "
+          // Smart join
           final bufferParts = StringBuffer();
           bufferParts.write(oursParts[0]);
 
@@ -1042,20 +1111,31 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               bufferParts.write("; $p");
             }
           }
-
-          buffer.writeln("Итого Наши: ${bufferParts.toString()}");
+          buffer.writeln("Итого Наши: ${bufferParts.toString()}.");
         }
       } else {
         // --- STANDARD FORMAT ---
         final parts = <String>[];
-        // Rounding logic: <0.5 down, >=0.5 up (standard .round())
-        if (totalUsd > 0.4) parts.add("${totalUsd.round()}\$");
-        if (totalByn > 0.4) parts.add("${totalByn.round()}р");
+
+        // Use displayed rounding
+        double finalUsd;
+        double finalByn;
+
+        if (isWorkReport) {
+          finalUsd = totalUsd.roundToDouble();
+          finalByn = totalByn.roundToDouble();
+        } else {
+          finalUsd = (totalUsd * 100).round() / 100;
+          finalByn = (totalByn * 100).round() / 100;
+        }
+
+        if (finalUsd > 0.001) parts.add("${fmtMoney(finalUsd)}\$");
+        if (finalByn > 0.001) parts.add("${fmtMoney(finalByn)}р");
 
         if (parts.isNotEmpty) {
-          buffer.writeln("Итого: ${parts.join(" + ")}");
+          buffer.writeln("Итого: ${parts.join(" + ")}.");
         } else {
-          buffer.writeln("Итого: 0");
+          buffer.writeln("Итого: 0.");
         }
       }
     }
