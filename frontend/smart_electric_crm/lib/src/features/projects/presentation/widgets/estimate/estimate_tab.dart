@@ -67,7 +67,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   @override
   void initState() {
     super.initState();
-    debugPrint("📝 _EstimateTabState.initState: note='${widget.note}'");
+    // debugPrint("📝 _EstimateTabState.initState: note='${widget.note}'");
     _noteCtrl = TextEditingController(text: widget.note);
 
     // Default text logic for Materials

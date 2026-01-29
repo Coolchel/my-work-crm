@@ -66,7 +66,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   Future<void> _refresh() async {
     try {
       final repo = ref.read(projectRepositoryProvider);
-      debugPrint("📝 Fetching stage ID: ${widget.stage.id}");
+      // debugPrint("📝 Fetching stage ID: ${widget.stage.id}");
       final updatedStage = await repo.fetchStage(widget.stage.id);
 
       if (!mounted) return;
@@ -106,7 +106,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       try {
         final repo = ref.read(projectRepositoryProvider);
         await repo.updateStage(widget.stage.id, {'markup_percent': val});
-        debugPrint("✅ Markup saved to DB: $val");
+        // debugPrint("✅ Markup saved to DB: $val");
       } catch (e) {
         debugPrint("Error saving markup: $e");
       }
@@ -1329,7 +1329,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   // though we removed references in _showActionsDialog.
 
   Future<void> _saveNotes(String type, String value) async {
-    debugPrint("💾 Saving note: type='$type', value='$value'");
+    // debugPrint("💾 Saving note: type='$type', value='$value'");
 
     // Optimistic update
     setState(() {
@@ -1359,7 +1359,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       }
 
       await repo.updateStage(widget.stage.id, data);
-      debugPrint("✅ Note saved successfully");
+      // debugPrint("✅ Note saved successfully");
 
       // Optimistic update already applied, no need to refresh
     } catch (e) {
