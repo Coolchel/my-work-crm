@@ -39,6 +39,8 @@ class StageSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'work_notes': {'required': False, 'allow_blank': True},
             'material_notes': {'required': False, 'allow_blank': True},
+            'work_remarks': {'required': False, 'allow_blank': True},
+            'material_remarks': {'required': False, 'allow_blank': True},
             'markup_percent': {'required': False},
             'show_prices': {'required': False},
         }

@@ -31,6 +31,12 @@ class StageModel {
   @JsonKey(name: 'material_notes', defaultValue: '')
   final String materialNotes;
 
+  @JsonKey(name: 'work_remarks', defaultValue: '')
+  final String workRemarks;
+
+  @JsonKey(name: 'material_remarks', defaultValue: '')
+  final String materialRemarks;
+
   @JsonKey(name: 'markup_percent', defaultValue: 0.0)
   final double markupPercent;
 
@@ -51,6 +57,8 @@ class StageModel {
     this.estimateItems = const [],
     this.workNotes = '',
     this.materialNotes = '',
+    this.workRemarks = '',
+    this.materialRemarks = '',
     this.markupPercent = 0.0,
     this.showPrices = false,
   });
@@ -73,6 +81,8 @@ class StageModel {
     List<EstimateItemModel>? estimateItems,
     String? workNotes,
     String? materialNotes,
+    String? workRemarks,
+    String? materialRemarks,
     double? markupPercent,
     bool? showPrices,
   }) {
@@ -86,6 +96,8 @@ class StageModel {
       estimateItems: estimateItems ?? this.estimateItems,
       workNotes: workNotes ?? this.workNotes,
       materialNotes: materialNotes ?? this.materialNotes,
+      workRemarks: workRemarks ?? this.workRemarks,
+      materialRemarks: materialRemarks ?? this.materialRemarks,
       markupPercent: markupPercent ?? this.markupPercent,
       showPrices: showPrices ?? this.showPrices,
     );

@@ -185,6 +185,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                           title: "Работы",
                           note: _stage.workNotes,
                           onSaveNote: (val) => _saveNotes('work', val),
+                          remarks: _stage.workRemarks,
+                          onSaveRemarks: (val) =>
+                              _saveNotes('work_remarks', val),
                           isDisabled: _isFabExpanded,
                           onDismissRequest: () =>
                               setState(() => _isFabExpanded = false),
@@ -197,6 +200,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                           title: "Материалы",
                           note: _stage.materialNotes,
                           onSaveNote: (val) => _saveNotes('material', val),
+                          remarks: _stage.materialRemarks,
+                          onSaveRemarks: (val) =>
+                              _saveNotes('material_remarks', val),
                           markupPercent: _markupPercent,
                           onMarkupChanged: _saveMarkup,
                           showPrices: _showPrices,
@@ -423,7 +429,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                     final title = "${project.address} - Работы - $stageTitle";
 
                     final text = _generateReportText(_works, title,
-                        showPrices: true, quantityType: 'total');
+                        showPrices: true,
+                        quantityType: 'total',
+                        note: _stage.workRemarks);
                     _copyText(text);
                   }, dense: true),
                   _buildActionTile(
@@ -437,7 +445,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                         "${project.address} - Работы - $stageTitle - ТВОИ";
 
                     final text = _generateReportText(_works, title,
-                        showPrices: true, quantityType: 'employer');
+                        showPrices: true,
+                        quantityType: 'employer',
+                        note: _stage.workRemarks);
                     _copyText(text);
                   }, dense: true),
                   _buildActionTile(context, Icons.copy_all, "Материалы без цен",
@@ -452,7 +462,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                         "${project.address} - Материалы - $stageTitle";
 
                     final text = _generateReportText(_materials, title,
-                        showPrices: false, markup: 0, quantityType: 'total');
+                        showPrices: false,
+                        markup: 0,
+                        quantityType: 'total',
+                        note: _stage.materialRemarks);
                     _copyText(text);
                   }, dense: true),
                   const Divider(indent: 16, endIndent: 16),
@@ -822,8 +835,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   String _generateReportText(List<EstimateItemModel> items, String fullTitle,
       {bool showPrices = true,
       double markup = 0.0,
-      String quantityType = 'total' // 'total', 'employer', 'our'
-      }) {
+      String quantityType = 'total', // 'total', 'employer', 'our'
+      String? note}) {
     final buffer = StringBuffer();
     buffer.writeln(fullTitle);
     buffer.writeln("----------------------------------------");
@@ -1114,6 +1127,11 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       }
     }
 
+    if (note != null && note.trim().isNotEmpty) {
+      buffer.writeln("\nПримечание:");
+      buffer.writeln(note.trim());
+    }
+
     return buffer.toString();
   }
 
@@ -1132,24 +1150,27 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
       // --- ORDER: Works First, then Materials (V6) ---
 
-      // 1. WORKS
       tabs.add(_ReportTabInfo(
           title: "Наши",
           text: _generateReportText(_works, workBaseTitle,
-              showPrices: true, quantityType: 'our'),
+              showPrices: true, quantityType: 'our', note: _stage.workRemarks),
           color: Colors.green));
 
       tabs.add(_ReportTabInfo(
           title: "Контрагент",
           // ADDED: " - ТВОИ" suffix
           text: _generateReportText(_works, "$workBaseTitle - ТВОИ",
-              showPrices: true, quantityType: 'employer'),
+              showPrices: true,
+              quantityType: 'employer',
+              note: _stage.workRemarks),
           color: Colors.green));
 
       tabs.add(_ReportTabInfo(
           title: "Заказчик",
           text: _generateReportText(_works, workBaseTitle,
-              showPrices: true, quantityType: 'total'),
+              showPrices: true,
+              quantityType: 'total',
+              note: _stage.workRemarks),
           color: Colors.green));
 
       // 2. MATERIALS
@@ -1160,14 +1181,20 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         tabs.add(_ReportTabInfo(
             title: "Материал",
             text: _generateReportText(_materials, matBaseTitle,
-                showPrices: false, markup: 0, quantityType: 'total'),
+                showPrices: false,
+                markup: 0,
+                quantityType: 'total',
+                note: _stage.materialRemarks),
             color: Colors.blue));
 
         // Base Prices (Renamed V6: Материал с ценами)
         tabs.add(_ReportTabInfo(
             title: "Материал с ценами",
             text: _generateReportText(_materials, matBaseTitle,
-                showPrices: true, markup: 0, quantityType: 'total'),
+                showPrices: true,
+                markup: 0,
+                quantityType: 'total',
+                note: _stage.materialRemarks),
             color: Colors.blue));
 
         if (_markupPercent > 0) {
@@ -1177,7 +1204,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               text: _generateReportText(_materials, matBaseTitle,
                   showPrices: true,
                   markup: _markupPercent,
-                  quantityType: 'total'),
+                  quantityType: 'total',
+                  note: _stage.materialRemarks),
               color: Colors.blue));
         }
       } else {
@@ -1185,7 +1213,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         tabs.add(_ReportTabInfo(
             title: "Материал",
             text: _generateReportText(_materials, matBaseTitle,
-                showPrices: false, markup: 0, quantityType: 'total'),
+                showPrices: false,
+                markup: 0,
+                quantityType: 'total',
+                note: _stage.materialRemarks),
             color: Colors.blue));
       }
 
@@ -1231,15 +1262,28 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     setState(() {
       if (type == 'work') {
         _stage = _stage.copyWith(workNotes: value);
-      } else {
+      } else if (type == 'material') {
         _stage = _stage.copyWith(materialNotes: value);
+      } else if (type == 'work_remarks') {
+        _stage = _stage.copyWith(workRemarks: value);
+      } else if (type == 'material_remarks') {
+        _stage = _stage.copyWith(materialRemarks: value);
       }
     });
 
     try {
       final repo = ref.read(projectRepositoryProvider);
-      final data =
-          type == 'work' ? {'work_notes': value} : {'material_notes': value};
+      final data = <String, dynamic>{};
+
+      if (type == 'work') {
+        data['work_notes'] = value;
+      } else if (type == 'material') {
+        data['material_notes'] = value;
+      } else if (type == 'work_remarks') {
+        data['work_remarks'] = value;
+      } else if (type == 'material_remarks') {
+        data['material_remarks'] = value;
+      }
 
       await repo.updateStage(widget.stage.id, data);
       debugPrint("✅ Note saved successfully");

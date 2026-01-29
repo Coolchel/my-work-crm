@@ -17,6 +17,9 @@ class EstimateTab extends ConsumerStatefulWidget {
   final String note;
   final Future<void> Function(String) onSaveNote;
 
+  final String remarks;
+  final Future<void> Function(String) onSaveRemarks;
+
   // Markup props
   final double markupPercent;
   final ValueChanged<double>? onMarkupChanged;
@@ -35,6 +38,8 @@ class EstimateTab extends ConsumerStatefulWidget {
     required this.title,
     required this.note,
     required this.onSaveNote,
+    required this.remarks,
+    required this.onSaveRemarks,
     this.markupPercent = 0.0,
     this.onMarkupChanged,
     this.showPrices = true,
@@ -49,35 +54,45 @@ class EstimateTab extends ConsumerStatefulWidget {
 
 class _EstimateTabState extends ConsumerState<EstimateTab> {
   late TextEditingController _noteCtrl;
+  late TextEditingController _remarksCtrl;
   late TextEditingController _markupCtrl;
   late FocusNode _markupFocus;
-  bool _saving = false;
-  String? _lastSavedValue;
-  bool _hasUnsavedChanges = false;
+  bool _savingNote = false;
+  bool _savingRemarks = false;
+  String? _lastSavedNote;
+  String? _lastSavedRemarks;
+  bool _hasUnsavedNote = false;
+  bool _hasUnsavedRemarks = false;
 
   @override
   void initState() {
     super.initState();
     debugPrint("📝 _EstimateTabState.initState: note='${widget.note}'");
     _noteCtrl = TextEditingController(text: widget.note);
+    _remarksCtrl = TextEditingController(text: widget.remarks);
     _markupCtrl =
         TextEditingController(text: _formatMarkup(widget.markupPercent));
     _markupFocus = FocusNode();
     _markupFocus.addListener(_onMarkupFocusChange);
-    _lastSavedValue = widget.note;
+    _lastSavedNote = widget.note;
+    _lastSavedRemarks = widget.remarks;
   }
 
   @override
   void didUpdateWidget(EstimateTab oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.note != oldWidget.note) {
-      debugPrint(
-          "📝 _EstimateTabState.didUpdateWidget: old='${oldWidget.note}', new='${widget.note}'");
-      // Parent sent new data - sync
-      if (widget.note != _lastSavedValue) {
+      if (widget.note != _lastSavedNote) {
         _noteCtrl.text = widget.note;
-        _lastSavedValue = widget.note;
-        _hasUnsavedChanges = false;
+        _lastSavedNote = widget.note;
+        _hasUnsavedNote = false;
+      }
+    }
+    if (widget.remarks != oldWidget.remarks) {
+      if (widget.remarks != _lastSavedRemarks) {
+        _remarksCtrl.text = widget.remarks;
+        _lastSavedRemarks = widget.remarks;
+        _hasUnsavedRemarks = false;
       }
     }
     if (widget.markupPercent != oldWidget.markupPercent) {
@@ -131,34 +146,76 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   @override
   void dispose() {
     _noteCtrl.dispose();
+    _remarksCtrl.dispose();
     _markupCtrl.dispose();
     _markupFocus.dispose();
     super.dispose();
   }
 
   Future<void> _saveNote() async {
-    setState(() => _saving = true);
+    setState(() => _savingNote = true);
     try {
       await widget.onSaveNote(_noteCtrl.text);
       if (mounted) {
         setState(() {
-          _lastSavedValue = _noteCtrl.text;
-          _hasUnsavedChanges = false;
+          _lastSavedNote = _noteCtrl.text;
+          _hasUnsavedNote = false;
         });
       }
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) setState(() => _savingNote = false);
+    }
+  }
+
+  Future<void> _saveRemarks() async {
+    setState(() => _savingRemarks = true);
+    try {
+      await widget.onSaveRemarks(_remarksCtrl.text);
+      if (mounted) {
+        setState(() {
+          _lastSavedRemarks = _remarksCtrl.text;
+          _hasUnsavedRemarks = false;
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _savingRemarks = false);
     }
   }
 
   void _onNoteChanged(String value) {
     setState(() {
-      _hasUnsavedChanges = value != _lastSavedValue;
+      _hasUnsavedNote = value != _lastSavedNote;
+    });
+  }
+
+  void _onRemarksChanged(String value) {
+    setState(() {
+      _hasUnsavedRemarks = value != _lastSavedRemarks;
     });
   }
 
   Widget? _buildNoteSuffix() {
-    if (_saving) {
+    return _buildSuffix(
+      saving: _savingNote,
+      hasUnsaved: _hasUnsavedNote,
+      onSave: widget.isDisabled ? null : _saveNote,
+    );
+  }
+
+  Widget? _buildRemarksSuffix() {
+    return _buildSuffix(
+      saving: _savingRemarks,
+      hasUnsaved: _hasUnsavedRemarks,
+      onSave: widget.isDisabled ? null : _saveRemarks,
+    );
+  }
+
+  Widget? _buildSuffix({
+    required bool saving,
+    required bool hasUnsaved,
+    required VoidCallback? onSave,
+  }) {
+    if (saving) {
       return const Padding(
         padding: EdgeInsets.all(12.0),
         child: SizedBox(
@@ -167,24 +224,26 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             child: CircularProgressIndicator(strokeWidth: 2)),
       );
     }
-    if (_hasUnsavedChanges) {
+    if (hasUnsaved) {
       return Padding(
         padding: const EdgeInsets.only(right: 8),
         child: SizedBox(
           width: 24,
           height: 24,
           child: IconButton(
-            onPressed: widget.isDisabled ? null : _saveNote,
+            onPressed: onSave,
             icon: Icon(Icons.save, color: _primaryColor, size: 20),
             padding: EdgeInsets.zero,
             tooltip: "Сохранить",
             constraints: const BoxConstraints(),
-            style: IconButton.styleFrom(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            style: IconButton.styleFrom(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
           ),
         ),
       );
     }
-    return Icon(Icons.check_circle, color: _primaryColor.withOpacity(0.5), size: 18);
+    return Icon(Icons.check_circle,
+        color: _primaryColor.withOpacity(0.5), size: 18);
   }
 
   Widget _buildMarkupControl() {
@@ -758,145 +817,193 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       behavior: HitTestBehavior.translucent,
       child: CustomScrollView(
         primary: false,
-      slivers: [
-        // Toggle for Hide Prices (Only in Materials tab)
-        if (!_isWorkTab)
-          SliverToBoxAdapter(
-            child: AbsorbPointer(
-              absorbing: widget.isDisabled,
-              child: _buildViewModeToggleSegmented(showPrices),
-            ),
-          ),
-
-        if (widget.items.isEmpty)
-          const SliverToBoxAdapter(
-              child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Center(
-                      child: Text("Нет позиций",
-                          style: TextStyle(color: Colors.grey)))))
-        else
-          for (var category in sortedCategories) ...[
+        slivers: [
+          // Toggle for Hide Prices (Only in Materials tab)
+          if (!_isWorkTab)
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: GroupHeader(title: category, color: _primaryColor),
+              child: AbsorbPointer(
+                absorbing: widget.isDisabled,
+                child: _buildViewModeToggleSegmented(showPrices),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final item = groupedItems[category]![index];
-                    return EstimateListTile(
-                      item: item,
-                      onUpdate: widget.onUpdate,
-                      onDelete: () => widget.onDelete(item),
-                      primaryColor: _primaryColor,
-                      isMarkupActive: (widget.markupPercent > 0) == true,
-                      hidePrices: (!showPrices) == true,
-                      isDisabled: widget.isDisabled == true,
-                    );
-                  },
-                  childCount: groupedItems[category]!.length,
+
+          if (widget.items.isEmpty)
+            const SliverToBoxAdapter(
+                child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Center(
+                        child: Text("Нет позиций",
+                            style: TextStyle(color: Colors.grey)))))
+          else
+            for (var category in sortedCategories) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: GroupHeader(title: category, color: _primaryColor),
                 ),
               ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 4)),
-          ],
-
-        // Total Section - Detailed Dashboard (Hidden if prices hidden)
-        if (showPrices)
-          SliverToBoxAdapter(
-            child: TotalDashboard(
-              totalUsd: totalUsd,
-              totalByn: totalByn,
-              employerUsd: employerUsd,
-              employerByn: employerByn,
-              ourUsd: ourUsd,
-              ourByn: ourByn,
-              primaryColor: _primaryColor,
-              primaryColorLight: _primaryColorLight,
-              isWorkTab: _isWorkTab,
-              isMarkupActive: !_isWorkTab && widget.markupPercent > 0,
-            ),
-          ),
-
-        // Markup Control (Spoiler style) - Hidden if prices hidden
-        if (!_isWorkTab && showPrices)
-          SliverToBoxAdapter(
-            child: AbsorbPointer(
-              absorbing: widget.isDisabled,
-              child: _buildMarkupControl(),
-            ),
-          ),
-
-        // Notes Section - at the bottom
-        SliverToBoxAdapter(
-            child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.sticky_note_2_outlined,
-                      size: 14, color: _primaryColor.withOpacity(0.8)),
-                  const SizedBox(width: 6),
-                  Text(
-                    "Заметки для ${_isWorkTab ? 'работ' : 'закупки'}",
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: _primaryColor.withOpacity(0.8)),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final item = groupedItems[category]![index];
+                      return EstimateListTile(
+                        item: item,
+                        onUpdate: widget.onUpdate,
+                        onDelete: () => widget.onDelete(item),
+                        primaryColor: _primaryColor,
+                        isMarkupActive: (widget.markupPercent > 0) == true,
+                        hidePrices: (!showPrices) == true,
+                        isDisabled: widget.isDisabled == true,
+                      );
+                    },
+                    childCount: groupedItems[category]!.length,
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _noteCtrl,
-                maxLines: null,
-                minLines: 1,
-                keyboardType: TextInputType.multiline,
-                style: const TextStyle(fontSize: 13),
-                onChanged: _onNoteChanged,
-                readOnly: widget.isDisabled,
-                decoration: InputDecoration(
-                  hintText: "Добавить заметку...",
-                  hintStyle: TextStyle(color: Colors.grey.withOpacity(0.6)),
-                  filled: true,
-                  // Match TotalDashboard background (primary shade50)
-                  fillColor: _primaryColorLight,
-                  isDense: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                  // Glassmorphic border (Offline state)
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.5), width: 1.5)),
-                  enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      // Soft border matching Total
-                      borderSide: BorderSide(
-                          color: _primaryColor.withOpacity(0.12), width: 0.8)),
-                  focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                          color: _primaryColor, 
-                          width: 1.0)),
-                  suffixIcon: _buildNoteSuffix(),
                 ),
               ),
+              const SliverToBoxAdapter(child: SizedBox(height: 4)),
             ],
-          ),
-        )),
-        
-        // Bottom Padding for FAB
-        const SliverToBoxAdapter(child: SizedBox(height: 100)),
 
-      ],
+          // Total Section - Detailed Dashboard (Hidden if prices hidden)
+          if (showPrices)
+            SliverToBoxAdapter(
+              child: TotalDashboard(
+                totalUsd: totalUsd,
+                totalByn: totalByn,
+                employerUsd: employerUsd,
+                employerByn: employerByn,
+                ourUsd: ourUsd,
+                ourByn: ourByn,
+                primaryColor: _primaryColor,
+                primaryColorLight: _primaryColorLight,
+                isWorkTab: _isWorkTab,
+                isMarkupActive: !_isWorkTab && widget.markupPercent > 0,
+              ),
+            ),
+
+          // Markup Control (Spoiler style) - Hidden if prices hidden
+          if (!_isWorkTab && showPrices)
+            SliverToBoxAdapter(
+              child: AbsorbPointer(
+                absorbing: widget.isDisabled,
+                child: _buildMarkupControl(),
+              ),
+            ),
+
+          // Notes Section - at the bottom
+          SliverToBoxAdapter(
+              child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.sticky_note_2_outlined,
+                        size: 14, color: _primaryColor.withOpacity(0.8)),
+                    const SizedBox(width: 6),
+                    Text(
+                      "Заметки для ${_isWorkTab ? 'работ' : 'закупки'}",
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: _primaryColor.withOpacity(0.8)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _noteCtrl,
+                  maxLines: null,
+                  minLines: 1,
+                  keyboardType: TextInputType.multiline,
+                  style: const TextStyle(fontSize: 13),
+                  onChanged: _onNoteChanged,
+                  readOnly: widget.isDisabled,
+                  decoration: InputDecoration(
+                    hintText: "Добавить заметку...",
+                    hintStyle: TextStyle(color: Colors.grey.withOpacity(0.6)),
+                    filled: true,
+                    // Match TotalDashboard background (primary shade50)
+                    fillColor: _primaryColorLight,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
+                    // Glassmorphic border (Offline state)
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                            color: Colors.white.withOpacity(0.5), width: 1.5)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        // Soft border matching Total
+                        borderSide: BorderSide(
+                            color: _primaryColor.withOpacity(0.12),
+                            width: 0.8)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide:
+                            BorderSide(color: _primaryColor, width: 1.0)),
+                    suffixIcon: _buildNoteSuffix(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Icon(Icons.description_outlined,
+                        size: 14, color: _primaryColor.withOpacity(0.8)),
+                    const SizedBox(width: 6),
+                    Text(
+                      "Примечания (для отчета)",
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: _primaryColor.withOpacity(0.8)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _remarksCtrl,
+                  maxLines: null,
+                  minLines: 1,
+                  keyboardType: TextInputType.multiline,
+                  style: const TextStyle(fontSize: 13),
+                  onChanged: _onRemarksChanged,
+                  readOnly: widget.isDisabled,
+                  decoration: InputDecoration(
+                    hintText: "Добавить примечание...",
+                    hintStyle: TextStyle(color: Colors.grey.withOpacity(0.6)),
+                    filled: true,
+                    fillColor: _primaryColorLight,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                            color: Colors.white.withOpacity(0.5), width: 1.5)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                            color: _primaryColor.withOpacity(0.12),
+                            width: 0.8)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide:
+                            BorderSide(color: _primaryColor, width: 1.0)),
+                    suffixIcon: _buildRemarksSuffix(),
+                  ),
+                ),
+              ],
+            ),
+          )),
+
+          // Bottom Padding for FAB
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
       ),
     );
   }
