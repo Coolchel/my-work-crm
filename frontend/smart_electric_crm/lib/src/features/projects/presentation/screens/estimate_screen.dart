@@ -440,7 +440,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                         showPrices: true, quantityType: 'employer');
                     _copyText(text);
                   }, dense: true),
-                  _buildActionTile(context, Icons.copy_all, "Материалы",
+                  _buildActionTile(context, Icons.copy_all, "Материалы без цен",
                       () async {
                     Navigator.pop(context);
                     final project = await ref
@@ -452,9 +452,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                         "${project.address} - Материалы - $stageTitle";
 
                     final text = _generateReportText(_materials, title,
-                        showPrices: _showPrices,
-                        markup: _markupPercent,
-                        quantityType: 'total');
+                        showPrices: false, markup: 0, quantityType: 'total');
                     _copyText(text);
                   }, dense: true),
                   const Divider(indent: 16, endIndent: 16),
