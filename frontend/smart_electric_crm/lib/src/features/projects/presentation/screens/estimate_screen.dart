@@ -1128,7 +1128,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     }
 
     if (note != null && note.trim().isNotEmpty) {
-      buffer.writeln("\nПримечание:");
+      buffer.writeln("");
       buffer.writeln(note.trim());
     }
 

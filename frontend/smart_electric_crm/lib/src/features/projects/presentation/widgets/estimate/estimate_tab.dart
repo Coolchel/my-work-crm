@@ -69,12 +69,21 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     super.initState();
     debugPrint("📝 _EstimateTabState.initState: note='${widget.note}'");
     _noteCtrl = TextEditingController(text: widget.note);
-    _remarksCtrl = TextEditingController(text: widget.remarks);
+
+    // Default text logic for Materials
+    String initialRemarks = widget.remarks;
+    if (!_isWorkTab && initialRemarks.trim().isEmpty) {
+      initialRemarks = "Не учтен вводной кабель.";
+      _hasUnsavedRemarks = true; // Mark as unsaved so user sees the save button
+    }
+
+    _remarksCtrl = TextEditingController(text: initialRemarks);
     _markupCtrl =
         TextEditingController(text: _formatMarkup(widget.markupPercent));
     _markupFocus = FocusNode();
     _markupFocus.addListener(_onMarkupFocusChange);
     _lastSavedNote = widget.note;
+    // _lastSavedRemarks should remain as widget.remarks (empty) until saved.
     _lastSavedRemarks = widget.remarks;
   }
 
@@ -891,7 +900,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
               ),
             ),
 
-          // Notes Section - at the bottom
+          // Notes & Remarks Section - at the bottom
           SliverToBoxAdapter(
               child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -899,57 +908,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.sticky_note_2_outlined,
-                        size: 14, color: _primaryColor.withOpacity(0.8)),
-                    const SizedBox(width: 6),
-                    Text(
-                      "Заметки для ${_isWorkTab ? 'работ' : 'закупки'}",
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: _primaryColor.withOpacity(0.8)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _noteCtrl,
-                  maxLines: null,
-                  minLines: 1,
-                  keyboardType: TextInputType.multiline,
-                  style: const TextStyle(fontSize: 13),
-                  onChanged: _onNoteChanged,
-                  readOnly: widget.isDisabled,
-                  decoration: InputDecoration(
-                    hintText: "Добавить заметку...",
-                    hintStyle: TextStyle(color: Colors.grey.withOpacity(0.6)),
-                    filled: true,
-                    // Match TotalDashboard background (primary shade50)
-                    fillColor: _primaryColorLight,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 10),
-                    // Glassmorphic border (Offline state)
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                            color: Colors.white.withOpacity(0.5), width: 1.5)),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        // Soft border matching Total
-                        borderSide: BorderSide(
-                            color: _primaryColor.withOpacity(0.12),
-                            width: 0.8)),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            BorderSide(color: _primaryColor, width: 1.0)),
-                    suffixIcon: _buildNoteSuffix(),
-                  ),
-                ),
-                const SizedBox(height: 16),
+                // 1. Remarks (For Report) - Now Top
                 Row(
                   children: [
                     Icon(Icons.description_outlined,
@@ -995,6 +954,60 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                         borderSide:
                             BorderSide(color: _primaryColor, width: 1.0)),
                     suffixIcon: _buildRemarksSuffix(),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // 2. Notes (Internal) - Now Bottom
+                Row(
+                  children: [
+                    Icon(Icons.sticky_note_2_outlined,
+                        size: 14, color: _primaryColor.withOpacity(0.8)),
+                    const SizedBox(width: 6),
+                    Text(
+                      "Заметки (для себя)",
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: _primaryColor.withOpacity(0.8)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _noteCtrl,
+                  maxLines: null,
+                  minLines: 1,
+                  keyboardType: TextInputType.multiline,
+                  style: const TextStyle(fontSize: 13),
+                  onChanged: _onNoteChanged,
+                  readOnly: widget.isDisabled,
+                  decoration: InputDecoration(
+                    hintText: "Добавить заметку...",
+                    hintStyle: TextStyle(color: Colors.grey.withOpacity(0.6)),
+                    filled: true,
+                    // Match TotalDashboard background (primary shade50)
+                    fillColor: _primaryColorLight,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
+                    // Glassmorphic border (Offline state)
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                            color: Colors.white.withOpacity(0.5), width: 1.5)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        // Soft border matching Total
+                        borderSide: BorderSide(
+                            color: _primaryColor.withOpacity(0.12),
+                            width: 0.8)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide:
+                            BorderSide(color: _primaryColor, width: 1.0)),
+                    suffixIcon: _buildNoteSuffix(),
                   ),
                 ),
               ],
