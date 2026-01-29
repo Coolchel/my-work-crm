@@ -8,6 +8,10 @@ import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/es
 import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/estimate/quantity_input_dialog.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_tab.dart';
+import 'package:smart_electric_crm/src/features/projects/services/pdf_service.dart'; // [NEW]
+import 'package:path_provider/path_provider.dart'; // [NEW]
+import 'package:open_filex/open_filex.dart'; // [NEW]
+import 'dart:io'; // [NEW]
 
 class EstimateScreen extends ConsumerStatefulWidget {
   final StageModel stage;
@@ -469,12 +473,42 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                     _copyText(text);
                   }, dense: true),
                   const Divider(indent: 16, endIndent: 16),
-                  _buildActionTile(context, Icons.picture_as_pdf_outlined,
-                      "Экспорт в PDF (Скоро)", () {},
-                      enabled: false),
-                  _buildActionTile(context, Icons.share_outlined,
-                      "Поделиться (Скоро)", () {},
-                      enabled: false),
+                  _buildActionTile(
+                      context, Icons.picture_as_pdf, "PDF: Смета (Работы)",
+                      () async {
+                    Navigator.pop(context);
+                    final project = await ref
+                        .read(projectByIdProvider(widget.projectId).future);
+                    final stageTitle =
+                        await _formatStageTitle(widget.stage.title);
+                    final title = "${project.address} - Работы - $stageTitle";
+
+                    _printPdf(
+                      items: _works,
+                      title: title,
+                      showPrices: true,
+                      remarks: _stage.workRemarks,
+                    );
+                  }),
+                  _buildActionTile(
+                      context, Icons.picture_as_pdf, "PDF: Смета (Материалы)",
+                      () async {
+                    Navigator.pop(context);
+                    final project = await ref
+                        .read(projectByIdProvider(widget.projectId).future);
+                    final stageTitle =
+                        await _formatStageTitle(widget.stage.title);
+                    final title =
+                        "${project.address} - Материалы - $stageTitle";
+
+                    _printPdf(
+                      items: _materials,
+                      title: title,
+                      showPrices: _showPrices,
+                      markupPercent: _markupPercent,
+                      remarks: _stage.materialRemarks,
+                    );
+                  }),
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
@@ -1294,6 +1328,45 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Ошибка сохранения заметки: $e")));
+    }
+  }
+
+  Future<void> _printPdf({
+    required List<EstimateItemModel> items,
+    required String title,
+    required bool showPrices,
+    String? remarks,
+    double markupPercent = 0.0,
+  }) async {
+    try {
+      final pdfService = PdfService();
+      final bytes = await pdfService.generateEstimatePdf(
+        title: title,
+        items: items,
+        showPrices: showPrices,
+        remarks: remarks,
+        markupPercent: markupPercent,
+      );
+
+      // Save to temporary file
+      final output = await getTemporaryDirectory();
+      // Sanitize title for filename
+      final filename = title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+      final file = File("${output.path}/$filename.pdf");
+      await file.writeAsBytes(bytes);
+
+      // Open file
+      final result = await OpenFilex.open(file.path);
+
+      if (result.type != ResultType.done) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Не удалось открыть файл: ${result.message}")));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Ошибка PDF: $e")));
     }
   }
 }
