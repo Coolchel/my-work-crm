@@ -804,6 +804,29 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     double totalUsd = 0;
     double totalByn = 0;
     
+    // For formulae and "Ours" calculation
+    final List<double> usdParts = [];
+    final List<double> bynParts = [];
+    double totalClientUsd = 0;
+    double totalClientByn = 0;
+    
+    // Pre-calculate Total Client Amount (Whole Stage) for "Ours" calc
+    // This allows "Ours" = "Total Stage" - "Contractor Share"
+    // even if some items are not assigned to contractor at all.
+    for (var item in items) {
+       double p = item.pricePerUnit ?? 0;
+       if (markup > 0) p = p * (1 + (markup / 100));
+       
+       // Accumulate for all items that have > 0 total quantity
+       if (item.totalQuantity > 0.001) {
+          if (item.currency == 'USD') {
+             totalClientUsd += item.totalQuantity * p;
+          } else {
+             totalClientByn += item.totalQuantity * p;
+          }
+       }
+    }
+    
     // We want a flat list, no categories.
     // Just filter and process.
     List<EstimateItemModel> finalItems = [];
@@ -833,11 +856,15 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       );
       finalItems.add(processedItem);
       
-      // Calculate totals
+      final sum = quantity * price;
+
+      // Calculate displayed totals
       if (item.currency == 'USD') {
-        totalUsd += quantity * price;
+        totalUsd += sum;
+        usdParts.add(sum);
       } else {
-        totalByn += quantity * price;
+        totalByn += sum;
+        bynParts.add(sum);
       }
     }
 
@@ -847,19 +874,24 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     }
 
     // 2. Output Flat List
-    String fmt(double v) =>
-        v.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "");
+  String fmt(double v) =>
+      v.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "");
 
-    for (var idx = 0; idx < finalItems.length; idx++) {
-      final item = finalItems[idx];
-      // Format: "1. Name: Qty Unit ..."
+  // Split into groups
+  final usdItems = finalItems.where((i) => i.currency == 'USD').toList();
+  final otherItems = finalItems.where((i) => i.currency != 'USD').toList();
+  
+  int globalIndex = 0;
+
+  void writeItems(List<EstimateItemModel> groupItems) {
+    for (var item in groupItems) {
+      globalIndex++;
       final q = item.totalQuantity;
       final p = item.pricePerUnit ?? 0;
       final sum = q * p;
       final currencySymbol = item.currency == 'USD' ? '\$' : 'р';
       
-      // Ensure space between value and unit, NO space between value and currency
-      buffer.write("${idx + 1}. ${item.name}: ${fmt(q)} ${item.unit}");
+      buffer.write("${globalIndex}. ${item.name}: ${fmt(q)} ${item.unit}");
       
       if (showPrices) {
         buffer.write(" x ${fmt(p)}$currencySymbol = ${fmt(sum)}$currencySymbol");
@@ -870,11 +902,72 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       }
       buffer.writeln("");
     }
-    
-    buffer.writeln("----------------------------------------");
-    
-    // 3. Totals (Rounded, Single line, Capitalized "Itogo")
-    if (showPrices) {
+  }
+
+  // Write USD items
+  if (usdItems.isNotEmpty) {
+    writeItems(usdItems);
+  }
+
+  // Separator if needed
+  if (usdItems.isNotEmpty && otherItems.isNotEmpty) {
+    buffer.writeln(""); // Empty line
+  }
+
+  // Write Other items
+  if (otherItems.isNotEmpty) {
+    writeItems(otherItems);
+  }
+  
+  buffer.writeln("----------------------------------------");
+  
+  // 3. Totals
+  if (showPrices) {
+    if (quantityType == 'employer') {
+      // --- CONTRACTOR REPORT FORMAT ---
+      
+      // I. YOURS (Contractor)
+      final yoursParts = <String>[];
+      
+      // USD Formula
+      if (usdParts.isNotEmpty) {
+        final formula = usdParts.map((e) => "${fmt(e)}\$").join(" + ");
+        yoursParts.add("$formula = ${fmt(totalUsd)}\$");
+      }
+      // BYN Formula
+      if (bynParts.isNotEmpty) {
+        final formula = bynParts.map((e) => "${fmt(e)}р").join(" + ");
+        yoursParts.add("$formula = ${fmt(totalByn)}р");
+      }
+      
+      if (yoursParts.isNotEmpty) {
+         buffer.writeln("Итого Твои: ${yoursParts.join("; ")}");
+      } else {
+         buffer.writeln("Итого Твои: 0");
+      }
+
+      // II. OURS (Calculated: Total Client - Yours)
+      final oursParts = <String>[];
+      final totalOursUsd = totalClientUsd - totalUsd;
+      final totalOursByn = totalClientByn - totalByn;
+
+      // USD Calc
+      // Only show if there was any client amount involved.
+      if (totalClientUsd > 0.001 || totalUsd > 0.001) {
+         oursParts.add("${fmt(totalClientUsd)}\$ - ${fmt(totalUsd)}\$ = ${fmt(totalOursUsd)}\$");
+      }
+
+      // BYN Calc
+      if (totalClientByn > 0.001 || totalByn > 0.001) {
+         oursParts.add("${fmt(totalClientByn)}р - ${fmt(totalByn)}р = ${fmt(totalOursByn)}р");
+      }
+      
+      if (oursParts.isNotEmpty) {
+        buffer.writeln("Итого Наши: ${oursParts.join("; ")}");
+      }
+
+    } else {
+      // --- STANDARD FORMAT ---
       final parts = <String>[];
       // Rounding logic: <0.5 down, >=0.5 up (standard .round())
       if (totalUsd > 0.4) parts.add("${totalUsd.round()}\$");
@@ -886,9 +979,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         buffer.writeln("Итого: 0");
       }
     }
-
-    return buffer.toString();
   }
+
+  return buffer.toString();
+}
 
   Future<void> _showReport() async {
     try {
@@ -913,7 +1007,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       
       tabs.add(_ReportTabInfo(
         title: "Контрагент", 
-        text: _generateReportText(_works, workBaseTitle, showPrices: true, quantityType: 'employer'),
+        // ADDED: " - ТВОИ" suffix
+        text: _generateReportText(_works, "$workBaseTitle - ТВОИ", showPrices: true, quantityType: 'employer'),
         color: Colors.green
       ));
 
