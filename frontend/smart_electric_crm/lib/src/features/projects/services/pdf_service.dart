@@ -34,8 +34,9 @@ class PdfService {
     // Helper to resolve quantity based on type
     double getQty(EstimateItemModel item) {
       if (quantityType == 'employer') return item.employerQuantity;
-      if (quantityType == 'our')
+      if (quantityType == 'our') {
         return item.totalQuantity - item.employerQuantity;
+      }
       return item.totalQuantity;
     }
 
@@ -119,7 +120,7 @@ class PdfService {
               pw.Text("Примечание:",
                   style: pw.TextStyle(font: fontBold, fontSize: 12)),
               pw.SizedBox(height: 5),
-              pw.Text(remarks, style: pw.TextStyle(fontSize: 10)),
+              pw.Text(remarks, style: const pw.TextStyle(fontSize: 10)),
             ],
 
             // Footer
@@ -224,7 +225,7 @@ class PdfService {
                   if (showPrices)
                     _cell(_fmtMoney(sum, item.currency, isWork), font),
                 ]);
-          }).toList(),
+          }),
         ]);
   }
 
@@ -270,10 +271,11 @@ class PdfService {
 
       final sum = qty * price;
 
-      if (item.currency == 'USD')
+      if (item.currency == 'USD') {
         totalUsd += sum;
-      else
+      } else {
         totalByn += sum;
+      }
     }
 
     // Rounding logic for Total
@@ -301,7 +303,7 @@ class PdfService {
       } else {
         val = totalByn.toStringAsFixed(2);
       }
-      if (double.parse(val) > 0) parts.add("${val}р");
+      if (double.parse(val) > 0) parts.add("$valр");
     }
 
     return parts.isEmpty ? "0" : parts.join(" + ");

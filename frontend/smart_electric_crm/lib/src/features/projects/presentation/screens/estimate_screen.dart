@@ -8,10 +8,11 @@ import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/es
 import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/estimate/quantity_input_dialog.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_tab.dart';
-import 'package:smart_electric_crm/src/features/projects/services/pdf_service.dart'; // [NEW]
-import 'package:path_provider/path_provider.dart'; // [NEW]
-import 'package:open_filex/open_filex.dart'; // [NEW]
-import 'dart:io'; // [NEW]
+import 'package:smart_electric_crm/src/core/utils/debouncer.dart';
+import 'package:smart_electric_crm/src/features/projects/services/pdf_service.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
+import 'dart:io';
 
 class EstimateScreen extends ConsumerStatefulWidget {
   final StageModel stage;
@@ -33,6 +34,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   bool _showPrices = false;
   bool _isFabExpanded = false;
   late TabController _tabController;
+  final _markupDebouncer = Debouncer(milliseconds: 800);
 
   @override
   void initState() {
@@ -56,6 +58,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
   @override
   void dispose() {
+    _markupDebouncer.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -95,13 +98,19 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       _items.where((i) => i.itemType == 'material').toList();
 
   Future<void> _saveMarkup(double val) async {
+    // 1. Immediate UI update
     setState(() => _markupPercent = val);
-    try {
-      final repo = ref.read(projectRepositoryProvider);
-      await repo.updateStage(widget.stage.id, {'markup_percent': val});
-    } catch (e) {
-      debugPrint("Error saving markup: $e");
-    }
+
+    // 2. Debounced API call
+    _markupDebouncer.run(() async {
+      try {
+        final repo = ref.read(projectRepositoryProvider);
+        await repo.updateStage(widget.stage.id, {'markup_percent': val});
+        debugPrint("✅ Markup saved to DB: $val");
+      } catch (e) {
+        debugPrint("Error saving markup: $e");
+      }
+    });
   }
 
   Future<void> _saveShowPrices(bool val) async {
@@ -762,69 +771,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     }
   }
 
-  void _copyReportWithMarkup() async {
-    try {
-      final buffer = StringBuffer();
-      buffer.writeln(
-          "Список материалов (с наценкой ${_markupPercent.toStringAsFixed(1)}%):");
-
-      // Calculate displayed items with markup
-      List<EstimateItemModel> itemsToCopy = _materials;
-      if (_markupPercent > 0) {
-        itemsToCopy = _materials.map((item) {
-          final boostedPrice =
-              (item.pricePerUnit ?? 0) * (1 + (_markupPercent / 100));
-          return item.copyWith(pricePerUnit: boostedPrice);
-        }).toList();
-      }
-
-      // Group by category
-      final Map<String, List<EstimateItemModel>> grouped = {};
-      for (var item in itemsToCopy) {
-        final cat = item.categoryName ?? 'Разное';
-        if (!grouped.containsKey(cat)) grouped[cat] = [];
-        grouped[cat]!.add(item);
-      }
-
-      final sortedCats = grouped.keys.toList()..sort();
-      if (sortedCats.contains('Разное')) {
-        sortedCats.remove('Разное');
-        sortedCats.add('Разное');
-      }
-
-      double totalSum = 0;
-
-      for (var cat in sortedCats) {
-        buffer.writeln("\n--- $cat ---");
-        for (var item in grouped[cat]!) {
-          final price = item.pricePerUnit ?? 0;
-          final sum = (item.totalQuantity) * price;
-          totalSum += sum;
-          final currency = item.currency == 'USD' ? '\$' : 'р';
-
-          // Clean format
-          String fmt(double v) =>
-              v.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "");
-
-          buffer.writeln(
-              "- ${item.name}: ${fmt(item.totalQuantity)} ${item.unit} x ${fmt(price)}$currency = ${fmt(sum)}$currency");
-        }
-      }
-
-      buffer.writeln("\nИТОГО: ${totalSum.toStringAsFixed(2)}");
-
-      await Clipboard.setData(ClipboardData(text: buffer.toString()));
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Скопировано с учетом наценки!")),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
-    }
-  }
-
   void _updateItemFromTab(EstimateItemModel updatedItem) {
     final index = _items.indexWhere((i) => i.id == updatedItem.id);
     if (index != -1) {
@@ -1073,7 +1019,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         final sum = q * p;
         final currencySymbol = item.currency == 'USD' ? '\$' : 'р';
 
-        buffer.write("${globalIndex}. ${item.name}: ${fmtQty(q)} ${item.unit}");
+        buffer.write("$globalIndex. ${item.name}: ${fmtQty(q)} ${item.unit}");
 
         if (showPrices) {
           buffer.write(
@@ -1132,10 +1078,11 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
             yoursParts.add("$formula = ${fmtMoney(displayedTotalUsd)}\$");
           } else {
             double val;
-            if (isWorkReport)
+            if (isWorkReport) {
               val = usdParts.first.roundToDouble();
-            else
+            } else {
               val = (usdParts.first * 100).round() / 100;
+            }
 
             displayedTotalUsd = val;
             yoursParts.add("${fmtMoney(val)}\$");
@@ -1158,10 +1105,11 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
             yoursParts.add("$formula = ${fmtMoney(displayedTotalByn)}р");
           } else {
             double val;
-            if (isWorkReport)
+            if (isWorkReport) {
               val = bynParts.first.roundToDouble();
-            else
+            } else {
               val = (bynParts.first * 100).round() / 100;
+            }
 
             displayedTotalByn = val;
             yoursParts.add("${fmtMoney(val)}р");
@@ -1379,7 +1327,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
   // Legacy copy placeholder to keep code compiling if referenced elsewhere,
   // though we removed references in _showActionsDialog.
-  void _copyReport(String type) async {}
 
   Future<void> _saveNotes(String type, String value) async {
     debugPrint("💾 Saving note: type='$type', value='$value'");
@@ -1478,7 +1425,7 @@ class _ReportTabInfo {
 class _ReportDialogContent extends StatefulWidget {
   final List<_ReportTabInfo> tabs;
 
-  const _ReportDialogContent({super.key, required this.tabs});
+  const _ReportDialogContent({required this.tabs});
 
   @override
   State<_ReportDialogContent> createState() => _ReportDialogContentState();
@@ -1562,7 +1509,7 @@ class _ReportDialogContentState extends State<_ReportDialogContent> {
           child: ElevatedButton.icon(
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: currentTab.text));
-              if (!mounted) return;
+              if (!context.mounted) return;
               ScaffoldMessenger.of(context)
                   .showSnackBar(const SnackBar(content: Text("Скопировано!")));
             },
