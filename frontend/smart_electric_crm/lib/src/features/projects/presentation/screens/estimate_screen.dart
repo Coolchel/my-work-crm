@@ -400,23 +400,43 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                   }),
                   const Divider(indent: 16, endIndent: 16),
                   
-                  // Copy Sub-menu simulation (Expanded in dialog is tricky, let's use section)
                   _buildSectionHeader("Копировать"),
-                  _buildActionTile(context, Icons.copy_all, "РАБОТЫ (Клиент)", () {
+                  _buildActionTile(context, Icons.copy_all, "РАБОТЫ (Для заказчика)", () async {
                      Navigator.pop(context);
-                    _copyReport('client', itemType: 'work');
+                     final project = await ref.read(projectByIdProvider(widget.projectId).future);
+                     final stageTitle = await _formatStageTitle(widget.stage.title);
+                     final title = "${project.address} - Работы - $stageTitle";
+                     
+                     final text = _generateReportText(_works, title, showPrices: true, quantityType: 'total');
+                     _copyText(text);
                   }, dense: true),
-                  _buildActionTile(context, Icons.copy_all, "РАБОТЫ (Для Шефа)", () {
+                  _buildActionTile(context, Icons.copy_all, "РАБОТЫ (Для Контрагента)", () async {
                     Navigator.pop(context);
-                    _copyReport('employer', itemType: 'work');
+                     final project = await ref.read(projectByIdProvider(widget.projectId).future);
+                     final stageTitle = await _formatStageTitle(widget.stage.title);
+                     final title = "${project.address} - Работы - $stageTitle";
+
+                    final text = _generateReportText(_works, title, showPrices: true, quantityType: 'employer');
+                    _copyText(text);
                   }, dense: true),
-                   _buildActionTile(context, Icons.copy_all, "МАТЕРИАЛЫ (С наценкой)", () {
+                   _buildActionTile(context, Icons.copy_all, "МАТЕРИАЛЫ (С наценкой)", () async {
                     Navigator.pop(context);
-                    _copyReportWithMarkup();
+                     final project = await ref.read(projectByIdProvider(widget.projectId).future);
+                     final stageTitle = await _formatStageTitle(widget.stage.title);
+                     final title = "${project.address} - Материалы - $stageTitle";
+
+                    final text = _generateReportText(_materials, title, showPrices: true, markup: _markupPercent, quantityType: 'total');
+                    _copyText(text);
                   }, dense: true),
-                   _buildActionTile(context, Icons.copy_all, "МАТЕРИАЛЫ (Список)", () {
+                   _buildActionTile(context, Icons.copy_all, "МАТЕРИАЛЫ (Текущий вид)", () async {
                     Navigator.pop(context);
-                    _copyReport('client', itemType: 'material');
+                     final project = await ref.read(projectByIdProvider(widget.projectId).future);
+                     final stageTitle = await _formatStageTitle(widget.stage.title);
+                    
+                    final title = "${project.address} - Материалы - $stageTitle";
+
+                    final text = _generateReportText(_materials, title, showPrices: _showPrices, markup: _markupPercent, quantityType: 'total');
+                    _copyText(text);
                   }, dense: true),
 
                   const Divider(indent: 16, endIndent: 16),
@@ -435,6 +455,14 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         );
       },
     );
+  }
+
+  Future<void> _copyText(String text) async {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Скопировано в буфер обмена!")),
+      );
   }
   
   Widget _buildSectionHeader(String title) {
@@ -747,30 +775,195 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     }
   }
 
-  void _showReport() async {
+  Future<String> _formatStageTitle(String rawTitle) async {
+    // Basic formatting
+    String title = rawTitle;
+    if (title.startsWith('stage_')) {
+      title = title.replaceAll('stage_', 'Этап ');
+    } else if (title.startsWith('additional_')) {
+      title = title.replaceAll('additional_', 'Доп. работы ');
+    } else if (title.startsWith('pre_') || title.contains('preliminary')) {
+       title = title.replaceAll('pre_', 'Предпросчет ');
+       if (!title.contains('ориентировочно')) {
+         title += " (ориентировочно)";
+       }
+    }
+    return title;
+  }
+
+  String _generateReportText(List<EstimateItemModel> items, String fullTitle,
+      {bool showPrices = true,
+      double markup = 0.0,
+      String quantityType = 'total' // 'total', 'employer', 'our'
+      }) {
+    final buffer = StringBuffer();
+    buffer.writeln(fullTitle);
+    buffer.writeln("----------------------------------------");
+
+    // 1. Process items (Filter & Markup)
+    double totalUsd = 0;
+    double totalByn = 0;
+    
+    // We want a flat list, no categories.
+    // Just filter and process.
+    List<EstimateItemModel> finalItems = [];
+
+    for (var item in items) {
+      double quantity = 0;
+      if (quantityType == 'total') {
+        quantity = item.totalQuantity;
+      } else if (quantityType == 'employer') {
+        quantity = item.employerQuantity;
+      } else if (quantityType == 'our') {
+        quantity = item.totalQuantity - item.employerQuantity;
+      }
+
+      // Skip empty
+      if (quantity <= 0.001) continue;
+
+      double price = item.pricePerUnit ?? 0;
+      // Apply markup
+      if (markup > 0) {
+        price = price * (1 + (markup / 100));
+      }
+      
+      final processedItem = item.copyWith(
+          totalQuantity: quantity, 
+          pricePerUnit: price
+      );
+      finalItems.add(processedItem);
+      
+      // Calculate totals
+      if (item.currency == 'USD') {
+        totalUsd += quantity * price;
+      } else {
+        totalByn += quantity * price;
+      }
+    }
+
+    if (finalItems.isEmpty) {
+      buffer.writeln("(Список пуст)");
+      return buffer.toString();
+    }
+
+    // 2. Output Flat List
+    String fmt(double v) =>
+        v.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "");
+
+    for (var idx = 0; idx < finalItems.length; idx++) {
+      final item = finalItems[idx];
+      // Format: "1. Name: Qty Unit ..."
+      final q = item.totalQuantity;
+      final p = item.pricePerUnit ?? 0;
+      final sum = q * p;
+      final currencySymbol = item.currency == 'USD' ? '\$' : 'р';
+      
+      // Ensure space between value and unit, NO space between value and currency
+      buffer.write("${idx + 1}. ${item.name}: ${fmt(q)} ${item.unit}");
+      
+      if (showPrices) {
+        buffer.write(" x ${fmt(p)}$currencySymbol = ${fmt(sum)}$currencySymbol");
+      }
+      
+      if (!item.name.trim().endsWith('.')) {
+         buffer.write(";");
+      }
+      buffer.writeln("");
+    }
+    
+    buffer.writeln("----------------------------------------");
+    
+    // 3. Totals (Rounded, Single line, Capitalized "Itogo")
+    if (showPrices) {
+      final parts = <String>[];
+      // Rounding logic: <0.5 down, >=0.5 up (standard .round())
+      if (totalUsd > 0.4) parts.add("${totalUsd.round()}\$");
+      if (totalByn > 0.4) parts.add("${totalByn.round()}р");
+      
+      if (parts.isNotEmpty) {
+        buffer.writeln("Итого: ${parts.join(" + ")}");
+      } else {
+        buffer.writeln("Итого: 0");
+      }
+    }
+
+    return buffer.toString();
+  }
+
+  Future<void> _showReport() async {
     try {
-      final repo = ref.read(projectRepositoryProvider);
-      final reports = await repo.fetchStageReport(widget.stage.id);
+      final project = await ref.read(projectByIdProvider(widget.projectId).future);
+      final address = project.address;
+      final rawStageTitle = widget.stage.title;
+      final formattedStage = await _formatStageTitle(rawStageTitle);
+      
+      final List<_ReportTabInfo> tabs = [];
+      
+      final matBaseTitle = "$address - Материалы - $formattedStage";
+      final workBaseTitle = "$address - Работы - $formattedStage";
+      
+      // --- MATERIALS ---
+      if (_showPrices) {
+         if (_markupPercent > 0) {
+            tabs.add(_ReportTabInfo(
+              title: "Мат. (Наценка)", 
+              text: _generateReportText(_materials, matBaseTitle, showPrices: true, markup: _markupPercent, quantityType: 'total'),
+              color: Colors.blue
+            ));
+         }
+         
+         tabs.add(_ReportTabInfo(
+            title: "Мат. (С ценами)", 
+            text: _generateReportText(_materials, matBaseTitle, showPrices: true, markup: 0, quantityType: 'total'),
+            color: Colors.blue
+         ));
+         
+         tabs.add(_ReportTabInfo(
+            title: "Мат. (Без цен)", 
+            text: _generateReportText(_materials, matBaseTitle, showPrices: false, markup: 0, quantityType: 'total'),
+            color: Colors.blue
+         ));
+
+      } else {
+        tabs.add(_ReportTabInfo(
+           title: "Материалы", 
+           text: _generateReportText(_materials, matBaseTitle, showPrices: false, markup: 0, quantityType: 'total'),
+           color: Colors.blue
+        ));
+      }
+      
+      // --- WORKS ---
+      tabs.add(_ReportTabInfo(
+        title: "Заказчик", 
+        text: _generateReportText(_works, workBaseTitle, showPrices: true, quantityType: 'total'),
+        color: Colors.green
+      ));
+      
+      tabs.add(_ReportTabInfo(
+        title: "Контрагент", 
+        text: _generateReportText(_works, workBaseTitle, showPrices: true, quantityType: 'employer'),
+        color: Colors.green
+      ));
+      
+      tabs.add(_ReportTabInfo(
+        title: "Наши", 
+        text: _generateReportText(_works, workBaseTitle, showPrices: true, quantityType: 'our'),
+        color: Colors.green
+      ));
+
       if (!mounted) return;
+      
       showDialog(
           context: context,
           builder: (context) {
             return AlertDialog(
               title: const Center(child: Text("Отчеты")),
-              content: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text("--- Клиент ---",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    SelectableText(reports['client_report'] ?? ''),
-                    const SizedBox(height: 20),
-                    const Text("--- Работодатель ---",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    SelectableText(reports['employer_report'] ?? ''),
-                  ],
-                ),
+              contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              content: SizedBox(
+                width: double.maxFinite,
+                height: 500,
+                child: _ReportDialogContent(tabs: tabs),
               ),
               actions: [
                 TextButton(
@@ -780,33 +973,14 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
             );
           });
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
-    }
-  }
-
-  void _copyReport(String reportType, {String? itemType}) async {
-    try {
-      final repo = ref.read(projectRepositoryProvider);
-      final reports =
-          await repo.fetchStageReport(widget.stage.id, type: itemType);
-      final text = reportType == 'client'
-          ? reports['client_report']
-          : reports['employer_report'];
-
-      if (text != null) {
-        await Clipboard.setData(ClipboardData(text: text));
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Отчет скопирован!")),
-        );
-      }
-    } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Ошибка копирования: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Ошибка подготовки отчета: $e")));
     }
   }
+
+  // Legacy copy placeholder to keep code compiling if referenced elsewhere, 
+  // though we removed references in _showActionsDialog.
+  void _copyReport(String type) async {}
 
   Future<void> _saveNotes(String type, String value) async {
     debugPrint("💾 Saving note: type='$type', value='$value'");
@@ -834,5 +1008,110 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Ошибка сохранения заметки: $e")));
     }
+  }
+}
+
+class _ReportTabInfo {
+  final String title;
+  final String text;
+  final MaterialColor color;
+
+  _ReportTabInfo({required this.title, required this.text, required this.color});
+}
+
+class _ReportDialogContent extends StatefulWidget {
+  final List<_ReportTabInfo> tabs;
+  
+  const _ReportDialogContent({super.key, required this.tabs});
+
+  @override
+  State<_ReportDialogContent> createState() => _ReportDialogContentState();
+}
+
+class _ReportDialogContentState extends State<_ReportDialogContent> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final currentTab = widget.tabs[_currentIndex];
+    final activeColor = currentTab.color;
+
+    return Column(
+      children: [
+        // Navigation: Wrap with Chips instead of TabBar
+        SizedBox(
+          width: double.infinity,
+          child: Wrap(
+            alignment: WrapAlignment.center, // Center chips
+            spacing: 8.0,
+            runSpacing: 8.0,
+            children: List.generate(widget.tabs.length, (index) {
+              final tab = widget.tabs[index];
+              final isSelected = index == _currentIndex;
+              // Use color from the tab
+              final color = tab.color;
+              
+              return ChoiceChip(
+                label: Text(tab.title),
+                selected: isSelected,
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() => _currentIndex = index);
+                  }
+                },
+                selectedColor: color.shade100,
+                backgroundColor: Colors.grey.shade100,
+                labelStyle: TextStyle(
+                  color: isSelected ? color.shade900 : Colors.black87,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+                side: BorderSide(
+                  color: isSelected ? color.shade300 : Colors.grey.shade300,
+                ),
+              );
+            }),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Divider(),
+        const SizedBox(height: 8),
+        
+        // Content
+        Expanded(
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            child: SingleChildScrollView(
+              child: SelectableText(
+                currentTab.text, 
+                style: const TextStyle(fontSize: 13, fontFamily: 'Courier', height: 1.2)
+              ),
+            ),
+          ),
+        ),
+        
+        const SizedBox(height: 12),
+        // Action Button
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () async {
+               await Clipboard.setData(ClipboardData(text: currentTab.text));
+               if(!mounted) return;
+               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Скопировано!")));
+            },
+            icon: const Icon(Icons.copy, size: 18),
+            label: Text("Копировать отчет (${currentTab.title})"),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: activeColor.shade50,
+              foregroundColor: activeColor.shade800,
+              elevation: 0,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
   }
 }
