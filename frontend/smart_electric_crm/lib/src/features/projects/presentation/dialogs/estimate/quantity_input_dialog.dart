@@ -37,7 +37,7 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
         text: widget.item.defaultPrice
             .toStringAsFixed(2)
             .replaceAll(RegExp(r'\.?0+$'), ''));
-    _currency = 'USD';
+    _currency = widget.item.defaultCurrency;
 
     if (widget.itemType == 'work') {
       _setupListeners();
