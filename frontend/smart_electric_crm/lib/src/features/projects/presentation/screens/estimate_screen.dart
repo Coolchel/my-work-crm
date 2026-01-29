@@ -473,8 +473,11 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                     _copyText(text);
                   }, dense: true),
                   const Divider(indent: 16, endIndent: 16),
+                  _buildSectionHeader("PDF Экспорт"),
+
+                  // Works Actions
                   _buildActionTile(
-                      context, Icons.picture_as_pdf, "PDF: Смета (Работы)",
+                      context, Icons.picture_as_pdf, "Работы (Заказчик)",
                       () async {
                     Navigator.pop(context);
                     final project = await ref
@@ -487,11 +490,56 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                       items: _works,
                       title: title,
                       showPrices: true,
+                      isWork: true,
+                      quantityType: 'total',
                       remarks: _stage.workRemarks,
                     );
                   }),
                   _buildActionTile(
-                      context, Icons.picture_as_pdf, "PDF: Смета (Материалы)",
+                      context, Icons.picture_as_pdf, "Работы (Контрагент)",
+                      () async {
+                    Navigator.pop(context);
+                    final project = await ref
+                        .read(projectByIdProvider(widget.projectId).future);
+                    final stageTitle =
+                        await _formatStageTitle(widget.stage.title);
+                    // Add suffix similar to report
+                    final title =
+                        "${project.address} - Работы - $stageTitle - ТВОИ";
+
+                    _printPdf(
+                      items: _works,
+                      title: title,
+                      showPrices: true,
+                      isWork: true,
+                      quantityType: 'employer',
+                      remarks: _stage.workRemarks,
+                    );
+                  }),
+                  _buildActionTile(
+                      context, Icons.picture_as_pdf, "Работы (Наши)", () async {
+                    Navigator.pop(context);
+                    final project = await ref
+                        .read(projectByIdProvider(widget.projectId).future);
+                    final stageTitle =
+                        await _formatStageTitle(widget.stage.title);
+                    final title = "${project.address} - Работы - $stageTitle";
+
+                    _printPdf(
+                      items: _works,
+                      title: title,
+                      showPrices: true,
+                      isWork: true,
+                      quantityType: 'our',
+                      remarks: _stage.workRemarks,
+                    );
+                  }),
+
+                  const Divider(indent: 16, endIndent: 16),
+
+                  // Materials Actions
+                  _buildActionTile(
+                      context, Icons.picture_as_pdf, "Материалы (Без цен)",
                       () async {
                     Navigator.pop(context);
                     final project = await ref
@@ -504,11 +552,54 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                     _printPdf(
                       items: _materials,
                       title: title,
-                      showPrices: _showPrices,
-                      markupPercent: _markupPercent,
+                      showPrices: false,
+                      isWork: false,
+                      quantityType: 'total',
                       remarks: _stage.materialRemarks,
                     );
                   }),
+                  _buildActionTile(
+                      context, Icons.picture_as_pdf, "Материалы (С ценами)",
+                      () async {
+                    Navigator.pop(context);
+                    final project = await ref
+                        .read(projectByIdProvider(widget.projectId).future);
+                    final stageTitle =
+                        await _formatStageTitle(widget.stage.title);
+                    final title =
+                        "${project.address} - Материалы - $stageTitle";
+
+                    _printPdf(
+                      items: _materials,
+                      title: title,
+                      showPrices: true,
+                      markupPercent: 0, // Base prices
+                      isWork: false,
+                      quantityType: 'total',
+                      remarks: _stage.materialRemarks,
+                    );
+                  }),
+                  if (_markupPercent > 0)
+                    _buildActionTile(context, Icons.picture_as_pdf,
+                        "Материалы (+ $_markupPercent%)", () async {
+                      Navigator.pop(context);
+                      final project = await ref
+                          .read(projectByIdProvider(widget.projectId).future);
+                      final stageTitle =
+                          await _formatStageTitle(widget.stage.title);
+                      final title =
+                          "${project.address} - Материалы - $stageTitle";
+
+                      _printPdf(
+                        items: _materials,
+                        title: title,
+                        showPrices: true,
+                        markupPercent: _markupPercent,
+                        isWork: false,
+                        quantityType: 'total',
+                        remarks: _stage.materialRemarks,
+                      );
+                    }),
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
@@ -1335,8 +1426,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     required List<EstimateItemModel> items,
     required String title,
     required bool showPrices,
+    required bool isWork, // New
     String? remarks,
     double markupPercent = 0.0,
+    String quantityType = 'total', // New
   }) async {
     try {
       final pdfService = PdfService();
@@ -1344,6 +1437,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         title: title,
         items: items,
         showPrices: showPrices,
+        isWork: isWork,
+        quantityType: quantityType,
         remarks: remarks,
         markupPercent: markupPercent,
       );
