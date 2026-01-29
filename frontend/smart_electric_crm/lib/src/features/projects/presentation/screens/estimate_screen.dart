@@ -902,40 +902,12 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       final matBaseTitle = "$address - Материалы - $formattedStage";
       final workBaseTitle = "$address - Работы - $formattedStage";
       
-      // --- MATERIALS ---
-      if (_showPrices) {
-         if (_markupPercent > 0) {
-            tabs.add(_ReportTabInfo(
-              title: "Мат. (Наценка)", 
-              text: _generateReportText(_materials, matBaseTitle, showPrices: true, markup: _markupPercent, quantityType: 'total'),
-              color: Colors.blue
-            ));
-         }
-         
-         tabs.add(_ReportTabInfo(
-            title: "Мат. (С ценами)", 
-            text: _generateReportText(_materials, matBaseTitle, showPrices: true, markup: 0, quantityType: 'total'),
-            color: Colors.blue
-         ));
-         
-         tabs.add(_ReportTabInfo(
-            title: "Мат. (Без цен)", 
-            text: _generateReportText(_materials, matBaseTitle, showPrices: false, markup: 0, quantityType: 'total'),
-            color: Colors.blue
-         ));
+      // --- ORDER: Works First, then Materials (V6) ---
 
-      } else {
-        tabs.add(_ReportTabInfo(
-           title: "Материалы", 
-           text: _generateReportText(_materials, matBaseTitle, showPrices: false, markup: 0, quantityType: 'total'),
-           color: Colors.blue
-        ));
-      }
-      
-      // --- WORKS ---
+      // 1. WORKS
       tabs.add(_ReportTabInfo(
-        title: "Заказчик", 
-        text: _generateReportText(_works, workBaseTitle, showPrices: true, quantityType: 'total'),
+        title: "Наши", 
+        text: _generateReportText(_works, workBaseTitle, showPrices: true, quantityType: 'our'),
         color: Colors.green
       ));
       
@@ -944,12 +916,48 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         text: _generateReportText(_works, workBaseTitle, showPrices: true, quantityType: 'employer'),
         color: Colors.green
       ));
-      
+
       tabs.add(_ReportTabInfo(
-        title: "Наши", 
-        text: _generateReportText(_works, workBaseTitle, showPrices: true, quantityType: 'our'),
+        title: "Заказчик", 
+        text: _generateReportText(_works, workBaseTitle, showPrices: true, quantityType: 'total'),
         color: Colors.green
       ));
+      
+      // 2. MATERIALS
+      if (_showPrices) {
+         // Case 1: With Prices
+         
+         // No Prices (Renamed V6: Материал)
+         tabs.add(_ReportTabInfo(
+            title: "Материал", 
+            text: _generateReportText(_materials, matBaseTitle, showPrices: false, markup: 0, quantityType: 'total'),
+             color: Colors.blue
+         )); 
+
+         // Base Prices (Renamed V6: Материал с ценами)
+         tabs.add(_ReportTabInfo(
+            title: "Материал с ценами", 
+            text: _generateReportText(_materials, matBaseTitle, showPrices: true, markup: 0, quantityType: 'total'),
+            color: Colors.blue
+         ));
+         
+         if (_markupPercent > 0) {
+            // Renamed V6: Материал с + %
+            tabs.add(_ReportTabInfo(
+              title: "Материал с + %", 
+              text: _generateReportText(_materials, matBaseTitle, showPrices: true, markup: _markupPercent, quantityType: 'total'),
+              color: Colors.blue
+            ));
+         }
+
+      } else {
+        // Case 2: Only No Prices
+        tabs.add(_ReportTabInfo(
+           title: "Материал", 
+           text: _generateReportText(_materials, matBaseTitle, showPrices: false, markup: 0, quantityType: 'total'),
+           color: Colors.blue
+        ));
+      }
 
       if (!mounted) return;
       
@@ -968,6 +976,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(context),
+                    // V7: Black close button
+                    style: TextButton.styleFrom(foregroundColor: Colors.black),
                     child: const Text("Закрыть"))
               ],
             );
@@ -1059,21 +1069,26 @@ class _ReportDialogContentState extends State<_ReportDialogContent> {
                     setState(() => _currentIndex = index);
                   }
                 },
-                selectedColor: color.shade100,
-                backgroundColor: Colors.grey.shade100,
+                // V6 & V7: Pastel styling & Colored unselected
+                selectedColor: color.shade100, // Slightly darker for selected to distinguish
+                backgroundColor: color.withOpacity(0.15), // V7.1: Increased saturation (was 0.05)
                 labelStyle: TextStyle(
                   color: isSelected ? color.shade900 : Colors.black87,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
+                // V6: Thinner border
                 side: BorderSide(
                   color: isSelected ? color.shade300 : Colors.grey.shade300,
+                  width: 0.5,
                 ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               );
             }),
           ),
         ),
         const SizedBox(height: 12),
-        const Divider(),
+        // V7: Colored divider
+        Divider(color: activeColor.shade200, thickness: 1), // V7.1: Increased saturation (was shade100)
         const SizedBox(height: 8),
         
         // Content
@@ -1101,7 +1116,8 @@ class _ReportDialogContentState extends State<_ReportDialogContent> {
                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Скопировано!")));
             },
             icon: const Icon(Icons.copy, size: 18),
-            label: Text("Копировать отчет (${currentTab.title})"),
+            // V6: Removed "отчет"
+            label: Text("Копировать (${currentTab.title})"),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               backgroundColor: activeColor.shade50,
