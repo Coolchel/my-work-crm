@@ -404,16 +404,16 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                             fontWeight: FontWeight.bold,
                             color: themeColor)),
                   ),
+                  _buildSectionHeader("Просмотреть в txt"),
                   _buildActionTile(
-                      context, Icons.description_outlined, "Просмотреть отчеты",
-                      () {
+                      context, Icons.description_outlined, "Все сметы", () {
                     Navigator.pop(context);
                     _showReport();
                   }),
                   const Divider(indent: 16, endIndent: 16),
-                  _buildSectionHeader("Копировать"),
+                  _buildSectionHeader("Копировать в txt"),
                   _buildActionTile(
-                      context, Icons.copy_all, "РАБОТЫ (Для заказчика)",
+                      context, Icons.copy_all, "Работы (Для заказчика)",
                       () async {
                     Navigator.pop(context);
                     final project = await ref
@@ -427,38 +427,20 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                     _copyText(text);
                   }, dense: true),
                   _buildActionTile(
-                      context, Icons.copy_all, "РАБОТЫ (Для Контрагента)",
-                      () async {
-                    Navigator.pop(context);
-                    final project = await ref
-                        .read(projectByIdProvider(widget.projectId).future);
-                    final stageTitle =
-                        await _formatStageTitle(widget.stage.title);
-                    final title = "${project.address} - Работы - $stageTitle";
-
-                    final text = _generateReportText(_works, title,
-                        showPrices: true, quantityType: 'employer');
-                    _copyText(text);
-                  }, dense: true),
-                  _buildActionTile(
-                      context, Icons.copy_all, "МАТЕРИАЛЫ (С наценкой)",
-                      () async {
+                      context, Icons.copy_all, "Работы (Контрагент)", () async {
                     Navigator.pop(context);
                     final project = await ref
                         .read(projectByIdProvider(widget.projectId).future);
                     final stageTitle =
                         await _formatStageTitle(widget.stage.title);
                     final title =
-                        "${project.address} - Материалы - $stageTitle";
+                        "${project.address} - Работы - $stageTitle - ТВОИ";
 
-                    final text = _generateReportText(_materials, title,
-                        showPrices: true,
-                        markup: _markupPercent,
-                        quantityType: 'total');
+                    final text = _generateReportText(_works, title,
+                        showPrices: true, quantityType: 'employer');
                     _copyText(text);
                   }, dense: true),
-                  _buildActionTile(
-                      context, Icons.copy_all, "МАТЕРИАЛЫ (Текущий вид)",
+                  _buildActionTile(context, Icons.copy_all, "Материалы",
                       () async {
                     Navigator.pop(context);
                     final project = await ref
@@ -827,19 +809,16 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
 
   Future<String> _formatStageTitle(String rawTitle) async {
-    // Basic formatting
-    String title = rawTitle;
-    if (title.startsWith('stage_')) {
-      title = title.replaceAll('stage_', 'Этап ');
-    } else if (title.startsWith('additional_')) {
-      title = title.replaceAll('additional_', 'Доп. работы ');
-    } else if (title.startsWith('pre_') || title.contains('preliminary')) {
-      title = title.replaceAll('pre_', 'Предпросчет ');
-      if (!title.contains('ориентировочно')) {
-        title += " (ориентировочно)";
-      }
-    }
-    return title;
+    const titles = {
+      'precalc': 'Предпросчет',
+      'stage_1': 'Этап 1 (Черновой)',
+      'stage_1_2': 'Этап 1+2 (Черновой)',
+      'stage_2': 'Этап 2 (Черновой)',
+      'stage_3': 'Этап 3 (Чистовой)',
+      'extra': 'Доп. работы',
+      'other': 'Другое',
+    };
+    return titles[rawTitle] ?? rawTitle;
   }
 
   String _generateReportText(List<EstimateItemModel> items, String fullTitle,
