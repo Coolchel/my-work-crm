@@ -867,12 +867,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     //    - Works: Integer (Round)
     //    - Materials: 2 decimals, remove trailing zeros
     String fmtMoney(double v) {
-      if (isWorkReport) {
-        return v.round().toString();
-      } else {
-        // Materials: standard rounding to 2 decimals
-        return v.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "");
-      }
+      // Unified formatting: 2 decimals, remove trailing zeros.
+      // Works Totals are already rounded to integer before this call, so they will appear as integers.
+      return v.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "");
     }
 
     // 1. Process items (Filter & Markup)
