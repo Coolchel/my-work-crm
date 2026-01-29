@@ -1129,6 +1129,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
     if (note != null && note.trim().isNotEmpty) {
       buffer.writeln("");
+      buffer.writeln("Примечание:");
       buffer.writeln(note.trim());
     }
 
@@ -1226,7 +1227,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           context: context,
           builder: (context) {
             return AlertDialog(
-              title: const Center(child: Text("Отчеты")),
+              title: const Center(child: Text("Сметы")),
               contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 24),

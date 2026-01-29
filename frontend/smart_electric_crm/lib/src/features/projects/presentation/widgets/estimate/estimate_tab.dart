@@ -915,7 +915,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                         size: 14, color: _primaryColor.withOpacity(0.8)),
                     const SizedBox(width: 6),
                     Text(
-                      "Примечания (для отчета)",
+                      "Примечания (для сметы)",
                       style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
