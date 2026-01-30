@@ -20,11 +20,11 @@ mixin EstimateDialogHelpers {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.grey.shade700),
+          Icon(icon, size: 18, color: Colors.grey.shade700),
           const SizedBox(width: 8),
           Text(title,
               style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade700)),
         ],
@@ -182,14 +182,14 @@ class EstimateTextActionsDialog extends ConsumerWidget
               }, isGradient: true, enabled: hasWorks || hasMaterials),
             ),
 
-            // 2. Copy Text
+            // 2. Copy Text (Original Buttons)
             buildHeader(Icons.copy, "Копировать текст"),
-            _buildActionSection(context, ref, hasWorks, hasPartnerWorks,
+            _buildCopySection(context, ref, hasWorks, hasPartnerWorks,
                 hasMaterials, false), // share = false
 
-            // 3. Share Text (NEW)
+            // 3. Share Text (Smart Dropdowns)
             buildHeader(Icons.share, "Поделиться текстом"),
-            _buildActionSection(context, ref, hasWorks, hasPartnerWorks,
+            _buildShareSection(context, ref, hasWorks, hasPartnerWorks,
                 hasMaterials, true), // share = true
 
             const SizedBox(height: 16),
@@ -215,7 +215,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
     );
   }
 
-  Widget _buildActionSection(BuildContext context, WidgetRef ref, bool hasWorks,
+  Widget _buildCopySection(BuildContext context, WidgetRef ref, bool hasWorks,
       bool hasPartnerWorks, bool hasMaterials, bool share) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -226,7 +226,8 @@ class EstimateTextActionsDialog extends ConsumerWidget
                 "Заказчик", Colors.green.shade50, Colors.green.shade800,
                 () async {
               Navigator.pop(context);
-              await _processAction(context, ref, true, 'total', false, share);
+              await _processAction(context, ref,
+                  isWork: true, type: 'total', share: share);
             }, enabled: hasWorks),
           ),
           if (hasPartnerWorks) ...[
@@ -236,8 +237,8 @@ class EstimateTextActionsDialog extends ConsumerWidget
                   "Контрагент", Colors.green.shade50, Colors.green.shade800,
                   () async {
                 Navigator.pop(context);
-                await _processAction(
-                    context, ref, true, 'employer', false, share);
+                await _processAction(context, ref,
+                    isWork: true, type: 'employer', share: share);
               }, enabled: hasWorks),
             ),
           ],
@@ -247,7 +248,8 @@ class EstimateTextActionsDialog extends ConsumerWidget
                 buildBtn("Материалы", Colors.blue.shade50, Colors.blue.shade800,
                     () async {
               Navigator.pop(context);
-              await _processAction(context, ref, false, 'total', true, share);
+              await _processAction(context, ref,
+                  isWork: false, type: 'total', share: share);
             }, enabled: hasMaterials),
           ),
         ],
@@ -255,33 +257,120 @@ class EstimateTextActionsDialog extends ConsumerWidget
     );
   }
 
-  Future<void> _processAction(BuildContext context, WidgetRef ref, bool isWork,
-      String type, bool isMaterial, bool share) async {
+  Widget _buildShareSection(BuildContext context, WidgetRef ref, bool hasWorks,
+      bool hasPartnerWorks, bool hasMaterials, bool share) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: buildPopupBtn(
+              context,
+              "Работы",
+              Colors.green.shade50,
+              Colors.green.shade800,
+              [
+                const PopupMenuItem(
+                    value: 'total', child: Text("Для Заказчика")),
+                if (hasPartnerWorks) ...[
+                  const PopupMenuItem(
+                      value: 'employer', child: Text("Для Контрагента")),
+                  const PopupMenuItem(value: 'our', child: Text("Наши")),
+                ]
+              ],
+              (val) async {
+                Navigator.pop(context);
+                await _processAction(context, ref,
+                    isWork: true, type: val, share: share);
+              },
+              enabled: hasWorks,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: buildPopupBtn(
+              context,
+              "Материалы",
+              Colors.blue.shade50,
+              Colors.blue.shade800,
+              [
+                const PopupMenuItem(value: 'noprice', child: Text("Без цен")),
+                if (showPrices) ...[
+                  const PopupMenuItem(value: 'price', child: Text("С ценами")),
+                  if (markupPercent > 0)
+                    PopupMenuItem(
+                        value: 'markup',
+                        child: Text(
+                            "С наценкой (+${markupPercent.toStringAsFixed(0)}%)")),
+                ]
+              ],
+              (val) async {
+                Navigator.pop(context);
+                await _processAction(context, ref,
+                    isWork: false, type: val, share: share);
+              },
+              enabled: hasMaterials,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _processAction(BuildContext context, WidgetRef ref,
+      {required bool isWork, required String type, required bool share}) async {
     final project = await ref.read(projectByIdProvider(projectId).future);
     if (!context.mounted) return;
 
-    // Construct Text
     String text = "";
     final stageTitle = EstimateReportGenerator.formatStageTitle(stage.title);
 
     if (isWork) {
-      String titleType = (type == 'employer') ? "Работы (Ты)" : "Работы";
-      final title = "${project.address} - $titleType - $stageTitle";
-      final quantityType = type; // 'total' or 'employer'
+      // Works Logic
+      String titleType = "Работы";
+      String qType = 'total'; // default
 
+      if (type == 'total') {
+        titleType = "Работы";
+        qType = 'total';
+      } else if (type == 'employer') {
+        titleType = "Работы (ТВОИ)";
+        qType = 'employer';
+      } else if (type == 'our') {
+        titleType = "Работы (НАШИ)";
+        qType = 'our';
+      }
+
+      final title = "${project.address} - $titleType - $stageTitle";
       text = EstimateReportGenerator.generateReportText(works, title,
-          showPrices: true,
-          quantityType: quantityType,
+          showPrices: true, // Works always show prices
+          quantityType: qType,
           note: stage.workRemarks);
     } else {
+      // Materials Logic
       final title = "${project.address} - Материалы - $stageTitle";
+
+      // Default to current screen capability
+      bool usePrices = showPrices;
+      double useMarkup = markupPercent > 0 ? markupPercent : 0;
+
+      if (type == 'noprice') {
+        usePrices = false;
+        useMarkup = 0;
+      } else if (type == 'price') {
+        usePrices = true;
+        useMarkup = 0;
+      } else if (type == 'markup') {
+        usePrices = true;
+        useMarkup = markupPercent;
+      }
+      // If type == 'total', we use defaults above
+
       text = EstimateReportGenerator.generateReportText(
         materials,
         title,
-        showPrices: showPrices,
-        markup: markupPercent > 0
-            ? markupPercent
-            : 0, // Renamed markupPercent to markup
+        showPrices: usePrices,
+        markup: useMarkup,
         quantityType: 'total',
         note: stage.materialRemarks,
       );
@@ -294,91 +383,19 @@ class EstimateTextActionsDialog extends ConsumerWidget
     }
   }
 
-  Future<void> _showReport(BuildContext context, WidgetRef ref) async {
+  void _showReport(BuildContext context, WidgetRef ref) async {
     final project = await ref.read(projectByIdProvider(projectId).future);
     if (!context.mounted) return;
 
-    // Manually generate full report
-    final stageTitle = EstimateReportGenerator.formatStageTitle(stage.title);
-    final StringBuffer buffer = StringBuffer();
-
-    // Works Part
-    if (works.isNotEmpty) {
-      final workTitle = "${project.address} - Работы - $stageTitle";
-      final workText = EstimateReportGenerator.generateReportText(
-          works, workTitle,
-          showPrices: true, // Works always show prices in full report usually
-          quantityType: 'total',
-          note: stage.workRemarks);
-      buffer.writeln(workText);
-      buffer.writeln("\n\n");
-    }
-
-    // Materials Part
-    if (materials.isNotEmpty) {
-      final matTitle = "${project.address} - Материалы - $stageTitle";
-      final matText = EstimateReportGenerator.generateReportText(
-          materials, matTitle,
-          showPrices: showPrices,
-          markup: markupPercent,
-          quantityType: 'total',
-          note: stage.materialRemarks);
-      buffer.writeln(matText);
-    }
-
-    final text = buffer.toString();
-
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          width: 600,
-          height: 800,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Предварительный просмотр",
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close))
-                ],
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: SingleChildScrollView(
-                    child: SelectableText(text,
-                        style: const TextStyle(fontFamily: 'RobotoMono')),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  // Share Full Report button? Maybe later.
-                  ElevatedButton.icon(
-                    onPressed: () => _copyText(context, text),
-                    icon: const Icon(Icons.copy),
-                    label: const Text("Копировать"),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+      builder: (context) => ReportPreviewDialog(
+        project: project,
+        stage: stage,
+        works: works,
+        materials: materials,
+        showPrices: showPrices,
+        markupPercent: markupPercent,
       ),
     );
   }
@@ -388,6 +405,261 @@ class EstimateTextActionsDialog extends ConsumerWidget
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Скопировано в буфер обмена!")),
+    );
+  }
+}
+
+class ReportPreviewDialog extends StatefulWidget {
+  final dynamic project; // Using dynamic to avoid import issues if type obscure
+  final StageModel stage;
+  final List<EstimateItemModel> works;
+  final List<EstimateItemModel> materials;
+  final bool showPrices;
+  final double markupPercent;
+
+  const ReportPreviewDialog({
+    super.key,
+    required this.project,
+    required this.stage,
+    required this.works,
+    required this.materials,
+    required this.showPrices,
+    required this.markupPercent,
+  });
+
+  @override
+  State<ReportPreviewDialog> createState() => _ReportPreviewDialogState();
+}
+
+class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
+  late String _viewMode;
+
+  List<String> get _availableModes {
+    final modes = <String>[];
+    final hasPartnerWorks = widget.works.any((w) => w.employerQuantity > 0);
+
+    // Works
+    if (widget.works.isNotEmpty) {
+      modes.add('work_total');
+      if (hasPartnerWorks) {
+        modes.add('work_employer');
+      }
+      // Customer requested "Our" works to be shown if works exist, regardless of partner share
+      modes.add('work_our');
+    }
+
+    // Materials
+    if (widget.materials.isNotEmpty) {
+      // Customer requested "No Price" to be shown if materials exist, regardless of toggle
+      modes.add('mat_noprice');
+
+      if (widget.showPrices) {
+        modes.add('mat_price');
+        if (widget.markupPercent > 0) {
+          modes.add('mat_markup');
+        }
+      }
+    }
+    return modes;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final modes = _availableModes;
+    _viewMode = modes.isNotEmpty ? modes.first : 'none';
+  }
+
+  String get _currentText {
+    final stageTitle =
+        EstimateReportGenerator.formatStageTitle(widget.stage.title);
+    final address = widget.project.address ?? 'Адрес не указан';
+
+    switch (_viewMode) {
+      case 'work_total':
+        return EstimateReportGenerator.generateReportText(
+            widget.works, "$address - Работы - $stageTitle",
+            showPrices: true,
+            quantityType: 'total',
+            note: widget.stage.workRemarks);
+      case 'work_employer':
+        return EstimateReportGenerator.generateReportText(
+            widget.works, "$address - Работы (ТВОИ) - $stageTitle",
+            showPrices: true,
+            quantityType: 'employer',
+            note: widget.stage.workRemarks);
+      case 'work_our':
+        return EstimateReportGenerator.generateReportText(
+            widget.works, "$address - Работы (НАШИ) - $stageTitle",
+            showPrices: true,
+            quantityType: 'our',
+            note: widget.stage.workRemarks);
+      case 'mat_noprice':
+        return EstimateReportGenerator.generateReportText(
+            widget.materials, "$address - Материалы - $stageTitle",
+            showPrices: false,
+            markup: 0,
+            quantityType: 'total',
+            note: widget.stage.materialRemarks);
+      case 'mat_price':
+        return EstimateReportGenerator.generateReportText(
+            widget.materials, "$address - Материалы - $stageTitle",
+            showPrices: true,
+            markup: 0,
+            quantityType: 'total',
+            note: widget.stage.materialRemarks);
+      case 'mat_markup':
+        return EstimateReportGenerator.generateReportText(
+            widget.materials, "$address - Материалы - $stageTitle",
+            showPrices: true,
+            markup: widget.markupPercent,
+            quantityType: 'total',
+            note: widget.stage.materialRemarks);
+      default:
+        return "";
+    }
+  }
+
+  MaterialColor get _themeColor {
+    if (_viewMode.startsWith('work')) return Colors.green;
+    return Colors.blue;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final modes = _availableModes;
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        width: 720, // Increased width (~20% more than 600)
+        height: 800,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Предварительный просмотр",
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.black))
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Chips (Wrap for responsiveness)
+            if (modes.isNotEmpty) ...[
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: modes.map((mode) {
+                  String label = "";
+                  MaterialColor color = Colors.grey;
+
+                  switch (mode) {
+                    case 'work_total':
+                      label = "Заказчик";
+                      color = Colors.green;
+                      break;
+                    case 'work_employer':
+                      label = "Контрагент";
+                      color = Colors.green;
+                      break;
+                    case 'work_our':
+                      label = "Наши";
+                      color = Colors.green;
+                      break;
+                    case 'mat_noprice':
+                      label = "Без цен";
+                      color = Colors.blue;
+                      break;
+                    case 'mat_price':
+                      label = "С ценами";
+                      color = Colors.blue;
+                      break;
+                    case 'mat_markup':
+                      label = "С наценкой";
+                      color = Colors.blue;
+                      break;
+                  }
+                  return _buildChip(mode, label, color);
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
+              Divider(color: _themeColor.withOpacity(0.5), thickness: 2),
+              const SizedBox(height: 12),
+            ],
+
+            // Content
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: SingleChildScrollView(
+                  child: SelectableText(_currentText,
+                      style: const TextStyle(
+                          fontFamily: 'RobotoMono', fontSize: 13)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Copy Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _themeColor.withOpacity(0.1),
+                    foregroundColor: _themeColor.shade800,
+                    elevation: 0,
+                  ),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: _currentText));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Скопировано!")),
+                    );
+                  },
+                  icon: const Icon(Icons.copy, size: 18),
+                  label: const Text("Копировать"),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChip(String mode, String label, MaterialColor color) {
+    final isSelected = _viewMode == mode;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (val) {
+        if (val) setState(() => _viewMode = mode);
+      },
+      selectedColor: color.shade200,
+      backgroundColor: color.shade50, // Always colored background, lighter
+      labelStyle: TextStyle(
+        color:
+            isSelected ? color.shade900 : color.shade700, // Always colored text
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      side: BorderSide(
+        color: isSelected
+            ? color.shade400
+            : color.shade200, // Always colored border
+      ),
     );
   }
 }
