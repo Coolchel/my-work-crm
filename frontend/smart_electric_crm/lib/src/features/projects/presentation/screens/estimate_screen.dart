@@ -409,211 +409,318 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
+            constraints: const BoxConstraints(maxWidth: 420),
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
-                    child: Text("Действия",
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: themeColor)),
+                    child: Center(
+                      child: Text("Действия",
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: themeColor)),
+                    ),
                   ),
-                  _buildSectionHeader("Просмотреть в txt"),
-                  _buildActionTile(
-                      context, Icons.description_outlined, "Все сметы", () {
-                    Navigator.pop(context);
-                    _showReport();
-                  }),
-                  const Divider(indent: 16, endIndent: 16),
-                  _buildSectionHeader("Копировать в txt"),
-                  _buildActionTile(
-                      context, Icons.copy_all, "Работы (Для заказчика)",
-                      () async {
-                    Navigator.pop(context);
-                    final project = await ref
-                        .read(projectByIdProvider(widget.projectId).future);
-                    final stageTitle =
-                        await _formatStageTitle(widget.stage.title);
-                    final title = "${project.address} - Работы - $stageTitle";
 
-                    final text = _generateReportText(_works, title,
-                        showPrices: true,
-                        quantityType: 'total',
-                        note: _stage.workRemarks);
-                    _copyText(text);
-                  }, dense: true),
-                  _buildActionTile(
-                      context, Icons.copy_all, "Работы (Контрагент)", () async {
-                    Navigator.pop(context);
-                    final project = await ref
-                        .read(projectByIdProvider(widget.projectId).future);
-                    final stageTitle =
-                        await _formatStageTitle(widget.stage.title);
-                    final title =
-                        "${project.address} - Работы - $stageTitle - ТВОИ";
-
-                    final text = _generateReportText(_works, title,
-                        showPrices: true,
-                        quantityType: 'employer',
-                        note: _stage.workRemarks);
-                    _copyText(text);
-                  }, dense: true),
-                  _buildActionTile(context, Icons.copy_all, "Материалы без цен",
-                      () async {
-                    Navigator.pop(context);
-                    final project = await ref
-                        .read(projectByIdProvider(widget.projectId).future);
-                    final stageTitle =
-                        await _formatStageTitle(widget.stage.title);
-
-                    final title =
-                        "${project.address} - Материалы - $stageTitle";
-
-                    final text = _generateReportText(_materials, title,
-                        showPrices: false,
-                        markup: 0,
-                        quantityType: 'total',
-                        note: _stage.materialRemarks);
-                    _copyText(text);
-                  }, dense: true),
-                  const Divider(indent: 16, endIndent: 16),
-                  _buildSectionHeader("PDF Экспорт"),
-
-                  // Works Actions
-                  _buildActionTile(
-                      context, Icons.picture_as_pdf, "Работы (Заказчик)",
-                      () async {
-                    Navigator.pop(context);
-                    final project = await ref
-                        .read(projectByIdProvider(widget.projectId).future);
-                    final stageTitle =
-                        await _formatStageTitle(widget.stage.title);
-                    final title = "${project.address} - Работы - $stageTitle";
-
-                    _printPdf(
-                      items: _works,
-                      title: title,
-                      showPrices: true,
-                      isWork: true,
-                      quantityType: 'total',
-                      remarks: _stage.workRemarks,
-                    );
-                  }),
-                  _buildActionTile(
-                      context, Icons.picture_as_pdf, "Работы (Контрагент)",
-                      () async {
-                    Navigator.pop(context);
-                    final project = await ref
-                        .read(projectByIdProvider(widget.projectId).future);
-                    final stageTitle =
-                        await _formatStageTitle(widget.stage.title);
-                    // Add suffix similar to report
-                    final title =
-                        "${project.address} - Работы - $stageTitle - ТВОИ";
-
-                    _printPdf(
-                      items: _works,
-                      title: title,
-                      showPrices: true,
-                      isWork: true,
-                      quantityType: 'employer',
-                      remarks: _stage.workRemarks,
-                    );
-                  }),
-                  _buildActionTile(
-                      context, Icons.picture_as_pdf, "Работы (Наши)", () async {
-                    Navigator.pop(context);
-                    final project = await ref
-                        .read(projectByIdProvider(widget.projectId).future);
-                    final stageTitle =
-                        await _formatStageTitle(widget.stage.title);
-                    final title = "${project.address} - Работы - $stageTitle";
-
-                    _printPdf(
-                      items: _works,
-                      title: title,
-                      showPrices: true,
-                      isWork: true,
-                      quantityType: 'our',
-                      remarks: _stage.workRemarks,
-                    );
-                  }),
-
-                  const Divider(indent: 16, endIndent: 16),
-
-                  // Materials Actions
-                  _buildActionTile(
-                      context, Icons.picture_as_pdf, "Материалы (Без цен)",
-                      () async {
-                    Navigator.pop(context);
-                    final project = await ref
-                        .read(projectByIdProvider(widget.projectId).future);
-                    final stageTitle =
-                        await _formatStageTitle(widget.stage.title);
-                    final title =
-                        "${project.address} - Материалы - $stageTitle";
-
-                    _printPdf(
-                      items: _materials,
-                      title: title,
-                      showPrices: false,
-                      isWork: false,
-                      quantityType: 'total',
-                      remarks: _stage.materialRemarks,
-                    );
-                  }),
-                  _buildActionTile(
-                      context, Icons.picture_as_pdf, "Материалы (С ценами)",
-                      () async {
-                    Navigator.pop(context);
-                    final project = await ref
-                        .read(projectByIdProvider(widget.projectId).future);
-                    final stageTitle =
-                        await _formatStageTitle(widget.stage.title);
-                    final title =
-                        "${project.address} - Материалы - $stageTitle";
-
-                    _printPdf(
-                      items: _materials,
-                      title: title,
-                      showPrices: true,
-                      markupPercent: 0, // Base prices
-                      isWork: false,
-                      quantityType: 'total',
-                      remarks: _stage.materialRemarks,
-                    );
-                  }),
-                  if (_markupPercent > 0)
-                    _buildActionTile(context, Icons.picture_as_pdf,
-                        "Материалы (+ $_markupPercent%)", () async {
+                  // Section 0: View
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        Icon(Icons.description,
+                            size: 18, color: Colors.grey.shade600),
+                        const SizedBox(width: 8),
+                        Text("Просмотр",
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade600)),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _buildCompactAction(
+                        context, Icons.list_alt, "Все сметы (TXT)", () {
                       Navigator.pop(context);
-                      final project = await ref
-                          .read(projectByIdProvider(widget.projectId).future);
-                      final stageTitle =
-                          await _formatStageTitle(widget.stage.title);
-                      final title =
-                          "${project.address} - Материалы - $stageTitle";
-
-                      _printPdf(
-                        items: _materials,
-                        title: title,
-                        showPrices: true,
-                        markupPercent: _markupPercent,
-                        isWork: false,
-                        quantityType: 'total',
-                        remarks: _stage.materialRemarks,
-                      );
+                      _showReport();
                     }),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("Закрыть",
-                        style: TextStyle(color: Colors.grey)),
+                  ),
+                  const Divider(indent: 16, endIndent: 16, height: 24),
+
+                  // Section 1: Copy
+                  Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        Icon(Icons.copy, size: 18, color: Colors.grey.shade600),
+                        const SizedBox(width: 8),
+                        Text("Копирование",
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade600)),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildCompactAction(context, Icons.person, "Заказчик",
+                            () async {
+                          Navigator.pop(context);
+                          final project = await ref.read(
+                              projectByIdProvider(widget.projectId).future);
+                          final stageTitle =
+                              await _formatStageTitle(widget.stage.title);
+                          final title =
+                              "${project.address} - Работы - $stageTitle";
+                          final text = _generateReportText(_works, title,
+                              showPrices: true,
+                              quantityType: 'total',
+                              note: _stage.workRemarks);
+                          _copyText(text);
+                        }),
+                        _buildCompactAction(context, Icons.copy, "Контрагент",
+                            () async {
+                          Navigator.pop(context);
+                          final project = await ref.read(
+                              projectByIdProvider(widget.projectId).future);
+                          final stageTitle =
+                              await _formatStageTitle(widget.stage.title);
+                          final title =
+                              "${project.address} - Работы - $stageTitle - ТВОИ";
+                          final text = _generateReportText(_works, title,
+                              showPrices: true,
+                              quantityType: 'employer',
+                              note: _stage.workRemarks);
+                          _copyText(text);
+                        }),
+                        _buildCompactAction(
+                            context, Icons.assignment, "Материалы", () async {
+                          Navigator.pop(context);
+                          final project = await ref.read(
+                              projectByIdProvider(widget.projectId).future);
+                          final stageTitle =
+                              await _formatStageTitle(widget.stage.title);
+                          final title =
+                              "${project.address} - Материалы - $stageTitle";
+                          final text = _generateReportText(_materials, title,
+                              showPrices: false,
+                              markup: 0,
+                              quantityType: 'total',
+                              note: _stage.materialRemarks);
+                          _copyText(text);
+                        }),
+                      ],
+                    ),
+                  ),
+                  const Divider(indent: 16, endIndent: 16, height: 24),
+
+                  // Section 2: PDF Export
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header for PDF
+                        Row(
+                          children: [
+                            Icon(Icons.picture_as_pdf,
+                                size: 18, color: Colors.grey.shade600),
+                            const SizedBox(width: 8),
+                            Text("Экспорт в PDF",
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.grey.shade600)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Buttons Row
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            // Works Popup
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Theme(
+                                data: Theme.of(context).copyWith(
+                                  popupMenuTheme: PopupMenuThemeData(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                    elevation: 4,
+                                  ),
+                                ),
+                                child: PopupMenuButton<String>(
+                                  tooltip: "Выберите тип отчета",
+                                  offset: const Offset(0, 36),
+                                  child: Material(
+                                    color: Colors.green.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                    clipBehavior:
+                                        Clip.hardEdge, // Fix hover overflow
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 6), // Smaller padding
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text("Работы",
+                                              style: TextStyle(
+                                                  color: Colors.green.shade800,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize:
+                                                      12)), // Smaller font
+                                          const SizedBox(width: 4),
+                                          Icon(Icons.arrow_drop_down,
+                                              color: Colors.green.shade800,
+                                              size: 18),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  onSelected: (val) {
+                                    Navigator.pop(context);
+                                    if (val == 'total') {
+                                      _printPdfWithParams(
+                                          isWork: true, type: 'total');
+                                    } else if (val == 'employer') {
+                                      _printPdfWithParams(
+                                          isWork: true, type: 'employer');
+                                    } else if (val == 'our') {
+                                      _printPdfWithParams(
+                                          isWork: true, type: 'our');
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                        value: 'total',
+                                        child: Text("Для Заказчика (Полный)")),
+                                    const PopupMenuItem(
+                                        value: 'employer',
+                                        child: Text("Для Контрагента (Доля)")),
+                                    const PopupMenuItem(
+                                        value: 'our',
+                                        child: Text("Наши (Остаток)")),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // Materials Popup
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Theme(
+                                data: Theme.of(context).copyWith(
+                                  popupMenuTheme: PopupMenuThemeData(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
+                                    elevation: 4,
+                                  ),
+                                ),
+                                child: PopupMenuButton<String>(
+                                  tooltip: "Выберите тип отчета",
+                                  offset: const Offset(0, 36),
+                                  child: Material(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                    clipBehavior: Clip.hardEdge,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 6),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text("Материалы",
+                                              style: TextStyle(
+                                                  color: Colors.blue.shade800,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12)),
+                                          const SizedBox(width: 4),
+                                          Icon(Icons.arrow_drop_down,
+                                              color: Colors.blue.shade800,
+                                              size: 18),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  onSelected: (val) {
+                                    Navigator.pop(context);
+                                    if (val == 'noprice') {
+                                      _printPdfWithParams(
+                                          isWork: false, showPrices: false);
+                                    } else if (val == 'price') {
+                                      _printPdfWithParams(
+                                          isWork: false, showPrices: true);
+                                    } else if (val == 'markup') {
+                                      _printPdfWithParams(
+                                          isWork: false,
+                                          showPrices: true,
+                                          markup: _markupPercent);
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                        value: 'noprice',
+                                        child: Text("Без цен (Количество)")),
+                                    const PopupMenuItem(
+                                        value: 'price',
+                                        child: Text("С ценами (Закуп)")),
+                                    if (_markupPercent > 0)
+                                      PopupMenuItem(
+                                          value: 'markup',
+                                          child: Text(
+                                              "С наценкой (+${_markupPercent.toStringAsFixed(0)}%)")),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Section 3: Close
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: InkWell(
+                      onTap: () => Navigator.pop(context),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.close,
+                                size: 18, color: Colors.grey),
+                            const SizedBox(width: 8),
+                            const Text("Закрыть",
+                                style: TextStyle(
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
                   )
                 ],
               ),
@@ -624,43 +731,64 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     );
   }
 
+  Widget _buildCompactAction(
+      BuildContext context, IconData icon, String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade300)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: Colors.grey.shade700),
+            const SizedBox(width: 8),
+            Text(label, style: const TextStyle(fontSize: 12)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _printPdfWithParams({
+    required bool isWork,
+    bool showPrices = true,
+    double markup = 0,
+    String type = 'total',
+  }) async {
+    final items = isWork ? _works : _materials;
+    String titleType = isWork ? "Работы" : "Материалы";
+    String titleSuffix = "";
+    if (type == 'employer') titleSuffix = " - ТВОИ";
+
+    // Fetch full context for title
+    final project =
+        await ref.read(projectByIdProvider(widget.projectId).future);
+    final stageTitle = await _formatStageTitle(widget.stage.title);
+    final title = "${project.address} - $titleType - $stageTitle$titleSuffix";
+
+    final remarks =
+        isWork ? widget.stage.workRemarks : widget.stage.materialRemarks;
+
+    await _printPdf(
+        items: items,
+        title: title,
+        showPrices: showPrices,
+        isWork: isWork,
+        quantityType: type,
+        remarks: remarks,
+        markupPercent: markup);
+  }
+
   Future<void> _copyText(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Скопировано в буфер обмена!")),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
-      child: Align(
-          alignment: Alignment.centerLeft,
-          child: Text(title,
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade600))),
-    );
-  }
-
-  Widget _buildActionTile(
-      BuildContext context, IconData icon, String title, VoidCallback onTap,
-      {bool dense = false, bool enabled = true}) {
-    return ListTile(
-      leading: Icon(icon,
-          color: enabled ? Colors.grey.shade700 : Colors.grey.shade300,
-          size: dense ? 20 : 24),
-      title: Text(title,
-          style: TextStyle(
-              fontSize: dense ? 14 : 16,
-              color: enabled ? Colors.black87 : Colors.grey.shade300)),
-      onTap: enabled ? onTap : null,
-      dense: dense,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-      horizontalTitleGap: 12,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
 

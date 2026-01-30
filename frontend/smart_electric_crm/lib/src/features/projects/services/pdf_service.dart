@@ -62,7 +62,11 @@ class PdfService {
     pdf.addPage(
       pw.MultiPage(
         pageTheme: pw.PageTheme(
-          margin: const pw.EdgeInsets.all(40),
+          margin: const pw.EdgeInsets.only(
+              left: 60,
+              top: 40,
+              right: 30,
+              bottom: 40), // Increased left margin
           theme: pw.ThemeData.withFont(
             base: font,
             bold: fontBold,
@@ -82,54 +86,73 @@ class PdfService {
                   children: [
                     pw.Container(
                       width: double.infinity,
-                      padding:
-                          const pw.EdgeInsets.only(top: 10, bottom: 5, left: 0),
+                      decoration: const pw.BoxDecoration(
+                        color: PdfColors.grey100,
+                        border: pw.Border(
+                            left: pw.BorderSide(
+                                color: PdfColors.blueGrey800, width: 2)),
+                      ),
+                      padding: const pw.EdgeInsets.symmetric(
+                          vertical: 1, horizontal: 6), // Reduced padding
+                      margin: const pw.EdgeInsets.only(bottom: 4),
                       child: pw.Text(cat,
                           style: pw.TextStyle(
                               font: fontBold,
-                              fontSize: 12,
+                              fontSize: 9, // Smaller font
                               color: PdfColors.blueGrey800)),
                     ),
                     _buildTable(catItems, showPrices, markupPercent, font,
                         fontBold, isWork, getQty),
-                    pw.SizedBox(height: 10),
+                    pw.SizedBox(height: 20),
                   ]);
             }),
 
             // Grand Total
             if (showPrices)
               pw.Padding(
-                padding: const pw.EdgeInsets.only(top: 20),
+                padding: const pw.EdgeInsets.only(top: 15),
                 child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.end,
                   crossAxisAlignment: pw.CrossAxisAlignment.center,
                   children: [
                     pw.Text("ИТОГО: ",
-                        style: pw.TextStyle(font: fontBold, fontSize: 14)),
+                        style: pw.TextStyle(
+                            font: fontBold,
+                            fontSize: 10,
+                            color: PdfColors.grey700)), // Less flashy
+                    pw.SizedBox(width: 8),
                     pw.Text(
                         _calculateTotal(
                             displayedItems, markupPercent, isWork, getQty),
-                        style: pw.TextStyle(font: fontBold, fontSize: 16)),
+                        style: pw.TextStyle(
+                            font: fontBold,
+                            fontSize: 10, // Smaller font
+                            color: PdfColors.grey700)),
                   ],
                 ),
               ),
 
             // Remarks
             if (remarks != null && remarks.trim().isNotEmpty) ...[
-              pw.SizedBox(height: 30),
-              pw.Text("Примечание:",
-                  style: pw.TextStyle(font: fontBold, fontSize: 12)),
-              pw.SizedBox(height: 5),
-              pw.Text(remarks, style: const pw.TextStyle(fontSize: 10)),
+              pw.SizedBox(height: 20),
+              pw.Text("* Примечание:",
+                  style: pw.TextStyle(
+                      font: fontBold,
+                      fontSize: 8,
+                      color: PdfColors.grey600)), // Smaller, grey
+              pw.SizedBox(height: 2),
+              pw.Text(remarks,
+                  style: const pw.TextStyle(
+                      fontSize: 7, color: PdfColors.grey600)),
             ],
 
             // Footer
-            pw.SizedBox(height: 40),
-            pw.Divider(color: PdfColors.grey300),
+            pw.SizedBox(height: 30),
+            pw.Divider(color: PdfColors.grey300, thickness: 0.5),
             pw.Center(
-                child: pw.Text("Smart Electric System",
+                child: pw.Text("Электромонтажные работы", // Changed footer
                     style: const pw.TextStyle(
-                        fontSize: 10, color: PdfColors.grey))),
+                        fontSize: 8, color: PdfColors.grey))),
           ];
         },
       ),
@@ -145,27 +168,27 @@ class PdfService {
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
-            pw.Text("Smart Electric",
-                style: pw.TextStyle(
-                    font: fontBold,
-                    fontSize: 20,
-                    color: PdfColors.blueGrey900)),
+            pw.Container(
+              decoration: const pw.BoxDecoration(
+                  border: pw.Border(
+                      bottom: pw.BorderSide(
+                          color: PdfColors.blueGrey800, width: 1))),
+              padding: const pw.EdgeInsets.only(bottom: 2),
+              child: pw.Text("Электромонтаж",
+                  style: pw.TextStyle(
+                      font: fontBold, fontSize: 14, color: PdfColors.black)),
+            ),
             pw.Text(DateFormat('dd.MM.yyyy').format(DateTime.now()),
                 style:
-                    const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                    const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
           ],
         ),
-        pw.Container(
-            height: 2,
-            width: 100,
-            color: PdfColors.blueAccent,
-            margin: const pw.EdgeInsets.symmetric(vertical: 5)),
-        pw.SizedBox(height: 10),
+        pw.SizedBox(height: 16),
         pw.Center(
             child: pw.Text(title,
-                style: pw.TextStyle(font: fontBold, fontSize: 16),
+                style: pw.TextStyle(font: fontBold, fontSize: 13),
                 textAlign: pw.TextAlign.center)),
-        pw.Divider(thickness: 0.5, color: PdfColors.grey300),
+        pw.SizedBox(height: 8),
       ],
     );
   }
@@ -184,22 +207,24 @@ class PdfService {
             outside: const pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
         columnWidths: {
           0: const pw.FlexColumnWidth(4), // Name
-          1: const pw.FixedColumnWidth(50), // Qty
-          2: const pw.FixedColumnWidth(40), // Unit
-          if (showPrices) 3: const pw.FixedColumnWidth(70), // Price
-          if (showPrices) 4: const pw.FixedColumnWidth(80), // Sum
+          1: const pw.FixedColumnWidth(40), // Qty (Reduced)
+          2: const pw.FixedColumnWidth(30), // Unit (Reduced)
+          if (showPrices) 3: const pw.FixedColumnWidth(60), // Price (Reduced)
+          if (showPrices) 4: const pw.FixedColumnWidth(70), // Sum (Reduced)
         },
         children: [
           // Header Row
           pw.TableRow(
-              decoration: const pw.BoxDecoration(color: PdfColors.blueGrey50),
+              decoration: const pw.BoxDecoration(color: PdfColors.grey100),
               children: [
                 _cell("Наименование", fontBold,
                     align: pw.TextAlign.left, isHeader: true),
                 _cell("Кол-во", fontBold, isHeader: true),
                 _cell("Ед.", fontBold, isHeader: true),
                 if (showPrices) _cell("Цена", fontBold, isHeader: true),
-                if (showPrices) _cell("Сумма", fontBold, isHeader: true),
+                if (showPrices)
+                  _cell("Сумма", fontBold,
+                      isHeader: true), // Changed from "Сумма"
               ]),
           // Data Rows with Zebra Striping
           ...items.asMap().entries.map((entry) {
@@ -232,12 +257,12 @@ class PdfService {
   pw.Widget _cell(String text, pw.Font font,
       {pw.TextAlign align = pw.TextAlign.center, bool isHeader = false}) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
       child: pw.Text(text,
           style: pw.TextStyle(
               font: font,
-              fontSize: 10,
-              color: isHeader ? PdfColors.blueGrey900 : PdfColors.black),
+              fontSize: 8, // Reduced font size
+              color: isHeader ? PdfColors.black : PdfColors.black),
           textAlign: align),
     );
   }
