@@ -25,6 +25,7 @@
 - **Engineering Map:** Distinct module (ShieldGroups, LedZones, Multimedia) for technical documentation.
 - **Automation:** Engineering data must be linkable to CatalogItems for automatic estimate generation.
 - **Financials:** Dual view (Client view vs. Internal view for calculations with **Partner (Контрагент)**). "Контрагент" is the standard term across the app.
+- **Smart Calculator:** Logic for work volume entry: Users input any 2 of 3 values (Total, Me, Partner), and the 3rd is auto-calculated (Total = Me + Partner).
 - **Numerical Formatting:** All amounts, quantities, and percentages must be formatted to a maximum of 2 decimal places, with trailing zeros removed (e.g., `10.00` becomes `10`, `10.50` becomes `10.5`). <!-- id: prd_formatting -->
 - **Grouped Estimates:** Items in estimates must be grouped by their **Catalog Category** (e.g., "Cables", "Installation") for better readability.
 - **Manual Data Entry:** Important text fields like **Internal Notes** and **Public Remarks** use manual save via a button to prevent data loss or accidental overwrites during synchronization. Internal Notes are for the team, Public Remarks appear in PDF/Reports.
@@ -33,4 +34,5 @@
 - Follow PEP8.
 - Use Django built-in Permission classes.
 - Design: Material 3, focus on expert-level UX (speed of input, normalization of data).
+- **Aesthetics:** Premium/Rich look (Gradients, Glassmorphism, specific Color Palettes) is a critical requirement.
 - Data Integrity: Always use input normalization (e.g., RegEx for technical units) on the backend.

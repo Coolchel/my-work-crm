@@ -313,8 +313,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
             itemType: itemType,
             name: catalogItem.name,
             unit: catalogItem.unit,
-            pricePerUnit: catalogItem.defaultPrice,
-            currency: catalogItem.defaultCurrency,
+            pricePerUnit:
+                quantities['price']?.toDouble() ?? catalogItem.defaultPrice,
+            currency: quantities['currency'] as String? ??
+                catalogItem.defaultCurrency,
             totalQuantity: quantities['total']?.toDouble() ?? 0.0,
             employerQuantity: quantities['employer']?.toDouble() ?? 0.0,
             markupPercent: 0,
