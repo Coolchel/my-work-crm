@@ -400,7 +400,99 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
 
   void _showActionsDialog(BuildContext context) {
-    final themeColor = _activeColor;
+    // Helper to build section header
+    Widget buildHeader(IconData icon, String title) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: Colors.grey.shade600),
+            const SizedBox(width: 8),
+            Text(title,
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade600)),
+          ],
+        ),
+      );
+    }
+
+    // Helper for standard action button
+    Widget buildBtn(String label, Color bg, Color fg, VoidCallback onTap,
+        {bool isGradient = false}) {
+      return Container(
+        height: 38,
+        decoration: BoxDecoration(
+          color: isGradient ? null : bg,
+          gradient: isGradient
+              ? const LinearGradient(colors: [Colors.green, Colors.blue])
+              : null,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Center(
+              child: Text(label,
+                  style: TextStyle(
+                      color: fg, fontSize: 12, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Helper for Popup Button (Works/Materials)
+    Widget buildPopupBtn(String label, Color bg, Color fg,
+        List<PopupMenuEntry<String>> items, ValueChanged<String> onSelected) {
+      return Container(
+        height: 38,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              popupMenuTheme: PopupMenuThemeData(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                elevation: 4,
+              ),
+            ),
+            child: PopupMenuButton<String>(
+              tooltip: label,
+              offset: const Offset(0, 38),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              onSelected: onSelected,
+              itemBuilder: (context) => items,
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(label,
+                        style: TextStyle(
+                            color: fg,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 4),
+                    Icon(Icons.arrow_drop_down, color: fg, size: 16),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     showDialog(
       context: context,
@@ -411,315 +503,189 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+              padding: const EdgeInsets.fromLTRB(8, 24, 8, 12),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
+                  // Title
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
                     child: Center(
                       child: Text("Действия",
                           style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: themeColor)),
+                              color: Colors.black)),
                     ),
                   ),
 
-                  // Section 0: View
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Row(
-                      children: [
-                        Icon(Icons.description,
-                            size: 18, color: Colors.grey.shade600),
-                        const SizedBox(width: 8),
-                        Text("Просмотр",
-                            style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade600)),
-                      ],
-                    ),
-                  ),
+                  // 1. View
+                  buildHeader(Icons.remove_red_eye, "Просмотр"),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _buildCompactAction(
-                        context, Icons.list_alt, "Все сметы (TXT)", () {
+                    child: buildBtn(
+                        "Все сметы (TXT)", Colors.transparent, Colors.white,
+                        () {
                       Navigator.pop(context);
                       _showReport();
-                    }),
+                    }, isGradient: true),
                   ),
-                  const Divider(indent: 16, endIndent: 16, height: 24),
 
-                  // Section 1: Copy
+                  // 2. Copy
+                  buildHeader(Icons.copy, "Копирование"),
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        Icon(Icons.copy, size: 18, color: Colors.grey.shade600),
+                        Expanded(
+                          child: buildBtn("Заказчик", Colors.green.shade50,
+                              Colors.green.shade800, () async {
+                            Navigator.pop(context);
+                            final project = await ref.read(
+                                projectByIdProvider(widget.projectId).future);
+                            final stageTitle =
+                                await _formatStageTitle(widget.stage.title);
+                            final title =
+                                "${project.address} - Работы - $stageTitle";
+                            final text = _generateReportText(_works, title,
+                                showPrices: true,
+                                quantityType: 'total',
+                                note: _stage.workRemarks);
+                            _copyText(text);
+                          }),
+                        ),
                         const SizedBox(width: 8),
-                        Text("Копирование",
-                            style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade600)),
+                        Expanded(
+                          child: buildBtn("Контрагент", Colors.green.shade50,
+                              Colors.green.shade800, () async {
+                            Navigator.pop(context);
+                            final project = await ref.read(
+                                projectByIdProvider(widget.projectId).future);
+                            final stageTitle =
+                                await _formatStageTitle(widget.stage.title);
+                            final title =
+                                "${project.address} - Работы - $stageTitle - ТВОИ";
+                            final text = _generateReportText(_works, title,
+                                showPrices: true,
+                                quantityType: 'employer',
+                                note: _stage.workRemarks);
+                            _copyText(text);
+                          }),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: buildBtn("Материалы", Colors.blue.shade50,
+                              Colors.blue.shade800, () async {
+                            Navigator.pop(context);
+                            final project = await ref.read(
+                                projectByIdProvider(widget.projectId).future);
+                            final stageTitle =
+                                await _formatStageTitle(widget.stage.title);
+                            final title =
+                                "${project.address} - Материалы - $stageTitle";
+                            final text = _generateReportText(_materials, title,
+                                showPrices: false,
+                                markup: 0,
+                                quantityType: 'total',
+                                note: _stage.materialRemarks);
+                            _copyText(text);
+                          }),
+                        ),
                       ],
                     ),
                   ),
+
+                  // 3. PDF Export
+                  buildHeader(Icons.picture_as_pdf, "Экспорт в PDF"),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                    child: Row(
                       children: [
-                        _buildCompactAction(context, Icons.person, "Заказчик",
-                            () async {
-                          Navigator.pop(context);
-                          final project = await ref.read(
-                              projectByIdProvider(widget.projectId).future);
-                          final stageTitle =
-                              await _formatStageTitle(widget.stage.title);
-                          final title =
-                              "${project.address} - Работы - $stageTitle";
-                          final text = _generateReportText(_works, title,
-                              showPrices: true,
-                              quantityType: 'total',
-                              note: _stage.workRemarks);
-                          _copyText(text);
-                        }),
-                        _buildCompactAction(context, Icons.copy, "Контрагент",
-                            () async {
-                          Navigator.pop(context);
-                          final project = await ref.read(
-                              projectByIdProvider(widget.projectId).future);
-                          final stageTitle =
-                              await _formatStageTitle(widget.stage.title);
-                          final title =
-                              "${project.address} - Работы - $stageTitle - ТВОИ";
-                          final text = _generateReportText(_works, title,
-                              showPrices: true,
-                              quantityType: 'employer',
-                              note: _stage.workRemarks);
-                          _copyText(text);
-                        }),
-                        _buildCompactAction(
-                            context, Icons.assignment, "Материалы", () async {
-                          Navigator.pop(context);
-                          final project = await ref.read(
-                              projectByIdProvider(widget.projectId).future);
-                          final stageTitle =
-                              await _formatStageTitle(widget.stage.title);
-                          final title =
-                              "${project.address} - Материалы - $stageTitle";
-                          final text = _generateReportText(_materials, title,
-                              showPrices: false,
-                              markup: 0,
-                              quantityType: 'total',
-                              note: _stage.materialRemarks);
-                          _copyText(text);
-                        }),
+                        Expanded(
+                          child: buildPopupBtn(
+                            "Работы",
+                            Colors.green.shade50,
+                            Colors.green.shade800,
+                            [
+                              const PopupMenuItem(
+                                  value: 'total',
+                                  child: Text("Для Заказчика (Полный)")),
+                              const PopupMenuItem(
+                                  value: 'employer',
+                                  child: Text("Для Контрагента (Доля)")),
+                              const PopupMenuItem(
+                                  value: 'our', child: Text("Наши (Остаток)")),
+                            ],
+                            (val) {
+                              Navigator.pop(context);
+                              if (val == 'total') {
+                                _printPdfWithParams(
+                                    isWork: true, type: 'total');
+                              } else if (val == 'employer') {
+                                _printPdfWithParams(
+                                    isWork: true, type: 'employer');
+                              } else if (val == 'our') {
+                                _printPdfWithParams(isWork: true, type: 'our');
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: buildPopupBtn(
+                            "Материалы",
+                            Colors.blue.shade50,
+                            Colors.blue.shade800,
+                            [
+                              const PopupMenuItem(
+                                  value: 'noprice',
+                                  child: Text("Без цен (Количество)")),
+                              const PopupMenuItem(
+                                  value: 'price',
+                                  child: Text("С ценами (Закуп)")),
+                              if (_markupPercent > 0)
+                                PopupMenuItem(
+                                    value: 'markup',
+                                    child: Text(
+                                        "С наценкой (+${_markupPercent.toStringAsFixed(0)}%)")),
+                            ],
+                            (val) {
+                              Navigator.pop(context);
+                              if (val == 'noprice') {
+                                _printPdfWithParams(
+                                    isWork: false, showPrices: false);
+                              } else if (val == 'price') {
+                                _printPdfWithParams(
+                                    isWork: false, showPrices: true);
+                              } else if (val == 'markup') {
+                                _printPdfWithParams(
+                                    isWork: false,
+                                    showPrices: true,
+                                    markup: _markupPercent);
+                              }
+                            },
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  const Divider(indent: 16, endIndent: 16, height: 24),
 
-                  // Section 2: PDF Export
+                  const SizedBox(height: 16),
+
+                  // Close Button
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        // Header for PDF
-                        Row(
-                          children: [
-                            Icon(Icons.picture_as_pdf,
-                                size: 18, color: Colors.grey.shade600),
-                            const SizedBox(width: 8),
-                            Text("Экспорт в PDF",
-                                style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey.shade600)),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Buttons Row
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            // Works Popup
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Theme(
-                                data: Theme.of(context).copyWith(
-                                  popupMenuTheme: PopupMenuThemeData(
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
-                                    elevation: 4,
-                                  ),
-                                ),
-                                child: PopupMenuButton<String>(
-                                  tooltip: "Выберите тип отчета",
-                                  offset: const Offset(0, 36),
-                                  child: Material(
-                                    color: Colors.green.shade50,
-                                    borderRadius: BorderRadius.circular(12),
-                                    clipBehavior:
-                                        Clip.hardEdge, // Fix hover overflow
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 6), // Smaller padding
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text("Работы",
-                                              style: TextStyle(
-                                                  color: Colors.green.shade800,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize:
-                                                      12)), // Smaller font
-                                          const SizedBox(width: 4),
-                                          Icon(Icons.arrow_drop_down,
-                                              color: Colors.green.shade800,
-                                              size: 18),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  onSelected: (val) {
-                                    Navigator.pop(context);
-                                    if (val == 'total') {
-                                      _printPdfWithParams(
-                                          isWork: true, type: 'total');
-                                    } else if (val == 'employer') {
-                                      _printPdfWithParams(
-                                          isWork: true, type: 'employer');
-                                    } else if (val == 'our') {
-                                      _printPdfWithParams(
-                                          isWork: true, type: 'our');
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    const PopupMenuItem(
-                                        value: 'total',
-                                        child: Text("Для Заказчика (Полный)")),
-                                    const PopupMenuItem(
-                                        value: 'employer',
-                                        child: Text("Для Контрагента (Доля)")),
-                                    const PopupMenuItem(
-                                        value: 'our',
-                                        child: Text("Наши (Остаток)")),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            // Materials Popup
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Theme(
-                                data: Theme.of(context).copyWith(
-                                  popupMenuTheme: PopupMenuThemeData(
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
-                                    elevation: 4,
-                                  ),
-                                ),
-                                child: PopupMenuButton<String>(
-                                  tooltip: "Выберите тип отчета",
-                                  offset: const Offset(0, 36),
-                                  child: Material(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(12),
-                                    clipBehavior: Clip.hardEdge,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 6),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text("Материалы",
-                                              style: TextStyle(
-                                                  color: Colors.blue.shade800,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 12)),
-                                          const SizedBox(width: 4),
-                                          Icon(Icons.arrow_drop_down,
-                                              color: Colors.blue.shade800,
-                                              size: 18),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  onSelected: (val) {
-                                    Navigator.pop(context);
-                                    if (val == 'noprice') {
-                                      _printPdfWithParams(
-                                          isWork: false, showPrices: false);
-                                    } else if (val == 'price') {
-                                      _printPdfWithParams(
-                                          isWork: false, showPrices: true);
-                                    } else if (val == 'markup') {
-                                      _printPdfWithParams(
-                                          isWork: false,
-                                          showPrices: true,
-                                          markup: _markupPercent);
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    const PopupMenuItem(
-                                        value: 'noprice',
-                                        child: Text("Без цен (Количество)")),
-                                    const PopupMenuItem(
-                                        value: 'price',
-                                        child: Text("С ценами (Закуп)")),
-                                    if (_markupPercent > 0)
-                                      PopupMenuItem(
-                                          value: 'markup',
-                                          child: Text(
-                                              "С наценкой (+${_markupPercent.toStringAsFixed(0)}%)")),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text("Закрыть",
+                              style: TextStyle(
+                                  color: Colors.grey.shade600, fontSize: 12)),
                         ),
                       ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Section 3: Close
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: InkWell(
-                      onTap: () => Navigator.pop(context),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.close,
-                                size: 18, color: Colors.grey),
-                            const SizedBox(width: 8),
-                            const Text("Закрыть",
-                                style: TextStyle(
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
                     ),
                   )
                 ],
@@ -728,29 +694,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           ),
         );
       },
-    );
-  }
-
-  Widget _buildCompactAction(
-      BuildContext context, IconData icon, String label, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300)),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: Colors.grey.shade700),
-            const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontSize: 12)),
-          ],
-        ),
-      ),
     );
   }
 
