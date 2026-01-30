@@ -1,14 +1,19 @@
+import 'dart:async'; // For Timer
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/estimate_item_model.dart';
 import '../../data/models/stage_model.dart';
+import '../../../catalog/domain/catalog_item.dart';
 import '../providers/project_providers.dart';
 import '../widgets/estimate/estimate_tab.dart';
+import '../dialogs/estimate/add_item_dialog.dart';
+import '../dialogs/estimate/quantity_input_dialog.dart';
+import '../dialogs/estimate/edit_item_dialog.dart';
+import '../dialogs/estimate/estimate_actions_dialog.dart';
 
 import '../widgets/estimate/estimate_speed_dial.dart';
-import '../dialogs/estimate/estimate_actions_dialog.dart';
-import '../dialogs/estimate/edit_item_dialog.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -25,6 +30,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final ScrollController _scrollController = ScrollController();
+  Timer? _markupDebounce;
 
   bool _isFabExpanded = false;
   bool _showPrices = true;
@@ -52,6 +58,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     });
   }
 
+  Color get _activeColor =>
+      _tabController.index == 0 ? Colors.green.shade400 : Colors.blue.shade400;
+
   Future<void> _refresh() async {
     try {
       final repo = ref.read(projectRepositoryProvider);
@@ -73,6 +82,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   void dispose() {
     _tabController.dispose();
     _scrollController.dispose();
+    _markupDebounce?.cancel();
     super.dispose();
   }
 
@@ -92,13 +102,21 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               ],
             ),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: _refresh,
-              ),
-              IconButton(
-                icon: const Icon(Icons.more_vert),
-                onPressed: () => _showActionsDialog(context),
+              // Removed manual Refresh button as per user request (pull-to-refresh or back navigation is enough)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _activeColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: IconButton(
+                  onPressed: () => _showActionsDialog(context),
+                  icon: Icon(Icons.widgets_outlined, color: _activeColor),
+                  tooltip: "Меню действий",
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 40, minHeight: 40),
+                ),
               ),
             ],
             bottom: TabBar(
@@ -135,7 +153,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                 markupPercent: _markupPercent,
                 onMarkupChanged: (val) {
                   setState(() => _markupPercent = val);
-                  _saveMarkup(val);
+                  _saveMarkupDebounced(val);
                 },
                 note: _stage.materialNotes,
                 remarks: _stage.materialRemarks,
@@ -144,18 +162,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               ),
             ],
           ),
-          floatingActionButton: EstimateSpeedDial(
-            isExpanded: _isFabExpanded,
-            tabController: _tabController,
-            onToggle: () => setState(() => _isFabExpanded = !_isFabExpanded),
-            onDeleteAll: _deleteAllItems,
-            onShowTemplates: _showTemplatesDialog,
-            onManualAdd: _showManualAddDialog,
-            onSearchAdd: _showSearchDialog,
-          ),
+          // FAB removed from here to place it above Overlay in Stack
         ),
 
-        // Dark overlay when FAB is expanded
+        // Dark overlay when FAB is expanded (Below FAB)
         if (_isFabExpanded)
           Positioned.fill(
             child: GestureDetector(
@@ -165,6 +175,21 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               ),
             ),
           ),
+
+        // FAB and Speed Dial (Above Overlay)
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: EstimateSpeedDial(
+            isExpanded: _isFabExpanded,
+            tabController: _tabController,
+            onToggle: () => setState(() => _isFabExpanded = !_isFabExpanded),
+            onDeleteAll: _deleteAllItems,
+            onShowTemplates: _showTemplatesDialog,
+            onManualAdd: _showManualAddDialog,
+            onSearchAdd: _showSearchDialog,
+          ),
+        ),
       ],
     );
   }
@@ -249,11 +274,56 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
   void _showSearchDialog() {
     setState(() => _isFabExpanded = false);
-    // CatalogSearchScreen missing from codebase
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-          content:
-              Text("Поиск по каталогу (не реализовано или файл отсутствует)")),
+
+    final index = _tabController.index;
+    final itemType = index == 0 ? 'work' : 'material';
+    final showPrices = itemType == 'work' ? true : _showPrices;
+    final hidePrices = !showPrices;
+
+    showDialog(
+      context: context,
+      builder: (_) => AddItemDialog(
+        itemType: itemType,
+        hidePrices: hidePrices,
+        onAdd: (catalogItem) async {
+          // If ID == 0, it's manual.
+          if (catalogItem.id == 0) {
+            Navigator.pop(context); // Close Add Dialog
+            _showManualAddDialog();
+            return;
+          }
+
+          Navigator.pop(context); // Close search dialog
+
+          final quantities = await showDialog<Map<String, dynamic>>(
+            context: context,
+            builder: (_) => QuantityInputDialog(
+              item: catalogItem,
+              itemType: itemType,
+              hidePrices: hidePrices,
+            ),
+          );
+
+          if (quantities == null) return;
+
+          // Create model for _saveNewItem
+          final newItem = EstimateItemModel(
+            id: 0,
+            stage: widget.stage.id,
+            itemType: itemType,
+            name: catalogItem.name,
+            unit: catalogItem.unit,
+            pricePerUnit: catalogItem.defaultPrice,
+            currency: catalogItem.defaultCurrency,
+            totalQuantity: quantities['total']?.toDouble() ?? 0.0,
+            employerQuantity: quantities['employer']?.toDouble() ?? 0.0,
+            markupPercent: 0,
+            isPreliminary: false,
+          );
+
+          _saveNewItem(newItem, catalogItem.id);
+        },
+      ),
     );
   }
 
@@ -436,6 +506,13 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Ошибка сохранения заметки: $e")));
     }
+  }
+
+  void _saveMarkupDebounced(double value) {
+    if (_markupDebounce?.isActive ?? false) _markupDebounce!.cancel();
+    _markupDebounce = Timer(const Duration(milliseconds: 1000), () {
+      _saveMarkup(value);
+    });
   }
 
   Future<void> _saveMarkup(double value) async {

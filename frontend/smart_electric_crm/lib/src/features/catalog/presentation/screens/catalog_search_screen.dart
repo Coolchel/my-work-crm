@@ -1,0 +1,152 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/catalog_repository.dart';
+import '../../domain/catalog_item.dart';
+
+class CatalogSearchScreen extends ConsumerStatefulWidget {
+  final String? initialQuery;
+  final String? filterItemType; // 'work' or 'material'
+
+  const CatalogSearchScreen({
+    super.key,
+    this.initialQuery,
+    this.filterItemType,
+  });
+
+  @override
+  ConsumerState<CatalogSearchScreen> createState() =>
+      _CatalogSearchScreenState();
+}
+
+class _CatalogSearchScreenState extends ConsumerState<CatalogSearchScreen> {
+  final TextEditingController _searchCtrl = TextEditingController();
+  List<CatalogItem> _results = [];
+  bool _isLoading = false;
+  Timer? _debounce;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialQuery != null) {
+      _searchCtrl.text = widget.initialQuery!;
+      _performSearch(widget.initialQuery!);
+    } else {
+      // Focus on text field immediately if no initial query
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      _performSearch(query);
+    });
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _results = [];
+        _error = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final repo = ref.read(catalogRepositoryProvider);
+      final items =
+          await repo.searchItems(query, itemType: widget.filterItemType);
+
+      if (mounted) {
+        setState(() {
+          _results = items;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: TextField(
+          controller: _searchCtrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: "Поиск в каталоге...",
+            border: InputBorder.none,
+            hintStyle: TextStyle(color: Colors.white70),
+          ),
+          style: const TextStyle(color: Colors.white, fontSize: 18),
+          cursorColor: Colors.white,
+          onChanged: _onSearchChanged,
+        ),
+      ),
+      body: Column(
+        children: [
+          if (_isLoading) const LinearProgressIndicator(),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text("Ошибка поиска: $_error",
+                  style: const TextStyle(color: Colors.red)),
+            ),
+          Expanded(
+            child: _results.isEmpty &&
+                    !_isLoading &&
+                    _searchCtrl.text.isNotEmpty
+                ? const Center(child: Text("Ничего не найдено"))
+                : ListView.separated(
+                    itemCount: _results.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final item = _results[index];
+                      return ListTile(
+                        leading: Icon(
+                          item.itemType == 'work'
+                              ? Icons.handyman
+                              : Icons.inventory_2,
+                          color: item.itemType == 'work'
+                              ? Colors.green
+                              : Colors.blue,
+                        ),
+                        title: Text(item.name,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w500)),
+                        subtitle: Text(
+                            "${item.defaultPrice} ${item.defaultCurrency} / ${item.unit}"),
+                        trailing: const Icon(Icons.add_circle_outline,
+                            color: Colors.grey),
+                        onTap: () {
+                          Navigator.pop(context, item);
+                        },
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}

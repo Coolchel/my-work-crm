@@ -128,7 +128,8 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     if (widget.onMarkupChanged != null) {
       // Prevent redundant updates if value works out to same
       if ((parsed - widget.markupPercent).abs() > 0.01) {
-        widget.onMarkupChanged!(parsed.clamp(0.0, 100.0));
+        final rounded = double.parse(parsed.toStringAsFixed(2));
+        widget.onMarkupChanged!(rounded.clamp(0.0, 100.0));
       }
     }
   }
@@ -335,10 +336,13 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                         divisions: 200,
                         label: "${widget.markupPercent.toStringAsFixed(1)}%",
                         onChanged: (val) {
+                          // Round to 2 decimal places to avoid "max 5 digits" backend error
+                          final roundedVal =
+                              double.parse(val.toStringAsFixed(2));
                           if (widget.onMarkupChanged != null) {
-                            widget.onMarkupChanged!(val);
+                            widget.onMarkupChanged!(roundedVal);
                           }
-                          _markupCtrl.text = _formatMarkup(val);
+                          _markupCtrl.text = _formatMarkup(roundedVal);
                         },
                       ),
                     ),
