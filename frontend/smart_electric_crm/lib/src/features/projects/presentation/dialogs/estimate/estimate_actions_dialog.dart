@@ -20,11 +20,11 @@ mixin EstimateDialogHelpers {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.grey.shade700),
+          Icon(icon, size: 16, color: Colors.grey.shade700),
           const SizedBox(width: 8),
           Text(title,
               style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade700)),
         ],

@@ -103,23 +103,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               ],
             ),
             actions: [
-              // PDF Actions (Red)
-              Container(
-                margin: const EdgeInsets.only(top: 8, bottom: 8, left: 8),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: IconButton(
-                  onPressed: () => _showPdfActionsDialog(context),
-                  icon: Icon(Icons.picture_as_pdf, color: Colors.red.shade700),
-                  tooltip: "PDF меню",
-                  padding: EdgeInsets.zero,
-                  constraints:
-                      const BoxConstraints(minWidth: 40, minHeight: 40),
-                ),
-              ),
-              // Text Actions (Indigo)
               // Text Actions Button
               _buildActionButton(
                 context,
@@ -576,11 +559,22 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: color.shade50,
+              gradient: LinearGradient(
+                colors: [color.shade50, color.shade100],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: color.shade100),
+              border: Border.all(color: color.shade200),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.2),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: Icon(icon, color: color.shade700, size: 20),
+            child: Icon(icon, color: color.shade800, size: 20),
           ),
         ),
       ),
