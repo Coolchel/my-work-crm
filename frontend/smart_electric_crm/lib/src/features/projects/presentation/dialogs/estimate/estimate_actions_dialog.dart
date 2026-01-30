@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import 'dart:io';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../data/models/estimate_item_model.dart';
 import '../../../data/models/stage_model.dart';
@@ -332,6 +333,88 @@ class EstimateActionsDialog extends ConsumerWidget {
                 ),
               ),
 
+              // 4. Share
+              buildHeader(Icons.share, "Поделиться"),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: buildPopupBtn(
+                        context,
+                        "Работы",
+                        Colors.green.shade50,
+                        Colors.green.shade800,
+                        [
+                          const PopupMenuItem(
+                              value: 'total', child: Text("Для Заказчика")),
+                          if (hasPartnerWorks) ...[
+                            const PopupMenuItem(
+                                value: 'employer',
+                                child: Text("Для Контрагента")),
+                            const PopupMenuItem(
+                                value: 'our', child: Text("Наши")),
+                          ]
+                        ],
+                        (val) {
+                          Navigator.pop(context);
+                          if (val == 'total') {
+                            _printPdfWithParams(context, ref,
+                                isWork: true, type: 'total', share: true);
+                          } else if (val == 'employer') {
+                            _printPdfWithParams(context, ref,
+                                isWork: true, type: 'employer', share: true);
+                          } else if (val == 'our') {
+                            _printPdfWithParams(context, ref,
+                                isWork: true, type: 'our', share: true);
+                          }
+                        },
+                        enabled: hasWorks,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: buildPopupBtn(
+                        context,
+                        "Материалы",
+                        Colors.blue.shade50,
+                        Colors.blue.shade800,
+                        [
+                          const PopupMenuItem(
+                              value: 'noprice', child: Text("Без цен")),
+                          if (showPrices) ...[
+                            const PopupMenuItem(
+                                value: 'price', child: Text("С ценами")),
+                            if (markupPercent > 0)
+                              PopupMenuItem(
+                                  value: 'markup',
+                                  child: Text(
+                                      "С наценкой (+${markupPercent.toStringAsFixed(0)}%)")),
+                          ]
+                        ],
+                        (val) {
+                          Navigator.pop(context);
+                          if (val == 'noprice') {
+                            _printPdfWithParams(context, ref,
+                                isWork: false, showPrices: false, share: true);
+                          } else if (val == 'price') {
+                            _printPdfWithParams(context, ref,
+                                isWork: false, showPrices: true, share: true);
+                          } else if (val == 'markup') {
+                            _printPdfWithParams(context, ref,
+                                isWork: false,
+                                showPrices: true,
+                                markup: markupPercent,
+                                share: true);
+                          }
+                        },
+                        enabled: hasMaterials,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 16),
 
               // Close Button
@@ -371,6 +454,7 @@ class EstimateActionsDialog extends ConsumerWidget {
     bool showPrices = true,
     double markup = 0,
     String type = 'total',
+    bool share = false,
   }) async {
     final items = isWork ? works : materials;
     String titleType = isWork ? "Работы" : "Материалы";
@@ -393,7 +477,8 @@ class EstimateActionsDialog extends ConsumerWidget {
         isWork: isWork,
         quantityType: type,
         remarks: remarks,
-        markupPercent: markup);
+        markupPercent: markup,
+        share: share);
   }
 
   Future<void> _printPdf({
@@ -405,6 +490,7 @@ class EstimateActionsDialog extends ConsumerWidget {
     String? remarks,
     double markupPercent = 0.0,
     String quantityType = 'total',
+    bool share = false,
   }) async {
     try {
       final pdfService = PdfService();
@@ -425,13 +511,17 @@ class EstimateActionsDialog extends ConsumerWidget {
       final file = File("${output.path}/$filename.pdf");
       await file.writeAsBytes(bytes);
 
-      // Open file
-      final result = await OpenFilex.open(file.path);
+      if (share) {
+        await Share.shareXFiles([XFile(file.path)], text: title);
+      } else {
+        // Open file
+        final result = await OpenFilex.open(file.path);
 
-      if (result.type != ResultType.done) {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("Не удалось открыть файл: ${result.message}")));
+        if (result.type != ResultType.done) {
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text("Не удалось открыть файл: ${result.message}")));
+        }
       }
     } catch (e) {
       if (!context.mounted) return;
