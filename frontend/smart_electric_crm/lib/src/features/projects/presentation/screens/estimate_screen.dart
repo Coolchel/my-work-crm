@@ -102,7 +102,23 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               ],
             ),
             actions: [
-              // Removed manual Refresh button as per user request (pull-to-refresh or back navigation is enough)
+              // PDF Actions (Red)
+              Container(
+                margin: const EdgeInsets.only(top: 8, bottom: 8, left: 8),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: IconButton(
+                  onPressed: () => _showPdfActionsDialog(context),
+                  icon: Icon(Icons.picture_as_pdf, color: Colors.red.shade700),
+                  tooltip: "PDF меню",
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 40, minHeight: 40),
+                ),
+              ),
+              // Text Actions (Indigo)
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 decoration: BoxDecoration(
@@ -110,10 +126,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: IconButton(
-                  onPressed: () => _showActionsDialog(context),
-                  icon:
-                      const Icon(Icons.widgets_outlined, color: Colors.indigo),
-                  tooltip: "Меню действий",
+                  onPressed: () => _showTextActionsDialog(context),
+                  icon: const Icon(Icons.description, color: Colors.indigo),
+                  tooltip: "Текстовое меню",
                   padding: EdgeInsets.zero,
                   constraints:
                       const BoxConstraints(minWidth: 40, minHeight: 40),
@@ -195,16 +210,30 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     );
   }
 
-  void _showActionsDialog(BuildContext context) {
+  void _showTextActionsDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => EstimateActionsDialog(
+      builder: (context) => EstimateTextActionsDialog(
         projectId: widget.projectId,
         stage: _stage,
         works: _works,
         materials: _materials,
-        markupPercent: _markupPercent,
         showPrices: _showPrices,
+        markupPercent: _markupPercent,
+      ),
+    );
+  }
+
+  void _showPdfActionsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => EstimatePdfActionsDialog(
+        projectId: widget.projectId,
+        stage: _stage,
+        works: _works,
+        materials: _materials,
+        showPrices: _showPrices,
+        markupPercent: _markupPercent,
       ),
     );
   }
