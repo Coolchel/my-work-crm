@@ -99,20 +99,16 @@ class EstimateSpeedDial extends StatelessWidget {
       required VoidCallback onTap}) {
     final fgColor = textColor ?? Colors.black87;
 
-    return SizedBox(
-      width: 135,
-      height: 36,
-      child: FloatingActionButton.extended(
-        onPressed: onTap,
-        heroTag: label,
-        backgroundColor: color,
-        foregroundColor: fgColor,
-        elevation: 2,
-        hoverColor: Colors.grey.shade100,
-        icon: Icon(icon, size: 18),
-        label: Text(label,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-      ),
+    return FloatingActionButton.extended(
+      onPressed: onTap,
+      heroTag: label,
+      backgroundColor: color,
+      foregroundColor: fgColor,
+      elevation: 2,
+      hoverColor: Colors.grey.shade100,
+      icon: Icon(icon, size: 18),
+      label: Text(label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
     );
   }
 }

@@ -557,13 +557,14 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
+                alignment: WrapAlignment.center,
                 children: modes.map((mode) {
                   String label = "";
                   MaterialColor color = Colors.grey;
 
                   switch (mode) {
                     case 'work_total':
-                      label = "Заказчик";
+                      label = "Работа";
                       color = Colors.green;
                       break;
                     case 'work_employer':
@@ -575,7 +576,7 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
                       color = Colors.green;
                       break;
                     case 'mat_noprice':
-                      label = "Без цен";
+                      label = "Материал";
                       color = Colors.blue;
                       break;
                     case 'mat_price':

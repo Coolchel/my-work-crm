@@ -95,6 +95,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           appBar: AppBar(
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(widget.stage.title),
                 Text("Смета",
@@ -119,21 +120,24 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                 ),
               ),
               // Text Actions (Indigo)
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.indigo.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: IconButton(
-                  onPressed: () => _showTextActionsDialog(context),
-                  icon: const Icon(Icons.description, color: Colors.indigo),
-                  tooltip: "Текстовое меню",
-                  padding: EdgeInsets.zero,
-                  constraints:
-                      const BoxConstraints(minWidth: 40, minHeight: 40),
-                ),
+              // Text Actions Button
+              _buildActionButton(
+                context,
+                icon: Icons.description,
+                color: Colors.indigo,
+                onTap: () => _showTextActionsDialog(context),
+                tooltip: "Текстовые действия",
               ),
+              const SizedBox(width: 8),
+              // PDF Actions Button
+              _buildActionButton(
+                context,
+                icon: Icons.picture_as_pdf,
+                color: Colors.red,
+                onTap: () => _showPdfActionsDialog(context),
+                tooltip: "PDF действия",
+              ),
+              const SizedBox(width: 8),
             ],
             bottom: TabBar(
               controller: _tabController,
@@ -554,5 +558,32 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     } catch (e) {
       debugPrint("Error saving markup: $e");
     }
+  }
+
+  Widget _buildActionButton(BuildContext context,
+      {required IconData icon,
+      required MaterialColor color,
+      required VoidCallback onTap,
+      required String tooltip}) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: color.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: color.shade100),
+            ),
+            child: Icon(icon, color: color.shade700, size: 20),
+          ),
+        ),
+      ),
+    );
   }
 }
