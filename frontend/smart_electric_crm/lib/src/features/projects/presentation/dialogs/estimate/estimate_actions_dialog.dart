@@ -49,28 +49,32 @@ class EstimateActionsDialog extends ConsumerWidget {
 
   // Helper for standard action button
   Widget buildBtn(String label, Color bg, Color fg, VoidCallback onTap,
-      {bool isGradient = false}) {
-    return Container(
-      height: 38,
-      decoration: BoxDecoration(
-        color: isGradient ? null : bg,
-        gradient: isGradient
-            ? const LinearGradient(colors: [Colors.green, Colors.blue])
-            : null,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
+      {bool isGradient = false, bool enabled = true}) {
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.3,
+      child: Container(
+        height: 38,
+        decoration: BoxDecoration(
+          color: isGradient ? null : bg,
+          gradient: isGradient
+              ? LinearGradient(
+                  colors: [Colors.green.shade200, Colors.blue.shade200])
+              : null,
           borderRadius: BorderRadius.circular(12),
-          child: Center(
-            child: Text(label,
-                style: TextStyle(
-                    color: fg, fontSize: 12, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: enabled ? onTap : null,
+            borderRadius: BorderRadius.circular(12),
+            child: Center(
+              child: Text(label,
+                  style: TextStyle(
+                      color: fg, fontSize: 12, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+            ),
           ),
         ),
       ),
@@ -79,42 +83,50 @@ class EstimateActionsDialog extends ConsumerWidget {
 
   // Helper for Popup Button (Works/Materials)
   Widget buildPopupBtn(BuildContext context, String label, Color bg, Color fg,
-      List<PopupMenuEntry<String>> items, ValueChanged<String> onSelected) {
-    return Container(
-      height: 38,
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            popupMenuTheme: PopupMenuThemeData(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              elevation: 4,
-            ),
-          ),
-          child: PopupMenuButton<String>(
-            tooltip: label,
-            offset: const Offset(0, 38),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            onSelected: onSelected,
-            itemBuilder: (context) => items,
-            child: Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(label,
-                      style: TextStyle(
-                          color: fg,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 4),
-                  Icon(Icons.arrow_drop_down, color: fg, size: 16),
-                ],
+      List<PopupMenuEntry<String>> items, ValueChanged<String> onSelected,
+      {bool enabled = true}) {
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.3,
+      child: Container(
+        height: 38,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Material(
+            color: Colors.transparent,
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                popupMenuTheme: PopupMenuThemeData(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  elevation: 4,
+                ),
+              ),
+              child: PopupMenuButton<String>(
+                tooltip: label,
+                enabled: enabled,
+                offset: const Offset(0, 38),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                onSelected: onSelected,
+                itemBuilder: (context) => items,
+                child: Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(label,
+                          style: TextStyle(
+                              color: fg,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 4),
+                      Icon(Icons.arrow_drop_down, color: fg, size: 16),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -125,6 +137,11 @@ class EstimateActionsDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final hasWorks = works.isNotEmpty;
+    final hasMaterials = materials.isNotEmpty;
+    // Check if there are any works with partner share
+    final hasPartnerWorks = works.any((w) => w.employerQuantity > 0);
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: ConstrainedBox(
@@ -155,7 +172,7 @@ class EstimateActionsDialog extends ConsumerWidget {
                     "Все сметы (TXT)", Colors.transparent, Colors.white, () {
                   Navigator.pop(context);
                   _showReport(context, ref);
-                }, isGradient: true),
+                }, isGradient: true, enabled: hasWorks || hasMaterials),
               ),
 
               // 2. Copy
@@ -182,29 +199,32 @@ class EstimateActionsDialog extends ConsumerWidget {
                             quantityType: 'total',
                             note: stage.workRemarks);
                         _copyText(context, text);
-                      }),
+                      }, enabled: hasWorks),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: buildBtn("Контрагент", Colors.green.shade50,
-                          Colors.green.shade800, () async {
-                        Navigator.pop(context);
-                        final project = await ref
-                            .read(projectByIdProvider(projectId).future);
-                        if (!context.mounted) return;
-                        final stageTitle =
-                            EstimateReportGenerator.formatStageTitle(
-                                stage.title);
-                        final title =
-                            "${project.address} - Работы - $stageTitle - ТВОИ";
-                        final text = EstimateReportGenerator.generateReportText(
-                            works, title,
-                            showPrices: true,
-                            quantityType: 'employer',
-                            note: stage.workRemarks);
-                        _copyText(context, text);
-                      }),
-                    ),
+                    if (hasPartnerWorks) ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: buildBtn("Контрагент", Colors.green.shade50,
+                            Colors.green.shade800, () async {
+                          Navigator.pop(context);
+                          final project = await ref
+                              .read(projectByIdProvider(projectId).future);
+                          if (!context.mounted) return;
+                          final stageTitle =
+                              EstimateReportGenerator.formatStageTitle(
+                                  stage.title);
+                          final title =
+                              "${project.address} - Работы - $stageTitle - ТВОИ";
+                          final text =
+                              EstimateReportGenerator.generateReportText(
+                                  works, title,
+                                  showPrices: true,
+                                  quantityType: 'employer',
+                                  note: stage.workRemarks);
+                          _copyText(context, text);
+                        }, enabled: hasWorks),
+                      ),
+                    ],
                     const SizedBox(width: 8),
                     Expanded(
                       child: buildBtn("Материалы", Colors.blue.shade50,
@@ -225,7 +245,7 @@ class EstimateActionsDialog extends ConsumerWidget {
                             quantityType: 'total',
                             note: stage.materialRemarks);
                         _copyText(context, text);
-                      }),
+                      }, enabled: hasMaterials),
                     ),
                   ],
                 ),
@@ -245,13 +265,14 @@ class EstimateActionsDialog extends ConsumerWidget {
                         Colors.green.shade800,
                         [
                           const PopupMenuItem(
-                              value: 'total',
-                              child: Text("Для Заказчика (Полный)")),
-                          const PopupMenuItem(
-                              value: 'employer',
-                              child: Text("Для Контрагента (Доля)")),
-                          const PopupMenuItem(
-                              value: 'our', child: Text("Наши (Остаток)")),
+                              value: 'total', child: Text("Для Заказчика")),
+                          if (hasPartnerWorks) ...[
+                            const PopupMenuItem(
+                                value: 'employer',
+                                child: Text("Для Контрагента")),
+                            const PopupMenuItem(
+                                value: 'our', child: Text("Наши")),
+                          ]
                         ],
                         (val) {
                           Navigator.pop(context);
@@ -266,6 +287,7 @@ class EstimateActionsDialog extends ConsumerWidget {
                                 isWork: true, type: 'our');
                           }
                         },
+                        enabled: hasWorks,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -277,15 +299,16 @@ class EstimateActionsDialog extends ConsumerWidget {
                         Colors.blue.shade800,
                         [
                           const PopupMenuItem(
-                              value: 'noprice',
-                              child: Text("Без цен (Количество)")),
-                          const PopupMenuItem(
-                              value: 'price', child: Text("С ценами (Закуп)")),
-                          if (markupPercent > 0)
-                            PopupMenuItem(
-                                value: 'markup',
-                                child: Text(
-                                    "С наценкой (+${markupPercent.toStringAsFixed(0)}%)")),
+                              value: 'noprice', child: Text("Без цен")),
+                          if (showPrices) ...[
+                            const PopupMenuItem(
+                                value: 'price', child: Text("С ценами")),
+                            if (markupPercent > 0)
+                              PopupMenuItem(
+                                  value: 'markup',
+                                  child: Text(
+                                      "С наценкой (+${markupPercent.toStringAsFixed(0)}%)")),
+                          ]
                         ],
                         (val) {
                           Navigator.pop(context);
@@ -302,6 +325,7 @@ class EstimateActionsDialog extends ConsumerWidget {
                                 markup: markupPercent);
                           }
                         },
+                        enabled: hasMaterials,
                       ),
                     ),
                   ],

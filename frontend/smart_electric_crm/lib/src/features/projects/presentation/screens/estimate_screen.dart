@@ -106,12 +106,13 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 decoration: BoxDecoration(
-                  color: _activeColor.withOpacity(0.1),
+                  color: Colors.indigo.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: IconButton(
                   onPressed: () => _showActionsDialog(context),
-                  icon: Icon(Icons.widgets_outlined, color: _activeColor),
+                  icon:
+                      const Icon(Icons.widgets_outlined, color: Colors.indigo),
                   tooltip: "Меню действий",
                   padding: EdgeInsets.zero,
                   constraints:
