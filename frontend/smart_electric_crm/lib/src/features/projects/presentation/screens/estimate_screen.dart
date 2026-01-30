@@ -103,22 +103,22 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               ],
             ),
             actions: [
-              // Text Actions Button
+              // PDF Actions Button (Yellowish)
+              _buildActionButton(
+                context,
+                icon: Icons.picture_as_pdf,
+                color: Colors.amber,
+                onTap: () => _showPdfActionsDialog(context),
+                tooltip: "PDF действия",
+              ),
+              const SizedBox(width: 8),
+              // Text Actions Button (Indigo)
               _buildActionButton(
                 context,
                 icon: Icons.description,
                 color: Colors.indigo,
                 onTap: () => _showTextActionsDialog(context),
                 tooltip: "Текстовые действия",
-              ),
-              const SizedBox(width: 8),
-              // PDF Actions Button
-              _buildActionButton(
-                context,
-                icon: Icons.picture_as_pdf,
-                color: Colors.red,
-                onTap: () => _showPdfActionsDialog(context),
-                tooltip: "PDF действия",
               ),
               const SizedBox(width: 8),
             ],
@@ -548,36 +548,12 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       required MaterialColor color,
       required VoidCallback onTap,
       required String tooltip}) {
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color.shade50, color.shade100],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: color.shade200),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withOpacity(0.2),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Icon(icon, color: color.shade800, size: 20),
-          ),
-        ),
-      ),
+    return IconButton(
+      onPressed: onTap,
+      icon: Icon(icon),
+      iconSize: 28,
+      color: color,
+      tooltip: tooltip,
     );
   }
 }
