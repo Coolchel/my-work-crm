@@ -163,3 +163,60 @@ class LedTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = LedTemplate
         fields = ['id', 'name', 'description', 'items']
+
+# --- New Template System Serializers ---
+
+from .models import (
+    WorkTemplate, WorkTemplateItem,
+    MaterialTemplate, MaterialTemplateItem,
+    PowerShieldTemplate, PowerShieldTemplateItem,
+    MultimediaTemplate, MultimediaTemplateItem
+)
+
+class WorkTemplateItemSerializer(serializers.ModelSerializer):
+    catalog_item_name = serializers.ReadOnlyField(source='catalog_item.name')
+    class Meta:
+        model = WorkTemplateItem
+        fields = '__all__'
+
+class WorkTemplateSerializer(serializers.ModelSerializer):
+    items = WorkTemplateItemSerializer(many=True, read_only=True)
+    class Meta:
+        model = WorkTemplate
+        fields = '__all__'
+
+class MaterialTemplateItemSerializer(serializers.ModelSerializer):
+    catalog_item_name = serializers.ReadOnlyField(source='catalog_item.name')
+    class Meta:
+        model = MaterialTemplateItem
+        fields = '__all__'
+
+class MaterialTemplateSerializer(serializers.ModelSerializer):
+    items = MaterialTemplateItemSerializer(many=True, read_only=True)
+    class Meta:
+        model = MaterialTemplate
+        fields = '__all__'
+
+class PowerShieldTemplateItemSerializer(serializers.ModelSerializer):
+    catalog_item_name = serializers.ReadOnlyField(source='catalog_item.name')
+    class Meta:
+        model = PowerShieldTemplateItem
+        fields = '__all__'
+
+class PowerShieldTemplateSerializer(serializers.ModelSerializer):
+    items = PowerShieldTemplateItemSerializer(many=True, read_only=True)
+    class Meta:
+        model = PowerShieldTemplate
+        fields = '__all__'
+
+class MultimediaTemplateItemSerializer(serializers.ModelSerializer):
+    catalog_item_name = serializers.ReadOnlyField(source='catalog_item.name')
+    class Meta:
+        model = MultimediaTemplateItem
+        fields = '__all__'
+
+class MultimediaTemplateSerializer(serializers.ModelSerializer):
+    items = MultimediaTemplateItemSerializer(many=True, read_only=True)
+    class Meta:
+        model = MultimediaTemplate
+        fields = '__all__'

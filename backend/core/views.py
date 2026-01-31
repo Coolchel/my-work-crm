@@ -6,8 +6,11 @@ from .models import Project, Stage, ShieldTemplate, LedTemplate, ShieldGroup, Le
 from .serializers import (
     ProjectSerializer, StageSerializer, CatalogCategorySerializer, CatalogItemSerializer, 
     ShieldGroupSerializer, LedZoneSerializer, ShieldTemplateSerializer, LedTemplateSerializer,
-    ShieldSerializer, EstimateItemSerializer, EstimateTemplateSerializer
+    ShieldSerializer, EstimateItemSerializer, EstimateTemplateSerializer,
+    WorkTemplateSerializer, MaterialTemplateSerializer, 
+    PowerShieldTemplateSerializer, MultimediaTemplateSerializer
 )
+from .services import TemplateService
 
 class CatalogCategoryViewSet(viewsets.ModelViewSet):
     queryset = CatalogCategory.objects.all()
@@ -33,6 +36,26 @@ class ShieldViewSet(viewsets.ModelViewSet):
     serializer_class = ShieldSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['project']
+
+    @action(detail=True, methods=['post'])
+    def apply_powershield_template(self, request, pk=None):
+        shield = self.get_object()
+        template_id = request.data.get('template_id')
+        if not template_id: return Response({'error': 'template_id is required'}, status=400)
+        
+        result = TemplateService.apply_powershield_template(shield.id, template_id)
+        if result.get("status") == "error": return Response(result, status=400)
+        return Response(result)
+
+    @action(detail=True, methods=['post'])
+    def apply_multimedia_template(self, request, pk=None):
+        shield = self.get_object()
+        template_id = request.data.get('template_id')
+        if not template_id: return Response({'error': 'template_id is required'}, status=400)
+        
+        result = TemplateService.apply_multimedia_template(shield.id, template_id)
+        if result.get("status") == "error": return Response(result, status=400)
+        return Response(result)
     
     @action(detail=True, methods=['post'])
     def apply_shield_template(self, request, pk=None):
@@ -185,6 +208,26 @@ class StageViewSet(viewsets.ModelViewSet):
     filterset_fields = ['project']
 
     @action(detail=True, methods=['post'])
+    def apply_work_template(self, request, pk=None):
+        stage = self.get_object()
+        template_id = request.data.get('template_id')
+        if not template_id: return Response({'error': 'template_id is required'}, status=400)
+        
+        result = TemplateService.apply_work_template(stage.id, template_id)
+        if result.get("status") == "error": return Response(result, status=400)
+        return Response(result)
+
+    @action(detail=True, methods=['post'])
+    def apply_material_template(self, request, pk=None):
+        stage = self.get_object()
+        template_id = request.data.get('template_id')
+        if not template_id: return Response({'error': 'template_id is required'}, status=400)
+        
+        result = TemplateService.apply_material_template(stage.id, template_id)
+        if result.get("status") == "error": return Response(result, status=400)
+        return Response(result)
+
+    @action(detail=True, methods=['post'])
     def apply_template(self, request, pk=None):
         stage = self.get_object()
         template_id = request.data.get('template_id')
@@ -269,3 +312,23 @@ class StageViewSet(viewsets.ModelViewSet):
             'client_report': client_report,
             'employer_report': employer_report
         })
+
+# --- New Template ViewSets ---
+
+from .models import WorkTemplate, MaterialTemplate, PowerShieldTemplate, MultimediaTemplate
+
+class WorkTemplateViewSet(viewsets.ModelViewSet):
+    queryset = WorkTemplate.objects.all()
+    serializer_class = WorkTemplateSerializer
+
+class MaterialTemplateViewSet(viewsets.ModelViewSet):
+    queryset = MaterialTemplate.objects.all()
+    serializer_class = MaterialTemplateSerializer
+
+class PowerShieldTemplateViewSet(viewsets.ModelViewSet):
+    queryset = PowerShieldTemplate.objects.all()
+    serializer_class = PowerShieldTemplateSerializer
+
+class MultimediaTemplateViewSet(viewsets.ModelViewSet):
+    queryset = MultimediaTemplate.objects.all()
+    serializer_class = MultimediaTemplateSerializer

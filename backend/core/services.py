@@ -349,3 +349,135 @@ class EstimateAutomationService:
             "created": created_count, 
             "updated": updated_count
         }
+
+class TemplateService:
+    @staticmethod
+    def apply_work_template(stage_id, template_id):
+        from .models import WorkTemplate, EstimateItem
+        
+        try:
+            stage = Stage.objects.get(id=stage_id)
+            template = WorkTemplate.objects.get(id=template_id)
+        except (Stage.DoesNotExist, WorkTemplate.DoesNotExist):
+            return {"status": "error", "message": "Stage or Template not found"}
+
+        created_count = 0
+        updated_count = 0
+
+        for item in template.items.all():
+            est_item = EstimateItem.objects.filter(
+                stage=stage,
+                catalog_item=item.catalog_item,
+                item_type='work'
+            ).first()
+
+            if est_item:
+                # Merge Logic: Sum quantity
+                est_item.total_quantity += item.quantity
+                est_item.save()
+                updated_count += 1
+            else:
+                EstimateItem.objects.create(
+                    stage=stage,
+                    catalog_item=item.catalog_item, # Copies name, unit, price, etc. via save()
+                    item_type='work',
+                    total_quantity=item.quantity,
+                    markup_percent=stage.markup_percent
+                )
+                created_count += 1
+        
+        return {"status": "success", "created": created_count, "updated": updated_count}
+
+    @staticmethod
+    def apply_material_template(stage_id, template_id):
+        from .models import MaterialTemplate, EstimateItem
+
+        try:
+            stage = Stage.objects.get(id=stage_id)
+            template = MaterialTemplate.objects.get(id=template_id)
+        except (Stage.DoesNotExist, MaterialTemplate.DoesNotExist):
+            return {"status": "error", "message": "Stage or Template not found"}
+
+        created_count = 0
+        updated_count = 0
+
+        for item in template.items.all():
+            est_item = EstimateItem.objects.filter(
+                stage=stage,
+                catalog_item=item.catalog_item,
+                item_type='material'
+            ).first()
+
+            if est_item:
+                # Merge Logic
+                est_item.total_quantity += item.quantity
+                est_item.save()
+                updated_count += 1
+            else:
+                EstimateItem.objects.create(
+                    stage=stage,
+                    catalog_item=item.catalog_item,
+                    item_type='material',
+                    total_quantity=item.quantity,
+                    markup_percent=stage.markup_percent
+                )
+                created_count += 1
+        
+        return {"status": "success", "created": created_count, "updated": updated_count}
+
+    @staticmethod
+    def apply_powershield_template(shield_id, template_id):
+        from .models import PowerShieldTemplate, ShieldGroup
+
+        try:
+            shield = Shield.objects.get(id=shield_id)
+            template = PowerShieldTemplate.objects.get(id=template_id)
+        except (Shield.DoesNotExist, PowerShieldTemplate.DoesNotExist):
+            return {"status": "error", "message": "Shield or Template not found"}
+
+        created_count = 0
+
+        for item in template.items.all():
+            # For ShieldGroups, we create multiple items based on quantity
+            # Because ShieldGroup is physical device representation
+            
+            for _ in range(item.quantity):
+                ShieldGroup.objects.create(
+                    shield=shield,
+                    device_type=item.device_type,
+                    rating=item.rating,
+                    poles=item.poles,
+                    catalog_item=item.catalog_item
+                    # name/zone/modules_count generated in save()
+                )
+                created_count += 1
+        
+        return {"status": "success", "created": created_count}
+
+    @staticmethod
+    def apply_multimedia_template(shield_id, template_id):
+        from .models import MultimediaTemplate, ShieldGroup
+
+        try:
+            shield = Shield.objects.get(id=shield_id)
+            template = MultimediaTemplate.objects.get(id=template_id)
+        except (Shield.DoesNotExist, MultimediaTemplate.DoesNotExist):
+            return {"status": "error", "message": "Shield or Template not found"}
+
+        created_count = 0
+
+        for item in template.items.all():
+            # Using ShieldGroup with generic type for multimedia items
+            # since there is no specialized MultimediaItem model
+            for _ in range(item.quantity):
+                ShieldGroup.objects.create(
+                    shield=shield,
+                    device_type='other', # Generic type
+                    rating='',
+                    poles='',
+                    device=item.name, # Explicitly set device name
+                    catalog_item=item.catalog_item
+                )
+                created_count += 1
+        
+        return {"status": "success", "created": created_count}

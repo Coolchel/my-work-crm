@@ -11,6 +11,9 @@ import '../dialogs/estimate/add_item_dialog.dart';
 import '../dialogs/estimate/quantity_input_dialog.dart';
 import '../dialogs/estimate/edit_item_dialog.dart';
 import '../dialogs/estimate/estimate_actions_dialog.dart';
+import '../../../engineering/presentation/dialogs/template_selection_dialog.dart';
+import '../../../engineering/presentation/providers/template_providers.dart';
+import '../../../engineering/data/models/template_models.dart';
 
 import '../widgets/estimate/estimate_speed_dial.dart';
 
@@ -37,6 +40,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
   bool _isImportingShields = false;
   bool _isCalculatingWorks = false;
+  bool _isApplyingTemplate = false;
 
   // Local state for items (for optimistic updates and display)
   List<EstimateItemModel> _items = [];
@@ -149,6 +153,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                 automationActionLabel: "Рассчитать по материалам",
                 onAutomationAction: _calculateWorksFromMaterials,
                 isAutomationLoading: _isCalculatingWorks,
+                onTemplatesAction: _showWorkTemplatesDialog,
+                isTemplatesLoading: _isApplyingTemplate,
               ),
               // Materials Tab
               EstimateTab(
@@ -170,6 +176,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                 automationActionLabel: "Импорт из инженерки",
                 onAutomationAction: _importFromShields,
                 isAutomationLoading: _isImportingShields,
+                onTemplatesAction: _showMaterialTemplatesDialog,
+                isTemplatesLoading: _isApplyingTemplate,
               ),
             ],
           ),
@@ -598,6 +606,90 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       await repo.updateStage(widget.stage.id, {'markup_percent': value});
     } catch (e) {
       debugPrint("Error saving markup: $e");
+    }
+  }
+
+  // --- Template Methods ---
+
+  void _showWorkTemplatesDialog() async {
+    try {
+      final templates = await ref.read(workTemplatesProvider.future);
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (context) => TemplateSelectionDialog<WorkTemplate>(
+          title: "Выберите шаблон работ",
+          templates: templates,
+          getName: (t) => t.name,
+          getDescription: (t) => t.description ?? '',
+          onSelected: (t) => _applyWorkTemplate(t.id),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Ошибка загрузки шаблонов: $e")));
+    }
+  }
+
+  void _showMaterialTemplatesDialog() async {
+    try {
+      final templates = await ref.read(materialTemplatesProvider.future);
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (context) => TemplateSelectionDialog<MaterialTemplate>(
+          title: "Выберите шаблон материалов",
+          templates: templates,
+          getName: (t) => t.name,
+          getDescription: (t) => t.description ?? '',
+          onSelected: (t) => _applyMaterialTemplate(t.id),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Ошибка загрузки шаблонов: $e")));
+    }
+  }
+
+  Future<void> _applyWorkTemplate(int templateId) async {
+    setState(() => _isApplyingTemplate = true);
+    try {
+      await ref
+          .read(templateRepositoryProvider)
+          .applyWorkTemplate(widget.stage.id, templateId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Шаблон работ применен!")));
+      _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Ошибка применения: $e")));
+    } finally {
+      if (mounted) setState(() => _isApplyingTemplate = false);
+    }
+  }
+
+  Future<void> _applyMaterialTemplate(int templateId) async {
+    setState(() => _isApplyingTemplate = true);
+    try {
+      await ref
+          .read(templateRepositoryProvider)
+          .applyMaterialTemplate(widget.stage.id, templateId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Шаблон материалов применен!")));
+      _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Ошибка применения: $e")));
+    } finally {
+      if (mounted) setState(() => _isApplyingTemplate = false);
     }
   }
 

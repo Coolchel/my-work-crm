@@ -150,3 +150,53 @@ class ShieldTemplateAdmin(admin.ModelAdmin):
 class LedTemplateAdmin(admin.ModelAdmin):
     list_display = ('name',)
     inlines = [LedTemplateItemInline]
+
+
+# --- New Template System ---
+
+from .models import (
+    WorkTemplate, WorkTemplateItem,
+    MaterialTemplate, MaterialTemplateItem,
+    PowerShieldTemplate, PowerShieldTemplateItem,
+    MultimediaTemplate, MultimediaTemplateItem
+)
+
+class WorkTemplateItemInline(admin.TabularInline):
+    model = WorkTemplateItem
+    extra = 1
+    autocomplete_fields = ['catalog_item']
+
+@admin.register(WorkTemplate)
+class WorkTemplateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
+    inlines = [WorkTemplateItemInline]
+
+class MaterialTemplateItemInline(admin.TabularInline):
+    model = MaterialTemplateItem
+    extra = 1
+    autocomplete_fields = ['catalog_item']
+
+@admin.register(MaterialTemplate)
+class MaterialTemplateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
+    inlines = [MaterialTemplateItemInline]
+
+class PowerShieldTemplateItemInline(admin.TabularInline):
+    model = PowerShieldTemplateItem
+    extra = 1
+    autocomplete_fields = ['catalog_item']
+
+@admin.register(PowerShieldTemplate)
+class PowerShieldTemplateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
+    inlines = [PowerShieldTemplateItemInline]
+
+class MultimediaTemplateItemInline(admin.TabularInline):
+    model = MultimediaTemplateItem
+    extra = 1
+    autocomplete_fields = ['catalog_item']
+
+@admin.register(MultimediaTemplate)
+class MultimediaTemplateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description')
+    inlines = [MultimediaTemplateItemInline]

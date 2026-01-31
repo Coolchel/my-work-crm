@@ -605,3 +605,126 @@ class LedTemplateItem(models.Model):
 
     def __str__(self):
         return f"{self.transformer} - {self.zone}"
+
+# --- New Template System ---
+
+class BaseTemplate(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Название шаблона")
+    description = models.TextField(blank=True, verbose_name="Описание")
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.name
+
+
+class WorkTemplate(BaseTemplate):
+    class Meta:
+        verbose_name = "Шаблон работ"
+        verbose_name_plural = "Шаблоны работ"
+
+
+class WorkTemplateItem(models.Model):
+    template = models.ForeignKey(WorkTemplate, on_delete=models.CASCADE, related_name='items', verbose_name="Шаблон")
+    catalog_item = models.ForeignKey(
+        CatalogItem, 
+        on_delete=models.CASCADE, 
+        limit_choices_to={'item_type': 'work'},
+        verbose_name="Работа из каталога"
+    )
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1, verbose_name="Количество")
+
+    class Meta:
+        verbose_name = "Позиция шаблона работ"
+        verbose_name_plural = "Позиции шаблона работ"
+
+    def __str__(self):
+        return f"{self.catalog_item.name} ({self.quantity})"
+
+
+class MaterialTemplate(BaseTemplate):
+    class Meta:
+        verbose_name = "Шаблон материалов"
+        verbose_name_plural = "Шаблоны материалов"
+
+
+class MaterialTemplateItem(models.Model):
+    template = models.ForeignKey(MaterialTemplate, on_delete=models.CASCADE, related_name='items', verbose_name="Шаблон")
+    catalog_item = models.ForeignKey(
+        CatalogItem, 
+        on_delete=models.CASCADE, 
+        limit_choices_to={'item_type': 'material'},
+        verbose_name="Материал из каталога"
+    )
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1, verbose_name="Количество")
+
+    class Meta:
+        verbose_name = "Позиция шаблона материалов"
+        verbose_name_plural = "Позиции шаблона материалов"
+
+    def __str__(self):
+        return f"{self.catalog_item.name} ({self.quantity})"
+
+
+class PowerShieldTemplate(BaseTemplate):
+    class Meta:
+        verbose_name = "Шаблон силового щита"
+        verbose_name_plural = "Шаблоны силовых щитов"
+
+
+class PowerShieldTemplateItem(models.Model):
+    template = models.ForeignKey(PowerShieldTemplate, on_delete=models.CASCADE, related_name='items', verbose_name="Шаблон")
+    
+    DEVICE_CHOICES = ShieldGroup.DEVICE_CHOICES
+    
+    device_type = models.CharField(max_length=20, choices=DEVICE_CHOICES, default='circuit_breaker', verbose_name="Тип устройства")
+    rating = models.CharField(max_length=50, default='16A', verbose_name="Номинал")
+    poles = models.CharField(max_length=50, default='1P', verbose_name="Полюса")
+    
+    quantity = models.IntegerField(default=1, verbose_name="Количество (шт)")
+    
+    catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
+
+    class Meta:
+        verbose_name = "Позиция силового щита"
+        verbose_name_plural = "Позиции силового щита"
+
+    def save(self, *args, **kwargs):
+        # Normalization logic similar to ShieldGroup
+        pole_digits = re.findall(r'\d+', str(self.poles))
+        if pole_digits:
+            self.poles = f"{int(pole_digits[0])}P"
+        else:
+            self.poles = "1P"
+
+        rating_digits = re.findall(r'\d+', str(self.rating))
+        if rating_digits:
+             self.rating = f"{int(rating_digits[0])}A"
+        
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.device_type} {self.rating} {self.poles} x{self.quantity}"
+
+
+class MultimediaTemplate(BaseTemplate):
+    class Meta:
+        verbose_name = "Шаблон мультимедиа"
+        verbose_name_plural = "Шаблоны мультимедиа"
+
+
+class MultimediaTemplateItem(models.Model):
+    template = models.ForeignKey(MultimediaTemplate, on_delete=models.CASCADE, related_name='items', verbose_name="Шаблон")
+    
+    name = models.CharField(max_length=255, verbose_name="Название линии/устройства")
+    quantity = models.IntegerField(default=1, verbose_name="Количество")
+    
+    catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
+
+    class Meta:
+        verbose_name = "Позиция мультимедиа"
+        verbose_name_plural = "Позиции мультимедиа"
+
+    def __str__(self):
+         return f"{self.name} x{self.quantity}"

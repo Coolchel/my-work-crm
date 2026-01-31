@@ -7,6 +7,9 @@ import '../../dialogs/engineering/edit_shield_dialog.dart';
 import 'shield_content_power.dart';
 import 'shield_content_led.dart';
 import 'shield_content_multimedia.dart';
+import '../../../../engineering/presentation/dialogs/template_selection_dialog.dart';
+import '../../../../engineering/presentation/providers/template_providers.dart';
+import '../../../../engineering/data/models/template_models.dart';
 
 class ShieldCard extends ConsumerWidget {
   final ShieldModel shield;
@@ -164,6 +167,13 @@ class ShieldCard extends ConsumerWidget {
                 label: const Text('Изменить',
                     style: TextStyle(color: Colors.blue)),
               ),
+              if (shield.shieldType == 'power' ||
+                  shield.shieldType == 'multimedia')
+                IconButton(
+                  onPressed: () => _showTemplateDialog(context, ref, shield),
+                  icon: const Icon(Icons.copy_all, color: Colors.indigo),
+                  tooltip: "Применить шаблон",
+                ),
             ],
           )
         ],
@@ -217,5 +227,73 @@ class ShieldCard extends ConsumerWidget {
       builder: (context) =>
           EditShieldDialog(shield: shield, projectId: projectId),
     );
+  }
+
+  void _showTemplateDialog(
+      BuildContext context, WidgetRef ref, ShieldModel shield) async {
+    try {
+      final isPower = shield.shieldType == 'power';
+      final templates = isPower
+          ? await ref.read(powerShieldTemplatesProvider.future)
+          : await ref.read(multimediaTemplatesProvider.future);
+
+      if (!context.mounted) return;
+
+      // Handle generic type safely
+      void showSelect<T>(List<T> items) {
+        showDialog(
+          context: context,
+          builder: (ctx) => TemplateSelectionDialog<T>(
+            title: isPower
+                ? "Выберите силовой шаблон"
+                : "Выберите слаботочный шаблон",
+            templates: items,
+            getName: (t) => (t as dynamic).name,
+            getDescription: (t) => (t as dynamic).description ?? '',
+            onSelected: (t) =>
+                _applyTemplate(context, ref, shield, (t as dynamic).id),
+          ),
+        );
+      }
+
+      if (isPower) {
+        showSelect<PowerShieldTemplate>(templates as List<PowerShieldTemplate>);
+      } else {
+        showSelect<MultimediaTemplate>(templates as List<MultimediaTemplate>);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Ошибка загрузки шаблонов: $e")));
+      }
+    }
+  }
+
+  Future<void> _applyTemplate(BuildContext context, WidgetRef ref,
+      ShieldModel shield, int templateId) async {
+    try {
+      if (shield.shieldType == 'power') {
+        await ref
+            .read(templateRepositoryProvider)
+            .applyPowerShieldTemplate(shield.id, templateId);
+      } else {
+        await ref
+            .read(templateRepositoryProvider)
+            .applyMultimediaTemplate(shield.id, templateId);
+      }
+
+      ref.invalidate(projectListProvider);
+      ref.invalidate(projectByIdProvider(projectId));
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Шаблон применен!")));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Ошибка применения: $e")));
+      }
+    }
   }
 }

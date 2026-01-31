@@ -35,6 +35,10 @@ class EstimateTab extends ConsumerStatefulWidget {
   final VoidCallback? onAutomationAction;
   final bool isAutomationLoading;
 
+  // Template props
+  final VoidCallback? onTemplatesAction;
+  final bool isTemplatesLoading;
+
   const EstimateTab({
     super.key,
     required this.items,
@@ -54,6 +58,8 @@ class EstimateTab extends ConsumerStatefulWidget {
     this.automationActionLabel,
     this.onAutomationAction,
     this.isAutomationLoading = false,
+    this.onTemplatesAction,
+    this.isTemplatesLoading = false,
   });
 
   @override
@@ -462,35 +468,76 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     );
   }
 
-  Widget _buildAutomationButton() {
-    if (widget.onAutomationAction == null) return const SizedBox.shrink();
+  Widget _buildActionButtons() {
+    final buttons = <Widget>[];
+
+    // Automation Button
+    if (widget.onAutomationAction != null) {
+      buttons.add(
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: widget.isDisabled || widget.isAutomationLoading
+                ? null
+                : widget.onAutomationAction,
+            icon: widget.isAutomationLoading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(Icons.auto_awesome, size: 18, color: _primaryColor),
+            label: Text(
+              widget.isAutomationLoading
+                  ? "Загрузка..."
+                  : (widget.automationActionLabel ?? "Автоматизация"),
+              style: TextStyle(color: _primaryColor, fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: _primaryColor.withOpacity(0.3)),
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Templates Button
+    if (widget.onTemplatesAction != null) {
+      if (buttons.isNotEmpty) {
+        buttons.add(const SizedBox(width: 8));
+      }
+      buttons.add(
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: widget.isDisabled || widget.isTemplatesLoading
+                ? null
+                : widget.onTemplatesAction,
+            icon: widget.isTemplatesLoading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(Icons.copy_all, size: 18, color: _primaryColor),
+            label: Text(
+              widget.isTemplatesLoading ? "Загрузка..." : "Шаблоны",
+              style: TextStyle(color: _primaryColor, fontSize: 13),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: _primaryColor.withOpacity(0.3)),
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (buttons.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Center(
-        child: OutlinedButton.icon(
-          onPressed: widget.isDisabled || widget.isAutomationLoading
-              ? null
-              : widget.onAutomationAction,
-          icon: widget.isAutomationLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Icon(Icons.auto_awesome, size: 18, color: _primaryColor),
-          label: Text(
-            widget.isAutomationLoading
-                ? "Загрузка..."
-                : (widget.automationActionLabel ?? "Автоматизация"),
-            style: TextStyle(color: _primaryColor, fontSize: 13),
-          ),
-          style: OutlinedButton.styleFrom(
-            side: BorderSide(color: _primaryColor.withOpacity(0.3)),
-            visualDensity: VisualDensity.compact,
-          ),
-        ),
-      ),
+      child: Row(children: buttons),
     );
   }
 
@@ -618,7 +665,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
               ),
             ),
 
-          SliverToBoxAdapter(child: _buildAutomationButton()),
+          SliverToBoxAdapter(child: _buildActionButtons()),
 
           if (widget.items.isEmpty)
             const SliverToBoxAdapter(
