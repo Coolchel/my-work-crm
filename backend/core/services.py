@@ -127,18 +127,55 @@ class EstimateAutomationService:
                     selected_size = size
                     break
             
-            # If bigger than max, take max or skip? Take max.
-            # Debugging
-            if not selected_size and total_modules > 0:
-                 print(f"DEBUG: Could not match size for modules={total_modules}, taking max.")
-                 selected_size = standard_sizes[-1]
-            elif selected_size:
-                 print(f"DEBUG: Modules={total_modules} -> Selected Size={selected_size}")
+            # Check 1: Zero Modules
+            if total_modules == 0:
+                continue
 
-            if selected_size:
-                if selected_size not in enclosure_requirements:
-                    enclosure_requirements[selected_size] = 0
-                enclosure_requirements[selected_size] += 1
+            # Check 2: Max Limit (> 144)
+            if total_modules > 144:
+                 # Create Warning Item for Individual Calculation
+                 warning_name = f"ВНИМАНИЕ: Индивидуальный расчет щита (превышен предел 144 мод, факт: {total_modules})"
+                 est_item = EstimateItem.objects.filter(
+                    stage=stage,
+                    name=warning_name,
+                    item_type='material'
+                 ).first()
+                 
+                 if est_item:
+                     # Just update (or ensure exists)
+                     est_item.total_quantity = 1
+                     est_item.save()
+                     updated_count += 1
+                 else:
+                     EstimateItem.objects.create(
+                        stage=stage,
+                        catalog_item=None,
+                        name=warning_name,
+                        item_type='material',
+                        unit='шт',
+                        total_quantity=1,
+                        price_per_unit=Decimal('0.00'),
+                        currency='USD'
+                     )
+                     created_count += 1
+                 continue # Stop processing this shield enclosure
+
+            # Check 3: Standard Size Selection
+            selected_size = None
+            for size in standard_sizes:
+                if total_modules <= size:
+                    selected_size = size
+                    break
+            
+            # If bigger than max (standard) but <= 144 (handled above), or logic missed:
+            # Re-check logic: standard_sizes[-1] is 144. So loop finds it if <= 144.
+            # Just in case:
+            if not selected_size:
+                 selected_size = standard_sizes[-1]
+                 
+            if selected_size not in enclosure_requirements:
+                enclosure_requirements[selected_size] = 0
+            enclosure_requirements[selected_size] += 1
                 
         # Process Enclosures
         for size, count in enclosure_requirements.items():
@@ -147,35 +184,51 @@ class EstimateAutomationService:
             # Try to find specific size
             catalog_enclosure = CatalogItem.objects.filter(mapping_key=enclosure_key).first()
             
-            if not catalog_enclosure:
-                print(f"DEBUG: Missing Catalog Item for key: {enclosure_key}")
-            
-            # Fallback: if not found, maybe find next available size?
-            # For now, strict match to encourage proper catalog setup.
+            final_name = ""
+            price = Decimal('0.00')
+            currency = 'USD'
+            unit = 'шт'
+            markup = stage.markup_percent
             
             if catalog_enclosure:
-                est_item = EstimateItem.objects.filter(
-                    stage=stage,
-                    catalog_item=catalog_enclosure,
-                    item_type='material'
-                ).first()
+                 final_name = catalog_enclosure.name
+                 price = catalog_enclosure.default_price
+                 currency = catalog_enclosure.default_currency
+                 unit = catalog_enclosure.unit
+            else:
+                 # Fallback Logic for Enclosure
+                 final_name = f"ВНИМАНИЕ: Не найден корпус в каталоге! (на {size} мод)"
+            
+            # Search Filter
+            filter_kwargs = {
+                'stage': stage,
+                'item_type': 'material',
+                'name': final_name
+            }
+            if catalog_enclosure:
+                filter_kwargs['catalog_item'] = catalog_enclosure
+            else:
+                filter_kwargs['catalog_item__isnull'] = True
+            
+            est_item = EstimateItem.objects.filter(**filter_kwargs).first()
                 
-                if est_item:
-                    est_item.total_quantity = count
-                    est_item.save()
-                    updated_count += 1
-                else:
-                    EstimateItem.objects.create(
-                        stage=stage,
-                        catalog_item=catalog_enclosure,
-                        name=catalog_enclosure.name,
-                        item_type='material',
-                        unit=catalog_enclosure.unit,
-                        total_quantity=count,
-                        price_per_unit=catalog_enclosure.default_price,
-                        currency=catalog_enclosure.default_currency
-                    )
-                    created_count += 1
+            if est_item:
+                est_item.total_quantity = count
+                est_item.save()
+                updated_count += 1
+            else:
+                EstimateItem.objects.create(
+                    stage=stage,
+                    catalog_item=catalog_enclosure, # Can be None
+                    name=final_name,
+                    item_type='material',
+                    unit=unit,
+                    total_quantity=count,
+                    price_per_unit=price,
+                    currency=currency,
+                    markup_percent=markup
+                )
+                created_count += 1
 
         return {
             "status": "success", 

@@ -134,14 +134,15 @@ class Command(BaseCommand):
             title='stage_1',
             defaults={'status': 'plan'}
         )
-        shield, _ = Shield.objects.get_or_create(
+        # Clear existing shields to avoid lookup errors and duplicates
+        Shield.objects.filter(project=project).delete()
+        
+        # Re-create Main Shield
+        shield = Shield.objects.create(
             project=project,
             shield_type='power',
-            defaults={'name': 'Main Shield'}
+            name='Main Shield'
         )
-        
-        # Clear existing groups to avoid piling up on every run
-        shield.groups.all().delete()
         
         # 5. Populate Shield with diverse items
         
@@ -184,3 +185,27 @@ class Command(BaseCommand):
         self.stdout.write(f"Project ID: {project.id}, Stage ID: {stage.id}")
         self.stdout.write("Shield populated with 14 modules + 1 Mystery item (15 total).")
         self.stdout.write("Expect: Enclosure 18 (fits 15) and ONE 'Warning' line in estimate.")
+        
+        # 9. Create Mega Shield (> 144 modules)
+        mega_shield = Shield.objects.create(
+            project=project,
+            shield_type='power',
+            name='Mega Shield'
+        )
+        ShieldGroup.objects.create(
+            shield=mega_shield,
+            device_type='rx_switch', # Dummy
+            rating='1000A',
+            poles='150P', # Hack to force 150 modules (model auto-calcs from poles)
+            zone='Factory',
+            # modules_count=150 # Ignored by save() logic
+        )
+        self.stdout.write("Created 'Mega Shield' with 150 modules (via 150P). Expect: Warning Individual Calculation.")
+        
+        # 10. Create Empty Shield (0 modules)
+        empty_shield = Shield.objects.create(
+            project=project,
+            shield_type='power',
+            name='Empty Shield'
+        )
+        self.stdout.write("Created 'Empty Shield' (0 modules). Expect: No enclosure line for this shield.")

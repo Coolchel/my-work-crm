@@ -21,7 +21,21 @@ class Command(BaseCommand):
         result = EstimateAutomationService.import_shield_to_materials(project.id, stage.id)
         self.stdout.write(f"Result: {result}")
         
-        from core.models import EstimateItem
+        from core.models import EstimateItem, Shield
+        
+        # Debug Shields
+        shields = Shield.objects.filter(project=project, shield_type='power')
+        for s in shields:
+             mods = sum(g.modules_count for g in s.groups.all())
+             self.stdout.write(f"Shield '{s.name}': {mods} modules")
+
         items = EstimateItem.objects.filter(stage=stage, item_type='material')
         for item in items:
              self.stdout.write(f"- {item.name}: {item.total_quantity} {item.unit}")
+             
+        # Check specifically for warning
+        warn = items.filter(name__startswith="ВНИМАНИЕ: Индивидуальный").first()
+        if warn:
+             self.stdout.write(f"SUCCESS: Found Warning Item: {warn.name}")
+        else:
+             self.stdout.write("FAILURE: Warning Item NOT FOUND")
