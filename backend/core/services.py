@@ -55,41 +55,57 @@ class EstimateAutomationService:
             # Form search key: shield_{device_type}_{poles}
             mapping_key = f"shield_{device_type}_{poles}"
             
+            # Find in Catalog
             catalog_item = CatalogItem.objects.filter(mapping_key=mapping_key).first()
-            if not catalog_item:
-                continue
-                
+            
             # Name Construction
-            final_name = catalog_item.name
-            if rating:
-                final_name = f"{final_name} {rating}"
+            final_name = ""
+            price = Decimal('0.00')
+            currency = 'USD' # Default
+            unit = 'шт'
+            markup = stage.markup_percent
+
+            if catalog_item:
+                final_name = catalog_item.name
+                if rating:
+                     final_name = f"{final_name} {rating}"
+                price = catalog_item.default_price
+                currency = catalog_item.default_currency
+                unit = catalog_item.unit
+            else:
+                # Fallback Logic
+                final_name = f"ВНИМАНИЕ: Не найден в каталоге! ({device_type} {poles} {rating})"
                 
-            # Merge Logic: Search by CatalogItem (Best) or Name (Fallback)
-            est_item = EstimateItem.objects.filter(
-                stage=stage, 
-                catalog_item=catalog_item,
-                item_type='material'
-            ).first()
+            # Merge Logic
+            # Search filter depends on whether we have catalog_item
+            filter_kwargs = {
+                'stage': stage,
+                'item_type': 'material',
+                'name': final_name
+            }
+            if catalog_item:
+                filter_kwargs['catalog_item'] = catalog_item
+            else:
+                filter_kwargs['catalog_item__isnull'] = True
+
+            est_item = EstimateItem.objects.filter(**filter_kwargs).first()
             
             if est_item:
                 # Update existing
                 est_item.total_quantity = quantity
-                # We update name only if it was auto-generated or empty? 
-                # Let's keep existing name to respect user edits, unless it's generic?
-                # User said: "Update total_quantity".
                 est_item.save()
                 updated_count += 1
             else:
                 EstimateItem.objects.create(
                     stage=stage,
-                    catalog_item=catalog_item,
+                    catalog_item=catalog_item, # Can be None
                     name=final_name,
                     item_type='material',
-                    unit=catalog_item.unit,
+                    unit=unit,
                     total_quantity=quantity,
-                    price_per_unit=catalog_item.default_price,
-                    currency=catalog_item.default_currency,
-                    markup_percent=stage.markup_percent
+                    price_per_unit=price,
+                    currency=currency,
+                    markup_percent=markup
                 )
                 created_count += 1
                 

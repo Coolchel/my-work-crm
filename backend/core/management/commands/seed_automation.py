@@ -2,41 +2,37 @@ from django.core.management.base import BaseCommand
 from core.models import CatalogCategory, CatalogItem, Project, Shield, ShieldGroup, Stage
 
 class Command(BaseCommand):
-    help = 'Seeds data for Automation verification'
+    help = 'Seeds data for Full Automation verification'
 
     def handle(self, *args, **options):
-        self.stdout.write("Seeding Automation Data...")
+        self.stdout.write("Seeding Full Automation Data...")
         
         # 1. Create Categories
         cat_mat, _ = CatalogCategory.objects.get_or_create(name="Автоматика", slug="avtomatika")
         cat_work, _ = CatalogCategory.objects.get_or_create(name="Установка Щит", slug="install_shield")
 
-        # 2. Create Work Item: "Install Breaker"
-        work_breaker, _ = CatalogItem.objects.get_or_create(
-            name="Установка однополюсного автомата",
-            defaults={
-                'category': cat_work,
-                'item_type': 'work',
-                'unit': 'шт',
-                'default_price': 5.00,
-                'default_currency': 'USD'
-            }
+        # 2. Create Works
+        work_1p, _ = CatalogItem.objects.get_or_create(
+            name="Монтаж 1P устройства",
+            defaults={'category': cat_work, 'item_type': 'work', 'unit': 'шт', 'default_price': 5.00}
         )
-        
-        # 2b. Create Work Item: "Mount Shield 24"
-        work_mount_shield, _ = CatalogItem.objects.get_or_create(
-            name="Монтаж щита встраиваемого (до 24 мод)",
-            defaults={
-                'category': cat_work,
-                'item_type': 'work',
-                'unit': 'шт',
-                'default_price': 25.00,
-                'default_currency': 'USD'
-            }
+        work_2p, _ = CatalogItem.objects.get_or_create(
+            name="Монтаж 2P устройства",
+            defaults={'category': cat_work, 'item_type': 'work', 'unit': 'шт', 'default_price': 8.00}
+        )
+        work_3p4p, _ = CatalogItem.objects.get_or_create(
+            name="Монтаж 3P/4P устройства",
+            defaults={'category': cat_work, 'item_type': 'work', 'unit': 'шт', 'default_price': 12.00}
+        )
+        work_shield, _ = CatalogItem.objects.get_or_create(
+            name="Монтаж корпуса щита",
+            defaults={'category': cat_work, 'item_type': 'work', 'unit': 'шт', 'default_price': 50.00}
         )
 
-        # 3. Create Material Item: "Breaker 1P" with mapping and relation
-        mat_breaker, created = CatalogItem.objects.get_or_create(
+        # 3. Create Materials with mapping and links
+        
+        # 3.1. Breaker 1P
+        CatalogItem.objects.update_or_create(
             mapping_key="shield_circuit_breaker_1P",
             defaults={
                 'name': "Автоматический выключатель 1P",
@@ -44,167 +40,147 @@ class Command(BaseCommand):
                 'item_type': 'material',
                 'unit': 'шт',
                 'default_price': 3.50,
-                'default_currency': 'USD',
-                'related_work_item': work_breaker
-            }
-        )
-        if not created:
-             mat_breaker.related_work_item = work_breaker
-             mat_breaker.save()
-             
-        # 4. Create Enclosure (Shield Box) 24 modules
-        mat_shield_24, created_sh = CatalogItem.objects.get_or_create(
-            mapping_key="shield_enclosure_24",
-            defaults={
-                'name': "Щит встраиваемый 24 модуля (Hager)",
-                'category': cat_mat,
-                'item_type': 'material',
-                'unit': 'шт',
-                'default_price': 50.00,
-                'default_currency': 'USD',
-                'related_work_item': work_mount_shield
-            }
-        )
-        if not created_sh:
-            mat_shield_24.related_work_item = work_mount_shield
-            mat_shield_24.save()
-            
-        # 4b. Create Enclosure Size 4 (for small test case)
-        mat_shield_4, created_sh4 = CatalogItem.objects.get_or_create(
-            mapping_key="shield_enclosure_4",
-            defaults={
-                'name': "Щит пластиковый 4 модуля",
-                'category': cat_mat,
-                'item_type': 'material',
-                'unit': 'шт',
-                'default_price': 10.00,
-                'default_currency': 'USD',
-                'related_work_item': work_mount_shield
-            }
-        )
-        if not created_sh4:
-            mat_shield_4.related_work_item = work_mount_shield
-            mat_shield_4.save()
-        if not created_sh4:
-            mat_shield_4.related_work_item = work_mount_shield
-            mat_shield_4.save()
-
-        # 5. Create Work Item: "Mount RCD"
-        work_mount_rcd, _ = CatalogItem.objects.get_or_create(
-            name="Монтаж УЗО (2P)",
-            defaults={
-                'category': cat_work,
-                'item_type': 'work',
-                'unit': 'шт',
-                'default_price': 8.00,
-                'default_currency': 'USD'
+                'related_work_item': work_1p
             }
         )
 
-        # 6. Create Material Item: "RCD 2P"
-        # Logic usage: shield_{device_type}_{poles} -> shield_rcd_2P
-        mat_rcd_2p, created_rcd = CatalogItem.objects.get_or_create(
+        # 3.2. Diff Breaker 2P
+        CatalogItem.objects.update_or_create(
+            mapping_key="shield_diff_breaker_2P",
+            defaults={
+                'name': "Диф.автомат 2P",
+                'category': cat_mat,
+                'item_type': 'material',
+                'unit': 'шт',
+                'default_price': 20.00,
+                'related_work_item': work_2p
+            }
+        )
+
+        # 3.3. RCD 2P
+        CatalogItem.objects.update_or_create(
             mapping_key="shield_rcd_2P",
             defaults={
-                'name': "УЗО 2P (Diff)",
+                'name': "УЗО 2P",
                 'category': cat_mat,
                 'item_type': 'material',
                 'unit': 'шт',
                 'default_price': 25.00,
-                'default_currency': 'USD',
-                'related_work_item': work_mount_rcd
+                'related_work_item': work_2p
             }
         )
-        if not created_rcd:
-            mat_rcd_2p.related_work_item = work_mount_rcd
-            mat_rcd_2p.save()
-        if not created_rcd:
-            mat_rcd_2p.related_work_item = work_mount_rcd
-            mat_rcd_2p.save()
-            
-        # 7. Create Material Item: "Shield 18 modules"
-        mat_shield_18, created_sh18 = CatalogItem.objects.get_or_create(
-            mapping_key="shield_enclosure_18",
+
+        # 3.4. Voltage Relay 2P
+        CatalogItem.objects.update_or_create(
+            mapping_key="shield_relay_2P",
             defaults={
-                'name': "Щит встраиваемый 18 модулей (Hager)",
+                'name': "Реле напряжения 2P",
                 'category': cat_mat,
                 'item_type': 'material',
                 'unit': 'шт',
-                'default_price': 35.00,
-                'default_currency': 'USD',
-                'related_work_item': work_mount_shield
+                'default_price': 30.00,
+                'related_work_item': work_2p
             }
         )
-        if not created_sh18:
-            mat_shield_18.related_work_item = work_mount_shield
-            mat_shield_18.save()
 
-        # 8. Create Large Group to force > 12 modules logic (Test for 18)
-        # We add to the SAME shield "ГРЩ Тест"
-        # Existing modules: 1+1+2 = 4. 
-        # We need 14 total. So we need +10 modules.
-        shield = Shield.objects.filter(name='ГРЩ Тест').first()
-        if shield:
-            ShieldGroup.objects.create(
-                shield=shield,
-                device_type='relay', # Just a placeholder type
-                rating='Unknown',
-                poles='4P',
-                zone='Big Test Device',
-                modules_count=10
-            )
-             
-        self.stdout.write(f"Catalog Items created: {mat_breaker} -> {work_breaker}")
+        # 3.5. Load Switch 3P
+        CatalogItem.objects.update_or_create(
+            mapping_key="shield_load_switch_3P",
+            defaults={
+                'name': "Выключатель нагрузки 3P",
+                'category': cat_mat,
+                'item_type': 'material',
+                'unit': 'шт',
+                'default_price': 15.00,
+                'related_work_item': work_3p4p
+            }
+        )
 
-        # 5. Create Test Project
-        project, _ = Project.objects.get_or_create(
-            address="Тест Автоматизации",
-            defaults={'client_info': "Auto Tester"}
+        # 3.6. Enclosure 24
+        CatalogItem.objects.update_or_create(
+            mapping_key="shield_enclosure_24",
+            defaults={
+                'name': "Щит встраиваемый 24 модуля",
+                'category': cat_mat,
+                'item_type': 'material',
+                'unit': 'шт',
+                'default_price': 50.00,
+                'related_work_item': work_shield
+            }
         )
         
-        # 6. Create Stage
+        # 3.7 Enclosure 18 (requested previously)
+        CatalogItem.objects.update_or_create(
+            mapping_key="shield_enclosure_18",
+            defaults={
+                'name': "Щит встраиваемый 18 модулей",
+                'category': cat_mat,
+                'item_type': 'material',
+                'unit': 'шт',
+                'default_price': 40.00,
+                'related_work_item': work_shield
+            }
+        )
+
+        self.stdout.write("Catalog Items updated/created.")
+
+        # 4. Create Project and Shield for Test
+        project, _ = Project.objects.get_or_create(
+            address="Full Automation Test",
+            defaults={'client_info': "Auto Tester"}
+        )
         stage, _ = Stage.objects.get_or_create(
             project=project,
             title='stage_1',
             defaults={'status': 'plan'}
         )
-        
-        # 7. Create Power Shield
         shield, _ = Shield.objects.get_or_create(
             project=project,
             shield_type='power',
-            defaults={'name': 'ГРЩ Тест'}
+            defaults={'name': 'Main Shield'}
         )
         
-        # 8. Create Shield Group (Circuit Breaker 16A 1P) -> Should match our key
-        # We need 2 of them to test aggregation
+        # Clear existing groups to avoid piling up on every run
+        shield.groups.all().delete()
+        
+        # 5. Populate Shield with diverse items
+        
+        # 5.1. Breakers 1P 16A (x2)
+        ShieldGroup.objects.create(shield=shield, device_type='circuit_breaker', rating='16A', poles='1P', zone='Light', modules_count=1)
+        ShieldGroup.objects.create(shield=shield, device_type='circuit_breaker', rating='16A', poles='1P', zone='Socket', modules_count=1)
+        
+        # 5.2. Diff 2P 16A (x1)
+        ShieldGroup.objects.create(shield=shield, device_type='diff_breaker', rating='16A', poles='2P', zone='Wet Area', modules_count=2)
+        
+        # 5.3. RCD 2P 40A (x1)
+        ShieldGroup.objects.create(shield=shield, device_type='rcd', rating='40A', poles='2P', zone='Input RCD', modules_count=2)
+        
+        # 5.4. Relay 2P 63A (x1)
+        ShieldGroup.objects.create(shield=shield, device_type='relay', rating='63A', poles='2P', zone='Input Protection', modules_count=2)
+        
+        # 5.5. Load Switch 3P 63A (x1)
+        ShieldGroup.objects.create(shield=shield, device_type='load_switch', rating='63A', poles='3P', zone='Main Switch', modules_count=3)
+
+        # Total modules: 1+1+2+2+2+3 = 11 modules. 
+        # Should pick matching enclosure -> 12 modules? 
+        # But we only seeded 18 and 24.
+        # Let's add 12 to catalog just in case, or force higher modules count.
+        # Let's add more params to force 18 modules (need 13+ modules).
+        # Add another 3P switch
+        ShieldGroup.objects.create(shield=shield, device_type='load_switch', rating='32A', poles='3P', zone='Backup', modules_count=3)
+        # Total: 14 modules -> Should pick 18.
+        
+        # 5.6. MISSING ITEM TEST
+        # Add a device that definitely doesn't exist in catalog to instructions
         ShieldGroup.objects.create(
             shield=shield,
-            device_type='circuit_breaker',
-            rating='16A',
+            device_type='other',
+            rating='Unknown',
             poles='1P',
-            zone='Свет кухня',
+            zone='Mystery Zone',
             modules_count=1
         )
-        ShieldGroup.objects.create(
-            shield=shield,
-            device_type='circuit_breaker',
-            rating='16A',
-            poles='1P',
-            zone='Свет спальня',
-            modules_count=1
-        )
-        
-        # 9. Create RCD (Diff) - for which we didn't create catalog item, to test skip/fallback
-        ShieldGroup.objects.create(
-            shield=shield,
-            device_type='rcd',
-            rating='40A',
-            poles='2P',
-            zone='Ввод',
-            modules_count=2
-        )
-        
-        self.stdout.write("Created Project with Shield Groups.")
+
         self.stdout.write(f"Project ID: {project.id}, Stage ID: {stage.id}")
-        self.stdout.write("You can now open the app, go to this project, and test Import.")
+        self.stdout.write("Shield populated with 14 modules + 1 Mystery item (15 total).")
+        self.stdout.write("Expect: Enclosure 18 (fits 15) and ONE 'Warning' line in estimate.")

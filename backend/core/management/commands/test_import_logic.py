@@ -20,3 +20,8 @@ class Command(BaseCommand):
         self.stdout.write(f"Running Import for Project {project.id}, Stage {stage.id}...")
         result = EstimateAutomationService.import_shield_to_materials(project.id, stage.id)
         self.stdout.write(f"Result: {result}")
+        
+        from core.models import EstimateItem
+        items = EstimateItem.objects.filter(stage=stage, item_type='material')
+        for item in items:
+             self.stdout.write(f"- {item.name}: {item.total_quantity} {item.unit}")
