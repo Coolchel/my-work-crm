@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/estimate_item_model.dart';
 import '../../data/models/stage_model.dart';
-import '../../../catalog/domain/catalog_item.dart';
 import '../providers/project_providers.dart';
 import '../widgets/estimate/estimate_tab.dart';
 import '../dialogs/estimate/add_item_dialog.dart';
@@ -35,6 +34,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   bool _isFabExpanded = false;
   bool _showPrices = true;
   double _markupPercent = 0;
+
+  bool _isImportingShields = false;
+  bool _isCalculatingWorks = false;
 
   // Local state for items (for optimistic updates and display)
   List<EstimateItemModel> _items = [];
@@ -144,6 +146,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                 remarks: _stage.workRemarks,
                 onSaveNote: (v) => _saveNotes('work', v),
                 onSaveRemarks: (v) => _saveNotes('work_remarks', v),
+                automationActionLabel: "Рассчитать по материалам",
+                onAutomationAction: _calculateWorksFromMaterials,
+                isAutomationLoading: _isCalculatingWorks,
               ),
               // Materials Tab
               EstimateTab(
@@ -162,6 +167,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                 remarks: _stage.materialRemarks,
                 onSaveNote: (v) => _saveNotes('material', v),
                 onSaveRemarks: (v) => _saveNotes('material_remarks', v),
+                automationActionLabel: "Импорт из инженерки",
+                onAutomationAction: _importFromShields,
+                isAutomationLoading: _isImportingShields,
               ),
             ],
           ),
@@ -532,6 +540,56 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     _markupDebounce = Timer(const Duration(milliseconds: 1000), () {
       _saveMarkup(value);
     });
+  }
+
+  Future<void> _importFromShields() async {
+    setState(() => _isImportingShields = true);
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+      final result = await repo.importFromShields(widget.stage.id);
+
+      final created = result['created'] ?? 0;
+      final updated = result['updated'] ?? 0;
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text("Импорт завершен: Создано $created, Обновлено $updated")),
+      );
+      _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Ошибка импорта: $e")));
+    } finally {
+      if (mounted) setState(() => _isImportingShields = false);
+    }
+  }
+
+  Future<void> _calculateWorksFromMaterials() async {
+    setState(() => _isCalculatingWorks = true);
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+      final result = await repo.calculateWorks(widget.stage.id);
+
+      final created = result['created'] ?? 0;
+      final updated = result['updated'] ?? 0;
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text("Расчет завершен: Создано $created, Обновлено $updated")),
+      );
+      _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Ошибка расчета: $e")));
+    } finally {
+      if (mounted) setState(() => _isCalculatingWorks = false);
+    }
   }
 
   Future<void> _saveMarkup(double value) async {

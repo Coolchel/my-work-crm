@@ -42,6 +42,10 @@ class CatalogItem(models.Model):
     # Поле для поиска (lowercase), т.к. SQLite не умеет lowercase для кириллицы
     search_name = models.CharField(max_length=255, blank=True, verbose_name="Поиск (нижний регистр)")
 
+    # Поля для автоматизации (Import & Calc)
+    mapping_key = models.CharField(max_length=100, blank=True, null=True, verbose_name="Технический ключ")
+    related_work_item = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Связанная работа")
+
     class Meta:
         verbose_name = "Элемент справочника"
         verbose_name_plural = "Справочник (Товары/Работы)"

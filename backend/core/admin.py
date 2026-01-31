@@ -73,9 +73,10 @@ class CatalogCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(CatalogItem)
 class CatalogItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'item_type', 'default_price', 'default_currency', 'unit')
+    list_display = ('name', 'category', 'item_type', 'default_price', 'default_currency', 'unit', 'mapping_key')
     list_filter = ('category', 'item_type')
-    search_fields = ('name',)
+    search_fields = ('name', 'mapping_key')
+    autocomplete_fields = ['related_work_item']
 
 @admin.register(EstimateTemplate)
 class EstimateTemplateAdmin(admin.ModelAdmin):

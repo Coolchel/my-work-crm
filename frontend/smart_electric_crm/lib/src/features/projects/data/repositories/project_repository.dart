@@ -199,4 +199,30 @@ class ProjectRepository {
       rethrow;
     }
   }
+
+  /// Импорт материалов из инженерной карты (Щиты)
+  Future<Map<String, dynamic>> importFromShields(int stageId) async {
+    try {
+      final response = await _dio.post('/stages/$stageId/import_from_shields/');
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      if (e is DioException) {
+        debugPrint("❌ Import Shields Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  /// Расчет работ на основе материалов
+  Future<Map<String, dynamic>> calculateWorks(int stageId) async {
+    try {
+      final response = await _dio.post('/stages/$stageId/calculate_works/');
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      if (e is DioException) {
+        debugPrint("❌ Calculate Works Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
 }

@@ -198,97 +198,64 @@ class StageViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Template not found'}, status=status.HTTP_404_NOT_FOUND)
             
         items_to_create = []
+        created_count = 0
+        updated_count = 0
+        
         for item in template.items.all():
-            items_to_create.append(EstimateItem(
+            # Check if exists
+            est_item = EstimateItem.objects.filter(
                 stage=stage,
                 catalog_item=item.catalog_item,
-                name=item.catalog_item.name,
-                item_type=item.catalog_item.item_type,
-                unit=item.catalog_item.unit,
-                total_quantity=item.default_quantity,
-                price_per_unit=item.catalog_item.default_price,
-                currency=item.catalog_item.default_currency,
-                employer_quantity=0,
-                markup_percent=0
-            ))
+                item_type=item.catalog_item.item_type
+            ).first()
             
-        EstimateItem.objects.bulk_create(items_to_create)
-        return Response({'status': 'Template applied', 'added_count': len(items_to_create)})
+            if est_item:
+                # Update quantity (Additive for templates)
+                est_item.total_quantity += item.default_quantity
+                est_item.save()
+                updated_count += 1
+            else:
+                EstimateItem.objects.create(
+                    stage=stage,
+                    catalog_item=item.catalog_item,
+                    name=item.catalog_item.name,
+                    item_type=item.catalog_item.item_type,
+                    unit=item.catalog_item.unit,
+                    total_quantity=item.default_quantity,
+                    price_per_unit=item.catalog_item.default_price,
+                    currency=item.catalog_item.default_currency,
+                    employer_quantity=0,
+                    markup_percent=0
+                )
+                created_count += 1
+            
+        return Response({
+            'status': 'Template applied', 
+            'created': created_count, 
+            'updated': updated_count
+        })
 
     @action(detail=True, methods=['post'])
     def import_from_shields(self, request, pk=None):
         stage = self.get_object()
-        project = stage.project
+        from .services import EstimateAutomationService
+        result = EstimateAutomationService.import_shield_to_materials(stage.project.id, stage.id)
         
-        added_count = 0
-        items_to_create = []
-
-        # 1. Импорт из Силовых щитов (ShieldGroup)
-        power_shields = Shield.objects.filter(project=project, shield_type='power')
-        for shield in power_shields:
-            for group in shield.groups.all():
-                # Создаем работу по установке устройства
-                # Пытаемся найти подходящую работу в справочнике или создаем generic
-                # Логика: "Установка {device}"
-                work_name = f"Установка: {group.device}"
-                
-                # Создаем EstimateItem (Работа)
-                items_to_create.append(EstimateItem(
-                    stage=stage,
-                    name=work_name,
-                    item_type='work',
-                    unit='шт',
-                    total_quantity=1, # 1 шт на группу
-                    price_per_unit=0, # Цену нужно заполнить или брать из справочника
-                    currency='USD'
-                ))
-                
-                # Если у группы указан товар (материал), добавляем и его
-                if group.catalog_item:
-                    items_to_create.append(EstimateItem(
-                        stage=stage,
-                        catalog_item=group.catalog_item, # save() подтянет поля
-                        total_quantity=1
-                    ))
-        
-        # 2. Импорт из LED щитов (LedZone)
-        led_shields = Shield.objects.filter(project=project, shield_type='led')
-        for shield in led_shields:
-            for zone in shield.led_zones.all():
-                # Установка трансформатора
-                items_to_create.append(EstimateItem(
-                    stage=stage,
-                    name=f"Монтаж LED зоны: {zone.transformer}",
-                    item_type='work',
-                    unit='шт',
-                    total_quantity=1,
-                    price_per_unit=0,
-                    currency='USD'
-                ))
-
-        # Сохраняем (bulk_create не вызовет save(), поэтому поля из catalog_item не подтянутся автоматически
-        # для items, созданных с catalog_item. Придется итерировать или вызывать save/подготавливать вручную)
-        # Для надежности используем цикл с save() или подготовим данные полнее.
-        # Выше я использовал bulk_create для template, но там я вручную заполнил поля.
-        # Здесь для catalog_item лучше заполнить вручную.
-        
-        # Исправляем items с catalog_item
-        final_items = []
-        for item in items_to_create:
-            if item.catalog_item and not item.name:
-                item.name = item.catalog_item.name
-                item.unit = item.catalog_item.unit
-                item.item_type = item.catalog_item.item_type
-                if item.price_per_unit is None or item.price_per_unit == 0:
-                    item.price_per_unit = item.catalog_item.default_price
-                if not item.currency:
-                    item.currency = item.catalog_item.default_currency
+        if result.get("status") == "error":
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
             
-            final_items.append(item)
+        return Response(result)
 
-        EstimateItem.objects.bulk_create(final_items)
+    @action(detail=True, methods=['post'])
+    def calculate_works(self, request, pk=None):
+        stage = self.get_object()
+        from .services import EstimateAutomationService
+        result = EstimateAutomationService.calculate_works_from_materials(stage.id)
         
-        return Response({'status': 'Imported from shields', 'added_count': len(final_items)})
+        if result.get("status") == "error":
+             return Response(result, status=status.HTTP_400_BAD_REQUEST)
+             
+        return Response(result)
 
     @action(detail=True, methods=['get'])
     def get_report(self, request, pk=None):

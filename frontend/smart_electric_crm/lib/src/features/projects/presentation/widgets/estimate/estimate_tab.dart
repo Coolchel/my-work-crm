@@ -30,6 +30,11 @@ class EstimateTab extends ConsumerStatefulWidget {
   final bool isDisabled;
   final VoidCallback? onDismissRequest;
 
+  // Automation props
+  final String? automationActionLabel;
+  final VoidCallback? onAutomationAction;
+  final bool isAutomationLoading;
+
   const EstimateTab({
     super.key,
     required this.items,
@@ -46,6 +51,9 @@ class EstimateTab extends ConsumerStatefulWidget {
     this.onShowPricesChanged,
     this.isDisabled = false,
     this.onDismissRequest,
+    this.automationActionLabel,
+    this.onAutomationAction,
+    this.isAutomationLoading = false,
   });
 
   @override
@@ -454,6 +462,38 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     );
   }
 
+  Widget _buildAutomationButton() {
+    if (widget.onAutomationAction == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Center(
+        child: OutlinedButton.icon(
+          onPressed: widget.isDisabled || widget.isAutomationLoading
+              ? null
+              : widget.onAutomationAction,
+          icon: widget.isAutomationLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(Icons.auto_awesome, size: 18, color: _primaryColor),
+          label: Text(
+            widget.isAutomationLoading
+                ? "Загрузка..."
+                : (widget.automationActionLabel ?? "Автоматизация"),
+            style: TextStyle(color: _primaryColor, fontSize: 13),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: _primaryColor.withOpacity(0.3)),
+            visualDensity: VisualDensity.compact,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildViewModeToggleSegmented(bool showPrices) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -577,6 +617,8 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                 child: _buildViewModeToggleSegmented(showPrices),
               ),
             ),
+
+          SliverToBoxAdapter(child: _buildAutomationButton()),
 
           if (widget.items.isEmpty)
             const SliverToBoxAdapter(
