@@ -19,69 +19,24 @@ class EstimateAutomationService:
         created_count = 0
         updated_count = 0
         
-        # 1. Aggregation of Shield Groups (Circuit Breakers, RCDs, etc)
-        # We need to group by (device_type, poles, rating)
-        # But since ShieldGroup doesn't have a direct 'group by' in ORM easily for constructed fields,
-        # we will iterate and aggregate in python or use existing fields.
-        # ShieldGroup has: device_type, rating, poles. Perfect.
-        
-        shields = Shield.objects.filter(project_id=project_id, shield_type='power')
-        
-        # Dictionary to store aggregated data: key -> quantity
-        # key = (device_type, poles, rating)
-        aggregated_items = {}
-        
-        for shield in shields:
-            groups = shield.groups.all()
-            for group in groups:
-                # Key for aggregation
-                key = (group.device_type, group.poles, group.rating)
-                
-                # Check for catalog item override in group? 
-                # Currently logic says: search via Key.
-                # If group has manual catalog_item, we might want to use it? 
-                # LOGIC.md section 4.1 says: Group by 3 attributes -> Search Catalog.
-                
-                if key not in aggregated_items:
-                    aggregated_items[key] = 0
-                
-                # Assuming 1 group = 1 device physically (often true for modular devices)
-                # But 'group' can represent multiple? No, usually 1 row = 1 device in this app logic (1P, 16A).
-                # Actually, check logic. ShieldGroup usually is "Kitchen Sockets, 16A, 1P". It is ONE breaker.
-                aggregated_items[key] += 1
-
-        # Process Aggregated Items
-        for (device_type, poles, rating), quantity in aggregated_items.items():
-            # Form search key: shield_{device_type}_{poles}
-            mapping_key = f"shield_{device_type}_{poles}"
+        # Helper to simplify creation/update
+        def create_or_update(name, quantity, catalog_item=None, price=None, currency='USD', unit='шт'):
+            nonlocal created_count, updated_count
             
-            # Find in Catalog
-            catalog_item = CatalogItem.objects.filter(mapping_key=mapping_key).first()
-            
-            # Name Construction
-            final_name = ""
-            price = Decimal('0.00')
-            currency = 'USD' # Default
-            unit = 'шт'
-            markup = stage.markup_percent
-
+            # Defaults if catalog_item provided
             if catalog_item:
-                final_name = catalog_item.name
-                if rating:
-                     final_name = f"{final_name} {rating}"
-                price = catalog_item.default_price
-                currency = catalog_item.default_currency
-                unit = catalog_item.unit
-            else:
-                # Fallback Logic
-                final_name = f"ВНИМАНИЕ: Не найден в каталоге! ({device_type} {poles} {rating})"
-                
-            # Merge Logic
-            # Search filter depends on whether we have catalog_item
+                if not name: name = catalog_item.name
+                if price is None: price = catalog_item.default_price
+                if not unit: unit = catalog_item.unit
+                if not currency: currency = catalog_item.default_currency
+            
+            # Fallbacks
+            if price is None: price = Decimal('0.00')
+            
             filter_kwargs = {
                 'stage': stage,
                 'item_type': 'material',
-                'name': final_name
+                'name': name
             }
             if catalog_item:
                 filter_kwargs['catalog_item'] = catalog_item
@@ -91,144 +46,168 @@ class EstimateAutomationService:
             est_item = EstimateItem.objects.filter(**filter_kwargs).first()
             
             if est_item:
-                # Update existing
                 est_item.total_quantity = quantity
                 est_item.save()
                 updated_count += 1
             else:
                 EstimateItem.objects.create(
                     stage=stage,
-                    catalog_item=catalog_item, # Can be None
-                    name=final_name,
+                    catalog_item=catalog_item,
+                    name=name,
                     item_type='material',
                     unit=unit,
                     total_quantity=quantity,
                     price_per_unit=price,
                     currency=currency,
-                    markup_percent=markup
+                    markup_percent=stage.markup_percent
                 )
                 created_count += 1
-                
-        # 2. Logic for Enclosures (Shields)
-        # We calculate modules per shield, select best standard size, and aggregate by size.
-        enclosure_requirements = {} # size -> count
-        standard_sizes = [2, 4, 6, 8, 12, 18, 24, 36, 48, 60, 72, 96, 120, 144]
+
+        # --- 1. Aggregation of Shield Groups (Circuit Breakers, etc) ---
+        shields = Shield.objects.filter(project_id=project_id, shield_type='power')
+        aggregated_items = {}
         
         for shield in shields:
-            total_modules = sum(g.modules_count for g in shield.groups.all())
-            if total_modules == 0:
-                continue
+            groups = shield.groups.all()
+            for group in groups:
+                key = (group.device_type, group.poles, group.rating)
+                if key not in aggregated_items:
+                    aggregated_items[key] = 0
+                aggregated_items[key] += 1
 
-            # Find standard size
-            standard_sizes = [2, 4, 6, 8, 12, 18, 24, 36, 48, 60, 72, 96, 120, 144]
-            selected_size = None
-            for size in standard_sizes:
-                if total_modules <= size:
-                    selected_size = size
-                    break
+        for (device_type, poles, rating), quantity in aggregated_items.items():
+            mapping_key = f"shield_{device_type}_{poles}"
+            catalog_item = CatalogItem.objects.filter(mapping_key=mapping_key).first()
             
-            # Check 1: Zero Modules
-            if total_modules == 0:
-                continue
-
-            # Check 2: Max Limit (> 144)
-            if total_modules > 144:
-                 # Create Warning Item for Individual Calculation
-                 warning_name = f"ВНИМАНИЕ: Индивидуальный расчет щита (превышен предел 144 мод, факт: {total_modules})"
-                 est_item = EstimateItem.objects.filter(
-                    stage=stage,
-                    name=warning_name,
-                    item_type='material'
-                 ).first()
-                 
-                 if est_item:
-                     # Just update (or ensure exists)
-                     est_item.total_quantity = 1
-                     est_item.save()
-                     updated_count += 1
-                 else:
-                     EstimateItem.objects.create(
-                        stage=stage,
-                        catalog_item=None,
-                        name=warning_name,
-                        item_type='material',
-                        unit='шт',
-                        total_quantity=1,
-                        price_per_unit=Decimal('0.00'),
-                        currency='USD'
-                     )
-                     created_count += 1
-                 continue # Stop processing this shield enclosure
-
-            # Check 3: Standard Size Selection
-            selected_size = None
-            for size in standard_sizes:
-                if total_modules <= size:
-                    selected_size = size
-                    break
+            final_name = ""
+            if catalog_item:
+                final_name = catalog_item.name
+                if rating: final_name = f"{final_name} {rating}"
+            else:
+                final_name = f"ВНИМАНИЕ: Не найден в каталоге! ({device_type} {poles} {rating})"
             
-            # If bigger than max (standard) but <= 144 (handled above), or logic missed:
-            # Re-check logic: standard_sizes[-1] is 144. So loop finds it if <= 144.
-            # Just in case:
-            if not selected_size:
-                 selected_size = standard_sizes[-1]
-                 
-            if selected_size not in enclosure_requirements:
-                enclosure_requirements[selected_size] = 0
-            enclosure_requirements[selected_size] += 1
+            create_or_update(name=final_name, quantity=quantity, catalog_item=catalog_item)
                 
-        # Process Enclosures
-        for size, count in enclosure_requirements.items():
-            enclosure_key = f"shield_enclosure_{size}"
+        # --- 2. Logic for Enclosures (Shields) ---
+        # Separate logic for Power and Multimedia/LED to ensure they are distinct items in Estimate
+        
+        # --- 2. Logic for Enclosures (Shields) ---
+        # Separate logic for Power and Multimedia/LED to ensure they are distinct items in Estimate
+        
+        # --- 2. Logic for Enclosures (Shields) ---
+        
+        standard_sizes = [2, 4, 6, 8, 12, 18, 24, 36, 48, 60, 72, 96, 120, 144]
+
+        # Structure: (size, mounting) -> count
+        power_enclosure_requirements = {} 
+        media_enclosure_requirements = {} 
+
+        # Iterate ALL shields and calculate per-shield requirements
+        all_shields = Shield.objects.filter(project_id=project_id)
+        
+        for shield in all_shields:
+            shield_size = None
+            is_media = False
+            mounting = shield.mounting # 'internal' or 'external'
             
-            # Try to find specific size
+            if shield.shield_type == 'power':
+                # --- Power Logic ---
+                total_modules = sum(g.modules_count for g in shield.groups.all())
+                if total_modules == 0: continue
+                
+                if total_modules > 144:
+                     create_or_update(
+                         name=f"ВНИМАНИЕ: Индивидуальный расчет щита (превышен предел 144 мод, факт: {total_modules})",
+                         quantity=1,
+                         price=Decimal('0.00')
+                     )
+                     continue
+                
+                shield_size = next((s for s in standard_sizes if total_modules <= s), standard_sizes[-1])
+                is_media = False
+
+            elif shield.shield_type == 'led':
+                # --- LED Logic ---
+                drivers = shield.led_zones.count()
+                if drivers == 0: continue
+                
+                is_media = True
+                if drivers <= 2:
+                    create_or_update(
+                        name=f"Переместить трансформаторы LED в слаботочный щит (из {shield.name})",
+                        quantity=1,
+                        price=Decimal('0.00')
+                    )
+                    continue
+                elif drivers > 15:
+                    create_or_update(
+                        name=f"ВНИМАНИЕ: Индивидуальный расчет щита LED (более 15 блоков, {shield.name})",
+                        quantity=1,
+                        price=Decimal('0.00')
+                    )
+                    continue
+                else:
+                    if 3 <= drivers <= 4: shield_size = 24
+                    elif 5 <= drivers <= 9: shield_size = 36
+                    elif 10 <= drivers <= 12: shield_size = 48
+                    elif 13 <= drivers <= 15: shield_size = 60
+
+            elif shield.shield_type == 'multimedia':
+                # --- Multimedia Logic ---
+                lines = shield.internet_lines_count
+                is_media = True
+                if lines > 10:
+                    create_or_update(
+                        name=f"ВНИМАНИЕ: Индивидуальный расчет слаботочного щита (> 10 линий, {shield.name})",
+                        quantity=1,
+                        price=Decimal('0.00')
+                    )
+                    continue
+                else:
+                    shield_size = 36 if (5 <= lines <= 10) else 24
+
+            # --- Add to Requirements ---
+            if shield_size:
+                # Key is now tuple (size, mounting)
+                key = (shield_size, mounting)
+                if is_media:
+                    media_enclosure_requirements[key] = media_enclosure_requirements.get(key, 0) + 1
+                else:
+                    power_enclosure_requirements[key] = power_enclosure_requirements.get(key, 0) + 1
+
+        # --- 3. Process Enclosures (Two Passes) ---
+        
+        # Pass 3.1: Power Enclosures
+        for (size, mounting), count in power_enclosure_requirements.items():
+            # Key format: shield_enclosure_{size}_{mounting} (e.g. shield_enclosure_24_internal)
+            enclosure_key = f"shield_enclosure_{size}_{mounting}"
+            catalog_enclosure = CatalogItem.objects.filter(mapping_key=enclosure_key).first()
+            
+            # Fallback for backward compatibility or missing keys?
+            # User specifically asked for separation. If not found -> Warning.
+            
+            final_name = ""
+            if catalog_enclosure:
+                final_name = catalog_enclosure.name
+            else:
+                mount_str = "Встр." if mounting == 'internal' else "Накл."
+                final_name = f"ВНИМАНИЕ: Не найден корпус в каталоге! ({size} мод, {mount_str})"
+            
+            create_or_update(name=final_name, quantity=count, catalog_item=catalog_enclosure)
+
+        # Pass 3.2: Media Enclosures
+        for (size, mounting), count in media_enclosure_requirements.items():
+            enclosure_key = f"shield_media_enclosure_{size}_{mounting}"
             catalog_enclosure = CatalogItem.objects.filter(mapping_key=enclosure_key).first()
             
             final_name = ""
-            price = Decimal('0.00')
-            currency = 'USD'
-            unit = 'шт'
-            markup = stage.markup_percent
-            
             if catalog_enclosure:
-                 final_name = catalog_enclosure.name
-                 price = catalog_enclosure.default_price
-                 currency = catalog_enclosure.default_currency
-                 unit = catalog_enclosure.unit
+                final_name = catalog_enclosure.name
             else:
-                 # Fallback Logic for Enclosure
-                 final_name = f"ВНИМАНИЕ: Не найден корпус в каталоге! (на {size} мод)"
+                mount_str = "Встр." if mounting == 'internal' else "Накл."
+                final_name = f"ВНИМАНИЕ: Не найден слаботочный корпус! ({size} мод, {mount_str})"
             
-            # Search Filter
-            filter_kwargs = {
-                'stage': stage,
-                'item_type': 'material',
-                'name': final_name
-            }
-            if catalog_enclosure:
-                filter_kwargs['catalog_item'] = catalog_enclosure
-            else:
-                filter_kwargs['catalog_item__isnull'] = True
-            
-            est_item = EstimateItem.objects.filter(**filter_kwargs).first()
-                
-            if est_item:
-                est_item.total_quantity = count
-                est_item.save()
-                updated_count += 1
-            else:
-                EstimateItem.objects.create(
-                    stage=stage,
-                    catalog_item=catalog_enclosure, # Can be None
-                    name=final_name,
-                    item_type='material',
-                    unit=unit,
-                    total_quantity=count,
-                    price_per_unit=price,
-                    currency=currency,
-                    markup_percent=markup
-                )
-                created_count += 1
+            create_or_update(name=final_name, quantity=count, catalog_item=catalog_enclosure)
 
         return {
             "status": "success", 

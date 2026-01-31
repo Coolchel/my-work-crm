@@ -109,9 +109,47 @@ class Command(BaseCommand):
             }
         )
         
-        # 3.7 Enclosure 18 (requested previously)
+        # --- 3.7 Shield Enclosures (Standardized Naming) ---
+        # Format: Щит [Type] [Size] [Mounting]
+        # Type: силовой / слаботочный
+        # Size: на X модулей
+        # Mounting: (встройка) / (наружный)
+        
+        enclosure_configs = [
+            # Power (Силовой)
+            (24, 'shield_enclosure', 'internal', "Щит силовой на 24 модуля (встройка)", 50.00),
+            (24, 'shield_enclosure', 'external', "Щит силовой на 24 модуля (наружный)", 55.00),
+            (36, 'shield_enclosure', 'internal', "Щит силовой на 36 модулей (встройка)", 70.00),
+            (36, 'shield_enclosure', 'external', "Щит силовой на 36 модулей (наружный)", 75.00),
+            (48, 'shield_enclosure', 'internal', "Щит силовой на 48 модулей (встройка)", 90.00),
+            (48, 'shield_enclosure', 'external', "Щит силовой на 48 модулей (наружный)", 95.00),
+            
+            # Media (Слаботочный)
+            (24, 'shield_media_enclosure', 'internal', "Щит слаботочный на 24 модуля (встройка)", 60.00),
+            (24, 'shield_media_enclosure', 'external', "Щит слаботочный на 24 модуля (наружный)", 65.00),
+            (36, 'shield_media_enclosure', 'internal', "Щит слаботочный на 36 модулей (встройка)", 80.00),
+            (36, 'shield_media_enclosure', 'external', "Щит слаботочный на 36 модулей (наружный)", 85.00),
+            (48, 'shield_media_enclosure', 'internal', "Щит слаботочный на 48 модулей (встройка)", 100.00),
+            (48, 'shield_media_enclosure', 'external', "Щит слаботочный на 48 модулей (наружный)", 105.00),
+        ]
+        
+        for size, base_key, mounting, name, price in enclosure_configs:
+            key = f"{base_key}_{size}_{mounting}"
+            CatalogItem.objects.update_or_create(
+                mapping_key=key,
+                defaults={
+                    'name': name,
+                    'category': cat_mat,
+                    'item_type': 'material',
+                    'unit': 'шт',
+                    'default_price': price,
+                    'related_work_item': work_shield
+                }
+            )
+
+        # 3.7.X Enclosure 18 Internal (Legacy/Specific request)
         CatalogItem.objects.update_or_create(
-            mapping_key="shield_enclosure_18",
+            mapping_key="shield_enclosure_18_internal",
             defaults={
                 'name': "Щит встраиваемый 18 модулей",
                 'category': cat_mat,
@@ -209,3 +247,21 @@ class Command(BaseCommand):
             name='Empty Shield'
         )
         self.stdout.write("Created 'Empty Shield' (0 modules). Expect: No enclosure line for this shield.")
+        
+        # 11. Create Multimedia Shield 1 (6 lines -> 36 mod)
+        media_shield = Shield.objects.create(
+             project=project,
+             shield_type='multimedia',
+             name='Media Shield 1',
+             internet_lines_count=6 # > 4 -> 36 modules
+        )
+        
+        # 12. Create Multimedia Shield 2 (External, 4 lines -> 24 mod)
+        media_shield_2 = Shield.objects.create(
+             project=project,
+             shield_type='multimedia',
+             name='Media Shield 2',
+             internet_lines_count=4, # <= 4 -> 24 modules
+             mounting='external'
+        )
+        self.stdout.write("Created 'Media Shield 1' (36 mod, Auto-Internal) and 'Media Shield 2' (24 mod, External). Expect: Media Shield 36 (Встр) and Media Shield 24 (Навесной).")
