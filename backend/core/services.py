@@ -219,7 +219,9 @@ class EstimateAutomationService:
     def calculate_works_from_materials(stage_id):
         """
         Scans all Materials in the stage.
-        If Material has a 'related_work_item', create/update corresponding Work item.
+        Generates Works based on two strategies:
+        1. Aggregation: Materials with 'aggregation_key' are summed up and mapped to a single Work item.
+        2. Direct (1-to-1): Materials without 'aggregation_key' but with 'related_work_item' generate individual Work items.
         """
         try:
             stage = Stage.objects.get(id=stage_id)
@@ -231,52 +233,93 @@ class EstimateAutomationService:
         created_count = 0
         updated_count = 0
         
-        for mat in materials:
-            # Check if linked catalog item has related work
-            if not mat.catalog_item or not mat.catalog_item.related_work_item:
-                continue
-                
-            related_work_catalog = mat.catalog_item.related_work_item
-            
-            # Logic: 
-            # Quantity = Material Quantity
-            # Name = RelatedWorkCatalog Name (or we can append details? No, standard name usually)
-            
-            # Find or Create Work Item
-            work_item = EstimateItem.objects.filter(
-                stage=stage,
-                catalog_item=related_work_catalog,
-                item_type='work'
-            ).first()
-            
-            if work_item:
-                # Update quantity? 
-                # Section 5.1 in LOGIC.md says: Logic duplication handling.
-                # If exists -> Propose update or create new. 
-                # For automation, let's Accumulate or Replace?
-                # Logic: "100m cable -> 100m work".
-                # If we have multiple cables (Cable 3x1.5 (100m) and Cable 3x2.5 (50m))
-                # And both map to "Installation of Cable", we should SUM them.
-                
-                # BUT here we are iterating materials. 
-                # If we just set "total_quantity = mat.total_quantity", we overwrite previous loop iteration.
-                # We need to AGGREGATE works first.
-                pass
-                
-        # Better approach: Aggregate Works first
-        works_aggregation = {} # CatalogItem(Work) -> Total Quantity
+        # 1. Aggregation Dictionary: { aggregation_key: total_quantity }
+        aggregation_map = {}
         
         for mat in materials:
-            if mat.catalog_item and mat.catalog_item.related_work_item:
-                work_cat = mat.catalog_item.related_work_item
-                qty = mat.total_quantity
+            if not mat.catalog_item:
+                continue
                 
-                if work_cat not in works_aggregation:
-                    works_aggregation[work_cat] = 0
-                works_aggregation[work_cat] += qty
+            cat_item = mat.catalog_item
+            qty = mat.total_quantity
+            
+            # Case A: Aggregation
+            if cat_item.aggregation_key:
+                agg_key = cat_item.aggregation_key
+                if agg_key not in aggregation_map:
+                    aggregation_map[agg_key] = 0
+                aggregation_map[agg_key] += qty
                 
-        # Now apply to DB
-        for work_cat, total_qty in works_aggregation.items():
+            # Case B: Direct 1-to-1 (Legacy/Simple)
+            elif cat_item.related_work_item:
+                work_cat = cat_item.related_work_item
+                
+                # Check if we should update existing or create new?
+                # For 1-to-1, we assume uniqueness by CatalogItem usually.
+                # However, if multiple materials point to same work but NO aggregation key...
+                # Ideally they SHOULD have aggregation key. 
+                # If they don't, we might overwrite. 
+                # Let's assume 1-to-1 means specific Unique mapping.
+                
+                work_item = EstimateItem.objects.filter(
+                    stage=stage,
+                    catalog_item=work_cat,
+                    item_type='work'
+                ).first()
+                
+                if work_item:
+                    work_item.total_quantity = qty
+                    work_item.save()
+                    updated_count += 1
+                else:
+                    EstimateItem.objects.create(
+                        stage=stage,
+                        catalog_item=work_cat,
+                        name=work_cat.name,
+                        item_type='work',
+                        unit=work_cat.unit,
+                        total_quantity=qty,
+                        price_per_unit=work_cat.default_price,
+                        currency=work_cat.default_currency,
+                        markup_percent=stage.markup_percent
+                    )
+                    created_count += 1
+
+        # 2. Process Aggregated Items
+        for agg_key, total_qty in aggregation_map.items():
+            # Find Work CatalogItem by mapping_key == agg_key
+            work_cat = CatalogItem.objects.filter(mapping_key=agg_key, item_type='work').first()
+            
+            if not work_cat:
+                # Warning if work item not found for key
+                # We create a placeholder Work Item to alert user
+                final_name = f"ВНИМАНИЕ: Не найдена работа для ключа '{agg_key}'"
+                
+                # Try to find existing placeholder
+                work_item = EstimateItem.objects.filter(
+                    stage=stage,
+                    name=final_name,
+                    item_type='work'
+                ).first()
+                
+                if work_item:
+                    work_item.total_quantity = total_qty
+                    work_item.save()
+                    updated_count += 1
+                else:
+                    EstimateItem.objects.create(
+                        stage=stage,
+                        name=final_name,
+                        item_type='work',
+                        unit='?',
+                        total_quantity=total_qty,
+                        price_per_unit=Decimal(0),
+                        markup_percent=stage.markup_percent
+                    )
+                    created_count += 1
+                continue
+
+            # Work found
             work_item = EstimateItem.objects.filter(
                 stage=stage,
                 catalog_item=work_cat,
@@ -284,7 +327,6 @@ class EstimateAutomationService:
             ).first()
             
             if work_item:
-                # Update existing quantity
                 work_item.total_quantity = total_qty
                 work_item.save()
                 updated_count += 1
@@ -297,7 +339,8 @@ class EstimateAutomationService:
                     unit=work_cat.unit,
                     total_quantity=total_qty,
                     price_per_unit=work_cat.default_price,
-                    currency=work_cat.default_currency
+                    currency=work_cat.default_currency,
+                    markup_percent=stage.markup_percent
                 )
                 created_count += 1
                 

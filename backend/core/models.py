@@ -43,8 +43,28 @@ class CatalogItem(models.Model):
     search_name = models.CharField(max_length=255, blank=True, verbose_name="Поиск (нижний регистр)")
 
     # Поля для автоматизации (Import & Calc)
-    mapping_key = models.CharField(max_length=100, blank=True, null=True, verbose_name="Технический ключ")
-    related_work_item = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Связанная работа")
+    mapping_key = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True, 
+        verbose_name="Технический ключ",
+        help_text="Универсальный входной ключ. Для щитов: shield_{тип}{полюса}. Для работ: agg{название}."
+    )
+    aggregation_key = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True, 
+        verbose_name="Ключ агрегации",
+        help_text="Ключ группировки материалов. Используй формат agg_{название}, чтобы объединить этот материал с другими в одну работу."
+    )
+    related_work_item = models.ForeignKey(
+        'self', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        verbose_name="Связанная работа",
+        help_text="Прямая связь 1-к-1 (используется, если не задан aggregation_key)."
+    )
 
     class Meta:
         verbose_name = "Элемент справочника"
