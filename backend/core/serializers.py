@@ -74,6 +74,8 @@ class ShieldSerializer(serializers.ModelSerializer):
         # Calculate size based on type
         if obj.shield_type == 'power':
             modules = sum(g.modules_count for g in obj.groups.all())
+            if modules == 0:
+                return "0 модулей"
             sizes = [1, 2, 4, 6, 8, 12, 18, 24, 36, 48, 60, 72, 96, 108, 144]
             for size in sizes:
                 if modules <= size:
