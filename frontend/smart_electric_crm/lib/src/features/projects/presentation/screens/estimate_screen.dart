@@ -275,13 +275,16 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
   void _deleteAllItems() async {
     setState(() => _isFabExpanded = false);
-    final themeColor = _tabController.index == 0 ? Colors.green : Colors.blue;
+    final isWork = _tabController.index == 0;
+    final themeColor = isWork ? Colors.green : Colors.blue;
+    final sectionName = isWork ? "работы" : "материалы";
+
     final confirm = await showDialog<bool>(
       context: context,
       barrierColor: Colors.transparent,
       builder: (context) => ConfirmationDialog(
-        title: 'Очистить смету?',
-        content: 'Все позиции текущего этапа будут удалены.',
+        title: 'Очистить $sectionName?',
+        content: 'Все позиции в разделе $sectionName будут удалены.',
         confirmText: 'Удалить',
         isDestructive: true,
         themeColor: themeColor,
@@ -291,7 +294,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     if (confirm == true) {
       try {
         final repo = ref.read(projectRepositoryProvider);
-        for (var item in _items) {
+        final itemsToDelete = isWork ? _works : _materials;
+
+        for (var item in itemsToDelete) {
           await repo.deleteEstimateItem(item.id);
         }
         _refresh();
@@ -517,6 +522,21 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
 
   Future<void> _importFromShields() async {
+    if (_materials.isNotEmpty) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        barrierColor: Colors.transparent,
+        builder: (ctx) => const ConfirmationDialog(
+          title: "Импортировать оборудование?",
+          content:
+              "Импорт приведет к замене всех идентичных позиций на соответствующие позиции из инженерного раздела. Продолжить?",
+          confirmText: "Импортировать",
+          themeColor: Colors.blue,
+        ),
+      );
+      if (confirm != true) return;
+    }
+
     setState(() => _isImportingShields = true);
     try {
       final repo = ref.read(projectRepositoryProvider);
@@ -542,6 +562,21 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
 
   Future<void> _calculateWorksFromMaterials() async {
+    if (_works.isNotEmpty) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        barrierColor: Colors.transparent,
+        builder: (ctx) => const ConfirmationDialog(
+          title: "Рассчитать работы?",
+          content:
+              "Расчет приведет к замене всех идентичных позиций на рассчитанные позиции. Продолжить?",
+          confirmText: "Рассчитать",
+          themeColor: Colors.green,
+        ),
+      );
+      if (confirm != true) return;
+    }
+
     setState(() => _isCalculatingWorks = true);
     try {
       final repo = ref.read(projectRepositoryProvider);
@@ -711,6 +746,22 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
 
   Future<void> _applyWorkTemplate(int templateId) async {
+    if (_works.isNotEmpty) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        barrierColor: Colors.transparent,
+        builder: (ctx) => const ConfirmationDialog(
+          title: "Применить шаблон?",
+          content:
+              "Применение шаблона приведет к удалению всех текущих позиций в разделе работ. Продолжить?",
+          confirmText: "Применить",
+          isDestructive: true,
+          themeColor: Colors.green,
+        ),
+      );
+      if (confirm != true) return;
+    }
+
     setState(() => _isApplyingTemplate = true);
     try {
       await ref
@@ -730,6 +781,22 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
 
   Future<void> _applyMaterialTemplate(int templateId) async {
+    if (_materials.isNotEmpty) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        barrierColor: Colors.transparent,
+        builder: (ctx) => const ConfirmationDialog(
+          title: "Применить шаблон?",
+          content:
+              "Применение шаблона приведет к удалению всех текущих позиций в разделе материалов. Продолжить?",
+          confirmText: "Применить",
+          isDestructive: true,
+          themeColor: Colors.blue,
+        ),
+      );
+      if (confirm != true) return;
+    }
+
     setState(() => _isApplyingTemplate = true);
     try {
       await ref

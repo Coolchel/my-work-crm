@@ -318,6 +318,29 @@ class ShieldCard extends ConsumerWidget {
 
   Future<void> _applyTemplate(BuildContext context, WidgetRef ref,
       ShieldModel shield, int templateId) async {
+    // Check if shield is not empty
+    final isNotEmpty = shield.groups.isNotEmpty ||
+        shield.ledZones.isNotEmpty ||
+        shield.internetLinesCount > 0 ||
+        shield.multimediaNotes.isNotEmpty;
+
+    if (isNotEmpty) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        barrierColor: Colors.transparent,
+        builder: (ctx) => ConfirmationDialog(
+          title: "Применить шаблон?",
+          content:
+              "Применение шаблона приведет к удалению всех текущих позиций в этом щите. Продолжить?",
+          confirmText: "Применить",
+          isDestructive: true,
+          themeColor:
+              shield.shieldType == 'power' ? Colors.teal : Colors.purple,
+        ),
+      );
+      if (confirm != true) return;
+    }
+
     try {
       if (shield.shieldType == 'power') {
         await ref
