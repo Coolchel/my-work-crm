@@ -685,15 +685,6 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       child: CustomScrollView(
         primary: false,
         slivers: [
-          // Toggle for Hide Prices (Only in Materials tab)
-          if (!_isWorkTab)
-            SliverToBoxAdapter(
-              child: AbsorbPointer(
-                absorbing: widget.isDisabled,
-                child: _buildViewModeToggleSegmented(showPrices),
-              ),
-            ),
-
           if (!widget.hideTopActions)
             SliverToBoxAdapter(child: _buildActionButtons()),
 

@@ -214,6 +214,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                   onSaveToTemplate: () => _showSaveTemplateDialog('material'),
                   onApplyTemplate: _showMaterialTemplatesDialog,
                   onImport: _importFromShields,
+                  showPrices: _showPrices,
+                  onTogglePrices: () =>
+                      setState(() => _showPrices = !_showPrices),
                 );
               } else {
                 // Works Tab - Old Speed Dial

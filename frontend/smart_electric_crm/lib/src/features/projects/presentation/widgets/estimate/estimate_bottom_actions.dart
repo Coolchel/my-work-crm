@@ -6,6 +6,8 @@ class EstimateBottomActions extends StatefulWidget {
   final VoidCallback onSaveToTemplate;
   final VoidCallback onApplyTemplate;
   final VoidCallback onImport;
+  final bool showPrices;
+  final VoidCallback onTogglePrices;
 
   const EstimateBottomActions({
     super.key,
@@ -14,6 +16,8 @@ class EstimateBottomActions extends StatefulWidget {
     required this.onSaveToTemplate,
     required this.onApplyTemplate,
     required this.onImport,
+    required this.showPrices,
+    required this.onTogglePrices,
   });
 
   @override
@@ -31,90 +35,129 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
     final RenderBox overlay =
         Overlay.of(context).context.findRenderObject() as RenderBox;
 
-    // Get button metrics
     final Size buttonSize = renderBox.size;
     final Offset buttonPosition =
         renderBox.localToGlobal(Offset.zero, ancestor: overlay);
 
-    // Estimate Menu Height
-    // 4 items * 40height + 1 divider (8) + 16 vertical padding (default Material padding) = 184
+    // Calculate position same as before
     const double estimatedMenuHeight = 184.0;
     const double desiredGap = 12.0;
 
-    // We set the "target" rect to be at the calculated TOP of where the menu should be.
-    // showMenu aligns top-left of menu to top-left of target.
+    // Top position for the menu
     final double targetTop =
         buttonPosition.dy - estimatedMenuHeight - desiredGap;
 
-    final Rect overlayRect = Offset.zero & overlay.size;
+    // Calculate right offset to align menu right-to-right with the button
+    // Distance from right edge of screen = ScreenWidth - (ButtonX + ButtonWidth)
+    final double targetRight =
+        overlay.size.width - (buttonPosition.dx + buttonSize.width);
 
-    final RelativeRect position = RelativeRect.fromLTRB(
-      buttonPosition.dx, // Left aligned with button
-      targetTop, // Top aligned with calculated top
-      overlayRect.width - (buttonPosition.dx + buttonSize.width), // Right
-      overlayRect.height - targetTop, // Bottom
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black54, // Standard darkening
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return Stack(
+            children: [
+              Positioned(
+                right: targetRight, // Align right edge
+                top: targetTop,
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    width: 250, // Fixed width suitable for the content
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildCustomMenuItem('delete', Icons.delete_forever,
+                            "Удалить все", Colors.red.shade200, () {
+                          Navigator.pop(context);
+                          widget.onDeleteAll();
+                        }),
+                        const Divider(height: 8, thickness: 1),
+                        _buildCustomMenuItem('save_template', Icons.save_as,
+                            "Сохранить в шаблон", Colors.blue.shade200, () {
+                          Navigator.pop(context);
+                          widget.onSaveToTemplate();
+                        }),
+                        _buildCustomMenuItem(
+                            'apply_template',
+                            Icons.copy_all_rounded,
+                            "По шаблону",
+                            Colors.blue.shade200, () {
+                          Navigator.pop(context);
+                          widget.onApplyTemplate();
+                        }),
+                        _buildCustomMenuItem('import', Icons.download_rounded,
+                            "Импорт оборудования", Colors.blue.shade200, () {
+                          Navigator.pop(context);
+                          widget.onImport();
+                        }),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          // Slide from bottom to top
+          const begin = Offset(0.0, 0.1); // Start slightly lower
+          const end = Offset.zero;
+          const curve = Curves.easeOut;
+
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            ),
+          );
+        },
+      ),
     );
-
-    showMenu<String>(
-      context: context,
-      position: position,
-      useRootNavigator: true,
-      items: [
-        _buildMenuItem('delete', Icons.delete_forever, "Удалить все",
-            color: Colors.red.shade200),
-        const PopupMenuDivider(height: 8),
-        // Unified colors: all Blue.shade200
-        _buildMenuItem('save_template', Icons.save_as, "Сохранить в шаблон",
-            color: Colors.blue.shade200),
-        _buildMenuItem('apply_template', Icons.copy_all_rounded, "По шаблону",
-            color: Colors.blue.shade200),
-        _buildMenuItem('import', Icons.download_rounded, "Импорт оборудования",
-            color: Colors.blue.shade200),
-      ],
-      elevation: 6,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ).then((value) {
-      if (value != null) {
-        switch (value) {
-          case 'delete':
-            widget.onDeleteAll();
-            break;
-          case 'save_template':
-            widget.onSaveToTemplate();
-            break;
-          case 'apply_template':
-            widget.onApplyTemplate();
-            break;
-          case 'import':
-            widget.onImport();
-            break;
-        }
-      }
-    });
   }
 
-  PopupMenuItem<String> _buildMenuItem(String value, IconData icon, String text,
-      {Color? color}) {
-    return PopupMenuItem<String>(
-      value: value,
-      height: 40, // Reduced height (default is 48)
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon,
-              color: color ?? Colors.blue.shade200,
-              size: 20), // Reduced icon size (24->20)
-          const SizedBox(width: 12),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
-              fontSize: 13, // Reduced font size
+  Widget _buildCustomMenuItem(String value, IconData icon, String text,
+      Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+            horizontal: 16, vertical: 10), // Matched padding
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -124,7 +167,33 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Actions Menu Button (Left)
+        // 1. Price Toggle Button (New - Round with Icon+Text)
+        FloatingActionButton(
+          heroTag: 'material_price_toggle_fab',
+          onPressed: widget.onTogglePrices,
+          backgroundColor: Colors.blue.shade200,
+          foregroundColor: Colors.black87,
+          elevation: 2,
+          tooltip: widget.showPrices ? "Скрыть цены" : "Показать цены",
+          child: Center(
+            child: Text(
+              "Цены",
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                decoration:
+                    widget.showPrices ? TextDecoration.lineThrough : null,
+                decorationThickness: 2.0,
+                decorationColor: Colors.black87,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 16),
+
+        // 2. Actions Menu Button
         FloatingActionButton(
           key: _actionsButtonKey,
           heroTag: 'material_actions_fab',
@@ -137,7 +206,7 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
 
         const SizedBox(width: 16),
 
-        // Search Button (Right)
+        // 3. Search Button
         FloatingActionButton(
           heroTag: 'material_search_fab',
           onPressed: widget.onSearchTap,
