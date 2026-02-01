@@ -231,7 +231,7 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
             backgroundColor: Colors.blue.shade200,
             foregroundColor: Colors.black87,
             elevation: 2,
-            child: const Icon(Icons.search),
+            child: const Icon(Icons.add),
           ),
         ),
       ],
