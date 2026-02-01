@@ -195,13 +195,17 @@ class ShieldCard extends ConsumerWidget {
   }
 
   Future<void> _deleteShield(BuildContext context, WidgetRef ref) async {
+    final themeColor =
+        shield.shieldType == 'power' ? Colors.teal : Colors.purple;
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => const ConfirmationDialog(
+      barrierColor: Colors.transparent,
+      builder: (context) => ConfirmationDialog(
         title: 'Удалить щит?',
         content: 'Все группы внутри будут удалены.',
         confirmText: 'Удалить',
         isDestructive: true,
+        themeColor: themeColor,
       ),
     );
 
@@ -223,14 +227,18 @@ class ShieldCard extends ConsumerWidget {
 
   void _showSaveTemplateDialog(
       BuildContext context, WidgetRef ref, ShieldModel shield) async {
+    final themeColor =
+        shield.shieldType == 'power' ? Colors.teal : Colors.purple;
     final result = await showDialog<dynamic>(
       context: context,
+      barrierColor: Colors.transparent,
       builder: (context) => TextInputDialog(
         title: shield.shieldType == 'power'
             ? "Сохранить щит как шаблон"
             : "Сохранить LED щит как шаблон",
         labelText: "Название шаблона",
         descriptionLabelText: "Описание (опционально)",
+        themeColor: themeColor,
       ),
     );
 

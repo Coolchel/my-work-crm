@@ -15,6 +15,7 @@ import '../../../engineering/presentation/dialogs/template_selection_dialog.dart
 import '../../../engineering/presentation/providers/template_providers.dart';
 import '../../../engineering/data/models/template_models.dart';
 import '../../../../shared/presentation/dialogs/text_input_dialog.dart';
+import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 
 import '../widgets/estimate/estimate_bottom_actions.dart';
 
@@ -274,20 +275,16 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
   void _deleteAllItems() async {
     setState(() => _isFabExpanded = false);
+    final themeColor = _tabController.index == 0 ? Colors.green : Colors.blue;
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Очистить смету?'),
-        content: const Text('Все позиции текущего этапа будут удалены.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Отмена')),
-          TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child:
-                  const Text('Удалить', style: TextStyle(color: Colors.red))),
-        ],
+      barrierColor: Colors.transparent,
+      builder: (context) => ConfirmationDialog(
+        title: 'Очистить смету?',
+        content: 'Все позиции текущего этапа будут удалены.',
+        confirmText: 'Удалить',
+        isDestructive: true,
+        themeColor: themeColor,
       ),
     );
 
@@ -431,21 +428,16 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
 
   void _deleteItem(int index, int itemId) async {
+    final themeColor = _tabController.index == 0 ? Colors.green : Colors.blue;
     final confirm = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-              title: const Center(child: Text("Удалить позицию?")),
-              content: const Text(
-                  "Вы уверены, что хотите удалить эту позицию из сметы?"),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: const Text("Отмена")),
-                TextButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    child: const Text("Удалить",
-                        style: TextStyle(color: Colors.red))),
-              ],
+        barrierColor: Colors.transparent,
+        builder: (ctx) => ConfirmationDialog(
+              title: "Удалить позицию?",
+              content: "Вы уверены, что хотите удалить эту позицию из сметы?",
+              confirmText: "Удалить",
+              isDestructive: true,
+              themeColor: themeColor,
             ));
 
     if (confirm == true) {
@@ -666,12 +658,15 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
 
   void _showSaveTemplateDialog(String type) async {
+    final themeColor = type == 'work' ? Colors.green : Colors.blue;
     final result = await showDialog<dynamic>(
       context: context,
-      builder: (context) => const TextInputDialog(
+      barrierColor: Colors.transparent,
+      builder: (context) => TextInputDialog(
         title: "Сохранить как шаблон",
         labelText: "Название шаблона",
         descriptionLabelText: "Описание (опционально)",
+        themeColor: themeColor,
       ),
     );
 

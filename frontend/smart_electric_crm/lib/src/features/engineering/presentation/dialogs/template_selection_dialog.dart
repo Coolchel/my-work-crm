@@ -236,11 +236,13 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
   void _confirmDelete(BuildContext context, T template) async {
     final confirmed = await showDialog<bool>(
       context: context,
+      barrierColor: Colors.transparent,
       builder: (context) => ConfirmationDialog(
         title: "Удалить шаблон?",
         content: "Вы уверены, что хотите удалить '${getName(template)}'?",
         confirmText: "Удалить",
         isDestructive: true,
+        themeColor: themeColor,
       ),
     );
 

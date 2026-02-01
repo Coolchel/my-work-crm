@@ -6,6 +6,7 @@ import '../../../../engineering/presentation/providers/engineering_providers.dar
 import '../../../../engineering/presentation/providers/template_providers.dart';
 import '../../../../engineering/presentation/dialogs/template_selection_dialog.dart';
 import '../../../../../shared/presentation/dialogs/text_input_dialog.dart';
+import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../engineering/data/models/template_models.dart';
 import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/shield_group_dialog.dart';
@@ -191,6 +192,21 @@ class ShieldContentPower extends ConsumerWidget {
                           icon: const Icon(Icons.delete,
                               size: 16, color: Colors.grey),
                           onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              barrierColor: Colors.transparent,
+                              builder: (context) => const ConfirmationDialog(
+                                title: "Удалить группу?",
+                                content:
+                                    "Вы уверены, что хотите удалить эту группу устройств?",
+                                confirmText: "Удалить",
+                                isDestructive: true,
+                                themeColor: Colors.teal,
+                              ),
+                            );
+
+                            if (confirm != true) return;
+
                             await ref
                                 .read(engineeringRepositoryProvider)
                                 .deleteShieldGroup(group.id);
@@ -256,10 +272,12 @@ class ShieldContentPower extends ConsumerWidget {
   void _showSaveTemplateDialog(BuildContext context, WidgetRef ref) async {
     final result = await showDialog<dynamic>(
       context: context,
+      barrierColor: Colors.transparent,
       builder: (context) => const TextInputDialog(
         title: "Сохранить щит как шаблон",
         labelText: "Название шаблона",
         descriptionLabelText: "Описание (опционально)",
+        themeColor: Colors.teal,
       ),
     );
 
