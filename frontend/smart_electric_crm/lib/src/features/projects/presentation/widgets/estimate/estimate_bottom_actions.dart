@@ -63,50 +63,56 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
               Positioned(
                 right: targetRight, // Align right edge
                 top: targetTop,
-                child: Material(
-                  color: Colors.transparent,
-                  child: Container(
-                    width: 250, // Fixed width suitable for the content
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildCustomMenuItem('delete', Icons.delete_forever,
-                            "Удалить все", Colors.red.shade200, () {
-                          Navigator.pop(context);
-                          widget.onDeleteAll();
-                        }),
-                        const Divider(height: 8, thickness: 1),
-                        _buildCustomMenuItem('save_template', Icons.save_as,
-                            "Сохранить в шаблон", Colors.blue.shade200, () {
-                          Navigator.pop(context);
-                          widget.onSaveToTemplate();
-                        }),
-                        _buildCustomMenuItem(
-                            'apply_template',
-                            Icons.copy_all_rounded,
-                            "По шаблону",
-                            Colors.blue.shade200, () {
-                          Navigator.pop(context);
-                          widget.onApplyTemplate();
-                        }),
-                        _buildCustomMenuItem('import', Icons.download_rounded,
-                            "Импорт оборудования", Colors.blue.shade200, () {
-                          Navigator.pop(context);
-                          widget.onImport();
-                        }),
-                      ],
+                child: Container(
+                  width: 250, // Fixed width suitable for the content
+                  decoration: BoxDecoration(
+                    color: Colors
+                        .transparent, // Transparent container, shadow only
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color:
+                        Colors.white, // Material provides the white background
+                    borderRadius: BorderRadius.circular(12),
+                    clipBehavior: Clip.antiAlias, // Clip splashes to corners
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildCustomMenuItem('delete', Icons.delete_forever,
+                              "Удалить все", Colors.red.shade200, () {
+                            Navigator.pop(context);
+                            widget.onDeleteAll();
+                          }),
+                          const Divider(height: 8, thickness: 1),
+                          _buildCustomMenuItem('save_template', Icons.save_as,
+                              "Сохранить в шаблон", Colors.blue.shade200, () {
+                            Navigator.pop(context);
+                            widget.onSaveToTemplate();
+                          }),
+                          _buildCustomMenuItem(
+                              'apply_template',
+                              Icons.copy_all_rounded,
+                              "По шаблону",
+                              Colors.blue.shade200, () {
+                            Navigator.pop(context);
+                            widget.onApplyTemplate();
+                          }),
+                          _buildCustomMenuItem('import', Icons.download_rounded,
+                              "Импорт оборудования", Colors.blue.shade200, () {
+                            Navigator.pop(context);
+                            widget.onImport();
+                          }),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -139,6 +145,7 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
       Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
+      hoverColor: Colors.grey.withOpacity(0.1), // Added hover effect
       child: Padding(
         padding: const EdgeInsets.symmetric(
             horizontal: 16, vertical: 10), // Matched padding
@@ -168,24 +175,28 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
       mainAxisSize: MainAxisSize.min,
       children: [
         // 1. Price Toggle Button (New - Round with Icon+Text)
-        FloatingActionButton(
-          heroTag: 'material_price_toggle_fab',
-          onPressed: widget.onTogglePrices,
-          backgroundColor: Colors.blue.shade200,
-          foregroundColor: Colors.black87,
-          elevation: 2,
-          tooltip: widget.showPrices ? "Скрыть цены" : "Показать цены",
-          child: Center(
-            child: Text(
-              "Цены",
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                decoration:
-                    widget.showPrices ? TextDecoration.lineThrough : null,
-                decorationThickness: 2.0,
-                decorationColor: Colors.black87,
-                color: Colors.black87,
+        Tooltip(
+          message: widget.showPrices ? "Скрыть цены" : "Показать цены",
+          verticalOffset: 40, // Lift tooltip higher
+          child: FloatingActionButton(
+            heroTag: 'material_price_toggle_fab',
+            onPressed: widget.onTogglePrices,
+            backgroundColor: Colors.blue.shade200,
+            foregroundColor: Colors.black87,
+            elevation: 2,
+            tooltip: null, // Disable built-in tooltip
+            child: Center(
+              child: Text(
+                "Цены",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  decoration:
+                      widget.showPrices ? TextDecoration.lineThrough : null,
+                  decorationThickness: 2.0,
+                  decorationColor: Colors.black87,
+                  color: Colors.black87,
+                ),
               ),
             ),
           ),
@@ -194,26 +205,34 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
         const SizedBox(width: 16),
 
         // 2. Actions Menu Button
-        FloatingActionButton(
-          key: _actionsButtonKey,
-          heroTag: 'material_actions_fab',
-          onPressed: _showActionsMenu,
-          backgroundColor: Colors.blue.shade200,
-          foregroundColor: Colors.black87,
-          elevation: 2,
-          child: const Icon(Icons.grid_view_rounded),
+        Tooltip(
+          message: "Действия",
+          verticalOffset: 40,
+          child: FloatingActionButton(
+            key: _actionsButtonKey,
+            heroTag: 'material_actions_fab',
+            onPressed: _showActionsMenu,
+            backgroundColor: Colors.blue.shade200,
+            foregroundColor: Colors.black87,
+            elevation: 2,
+            child: const Icon(Icons.grid_view_rounded),
+          ),
         ),
 
         const SizedBox(width: 16),
 
         // 3. Search Button
-        FloatingActionButton(
-          heroTag: 'material_search_fab',
-          onPressed: widget.onSearchTap,
-          backgroundColor: Colors.blue.shade200,
-          foregroundColor: Colors.black87,
-          elevation: 2,
-          child: const Icon(Icons.search),
+        Tooltip(
+          message: "Поиск",
+          verticalOffset: 40,
+          child: FloatingActionButton(
+            heroTag: 'material_search_fab',
+            onPressed: widget.onSearchTap,
+            backgroundColor: Colors.blue.shade200,
+            foregroundColor: Colors.black87,
+            elevation: 2,
+            child: const Icon(Icons.search),
+          ),
         ),
       ],
     );

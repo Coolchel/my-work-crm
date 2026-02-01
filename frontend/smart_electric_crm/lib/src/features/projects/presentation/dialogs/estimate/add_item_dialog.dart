@@ -106,25 +106,32 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Stack(
+                    alignment: Alignment.center,
                     children: [
-                      Text(
-                        "Добавить ${widget.itemType == 'work' ? 'работу' : 'материал'}",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: themeColor.withOpacity(0.8),
+                      // Centered Title
+                      Center(
+                        child: Text(
+                          "Добавить ${widget.itemType == 'work' ? 'работу' : 'материал'}",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: themeColor.withOpacity(0.8),
+                          ),
                         ),
                       ),
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: Icon(Icons.close, color: themeColor),
-                        tooltip: "Закрыть",
-                        iconSize: 20,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      )
+                      // Close button on the right
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: Icon(Icons.close, color: themeColor),
+                          tooltip: "Закрыть",
+                          iconSize: 20,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -209,35 +216,38 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
 
             // Footer (Manual Add)
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               decoration: BoxDecoration(
                 border: Border(top: BorderSide(color: Colors.grey.shade100)),
               ),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Manual Add: Create dummy item
-                    final dummy = CatalogItem(
-                        id: 0, // 0 signals manual
-                        name: '',
-                        category: 0,
-                        unit: 'шт',
-                        defaultPrice: 0,
-                        defaultCurrency: 'USD',
-                        itemType: widget.itemType);
-                    widget.onAdd(dummy);
-                  },
-                  icon: const Icon(Icons.add_circle_outline, size: 20),
-                  label: const Text("Добавить свободную позицию (Вручную)",
-                      style: TextStyle(fontSize: 13)),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    backgroundColor: themeColor.withOpacity(0.1),
-                    foregroundColor: themeColor,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+              child: Center(
+                child: SizedBox(
+                  width: 200,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      // Manual Add: Create dummy item
+                      final dummy = CatalogItem(
+                          id: 0, // 0 signals manual
+                          name: '',
+                          category: 0,
+                          unit: 'шт',
+                          defaultPrice: 0,
+                          defaultCurrency: 'USD',
+                          itemType: widget.itemType);
+                      widget.onAdd(dummy);
+                    },
+                    icon: const Icon(Icons.add_circle_outline, size: 20),
+                    label: const Text("Новая позиция",
+                        style: TextStyle(fontSize: 13)),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: themeColor.withOpacity(0.1),
+                      foregroundColor: themeColor,
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
@@ -250,60 +260,63 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
   }
 
   Widget _buildItemCard(CatalogItem item, Color themeColor) {
-    return InkWell(
-      onTap: () => _onItemAdded(item),
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade200),
-          borderRadius: BorderRadius.circular(10),
-          color: Colors.white,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: themeColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(6),
+    return Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: InkWell(
+        onTap: () => _onItemAdded(item),
+        borderRadius: BorderRadius.circular(10),
+        hoverColor: Colors.grey.withOpacity(0.1), // Match estimate menu style
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: themeColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  widget.itemType == 'work'
+                      ? Icons.handyman_outlined
+                      : Icons.inventory_2_outlined,
+                  color: themeColor,
+                  size: 18,
+                ),
               ),
-              child: Icon(
-                widget.itemType == 'work'
-                    ? Icons.handyman_outlined
-                    : Icons.inventory_2_outlined,
-                color: themeColor,
-                size: 18,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                  if (!widget.hidePrices) ...[
-                    const SizedBox(height: 2),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      "${item.defaultPrice} ${item.defaultCurrency} / ${item.unit}",
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 11,
+                      item.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
                     ),
+                    if (!widget.hidePrices) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        "${item.defaultPrice} ${item.defaultCurrency} / ${item.unit}",
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            Icon(Icons.add, color: Colors.grey.shade400, size: 20),
-          ],
+              Icon(Icons.add, color: Colors.grey.shade400, size: 20),
+            ],
+          ),
         ),
       ),
     );
