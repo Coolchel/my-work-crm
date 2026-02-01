@@ -106,6 +106,37 @@ class EstimateAutomationService:
         # Iterate ALL shields and calculate per-shield requirements
         all_shields = Shield.objects.filter(project_id=project_id)
         
+        # User Rule: If any shield exists, clear ALL old shield enclosures from estimate first
+        if all_shields.exists():
+            # 1. Delete by Catalog Mapping Key (Standard Enclosures)
+            EstimateItem.objects.filter(
+                stage=stage,
+                item_type='material',
+                catalog_item__mapping_key__startswith='shield_enclosure_'
+            ).delete()
+            EstimateItem.objects.filter(
+                stage=stage,
+                item_type='material',
+                catalog_item__mapping_key__startswith='shield_media_enclosure_'
+            ).delete()
+            
+            # 2. Delete Specific Warnings / Custom Items (No Catalog Item)
+            # We match by name patterns used below
+            warning_patterns = [
+                "ВНИМАНИЕ: Индивидуальный расчет щита",
+                "ВНИМАНИЕ: Индивидуальный расчет слаботочного щита",
+                "ВНИМАНИЕ: Индивидуальный расчет щита LED",
+                "Переместить трансформаторы LED",
+                "ВНИМАНИЕ: Не найден корпус в каталоге!",
+                "ВНИМАНИЕ: Не найден слаботочный корпус!"
+            ]
+            for pattern in warning_patterns:
+                EstimateItem.objects.filter(
+                    stage=stage,
+                    item_type='material',
+                    name__startswith=pattern
+                ).delete()
+        
         for shield in all_shields:
             shield_size = None
             is_media = False
