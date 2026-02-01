@@ -16,6 +16,7 @@ import '../../../engineering/presentation/providers/template_providers.dart';
 import '../../../engineering/data/models/template_models.dart';
 
 import '../widgets/estimate/estimate_speed_dial.dart';
+import '../widgets/estimate/estimate_bottom_actions.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -180,6 +181,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                 onTemplatesAction: _showMaterialTemplatesDialog,
                 isTemplatesLoading: _isApplyingTemplate,
                 onSaveAsTemplate: () => _showSaveTemplateDialog('material'),
+                hideTopActions: true,
               ),
             ],
           ),
@@ -201,14 +203,32 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         Positioned(
           right: 16,
           bottom: 16,
-          child: EstimateSpeedDial(
-            isExpanded: _isFabExpanded,
-            tabController: _tabController,
-            onToggle: () => setState(() => _isFabExpanded = !_isFabExpanded),
-            onDeleteAll: _deleteAllItems,
-            onShowTemplates: _showTemplatesDialog,
-            onManualAdd: _showManualAddDialog,
-            onSearchAdd: _showSearchDialog,
+          child: AnimatedBuilder(
+            animation: _tabController,
+            builder: (context, _) {
+              if (_tabController.index == 1) {
+                // Materials Tab - New Bottom Actions
+                return EstimateBottomActions(
+                  onSearchTap: _showSearchDialog,
+                  onDeleteAll: _deleteAllItems,
+                  onSaveToTemplate: () => _showSaveTemplateDialog('material'),
+                  onApplyTemplate: _showMaterialTemplatesDialog,
+                  onImport: _importFromShields,
+                );
+              } else {
+                // Works Tab - Old Speed Dial
+                return EstimateSpeedDial(
+                  isExpanded: _isFabExpanded,
+                  tabController: _tabController,
+                  onToggle: () =>
+                      setState(() => _isFabExpanded = !_isFabExpanded),
+                  onDeleteAll: _deleteAllItems,
+                  onShowTemplates: _showTemplatesDialog,
+                  onManualAdd: _showManualAddDialog,
+                  onSearchAdd: _showSearchDialog,
+                );
+              }
+            },
           ),
         ),
       ],

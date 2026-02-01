@@ -39,6 +39,7 @@ class EstimateTab extends ConsumerStatefulWidget {
   final VoidCallback? onTemplatesAction;
   final bool isTemplatesLoading;
   final VoidCallback? onSaveAsTemplate;
+  final bool hideTopActions;
 
   const EstimateTab({
     super.key,
@@ -62,6 +63,7 @@ class EstimateTab extends ConsumerStatefulWidget {
     this.onTemplatesAction,
     this.isTemplatesLoading = false,
     this.onSaveAsTemplate,
+    this.hideTopActions = false,
   });
 
   @override
@@ -692,7 +694,8 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
               ),
             ),
 
-          SliverToBoxAdapter(child: _buildActionButtons()),
+          if (!widget.hideTopActions)
+            SliverToBoxAdapter(child: _buildActionButtons()),
 
           if (widget.items.isEmpty)
             const SliverToBoxAdapter(
