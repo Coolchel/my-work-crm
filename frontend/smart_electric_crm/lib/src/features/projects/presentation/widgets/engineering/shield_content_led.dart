@@ -138,7 +138,7 @@ class ShieldContentLed extends ConsumerWidget {
       showDialog(
         context: context,
         builder: (context) => TemplateSelectionDialog<LedShieldTemplate>(
-          title: "Выберите шаблон LED",
+          title: "Шаблоны LED щита",
           templates: templates,
           getName: (t) => t.name,
           getDescription: (t) => t.description,
@@ -155,6 +155,7 @@ class ShieldContentLed extends ConsumerWidget {
             ref.invalidate(ledShieldTemplatesProvider);
           },
           themeColor: Colors.purple,
+          onCreate: () => _showSaveTemplateDialog(context, ref),
         ),
       );
     } catch (e) {

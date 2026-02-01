@@ -225,6 +225,67 @@ class ShieldCard extends ConsumerWidget {
     );
   }
 
+  void _showSaveTemplateDialog(
+      BuildContext context, WidgetRef ref, ShieldModel shield) {
+    final TextEditingController nameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(shield.shieldType == 'power'
+            ? "Сохранить щит как шаблон"
+            : "Сохранить LED щит как шаблон"),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: "Название шаблона",
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Отмена"),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (nameController.text.trim().isEmpty) return;
+              Navigator.pop(context); // Close before async op
+              try {
+                if (shield.shieldType == 'power') {
+                  await ref
+                      .read(templateRepositoryProvider)
+                      .createPowerShieldTemplateFromShield(
+                          shield.id, nameController.text);
+                  ref.invalidate(powerShieldTemplatesProvider);
+                } else {
+                  await ref
+                      .read(templateRepositoryProvider)
+                      .createLedShieldTemplateFromShield(
+                          shield.id, nameController.text);
+                  ref.invalidate(ledShieldTemplatesProvider);
+                }
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content:
+                          Text("Шаблон '${nameController.text}' сохранен!")));
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Ошибка сохранения: $e")));
+                }
+              }
+            },
+            child: const Text("Сохранить"),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showTemplateDialog(
       BuildContext context, WidgetRef ref, ShieldModel shield) async {
     try {
@@ -240,13 +301,14 @@ class ShieldCard extends ConsumerWidget {
         showDialog(
           context: context,
           builder: (ctx) => TemplateSelectionDialog<T>(
-            title: isPower ? "Выберите силовой шаблон" : "Выберите LED шаблон",
+            title: isPower ? "Шаблоны силового щита" : "Шаблоны LED щита",
             templates: items,
             getName: (t) => (t as dynamic).name,
             getDescription: (t) => (t as dynamic).description ?? '',
             onSelected: (t) =>
                 _applyTemplate(context, ref, shield, (t as dynamic).id),
             themeColor: isPower ? Colors.teal : Colors.purple,
+            onCreate: () => _showSaveTemplateDialog(context, ref, shield),
           ),
         );
       }

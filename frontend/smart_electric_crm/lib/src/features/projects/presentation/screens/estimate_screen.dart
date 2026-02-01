@@ -592,13 +592,14 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       showDialog(
         context: context,
         builder: (context) => TemplateSelectionDialog<WorkTemplate>(
-          title: "Выберите шаблон работ",
+          title: "Шаблоны работ",
           templates: templates,
           getName: (t) => t.name,
           getDescription: (t) => t.description,
           onSelected: (t) => _applyWorkTemplate(t.id),
           onDelete: (t) => _deleteWorkTemplate(t),
           themeColor: Colors.green, // Theme color for Work
+          onCreate: () => _showSaveTemplateDialog('work'),
         ),
       );
     } catch (e) {
@@ -616,13 +617,14 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       showDialog(
         context: context,
         builder: (context) => TemplateSelectionDialog<MaterialTemplate>(
-          title: "Выберите шаблон материалов",
+          title: "Шаблоны материалов",
           templates: templates,
           getName: (t) => t.name,
           getDescription: (t) => t.description,
           onSelected: (t) => _applyMaterialTemplate(t.id),
           onDelete: (t) => _deleteMaterialTemplate(t),
           themeColor: Colors.blue, // Theme color for Material
+          onCreate: () => _showSaveTemplateDialog('material'),
         ),
       );
     } catch (e) {

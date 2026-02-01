@@ -8,6 +8,7 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
   final Function(T) onSelected;
   final Function(T)? onDelete;
   final Color themeColor;
+  final VoidCallback? onCreate;
 
   const TemplateSelectionDialog({
     super.key,
@@ -18,6 +19,7 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
     required this.onSelected,
     this.onDelete,
     this.themeColor = Colors.blue, // Default color
+    this.onCreate,
   });
 
   @override
@@ -112,6 +114,40 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                       },
                     ),
             ),
+
+            // Footer (Create New)
+            if (onCreate != null)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: Colors.grey.shade100)),
+                ),
+                child: Center(
+                  child: SizedBox(
+                    width: 250,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context); // Close dialog
+                        onCreate!(); // Trigger create action
+                      },
+                      icon: const Icon(Icons.add_circle_outline, size: 20),
+                      label: const Text("Сохранить текущую смету",
+                          style: TextStyle(fontSize: 13)),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: themeColor.withOpacity(0.1),
+                        foregroundColor: themeColor,
+                        elevation: 0,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

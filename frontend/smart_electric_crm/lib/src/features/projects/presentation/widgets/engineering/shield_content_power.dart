@@ -224,7 +224,7 @@ class ShieldContentPower extends ConsumerWidget {
       showDialog(
         context: context,
         builder: (context) => TemplateSelectionDialog<PowerShieldTemplate>(
-          title: "Выберите шаблон щита",
+          title: "Шаблоны силового щита",
           templates: templates,
           getName: (t) => t.name,
           getDescription: (t) => t.description,
@@ -241,6 +241,7 @@ class ShieldContentPower extends ConsumerWidget {
             ref.invalidate(powerShieldTemplatesProvider);
           },
           themeColor: Colors.teal,
+          onCreate: () => _showSaveTemplateDialog(context, ref),
         ),
       );
     } catch (e) {
