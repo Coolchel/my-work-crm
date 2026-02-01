@@ -254,17 +254,31 @@ class ShieldContentPower extends ConsumerWidget {
 
   void _showSaveTemplateDialog(BuildContext context, WidgetRef ref) {
     final TextEditingController nameCtrl = TextEditingController();
+    final TextEditingController descCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Сохранить щит как шаблон"),
-        content: TextField(
-          controller: nameCtrl,
-          decoration: const InputDecoration(
-            labelText: "Название шаблона",
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              decoration: const InputDecoration(
+                labelText: "Название шаблона",
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descCtrl,
+              decoration: const InputDecoration(
+                labelText: "Описание (опционально)",
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -279,7 +293,8 @@ class ShieldContentPower extends ConsumerWidget {
                 await ref
                     .read(templateRepositoryProvider)
                     .createPowerShieldTemplateFromShield(
-                        shield.id, nameCtrl.text);
+                        shield.id, nameCtrl.text,
+                        description: descCtrl.text);
                 ref.invalidate(powerShieldTemplatesProvider);
                 // ignore: use_build_context_synchronously
                 if (context.mounted) {

@@ -168,17 +168,31 @@ class ShieldContentLed extends ConsumerWidget {
 
   void _showSaveTemplateDialog(BuildContext context, WidgetRef ref) {
     final TextEditingController nameCtrl = TextEditingController();
+    final TextEditingController descCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Сохранить LED щит как шаблон"),
-        content: TextField(
-          controller: nameCtrl,
-          decoration: const InputDecoration(
-            labelText: "Название шаблона",
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              decoration: const InputDecoration(
+                labelText: "Название шаблона",
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descCtrl,
+              decoration: const InputDecoration(
+                labelText: "Описание (опционально)",
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -192,8 +206,8 @@ class ShieldContentLed extends ConsumerWidget {
               try {
                 await ref
                     .read(templateRepositoryProvider)
-                    .createLedShieldTemplateFromShield(
-                        shield.id, nameCtrl.text);
+                    .createLedShieldTemplateFromShield(shield.id, nameCtrl.text,
+                        description: descCtrl.text);
                 ref.invalidate(ledShieldTemplatesProvider);
                 // ignore: use_build_context_synchronously
                 if (context.mounted) {

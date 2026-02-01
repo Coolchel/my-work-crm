@@ -100,10 +100,12 @@ class TemplateRepository {
 
   // --- Create & Delete Methods ---
 
-  Future<void> createWorkTemplateFromStage(int stageId, String name) async {
+  Future<void> createWorkTemplateFromStage(int stageId, String name,
+      {String? description}) async {
     await _dio.post('/work-templates/create_from_stage/', data: {
       'stage_id': stageId,
       'name': name,
+      'description': description ?? '',
     });
   }
 
@@ -111,10 +113,12 @@ class TemplateRepository {
     await _dio.delete('/work-templates/$id/');
   }
 
-  Future<void> createMaterialTemplateFromStage(int stageId, String name) async {
+  Future<void> createMaterialTemplateFromStage(int stageId, String name,
+      {String? description}) async {
     await _dio.post('/material-templates/create_from_stage/', data: {
       'stage_id': stageId,
       'name': name,
+      'description': description ?? '',
     });
   }
 
@@ -122,11 +126,12 @@ class TemplateRepository {
     await _dio.delete('/material-templates/$id/');
   }
 
-  Future<void> createPowerShieldTemplateFromShield(
-      int shieldId, String name) async {
+  Future<void> createPowerShieldTemplateFromShield(int shieldId, String name,
+      {String? description}) async {
     await _dio.post('/powershield-templates/create_from_shield/', data: {
       'shield_id': shieldId,
       'name': name,
+      'description': description ?? '',
     });
   }
 
@@ -134,11 +139,12 @@ class TemplateRepository {
     await _dio.delete('/powershield-templates/$id/');
   }
 
-  Future<void> createLedShieldTemplateFromShield(
-      int shieldId, String name) async {
+  Future<void> createLedShieldTemplateFromShield(int shieldId, String name,
+      {String? description}) async {
     await _dio.post('/led-shield-templates/create_from_shield/', data: {
       'shield_id': shieldId,
       'name': name,
+      'description': description ?? '',
     });
   }
 

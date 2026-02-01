@@ -666,17 +666,31 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
   void _showSaveTemplateDialog(String type) {
     final TextEditingController nameCtrl = TextEditingController();
+    final TextEditingController descCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Сохранить как шаблон"),
-        content: TextField(
-          controller: nameCtrl,
-          decoration: const InputDecoration(
-            labelText: "Название шаблона",
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              decoration: const InputDecoration(
+                labelText: "Название шаблона",
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descCtrl,
+              decoration: const InputDecoration(
+                labelText: "Описание (опционально)",
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -684,7 +698,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
             child: const Text("Отмена"),
           ),
           FilledButton(
-            onPressed: () => _saveTemplate(type, nameCtrl.text),
+            onPressed: () => _saveTemplate(type, nameCtrl.text, descCtrl.text),
             child: const Text("Сохранить"),
           ),
         ],
@@ -692,24 +706,23 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     );
   }
 
-  Future<void> _saveTemplate(String type, String name) async {
+  Future<void> _saveTemplate(
+      String type, String name, String description) async {
     if (name.trim().isEmpty) return;
 
     Navigator.pop(context); // Close dialog
 
-    // Show spinner if needed or just snackbar logic
-    // We don't have a loading state for this specifically, but it's quick.
-
     try {
       if (type == 'work') {
-        await ref
-            .read(templateRepositoryProvider)
-            .createWorkTemplateFromStage(_stage.id, name);
+        await ref.read(templateRepositoryProvider).createWorkTemplateFromStage(
+            _stage.id, name,
+            description: description);
         ref.invalidate(workTemplatesProvider);
       } else if (type == 'material') {
         await ref
             .read(templateRepositoryProvider)
-            .createMaterialTemplateFromStage(_stage.id, name);
+            .createMaterialTemplateFromStage(_stage.id, name,
+                description: description);
         ref.invalidate(materialTemplatesProvider);
       }
 

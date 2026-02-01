@@ -228,6 +228,7 @@ class ShieldCard extends ConsumerWidget {
   void _showSaveTemplateDialog(
       BuildContext context, WidgetRef ref, ShieldModel shield) {
     final TextEditingController nameController = TextEditingController();
+    final TextEditingController descController = TextEditingController();
 
     showDialog(
       context: context,
@@ -235,13 +236,26 @@ class ShieldCard extends ConsumerWidget {
         title: Text(shield.shieldType == 'power'
             ? "Сохранить щит как шаблон"
             : "Сохранить LED щит как шаблон"),
-        content: TextField(
-          controller: nameController,
-          decoration: const InputDecoration(
-            labelText: "Название шаблона",
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: "Название шаблона",
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descController,
+              decoration: const InputDecoration(
+                labelText: "Описание (опционально)",
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -257,13 +271,15 @@ class ShieldCard extends ConsumerWidget {
                   await ref
                       .read(templateRepositoryProvider)
                       .createPowerShieldTemplateFromShield(
-                          shield.id, nameController.text);
+                          shield.id, nameController.text,
+                          description: descController.text);
                   ref.invalidate(powerShieldTemplatesProvider);
                 } else {
                   await ref
                       .read(templateRepositoryProvider)
                       .createLedShieldTemplateFromShield(
-                          shield.id, nameController.text);
+                          shield.id, nameController.text,
+                          description: descController.text);
                   ref.invalidate(ledShieldTemplatesProvider);
                 }
 
