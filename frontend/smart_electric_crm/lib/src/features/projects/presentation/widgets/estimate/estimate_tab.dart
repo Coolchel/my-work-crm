@@ -570,61 +570,6 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     );
   }
 
-  Widget _buildViewModeToggleSegmented(bool showPrices) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment<bool>(
-                value: true,
-                label: Text('С ценами', style: TextStyle(fontSize: 11)),
-                icon: Icon(Icons.payments_outlined, size: 14),
-              ),
-              ButtonSegment<bool>(
-                value: false,
-                label: Text('Без цен', style: TextStyle(fontSize: 11)),
-                icon: Icon(Icons.visibility_off_outlined, size: 14),
-              ),
-            ],
-            selected: {showPrices},
-            onSelectionChanged: (newSelection) {
-              if (widget.onShowPricesChanged != null) {
-                widget.onShowPricesChanged!(newSelection.first);
-              }
-            },
-            showSelectedIcon: false,
-            style: ButtonStyle(
-              visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: MaterialStateProperty.all(
-                const EdgeInsets.symmetric(horizontal: 12),
-              ),
-              // Theming to match Project/Materials blue
-              side: MaterialStateProperty.all(
-                BorderSide(color: Colors.blue.shade100),
-              ),
-              backgroundColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.selected)) {
-                  return Colors.blue.shade50;
-                }
-                return Colors.transparent;
-              }),
-              foregroundColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.selected)) {
-                  return Colors.blue.shade900;
-                }
-                return Colors.blue.shade300;
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // Color theming based on tab type
   bool get _isWorkTab => widget.title == "Работы";
   Color get _primaryColor => _isWorkTab ? Colors.green : Colors.blue;

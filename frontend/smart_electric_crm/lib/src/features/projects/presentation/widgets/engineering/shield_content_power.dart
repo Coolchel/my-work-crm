@@ -227,7 +227,7 @@ class ShieldContentPower extends ConsumerWidget {
           title: "Выберите шаблон щита",
           templates: templates,
           getName: (t) => t.name,
-          getDescription: (t) => t.description ?? '',
+          getDescription: (t) => t.description,
           onSelected: (t) async {
             await ref
                 .read(engineeringRepositoryProvider)

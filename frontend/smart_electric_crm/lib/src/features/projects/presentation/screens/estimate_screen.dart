@@ -15,7 +15,6 @@ import '../../../engineering/presentation/dialogs/template_selection_dialog.dart
 import '../../../engineering/presentation/providers/template_providers.dart';
 import '../../../engineering/data/models/template_models.dart';
 
-import '../widgets/estimate/estimate_speed_dial.dart';
 import '../widgets/estimate/estimate_bottom_actions.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
@@ -64,9 +63,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       _refresh();
     });
   }
-
-  Color get _activeColor =>
-      _tabController.index == 0 ? Colors.green.shade400 : Colors.blue.shade400;
 
   Future<void> _refresh() async {
     try {
@@ -484,61 +480,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     }
   }
 
-  void _showTemplatesDialog() async {
-    setState(() => _isFabExpanded = false);
-    try {
-      final repo = ref.read(projectRepositoryProvider);
-      final templates = await repo.fetchEstimateTemplates();
-
-      if (!mounted) return;
-      showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-                title: const Center(child: Text("Применить шаблон")),
-                content: SizedBox(
-                  width: double.maxFinite,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: templates.length,
-                    itemBuilder: (ctx, i) {
-                      final t = templates[i];
-                      return ListTile(
-                        title: Text(t.name),
-                        subtitle: Text(t.description ?? ''),
-                        onTap: () async {
-                          Navigator.pop(ctx);
-                          await _applyTemplate(t.id);
-                        },
-                      );
-                    },
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text("Отмена"))
-                ],
-              ));
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
-    }
-  }
-
-  Future<void> _applyTemplate(int templateId) async {
-    try {
-      final repo = ref.read(projectRepositoryProvider);
-      await repo.applyTemplate(widget.stage.id, templateId);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Шаблон применен!")));
-      _refresh();
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Ошибка применения: $e")));
-    }
-  }
-
   Future<void> _saveNotes(String type, String value) async {
     // Optimistic update
     setState(() {
@@ -654,7 +595,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           title: "Выберите шаблон работ",
           templates: templates,
           getName: (t) => t.name,
-          getDescription: (t) => t.description ?? '',
+          getDescription: (t) => t.description,
           onSelected: (t) => _applyWorkTemplate(t.id),
           onDelete: (t) => _deleteWorkTemplate(t),
         ),
@@ -677,7 +618,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           title: "Выберите шаблон материалов",
           templates: templates,
           getName: (t) => t.name,
-          getDescription: (t) => t.description ?? '',
+          getDescription: (t) => t.description,
           onSelected: (t) => _applyMaterialTemplate(t.id),
           onDelete: (t) => _deleteMaterialTemplate(t),
         ),
@@ -692,7 +633,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   Future<void> _deleteWorkTemplate(WorkTemplate t) async {
     try {
       await ref.read(templateRepositoryProvider).deleteWorkTemplate(t.id);
-      if (mounted) Navigator.pop(context); // Close dialog to refresh or re-open
+      if (!mounted) return;
+      Navigator.pop(context); // Close dialog to refresh or re-open
       // Re-open/Refresh logic could be better, but closing is safe.
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Шаблон '${t.name}' удален")));
@@ -707,7 +649,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   Future<void> _deleteMaterialTemplate(MaterialTemplate t) async {
     try {
       await ref.read(templateRepositoryProvider).deleteMaterialTemplate(t.id);
-      if (mounted) Navigator.pop(context);
+      if (!mounted) return;
+      Navigator.pop(context);
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text("Шаблон '${t.name}' удален")));
       ref.invalidate(materialTemplatesProvider);
@@ -755,16 +698,14 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
     try {
       if (type == 'work') {
-        if (_stage == null) throw Exception("Этап не выбран");
         await ref
             .read(templateRepositoryProvider)
-            .createWorkTemplateFromStage(_stage!.id, name);
+            .createWorkTemplateFromStage(_stage.id, name);
         ref.invalidate(workTemplatesProvider);
       } else if (type == 'material') {
-        if (_stage == null) throw Exception("Этап не выбран");
         await ref
             .read(templateRepositoryProvider)
-            .createMaterialTemplateFromStage(_stage!.id, name);
+            .createMaterialTemplateFromStage(_stage.id, name);
         ref.invalidate(materialTemplatesProvider);
       }
 

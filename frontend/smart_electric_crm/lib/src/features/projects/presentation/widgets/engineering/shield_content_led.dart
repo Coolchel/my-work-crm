@@ -141,7 +141,7 @@ class ShieldContentLed extends ConsumerWidget {
           title: "Выберите шаблон LED",
           templates: templates,
           getName: (t) => t.name,
-          getDescription: (t) => t.description ?? '',
+          getDescription: (t) => t.description,
           onSelected: (t) async {
             await ref
                 .read(engineeringRepositoryProvider)
