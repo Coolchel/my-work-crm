@@ -333,7 +333,7 @@ class ShieldCard extends ConsumerWidget {
           content:
               "Применение шаблона приведет к удалению всех текущих позиций в этом щите. Продолжить?",
           confirmText: "Применить",
-          isDestructive: true,
+          // isDestructive removed to use themeColor
           themeColor:
               shield.shieldType == 'power' ? Colors.teal : Colors.purple,
         ),

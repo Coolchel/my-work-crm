@@ -755,7 +755,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           content:
               "Применение шаблона приведет к удалению всех текущих позиций в разделе работ. Продолжить?",
           confirmText: "Применить",
-          isDestructive: true,
+          // isDestructive removed to use themeColor
           themeColor: Colors.green,
         ),
       );
@@ -790,7 +790,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           content:
               "Применение шаблона приведет к удалению всех текущих позиций в разделе материалов. Продолжить?",
           confirmText: "Применить",
-          isDestructive: true,
+          // isDestructive removed to use themeColor
           themeColor: Colors.blue,
         ),
       );
