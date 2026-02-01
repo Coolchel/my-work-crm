@@ -19,49 +19,56 @@ class EstimateAutomationService:
         created_count = 0
         updated_count = 0
         
-        # Helper to simplify creation/update
-        def create_or_update(name, quantity, catalog_item=None, price=None, currency='USD', unit='шт'):
+        # Helper to create/replace items
+        def create_or_replace(name, quantity, catalog_item=None, price=None, currency='USD', unit='шт'):
             nonlocal created_count, updated_count
-            
+
             # Defaults if catalog_item provided
             if catalog_item:
                 if not name: name = catalog_item.name
                 if price is None: price = catalog_item.default_price
                 if not unit: unit = catalog_item.unit
                 if not currency: currency = catalog_item.default_currency
-            
+
             # Fallbacks
             if price is None: price = Decimal('0.00')
-            
+
             filter_kwargs = {
                 'stage': stage,
                 'item_type': 'material',
-                'name': name
             }
             if catalog_item:
                 filter_kwargs['catalog_item'] = catalog_item
+                # If we have a catalog item, we want to replace ALL items with this catalog item
+                # regardless of name (as names might be slightly different or custom)
+                # But to be safe and strictly follow "if found - replace", we filter by catalog_item.
             else:
+                 # If no catalog item, match by name exactly
+                filter_kwargs['name'] = name
                 filter_kwargs['catalog_item__isnull'] = True
 
-            est_item = EstimateItem.objects.filter(**filter_kwargs).first()
+            # Find existing items to replace
+            existing_items = EstimateItem.objects.filter(**filter_kwargs)
             
-            if est_item:
-                est_item.total_quantity = quantity
-                est_item.save()
-                updated_count += 1
+            if existing_items.exists():
+                # DELETE all existing matching items
+                existing_items.delete()
+                updated_count += 1 # Count as update/replacement
             else:
-                EstimateItem.objects.create(
-                    stage=stage,
-                    catalog_item=catalog_item,
-                    name=name,
-                    item_type='material',
-                    unit=unit,
-                    total_quantity=quantity,
-                    price_per_unit=price,
-                    currency=currency,
-                    markup_percent=stage.markup_percent
-                )
                 created_count += 1
+
+            # CREATE new item with full quantity
+            EstimateItem.objects.create(
+                stage=stage,
+                catalog_item=catalog_item,
+                name=name,
+                item_type='material',
+                unit=unit,
+                total_quantity=quantity,
+                price_per_unit=price,
+                currency=currency,
+                markup_percent=stage.markup_percent
+            )
 
         # --- 1. Aggregation of Shield Groups (Circuit Breakers, etc) ---
         shields = Shield.objects.filter(project_id=project_id, shield_type='power')
@@ -86,14 +93,8 @@ class EstimateAutomationService:
             else:
                 final_name = f"ВНИМАНИЕ: Не найден в каталоге! ({device_type} {poles} {rating})"
             
-            create_or_update(name=final_name, quantity=quantity, catalog_item=catalog_item)
+            create_or_replace(name=final_name, quantity=quantity, catalog_item=catalog_item)
                 
-        # --- 2. Logic for Enclosures (Shields) ---
-        # Separate logic for Power and Multimedia/LED to ensure they are distinct items in Estimate
-        
-        # --- 2. Logic for Enclosures (Shields) ---
-        # Separate logic for Power and Multimedia/LED to ensure they are distinct items in Estimate
-        
         # --- 2. Logic for Enclosures (Shields) ---
         
         standard_sizes = [2, 4, 6, 8, 12, 18, 24, 36, 48, 60, 72, 96, 120, 144]
@@ -116,7 +117,7 @@ class EstimateAutomationService:
                 if total_modules == 0: continue
                 
                 if total_modules > 144:
-                     create_or_update(
+                     create_or_replace(
                          name=f"ВНИМАНИЕ: Индивидуальный расчет щита (превышен предел 144 мод, факт: {total_modules})",
                          quantity=1,
                          price=Decimal('0.00')
@@ -133,14 +134,14 @@ class EstimateAutomationService:
                 
                 is_media = True
                 if drivers <= 2:
-                    create_or_update(
+                    create_or_replace(
                         name=f"Переместить трансформаторы LED в слаботочный щит (из {shield.name})",
                         quantity=1,
                         price=Decimal('0.00')
                     )
                     continue
                 elif drivers > 15:
-                    create_or_update(
+                    create_or_replace(
                         name=f"ВНИМАНИЕ: Индивидуальный расчет щита LED (более 15 блоков, {shield.name})",
                         quantity=1,
                         price=Decimal('0.00')
@@ -157,7 +158,7 @@ class EstimateAutomationService:
                 lines = shield.internet_lines_count
                 is_media = True
                 if lines > 10:
-                    create_or_update(
+                    create_or_replace(
                         name=f"ВНИМАНИЕ: Индивидуальный расчет слаботочного щита (> 10 линий, {shield.name})",
                         quantity=1,
                         price=Decimal('0.00')
@@ -179,12 +180,8 @@ class EstimateAutomationService:
         
         # Pass 3.1: Power Enclosures
         for (size, mounting), count in power_enclosure_requirements.items():
-            # Key format: shield_enclosure_{size}_{mounting} (e.g. shield_enclosure_24_internal)
             enclosure_key = f"shield_enclosure_{size}_{mounting}"
             catalog_enclosure = CatalogItem.objects.filter(mapping_key=enclosure_key).first()
-            
-            # Fallback for backward compatibility or missing keys?
-            # User specifically asked for separation. If not found -> Warning.
             
             final_name = ""
             if catalog_enclosure:
@@ -193,7 +190,7 @@ class EstimateAutomationService:
                 mount_str = "Встр." if mounting == 'internal' else "Накл."
                 final_name = f"ВНИМАНИЕ: Не найден корпус в каталоге! ({size} мод, {mount_str})"
             
-            create_or_update(name=final_name, quantity=count, catalog_item=catalog_enclosure)
+            create_or_replace(name=final_name, quantity=count, catalog_item=catalog_enclosure)
 
         # Pass 3.2: Media Enclosures
         for (size, mounting), count in media_enclosure_requirements.items():
@@ -207,7 +204,7 @@ class EstimateAutomationService:
                 mount_str = "Встр." if mounting == 'internal' else "Накл."
                 final_name = f"ВНИМАНИЕ: Не найден слаботочный корпус! ({size} мод, {mount_str})"
             
-            create_or_update(name=final_name, quantity=count, catalog_item=catalog_enclosure)
+            create_or_replace(name=final_name, quantity=count, catalog_item=catalog_enclosure)
 
         return {
             "status": "success", 
@@ -222,6 +219,10 @@ class EstimateAutomationService:
         Generates Works based on two strategies:
         1. Aggregation: Materials with 'aggregation_key' are summed up and mapped to a single Work item.
         2. Direct (1-to-1): Materials without 'aggregation_key' but with 'related_work_item' generate individual Work items.
+        
+        UPDATED LOGIC: 
+        - Replaces existing works instead of updating/merging.
+        - Deletes old matches, creates new ones.
         """
         try:
             stage = Stage.objects.get(id=stage_id)
@@ -236,6 +237,13 @@ class EstimateAutomationService:
         # 1. Aggregation Dictionary: { aggregation_key: total_quantity }
         aggregation_map = {}
         
+        # 1.1 Also collect direct 1-to-1 mappings that act like aggregation (unique per Work CatalogItem)
+        # We will treat 1-to-1 also as "Aggregation by Work Catalog Item" essentially.
+        # So we can unify the creation logic.
+        
+        # Map: mapping_key (or Work CatalogItem ID) -> quantity
+        works_to_create = {} # Key: Work CatalogItem (obj), Value: Quantity
+        
         for mat in materials:
             if not mat.catalog_item:
                 continue
@@ -243,106 +251,79 @@ class EstimateAutomationService:
             cat_item = mat.catalog_item
             qty = mat.total_quantity
             
-            # Case A: Aggregation
+            # Case A: Aggregation Key
             if cat_item.aggregation_key:
                 agg_key = cat_item.aggregation_key
                 if agg_key not in aggregation_map:
                     aggregation_map[agg_key] = 0
                 aggregation_map[agg_key] += qty
                 
-            # Case B: Direct 1-to-1 (Legacy/Simple)
+            # Case B: Direct 1-to-1
             elif cat_item.related_work_item:
                 work_cat = cat_item.related_work_item
-                
-                # Check if we should update existing or create new?
-                # For 1-to-1, we assume uniqueness by CatalogItem usually.
-                # However, if multiple materials point to same work but NO aggregation key...
-                # Ideally they SHOULD have aggregation key. 
-                # If they don't, we might overwrite. 
-                # Let's assume 1-to-1 means specific Unique mapping.
-                
-                work_item = EstimateItem.objects.filter(
-                    stage=stage,
-                    catalog_item=work_cat,
-                    item_type='work'
-                ).first()
-                
-                if work_item:
-                    work_item.total_quantity = qty
-                    work_item.save()
-                    updated_count += 1
-                else:
-                    EstimateItem.objects.create(
-                        stage=stage,
-                        catalog_item=work_cat,
-                        name=work_cat.name,
-                        item_type='work',
-                        unit=work_cat.unit,
-                        total_quantity=qty,
-                        price_per_unit=work_cat.default_price,
-                        currency=work_cat.default_currency,
-                        markup_percent=stage.markup_percent
-                    )
-                    created_count += 1
+                if work_cat not in works_to_create:
+                    works_to_create[work_cat] = 0
+                works_to_create[work_cat] += qty
 
-        # 2. Process Aggregated Items
+        # 2. Process Aggregated Items (Convert to Work Catalog Items)
         for agg_key, total_qty in aggregation_map.items():
             # Find Work CatalogItem by mapping_key == agg_key
             work_cat = CatalogItem.objects.filter(mapping_key=agg_key, item_type='work').first()
             
-            if not work_cat:
+            if work_cat:
+                if work_cat not in works_to_create:
+                    works_to_create[work_cat] = 0
+                works_to_create[work_cat] += total_qty
+            else:
                 # Warning if work item not found for key
-                # We create a placeholder Work Item to alert user
+                # Special handling for "Not Found" case - we can't easily aggregate by object
+                # So handle immediately
                 final_name = f"ВНИМАНИЕ: Не найдена работа для ключа '{agg_key}'"
                 
-                # Try to find existing placeholder
-                work_item = EstimateItem.objects.filter(
-                    stage=stage,
-                    name=final_name,
-                    item_type='work'
-                ).first()
-                
-                if work_item:
-                    work_item.total_quantity = total_qty
-                    work_item.save()
+                # Check existance by Name
+                existing = EstimateItem.objects.filter(stage=stage, name=final_name, item_type='work')
+                if existing.exists():
+                    existing.delete()
                     updated_count += 1
                 else:
-                    EstimateItem.objects.create(
-                        stage=stage,
-                        name=final_name,
-                        item_type='work',
-                        unit='?',
-                        total_quantity=total_qty,
-                        price_per_unit=Decimal(0),
-                        markup_percent=stage.markup_percent
-                    )
                     created_count += 1
-                continue
 
-            # Work found
-            work_item = EstimateItem.objects.filter(
+                EstimateItem.objects.create(
+                    stage=stage,
+                    name=final_name,
+                    item_type='work',
+                    unit='?',
+                    total_quantity=total_qty,
+                    price_per_unit=Decimal(0),
+                    markup_percent=stage.markup_percent
+                )
+
+        # 3. Create/Replace Works from aggregated list
+        for work_cat, total_qty in works_to_create.items():
+            # Find existing works with this catalog item
+            existing = EstimateItem.objects.filter(
                 stage=stage,
                 catalog_item=work_cat,
                 item_type='work'
-            ).first()
+            )
             
-            if work_item:
-                work_item.total_quantity = total_qty
-                work_item.save()
+            if existing.exists():
+                existing.delete()
                 updated_count += 1
             else:
-                EstimateItem.objects.create(
-                    stage=stage,
-                    catalog_item=work_cat,
-                    name=work_cat.name,
-                    item_type='work',
-                    unit=work_cat.unit,
-                    total_quantity=total_qty,
-                    price_per_unit=work_cat.default_price,
-                    currency=work_cat.default_currency,
-                    markup_percent=stage.markup_percent
-                )
                 created_count += 1
+            
+            EstimateItem.objects.create(
+                stage=stage,
+                catalog_item=work_cat,
+                name=work_cat.name,
+                item_type='work',
+                unit=work_cat.unit,
+                total_quantity=total_qty,
+                price_per_unit=work_cat.default_price,
+                currency=work_cat.default_currency,
+                markup_percent=stage.markup_percent
+            )
                 
         return {
             "status": "success", 
@@ -361,32 +342,22 @@ class TemplateService:
         except (Stage.DoesNotExist, WorkTemplate.DoesNotExist):
             return {"status": "error", "message": "Stage or Template not found"}
 
+        # CLEAR Existing Works
+        EstimateItem.objects.filter(stage=stage, item_type='work').delete()
+
         created_count = 0
-        updated_count = 0
-
-        for item in template.items.all():
-            est_item = EstimateItem.objects.filter(
-                stage=stage,
-                catalog_item=item.catalog_item,
-                item_type='work'
-            ).first()
-
-            if est_item:
-                # Merge Logic: Sum quantity
-                est_item.total_quantity += item.quantity
-                est_item.save()
-                updated_count += 1
-            else:
-                EstimateItem.objects.create(
-                    stage=stage,
-                    catalog_item=item.catalog_item, # Copies name, unit, price, etc. via save()
-                    item_type='work',
-                    total_quantity=item.quantity,
-                    markup_percent=stage.markup_percent
-                )
-                created_count += 1
         
-        return {"status": "success", "created": created_count, "updated": updated_count}
+        for item in template.items.all():
+            EstimateItem.objects.create(
+                stage=stage,
+                catalog_item=item.catalog_item, 
+                item_type='work',
+                total_quantity=item.quantity,
+                markup_percent=stage.markup_percent
+            )
+            created_count += 1
+        
+        return {"status": "success", "created": created_count, "updated": 0}
 
     @staticmethod
     def apply_material_template(stage_id, template_id):
@@ -398,32 +369,22 @@ class TemplateService:
         except (Stage.DoesNotExist, MaterialTemplate.DoesNotExist):
             return {"status": "error", "message": "Stage or Template not found"}
 
-        created_count = 0
-        updated_count = 0
+        # CLEAR Existing Materials
+        EstimateItem.objects.filter(stage=stage, item_type='material').delete()
 
+        created_count = 0
+        
         for item in template.items.all():
-            est_item = EstimateItem.objects.filter(
+            EstimateItem.objects.create(
                 stage=stage,
                 catalog_item=item.catalog_item,
-                item_type='material'
-            ).first()
-
-            if est_item:
-                # Merge Logic
-                est_item.total_quantity += item.quantity
-                est_item.save()
-                updated_count += 1
-            else:
-                EstimateItem.objects.create(
-                    stage=stage,
-                    catalog_item=item.catalog_item,
-                    item_type='material',
-                    total_quantity=item.quantity,
-                    markup_percent=stage.markup_percent
-                )
-                created_count += 1
+                item_type='material',
+                total_quantity=item.quantity,
+                markup_percent=stage.markup_percent
+            )
+            created_count += 1
         
-        return {"status": "success", "created": created_count, "updated": updated_count}
+        return {"status": "success", "created": created_count, "updated": 0}
 
     @staticmethod
     def apply_powershield_template(shield_id, template_id):
@@ -435,31 +396,21 @@ class TemplateService:
         except (Shield.DoesNotExist, PowerShieldTemplate.DoesNotExist):
             return {"status": "error", "message": "Shield or Template not found"}
 
+        # CLEAR Existing Groups
+        ShieldGroup.objects.filter(shield=shield).delete()
+
         created_count = 0
 
         for item in template.items.all():
-            # Merge logic for PowerShield: check for same device spec
-            est_group = ShieldGroup.objects.filter(
+            ShieldGroup.objects.create(
                 shield=shield,
                 device_type=item.device_type,
                 rating=item.rating,
                 poles=item.poles,
+                quantity=item.quantity,
                 catalog_item=item.catalog_item
-            ).first()
-
-            if est_group:
-                est_group.quantity += item.quantity
-                est_group.save()
-            else:
-                ShieldGroup.objects.create(
-                    shield=shield,
-                    device_type=item.device_type,
-                    rating=item.rating,
-                    poles=item.poles,
-                    quantity=item.quantity,
-                    catalog_item=item.catalog_item
-                )
-                created_count += 1
+            )
+            created_count += 1
         
         return {"status": "success", "created": created_count}
 
@@ -473,33 +424,22 @@ class TemplateService:
         except (Shield.DoesNotExist, LedShieldTemplate.DoesNotExist):
             return {"status": "error", "message": "Shield or Template not found"}
 
-        created_count = 0
-        updated_count = 0
+        # CLEAR Existing Zones
+        LedZone.objects.filter(shield=shield).delete()
 
+        created_count = 0
+        
         for item in template.items.all():
-            # Merge logic for LED blocks: check by transformer and zone
-            est_zone = LedZone.objects.filter(
+            LedZone.objects.create(
                 shield=shield,
                 transformer=item.transformer,
                 zone=item.zone,
+                quantity=item.quantity,
                 catalog_item=item.catalog_item
-            ).first()
-
-            if est_zone:
-                est_zone.quantity += item.quantity
-                est_zone.save()
-                updated_count += 1
-            else:
-                LedZone.objects.create(
-                    shield=shield,
-                    transformer=item.transformer,
-                    zone=item.zone,
-                    quantity=item.quantity,
-                    catalog_item=item.catalog_item
-                )
-                created_count += 1
+            )
+            created_count += 1
         
-        return {"status": "success", "created": created_count, "updated": updated_count}
+        return {"status": "success", "created": created_count, "updated": 0}
 
     @staticmethod
     def create_work_template_from_stage(stage_id, name, description=""):
