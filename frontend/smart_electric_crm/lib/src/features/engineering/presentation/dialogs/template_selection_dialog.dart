@@ -129,7 +129,6 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                     width: 250,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        Navigator.pop(context); // Close dialog
                         onCreate!(); // Trigger create action
                       },
                       icon: const Icon(Icons.add_circle_outline, size: 20),
