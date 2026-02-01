@@ -215,14 +215,66 @@ class WorkTemplateViewSet(viewsets.ModelViewSet):
     queryset = WorkTemplate.objects.all()
     serializer_class = WorkTemplateSerializer
 
+    @action(detail=False, methods=['post'])
+    def create_from_stage(self, request):
+        stage_id = request.data.get('stage_id')
+        name = request.data.get('name')
+        description = request.data.get('description', '')
+        
+        if not stage_id or not name:
+            return Response({'error': 'stage_id and name are required'}, status=400)
+            
+        result = TemplateService.create_work_template_from_stage(stage_id, name, description)
+        if result.get("status") == "error": return Response(result, status=400)
+        return Response(result)
+
 class MaterialTemplateViewSet(viewsets.ModelViewSet):
     queryset = MaterialTemplate.objects.all()
     serializer_class = MaterialTemplateSerializer
 
+    @action(detail=False, methods=['post'])
+    def create_from_stage(self, request):
+        stage_id = request.data.get('stage_id')
+        name = request.data.get('name')
+        description = request.data.get('description', '')
+        
+        if not stage_id or not name:
+            return Response({'error': 'stage_id and name are required'}, status=400)
+            
+        result = TemplateService.create_material_template_from_stage(stage_id, name, description)
+        if result.get("status") == "error": return Response(result, status=400)
+        return Response(result)
+
 class PowerShieldTemplateViewSet(viewsets.ModelViewSet):
     queryset = PowerShieldTemplate.objects.all()
-    serializer_class = PowerShieldTemplateSerializer
+    serializer_class = PowerShieldTemplateSerializer  
+
+    @action(detail=False, methods=['post'])
+    def create_from_shield(self, request):
+        shield_id = request.data.get('shield_id')
+        name = request.data.get('name')
+        description = request.data.get('description', '')
+        
+        if not shield_id or not name:
+            return Response({'error': 'shield_id and name are required'}, status=400)
+            
+        result = TemplateService.create_powershield_template_from_shield(shield_id, name, description)
+        if result.get("status") == "error": return Response(result, status=400)
+        return Response(result)
 
 class LedShieldTemplateViewSet(viewsets.ModelViewSet):
     queryset = LedShieldTemplate.objects.all()
     serializer_class = LedShieldTemplateSerializer
+
+    @action(detail=False, methods=['post'])
+    def create_from_shield(self, request):
+        shield_id = request.data.get('shield_id')
+        name = request.data.get('name')
+        description = request.data.get('description', '')
+        
+        if not shield_id or not name:
+            return Response({'error': 'shield_id and name are required'}, status=400)
+            
+        result = TemplateService.create_ledshield_template_from_shield(shield_id, name, description)
+        if result.get("status") == "error": return Response(result, status=400)
+        return Response(result)

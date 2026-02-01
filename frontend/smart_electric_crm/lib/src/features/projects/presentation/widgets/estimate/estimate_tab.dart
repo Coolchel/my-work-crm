@@ -38,6 +38,7 @@ class EstimateTab extends ConsumerStatefulWidget {
   // Template props
   final VoidCallback? onTemplatesAction;
   final bool isTemplatesLoading;
+  final VoidCallback? onSaveAsTemplate;
 
   const EstimateTab({
     super.key,
@@ -60,6 +61,7 @@ class EstimateTab extends ConsumerStatefulWidget {
     this.isAutomationLoading = false,
     this.onTemplatesAction,
     this.isTemplatesLoading = false,
+    this.onSaveAsTemplate,
   });
 
   @override
@@ -527,6 +529,31 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: _primaryColor.withOpacity(0.3)),
               visualDensity: VisualDensity.compact,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Save as Template Button
+    if (widget.onSaveAsTemplate != null) {
+      if (buttons.isNotEmpty) {
+        buttons.add(const SizedBox(width: 8));
+      }
+      buttons.add(
+        Tooltip(
+          message: "Сохранить как шаблон",
+          child: SizedBox(
+            // Not expanded, just an icon button or small button
+            width: 48,
+            child: OutlinedButton(
+              onPressed: widget.isDisabled ? null : widget.onSaveAsTemplate,
+              style: OutlinedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                side: BorderSide(color: _primaryColor.withOpacity(0.3)),
+                visualDensity: VisualDensity.compact,
+              ),
+              child: Icon(Icons.save_as, size: 20, color: _primaryColor),
             ),
           ),
         ),

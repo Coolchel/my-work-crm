@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../engineering/data/models/shield_model.dart';
 import '../../../../engineering/data/models/shield_group_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
+import '../../../../engineering/presentation/providers/template_providers.dart';
+import '../../../../engineering/presentation/dialogs/template_selection_dialog.dart';
+import '../../../../engineering/data/models/template_models.dart';
 import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/shield_group_dialog.dart';
-import '../../dialogs/engineering/apply_template_dialog.dart';
+// import '../../dialogs/engineering/apply_template_dialog.dart'; // Removed
 
 class ShieldContentPower extends ConsumerWidget {
   final ShieldModel shield;
@@ -16,6 +19,7 @@ class ShieldContentPower extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // ... (same as before until Row with buttons)
     final groups = shield.groups;
 
     // Group items by device type
@@ -29,8 +33,8 @@ class ShieldContentPower extends ConsumerWidget {
 
     // Define custom order for groups
     final List<String> typeOrder = [
-      'load_switch', // Вводные всегда первыми
-      'relay', // Реле сразу после ввода
+      'load_switch',
+      'relay',
       'circuit_breaker',
       'diff_breaker',
       'rcd',
@@ -58,6 +62,16 @@ class ShieldContentPower extends ConsumerWidget {
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             Row(
               children: [
+                if (groups.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: IconButton(
+                      onPressed: () => _showSaveTemplateDialog(context, ref),
+                      icon: const Icon(Icons.save_as,
+                          size: 20, color: Colors.blue),
+                      tooltip: "Сохранить как шаблон",
+                    ),
+                  ),
                 TextButton.icon(
                   onPressed: () => _showApplyTemplateDialog(context, ref),
                   icon: const Icon(Icons.copy, size: 16),
@@ -194,7 +208,6 @@ class ShieldContentPower extends ConsumerWidget {
 
   void _showAddGroupDialog(BuildContext context, WidgetRef ref,
       {ShieldGroupModel? group}) {
-    debugPrint('Opening dialog for group: ${group?.id}');
     showDialog(
       context: context,
       builder: (context) => ShieldGroupDialog(
@@ -202,11 +215,87 @@ class ShieldContentPower extends ConsumerWidget {
     );
   }
 
-  void _showApplyTemplateDialog(BuildContext context, WidgetRef ref) {
+  void _showApplyTemplateDialog(BuildContext context, WidgetRef ref) async {
+    try {
+      final templates = await ref.read(powerShieldTemplatesProvider.future);
+      // ignore: use_build_context_synchronously
+      if (!context.mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (context) => TemplateSelectionDialog<PowerShieldTemplate>(
+          title: "Выберите шаблон щита",
+          templates: templates,
+          getName: (t) => t.name,
+          getDescription: (t) => t.description ?? '',
+          onSelected: (t) async {
+            await ref
+                .read(engineeringRepositoryProvider)
+                .applyShieldTemplate(shield.id, t.id);
+            ref.invalidate(projectListProvider);
+          },
+          onDelete: (t) async {
+            await ref
+                .read(templateRepositoryProvider)
+                .deletePowerShieldTemplate(t.id);
+            ref.invalidate(powerShieldTemplatesProvider);
+          },
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
+      }
+    }
+  }
+
+  void _showSaveTemplateDialog(BuildContext context, WidgetRef ref) {
+    final TextEditingController nameCtrl = TextEditingController();
     showDialog(
       context: context,
-      builder: (context) => ApplyTemplateDialog(
-          projectId: projectId, shieldId: shield.id, type: 'shield'),
+      builder: (context) => AlertDialog(
+        title: const Text("Сохранить щит как шаблон"),
+        content: TextField(
+          controller: nameCtrl,
+          decoration: const InputDecoration(
+            labelText: "Название шаблона",
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Отмена"),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (nameCtrl.text.trim().isEmpty) return;
+              Navigator.pop(context);
+              try {
+                await ref
+                    .read(templateRepositoryProvider)
+                    .createPowerShieldTemplateFromShield(
+                        shield.id, nameCtrl.text);
+                ref.invalidate(powerShieldTemplatesProvider);
+                // ignore: use_build_context_synchronously
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text("Шаблон '${nameCtrl.text}' создан")));
+                }
+              } catch (e) {
+                // ignore: use_build_context_synchronously
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
+                }
+              }
+            },
+            child: const Text("Сохранить"),
+          ),
+        ],
+      ),
     );
   }
 

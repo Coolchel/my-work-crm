@@ -500,3 +500,107 @@ class TemplateService:
                 created_count += 1
         
         return {"status": "success", "created": created_count, "updated": updated_count}
+
+    @staticmethod
+    def create_work_template_from_stage(stage_id, name, description=""):
+        from .models import WorkTemplate, WorkTemplateItem, EstimateItem
+        
+        try:
+            stage = Stage.objects.get(id=stage_id)
+        except Stage.DoesNotExist:
+            return {"status": "error", "message": "Stage not found"}
+
+        # Create Template
+        template = WorkTemplate.objects.create(name=name, description=description)
+        
+        # Copy Items
+        items = EstimateItem.objects.filter(stage=stage, item_type='work')
+        count = 0
+        for item in items:
+            if not item.catalog_item: continue # Skip custom items without catalog link? Or create without?
+            # Ideally we only template catalog items to keep link.
+            
+            WorkTemplateItem.objects.create(
+                template=template,
+                catalog_item=item.catalog_item,
+                quantity=item.total_quantity
+            )
+            count += 1
+            
+        return {"status": "success", "template_id": template.id, "count": count}
+
+    @staticmethod
+    def create_material_template_from_stage(stage_id, name, description=""):
+        from .models import MaterialTemplate, MaterialTemplateItem, EstimateItem
+        
+        try:
+            stage = Stage.objects.get(id=stage_id)
+        except Stage.DoesNotExist:
+            return {"status": "error", "message": "Stage not found"}
+
+        template = MaterialTemplate.objects.create(name=name, description=description)
+        
+        items = EstimateItem.objects.filter(stage=stage, item_type='material')
+        count = 0
+        for item in items:
+            if not item.catalog_item: continue
+            
+            MaterialTemplateItem.objects.create(
+                template=template,
+                catalog_item=item.catalog_item,
+                quantity=item.total_quantity
+            )
+            count += 1
+            
+        return {"status": "success", "template_id": template.id, "count": count}
+
+    @staticmethod
+    def create_powershield_template_from_shield(shield_id, name, description=""):
+        from .models import PowerShieldTemplate, PowerShieldTemplateItem, ShieldGroup
+        
+        try:
+            shield = Shield.objects.get(id=shield_id)
+        except Shield.DoesNotExist:
+            return {"status": "error", "message": "Shield not found"}
+
+        template = PowerShieldTemplate.objects.create(name=name, description=description)
+        
+        groups = shield.groups.all()
+        count = 0
+        for group in groups:
+            PowerShieldTemplateItem.objects.create(
+                template=template,
+                device_type=group.device_type,
+                rating=group.rating,
+                poles=group.poles,
+                quantity=group.quantity,
+                catalog_item=group.catalog_item
+            )
+            count += 1
+            
+        return {"status": "success", "template_id": template.id, "count": count}
+
+    @staticmethod
+    def create_ledshield_template_from_shield(shield_id, name, description=""):
+        from .models import LedShieldTemplate, LedShieldTemplateItem
+        
+        try:
+            shield = Shield.objects.get(id=shield_id)
+        except Shield.DoesNotExist:
+            return {"status": "error", "message": "Shield not found"}
+
+        template = LedShieldTemplate.objects.create(name=name, description=description)
+        
+        zones = shield.led_zones.all()
+        count = 0
+        for zone in zones:
+            LedShieldTemplateItem.objects.create(
+                template=template,
+                transformer=zone.transformer,
+                zone=zone.zone,
+                quantity=zone.quantity,
+                catalog_item=zone.catalog_item
+            )
+            count += 1
+            
+        return {"status": "success", "template_id": template.id, "count": count}

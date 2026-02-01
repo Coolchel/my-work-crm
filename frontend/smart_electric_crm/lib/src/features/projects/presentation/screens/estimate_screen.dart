@@ -155,6 +155,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                 isAutomationLoading: _isCalculatingWorks,
                 onTemplatesAction: _showWorkTemplatesDialog,
                 isTemplatesLoading: _isApplyingTemplate,
+                onSaveAsTemplate: () => _showSaveTemplateDialog('work'),
               ),
               // Materials Tab
               EstimateTab(
@@ -178,6 +179,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                 isAutomationLoading: _isImportingShields,
                 onTemplatesAction: _showMaterialTemplatesDialog,
                 isTemplatesLoading: _isApplyingTemplate,
+                onSaveAsTemplate: () => _showSaveTemplateDialog('material'),
               ),
             ],
           ),
@@ -624,6 +626,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           getName: (t) => t.name,
           getDescription: (t) => t.description ?? '',
           onSelected: (t) => _applyWorkTemplate(t.id),
+          onDelete: (t) => _deleteWorkTemplate(t),
         ),
       );
     } catch (e) {
@@ -646,12 +649,104 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           getName: (t) => t.name,
           getDescription: (t) => t.description ?? '',
           onSelected: (t) => _applyMaterialTemplate(t.id),
+          onDelete: (t) => _deleteMaterialTemplate(t),
         ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Ошибка загрузки шаблонов: $e")));
+    }
+  }
+
+  Future<void> _deleteWorkTemplate(WorkTemplate t) async {
+    try {
+      await ref.read(templateRepositoryProvider).deleteWorkTemplate(t.id);
+      if (mounted) Navigator.pop(context); // Close dialog to refresh or re-open
+      // Re-open/Refresh logic could be better, but closing is safe.
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Шаблон '${t.name}' удален")));
+      // Force refresh of provider?
+      ref.invalidate(workTemplatesProvider);
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Ошибка удаления: $e")));
+    }
+  }
+
+  Future<void> _deleteMaterialTemplate(MaterialTemplate t) async {
+    try {
+      await ref.read(templateRepositoryProvider).deleteMaterialTemplate(t.id);
+      if (mounted) Navigator.pop(context);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Шаблон '${t.name}' удален")));
+      ref.invalidate(materialTemplatesProvider);
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Ошибка удаления: $e")));
+    }
+  }
+
+  void _showSaveTemplateDialog(String type) {
+    final TextEditingController nameCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Сохранить как шаблон"),
+        content: TextField(
+          controller: nameCtrl,
+          decoration: const InputDecoration(
+            labelText: "Название шаблона",
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Отмена"),
+          ),
+          FilledButton(
+            onPressed: () => _saveTemplate(type, nameCtrl.text),
+            child: const Text("Сохранить"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveTemplate(String type, String name) async {
+    if (name.trim().isEmpty) return;
+
+    Navigator.pop(context); // Close dialog
+
+    // Show spinner if needed or just snackbar logic
+    // We don't have a loading state for this specifically, but it's quick.
+
+    try {
+      if (type == 'work') {
+        if (_stage == null) throw Exception("Этап не выбран");
+        await ref
+            .read(templateRepositoryProvider)
+            .createWorkTemplateFromStage(_stage!.id, name);
+        ref.invalidate(workTemplatesProvider);
+      } else if (type == 'material') {
+        if (_stage == null) throw Exception("Этап не выбран");
+        await ref
+            .read(templateRepositoryProvider)
+            .createMaterialTemplateFromStage(_stage!.id, name);
+        ref.invalidate(materialTemplatesProvider);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Шаблон '$name' создан")));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Ошибка создания шаблона: $e")));
+      }
     }
   }
 

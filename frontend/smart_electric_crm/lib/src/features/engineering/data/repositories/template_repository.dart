@@ -97,4 +97,52 @@ class TemplateRepository {
       throw Exception('Failed to apply LED shield template: $e');
     }
   }
+
+  // --- Create & Delete Methods ---
+
+  Future<void> createWorkTemplateFromStage(int stageId, String name) async {
+    await _dio.post('/work-templates/create_from_stage/', data: {
+      'stage_id': stageId,
+      'name': name,
+    });
+  }
+
+  Future<void> deleteWorkTemplate(int id) async {
+    await _dio.delete('/work-templates/$id/');
+  }
+
+  Future<void> createMaterialTemplateFromStage(int stageId, String name) async {
+    await _dio.post('/material-templates/create_from_stage/', data: {
+      'stage_id': stageId,
+      'name': name,
+    });
+  }
+
+  Future<void> deleteMaterialTemplate(int id) async {
+    await _dio.delete('/material-templates/$id/');
+  }
+
+  Future<void> createPowerShieldTemplateFromShield(
+      int shieldId, String name) async {
+    await _dio.post('/powershield-templates/create_from_shield/', data: {
+      'shield_id': shieldId,
+      'name': name,
+    });
+  }
+
+  Future<void> deletePowerShieldTemplate(int id) async {
+    await _dio.delete('/powershield-templates/$id/');
+  }
+
+  Future<void> createLedShieldTemplateFromShield(
+      int shieldId, String name) async {
+    await _dio.post('/led-shield-templates/create_from_shield/', data: {
+      'shield_id': shieldId,
+      'name': name,
+    });
+  }
+
+  Future<void> deleteLedShieldTemplate(int id) async {
+    await _dio.delete('/led-shield-templates/$id/');
+  }
 }

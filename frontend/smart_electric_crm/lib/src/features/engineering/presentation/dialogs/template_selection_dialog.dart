@@ -6,6 +6,7 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
   final String Function(T) getName;
   final String Function(T) getDescription;
   final Function(T) onSelected;
+  final Function(T)? onDelete;
 
   const TemplateSelectionDialog({
     super.key,
@@ -14,6 +15,7 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
     required this.getName,
     required this.getDescription,
     required this.onSelected,
+    this.onDelete,
   });
 
   @override
@@ -39,7 +41,17 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                       Navigator.pop(context); // Close dialog
                       onSelected(template); // Return selection
                     },
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (onDelete != null)
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.grey),
+                            onPressed: () => _confirmDelete(context, template),
+                          ),
+                        const Icon(Icons.arrow_forward_ios, size: 16),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -51,5 +63,29 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  void _confirmDelete(BuildContext context, T template) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Удалить шаблон?"),
+        content: Text("Вы уверены, что хотите удалить '${getName(template)}'?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Отмена"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Удалить", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && onDelete != null) {
+      onDelete!(template);
+    }
   }
 }

@@ -169,7 +169,7 @@ class EngineeringRepository {
   Future<void> applyShieldTemplate(int shieldId, int templateId) async {
     try {
       await _dio.post(
-        '/shields/$shieldId/apply_shield_template/',
+        '/shields/$shieldId/apply_powershield_template/',
         data: {'template_id': templateId},
       );
     } catch (e) {
@@ -184,7 +184,7 @@ class EngineeringRepository {
   Future<void> applyLedTemplate(int shieldId, int templateId) async {
     try {
       await _dio.post(
-        '/shields/$shieldId/apply_led_template/',
+        '/shields/$shieldId/apply_led_shield_template/',
         data: {'template_id': templateId},
       );
     } catch (e) {

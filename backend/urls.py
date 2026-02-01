@@ -34,6 +34,8 @@ router.register(r'work-templates', WorkTemplateViewSet, basename='work-template'
 router.register(r'material-templates', MaterialTemplateViewSet, basename='material-template')
 router.register(r'powershield-templates', PowerShieldTemplateViewSet, basename='powershield-template')
 router.register(r'led-shield-templates', LedShieldTemplateViewSet, basename='led-shield-template')
+router.register(r'shield-groups', ShieldGroupViewSet, basename='shield-group')
+router.register(r'led-zones', LedZoneViewSet, basename='led-zone')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
