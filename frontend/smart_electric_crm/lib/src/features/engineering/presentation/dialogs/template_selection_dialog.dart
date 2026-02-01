@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 
 class TemplateSelectionDialog<T> extends StatelessWidget {
   final String title;
@@ -235,19 +236,11 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
   void _confirmDelete(BuildContext context, T template) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Удалить шаблон?"),
-        content: Text("Вы уверены, что хотите удалить '${getName(template)}'?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Отмена"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Удалить", style: TextStyle(color: Colors.red)),
-          ),
-        ],
+      builder: (context) => ConfirmationDialog(
+        title: "Удалить шаблон?",
+        content: "Вы уверены, что хотите удалить '${getName(template)}'?",
+        confirmText: "Удалить",
+        isDestructive: true,
       ),
     );
 

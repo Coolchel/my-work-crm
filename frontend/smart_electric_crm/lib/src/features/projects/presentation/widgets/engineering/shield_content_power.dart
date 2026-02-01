@@ -5,6 +5,7 @@ import '../../../../engineering/data/models/shield_group_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../../../engineering/presentation/providers/template_providers.dart';
 import '../../../../engineering/presentation/dialogs/template_selection_dialog.dart';
+import '../../../../../shared/presentation/dialogs/text_input_dialog.dart';
 import '../../../../engineering/data/models/template_models.dart';
 import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/shield_group_dialog.dart';
@@ -252,68 +253,41 @@ class ShieldContentPower extends ConsumerWidget {
     }
   }
 
-  void _showSaveTemplateDialog(BuildContext context, WidgetRef ref) {
-    final TextEditingController nameCtrl = TextEditingController();
-    final TextEditingController descCtrl = TextEditingController();
-    showDialog(
+  void _showSaveTemplateDialog(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<dynamic>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Сохранить щит как шаблон"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(
-                labelText: "Название шаблона",
-                border: OutlineInputBorder(),
-              ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: descCtrl,
-              decoration: const InputDecoration(
-                labelText: "Описание (опционально)",
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Отмена"),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (nameCtrl.text.trim().isEmpty) return;
-              Navigator.pop(context);
-              try {
-                await ref
-                    .read(templateRepositoryProvider)
-                    .createPowerShieldTemplateFromShield(
-                        shield.id, nameCtrl.text,
-                        description: descCtrl.text);
-                ref.invalidate(powerShieldTemplatesProvider);
-                // ignore: use_build_context_synchronously
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text("Шаблон '${nameCtrl.text}' создан")));
-                }
-              } catch (e) {
-                // ignore: use_build_context_synchronously
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
-                }
-              }
-            },
-            child: const Text("Сохранить"),
-          ),
-        ],
+      builder: (context) => const TextInputDialog(
+        title: "Сохранить щит как шаблон",
+        labelText: "Название шаблона",
+        descriptionLabelText: "Описание (опционально)",
       ),
     );
+
+    if (result == null) return;
+
+    final name = result is Map ? result['text'] : result;
+    final description = result is Map ? result['description'] : '';
+
+    if (name == null || name.isEmpty) return;
+
+    try {
+      await ref
+          .read(templateRepositoryProvider)
+          .createPowerShieldTemplateFromShield(shield.id, name,
+              description: description);
+      ref.invalidate(powerShieldTemplatesProvider);
+      // ignore: use_build_context_synchronously
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Шаблон '$name' создан")));
+      }
+    } catch (e) {
+      // ignore: use_build_context_synchronously
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
+      }
+    }
   }
 
   String _getDeviceTypeName(String type) {

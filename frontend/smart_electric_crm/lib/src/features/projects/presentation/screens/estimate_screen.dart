@@ -14,6 +14,7 @@ import '../dialogs/estimate/estimate_actions_dialog.dart';
 import '../../../engineering/presentation/dialogs/template_selection_dialog.dart';
 import '../../../engineering/presentation/providers/template_providers.dart';
 import '../../../engineering/data/models/template_models.dart';
+import '../../../../shared/presentation/dialogs/text_input_dialog.dart';
 
 import '../widgets/estimate/estimate_bottom_actions.dart';
 
@@ -664,46 +665,22 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     }
   }
 
-  void _showSaveTemplateDialog(String type) {
-    final TextEditingController nameCtrl = TextEditingController();
-    final TextEditingController descCtrl = TextEditingController();
-    showDialog(
+  void _showSaveTemplateDialog(String type) async {
+    final result = await showDialog<dynamic>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Сохранить как шаблон"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(
-                labelText: "Название шаблона",
-                border: OutlineInputBorder(),
-              ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: descCtrl,
-              decoration: const InputDecoration(
-                labelText: "Описание (опционально)",
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Отмена"),
-          ),
-          FilledButton(
-            onPressed: () => _saveTemplate(type, nameCtrl.text, descCtrl.text),
-            child: const Text("Сохранить"),
-          ),
-        ],
+      builder: (context) => const TextInputDialog(
+        title: "Сохранить как шаблон",
+        labelText: "Название шаблона",
+        descriptionLabelText: "Описание (опционально)",
       ),
     );
+
+    if (result == null) return;
+
+    final name = result is Map ? result['text'] : result;
+    final description = result is Map ? result['description'] : '';
+
+    _saveTemplate(type, name, description);
   }
 
   Future<void> _saveTemplate(

@@ -9,45 +9,14 @@ import 'shield_content_led.dart';
 import '../../../../engineering/presentation/dialogs/template_selection_dialog.dart';
 import '../../../../engineering/presentation/providers/template_providers.dart';
 import '../../../../engineering/data/models/template_models.dart';
+import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
+import '../../../../../shared/presentation/dialogs/text_input_dialog.dart';
 
 class ShieldCard extends ConsumerWidget {
   final ShieldModel shield;
   final String projectId;
 
   const ShieldCard({required this.shield, required this.projectId, super.key});
-
-  Future<void> _deleteShield(BuildContext context, WidgetRef ref) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Удалить щит?'),
-        content: const Text('Все группы внутри будут удалены.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Удалить', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      try {
-        await ref.read(engineeringRepositoryProvider).deleteShield(shield.id);
-        ref.invalidate(projectListProvider);
-        ref.invalidate(projectByIdProvider(projectId));
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Ошибка: $e')));
-        }
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -225,81 +194,78 @@ class ShieldCard extends ConsumerWidget {
     );
   }
 
-  void _showSaveTemplateDialog(
-      BuildContext context, WidgetRef ref, ShieldModel shield) {
-    final TextEditingController nameController = TextEditingController();
-    final TextEditingController descController = TextEditingController();
-
-    showDialog(
+  Future<void> _deleteShield(BuildContext context, WidgetRef ref) async {
+    final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(shield.shieldType == 'power'
-            ? "Сохранить щит как шаблон"
-            : "Сохранить LED щит как шаблон"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: "Название шаблона",
-                border: OutlineInputBorder(),
-              ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(
-                labelText: "Описание (опционально)",
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Отмена"),
-          ),
-          FilledButton(
-            onPressed: () async {
-              if (nameController.text.trim().isEmpty) return;
-              Navigator.pop(context); // Close before async op
-              try {
-                if (shield.shieldType == 'power') {
-                  await ref
-                      .read(templateRepositoryProvider)
-                      .createPowerShieldTemplateFromShield(
-                          shield.id, nameController.text,
-                          description: descController.text);
-                  ref.invalidate(powerShieldTemplatesProvider);
-                } else {
-                  await ref
-                      .read(templateRepositoryProvider)
-                      .createLedShieldTemplateFromShield(
-                          shield.id, nameController.text,
-                          description: descController.text);
-                  ref.invalidate(ledShieldTemplatesProvider);
-                }
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content:
-                          Text("Шаблон '${nameController.text}' сохранен!")));
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Ошибка сохранения: $e")));
-                }
-              }
-            },
-            child: const Text("Сохранить"),
-          ),
-        ],
+      builder: (context) => const ConfirmationDialog(
+        title: 'Удалить щит?',
+        content: 'Все группы внутри будут удалены.',
+        confirmText: 'Удалить',
+        isDestructive: true,
       ),
     );
+
+    if (confirm == true) {
+      try {
+        await ref.read(engineeringRepositoryProvider).deleteShield(shield.id);
+        ref.invalidate(projectListProvider);
+        ref.invalidate(projectByIdProvider(projectId));
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+        }
+      }
+    }
+  }
+
+// ... (in _showSaveTemplateDialog)
+
+  void _showSaveTemplateDialog(
+      BuildContext context, WidgetRef ref, ShieldModel shield) async {
+    final result = await showDialog<dynamic>(
+      context: context,
+      builder: (context) => TextInputDialog(
+        title: shield.shieldType == 'power'
+            ? "Сохранить щит как шаблон"
+            : "Сохранить LED щит как шаблон",
+        labelText: "Название шаблона",
+        descriptionLabelText: "Описание (опционально)",
+      ),
+    );
+
+    if (result == null) return;
+
+    final name = result is Map ? result['text'] : result;
+    final description = result is Map ? result['description'] : '';
+
+    if (name == null || name.isEmpty) return;
+
+    try {
+      if (shield.shieldType == 'power') {
+        await ref
+            .read(templateRepositoryProvider)
+            .createPowerShieldTemplateFromShield(shield.id, name,
+                description: description);
+        ref.invalidate(powerShieldTemplatesProvider);
+      } else {
+        await ref
+            .read(templateRepositoryProvider)
+            .createLedShieldTemplateFromShield(shield.id, name,
+                description: description);
+        ref.invalidate(ledShieldTemplatesProvider);
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Шаблон '$name' сохранен!")));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Ошибка сохранения: $e")));
+      }
+    }
   }
 
   void _showTemplateDialog(
