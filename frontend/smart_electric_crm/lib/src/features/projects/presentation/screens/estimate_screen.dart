@@ -157,6 +157,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                 onTemplatesAction: _showWorkTemplatesDialog,
                 isTemplatesLoading: _isApplyingTemplate,
                 onSaveAsTemplate: () => _showSaveTemplateDialog('work'),
+                hideTopActions: true,
               ),
               // Materials Tab
               EstimateTab(
@@ -215,20 +216,26 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                   onApplyTemplate: _showMaterialTemplatesDialog,
                   onImport: _importFromShields,
                   showPrices: _showPrices,
+                  buttonColor:
+                      Colors.blue.shade200, // Blue buttons for Materials
                   onTogglePrices: () =>
                       setState(() => _showPrices = !_showPrices),
                 );
               } else {
-                // Works Tab - Old Speed Dial
-                return EstimateSpeedDial(
-                  isExpanded: _isFabExpanded,
-                  tabController: _tabController,
-                  onToggle: () =>
-                      setState(() => _isFabExpanded = !_isFabExpanded),
+                // Works Tab - New Bottom Actions (Replaces Speed Dial)
+                return EstimateBottomActions(
+                  onSearchTap: _showSearchDialog,
                   onDeleteAll: _deleteAllItems,
-                  onShowTemplates: _showTemplatesDialog,
-                  onManualAdd: _showManualAddDialog,
-                  onSearchAdd: _showSearchDialog,
+                  onSaveToTemplate: () => _showSaveTemplateDialog('work'),
+                  onApplyTemplate: _showWorkTemplatesDialog,
+                  onImport: _calculateWorksFromMaterials,
+                  automationText: "Рассчет по материалам",
+                  automationIcon: Icons.auto_awesome,
+                  automationColor: Colors.blue.shade200,
+                  showPrices: true,
+                  hidePriceToggle: true, // Hide price toggle for Works
+                  buttonColor: Colors.green.shade200, // Green buttons for Works
+                  onTogglePrices: () {},
                 );
               }
             },

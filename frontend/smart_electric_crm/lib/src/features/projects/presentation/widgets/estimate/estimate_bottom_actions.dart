@@ -6,8 +6,13 @@ class EstimateBottomActions extends StatefulWidget {
   final VoidCallback onSaveToTemplate;
   final VoidCallback onApplyTemplate;
   final VoidCallback onImport;
+  final String automationText;
+  final IconData automationIcon;
+  final Color? automationColor;
   final bool showPrices;
   final VoidCallback onTogglePrices;
+  final Color? buttonColor;
+  final bool hidePriceToggle;
 
   const EstimateBottomActions({
     super.key,
@@ -16,8 +21,13 @@ class EstimateBottomActions extends StatefulWidget {
     required this.onSaveToTemplate,
     required this.onApplyTemplate,
     required this.onImport,
+    this.automationText = "Импорт оборудования",
+    this.automationIcon = Icons.download_rounded,
+    this.automationColor,
     required this.showPrices,
     required this.onTogglePrices,
+    this.buttonColor,
+    this.hidePriceToggle = false,
   });
 
   @override
@@ -93,8 +103,11 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
                             widget.onDeleteAll();
                           }),
                           const Divider(height: 8, thickness: 1),
-                          _buildCustomMenuItem('save_template', Icons.save_as,
-                              "Сохранить в шаблон", Colors.blue.shade200, () {
+                          _buildCustomMenuItem(
+                              'save_template',
+                              Icons.save_as,
+                              "Сохранить в шаблон",
+                              widget.buttonColor ?? Colors.blue.shade200, () {
                             Navigator.pop(context);
                             widget.onSaveToTemplate();
                           }),
@@ -102,12 +115,16 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
                               'apply_template',
                               Icons.copy_all_rounded,
                               "По шаблону",
-                              Colors.blue.shade200, () {
+                              widget.buttonColor ?? Colors.blue.shade200, () {
                             Navigator.pop(context);
                             widget.onApplyTemplate();
                           }),
-                          _buildCustomMenuItem('import', Icons.download_rounded,
-                              "Импорт оборудования", Colors.blue.shade200, () {
+                          _buildCustomMenuItem(
+                              'import',
+                              widget.automationIcon,
+                              widget.automationText,
+                              widget.automationColor ?? Colors.purple.shade200,
+                              () {
                             Navigator.pop(context);
                             widget.onImport();
                           }),
@@ -175,34 +192,35 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
       mainAxisSize: MainAxisSize.min,
       children: [
         // 1. Price Toggle Button (New - Round with Icon+Text)
-        Tooltip(
-          message: widget.showPrices ? "Скрыть цены" : "Показать цены",
-          verticalOffset: 40, // Lift tooltip higher
-          child: FloatingActionButton(
-            heroTag: 'material_price_toggle_fab',
-            onPressed: widget.onTogglePrices,
-            backgroundColor: Colors.blue.shade200,
-            foregroundColor: Colors.black87,
-            elevation: 2,
-            tooltip: null, // Disable built-in tooltip
-            child: Center(
-              child: Text(
-                "Цены",
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  decoration:
-                      widget.showPrices ? TextDecoration.lineThrough : null,
-                  decorationThickness: 2.0,
-                  decorationColor: Colors.black87,
-                  color: Colors.black87,
+        if (!widget.hidePriceToggle) ...[
+          Tooltip(
+            message: widget.showPrices ? "Скрыть цены" : "Показать цены",
+            verticalOffset: 40, // Lift tooltip higher
+            child: FloatingActionButton(
+              heroTag: 'material_price_toggle_fab',
+              onPressed: widget.onTogglePrices,
+              backgroundColor: widget.buttonColor ?? Colors.blue.shade200,
+              foregroundColor: Colors.black87,
+              elevation: 2,
+              tooltip: null, // Disable built-in tooltip
+              child: Center(
+                child: Text(
+                  "Цены",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    decoration:
+                        widget.showPrices ? TextDecoration.lineThrough : null,
+                    decorationThickness: 2.0,
+                    decorationColor: Colors.black87,
+                    color: Colors.black87,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-
-        const SizedBox(width: 16),
+          const SizedBox(width: 16),
+        ],
 
         // 2. Actions Menu Button
         Tooltip(
@@ -212,7 +230,7 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
             key: _actionsButtonKey,
             heroTag: 'material_actions_fab',
             onPressed: _showActionsMenu,
-            backgroundColor: Colors.blue.shade200,
+            backgroundColor: widget.buttonColor ?? Colors.blue.shade200,
             foregroundColor: Colors.black87,
             elevation: 2,
             child: const Icon(Icons.grid_view_rounded),
@@ -223,12 +241,12 @@ class _EstimateBottomActionsState extends State<EstimateBottomActions> {
 
         // 3. Search Button
         Tooltip(
-          message: "Поиск",
+          message: "Добавить",
           verticalOffset: 40,
           child: FloatingActionButton(
             heroTag: 'material_search_fab',
             onPressed: widget.onSearchTap,
-            backgroundColor: Colors.blue.shade200,
+            backgroundColor: widget.buttonColor ?? Colors.blue.shade200,
             foregroundColor: Colors.black87,
             elevation: 2,
             child: const Icon(Icons.add),
