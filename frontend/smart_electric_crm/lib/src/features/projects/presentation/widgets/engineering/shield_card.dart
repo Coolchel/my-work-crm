@@ -246,6 +246,7 @@ class ShieldCard extends ConsumerWidget {
             getDescription: (t) => (t as dynamic).description ?? '',
             onSelected: (t) =>
                 _applyTemplate(context, ref, shield, (t as dynamic).id),
+            themeColor: isPower ? Colors.teal : Colors.purple,
           ),
         );
       }

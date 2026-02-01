@@ -598,6 +598,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           getDescription: (t) => t.description,
           onSelected: (t) => _applyWorkTemplate(t.id),
           onDelete: (t) => _deleteWorkTemplate(t),
+          themeColor: Colors.green, // Theme color for Work
         ),
       );
     } catch (e) {
@@ -621,6 +622,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
           getDescription: (t) => t.description,
           onSelected: (t) => _applyMaterialTemplate(t.id),
           onDelete: (t) => _deleteMaterialTemplate(t),
+          themeColor: Colors.blue, // Theme color for Material
         ),
       );
     } catch (e) {

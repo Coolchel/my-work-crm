@@ -240,6 +240,7 @@ class ShieldContentPower extends ConsumerWidget {
                 .deletePowerShieldTemplate(t.id);
             ref.invalidate(powerShieldTemplatesProvider);
           },
+          themeColor: Colors.teal,
         ),
       );
     } catch (e) {

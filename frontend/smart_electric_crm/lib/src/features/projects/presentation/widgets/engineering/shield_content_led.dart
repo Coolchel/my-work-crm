@@ -154,6 +154,7 @@ class ShieldContentLed extends ConsumerWidget {
                 .deleteLedShieldTemplate(t.id);
             ref.invalidate(ledShieldTemplatesProvider);
           },
+          themeColor: Colors.purple,
         ),
       );
     } catch (e) {
