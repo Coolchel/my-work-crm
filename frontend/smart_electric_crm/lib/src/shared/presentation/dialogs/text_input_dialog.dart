@@ -141,7 +141,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.grey,
+                      foregroundColor: Colors.black87,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 12),
                     ),

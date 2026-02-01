@@ -376,8 +376,10 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
                       },
                       style: FilledButton.styleFrom(
                         backgroundColor: themeColor,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(24),
                         ),
                       ),
                       child: const Text("Добавить"),

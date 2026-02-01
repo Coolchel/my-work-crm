@@ -187,12 +187,15 @@ class _EditItemDialogState extends State<EditItemDialog> {
                     ),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: Icon(Icons.close, color: themeColor),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        iconSize: 20,
+                      child: Tooltip(
+                        message: "Закрыть",
+                        child: IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: Icon(Icons.close, color: themeColor),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          iconSize: 20,
+                        ),
                       ),
                     ),
                   ],
@@ -480,8 +483,10 @@ class _EditItemDialogState extends State<EditItemDialog> {
                       onPressed: _save,
                       style: FilledButton.styleFrom(
                         backgroundColor: themeColor,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(24),
                         ),
                       ),
                       child: Text(isNewManual ? "Добавить" : "Изменить"),
