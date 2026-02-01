@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 /// Simple marquee widget for long titles - constrains width and scrolls text
 class MarqueeText extends StatefulWidget {
   final String text;
+  final TextStyle? style;
 
-  const MarqueeText({super.key, required this.text});
+  const MarqueeText({super.key, required this.text, this.style});
 
   @override
   State<MarqueeText> createState() => _MarqueeTextState();
@@ -56,7 +57,7 @@ class _MarqueeTextState extends State<MarqueeText> {
           children: [
             Text(
               widget.text,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: widget.style ?? Theme.of(context).textTheme.titleLarge,
               maxLines: 1,
             ),
             const SizedBox(width: 50), // Gap before restart
