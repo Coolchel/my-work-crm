@@ -79,35 +79,7 @@ class CatalogItem(models.Model):
         return f"{self.name} ({self.default_price} {self.default_currency})"
 
 
-class EstimateTemplate(models.Model):
-    """
-    Шаблон сметы. Позволяет создавать наборы работ/материалов (например, 'Электрика 1-комн. квартира').
-    """
-    name = models.CharField(max_length=255, verbose_name="Название шаблона")
-    description = models.TextField(blank=True, verbose_name="Описание")
 
-    class Meta:
-        verbose_name = "Шаблон сметы"
-        verbose_name_plural = "Шаблоны смет"
-
-    def __str__(self):
-        return self.name
-
-
-class TemplateItem(models.Model):
-    """
-    Позиция внутри шаблона. Ссылается на элемент справочника.
-    """
-    template = models.ForeignKey(EstimateTemplate, on_delete=models.CASCADE, related_name='items', verbose_name="Шаблон")
-    catalog_item = models.ForeignKey(CatalogItem, on_delete=models.CASCADE, verbose_name="Элемент справочника")
-    default_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=1, verbose_name="Кол-во по умолчанию")
-
-    class Meta:
-        verbose_name = "Позиция шаблона"
-        verbose_name_plural = "Позиции шаблона"
-
-    def __str__(self):
-        return f"{self.catalog_item.name} -> {self.template.name}"
 
 
 class Project(models.Model):
@@ -485,6 +457,7 @@ class ShieldGroup(models.Model):
     
     zone = models.CharField(max_length=255, verbose_name="Зона или потребитель", blank=True)
     modules_count = models.IntegerField(default=1, verbose_name="Кол-во модулей")
+    quantity = models.IntegerField(default=1, verbose_name="Количество")
     catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
 
     class Meta:
@@ -533,6 +506,7 @@ class LedZone(models.Model):
     shield = models.ForeignKey(Shield, on_delete=models.CASCADE, related_name='led_zones', verbose_name="Щит")
     transformer = models.CharField(max_length=255, verbose_name="Трансформатор/Блок")
     zone = models.CharField(max_length=255, verbose_name="Место установки/Лента")
+    quantity = models.IntegerField(default=1, verbose_name="Количество")
     catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
 
     class Meta:
@@ -543,68 +517,7 @@ class LedZone(models.Model):
         return f"{self.transformer} - {self.zone}"
 
 
-class ShieldTemplate(models.Model):
-    """
-    Шаблон щита.
-    """
-    name = models.CharField(max_length=255, verbose_name="Название шаблона")
-    description = models.TextField(blank=True, verbose_name="Описание")
 
-    class Meta:
-        verbose_name = "Шаблон щита"
-        verbose_name_plural = "Шаблоны щитов"
-
-    def __str__(self):
-        return self.name
-
-
-class ShieldTemplateItem(models.Model):
-    """
-    Пункт шаблона щита.
-    """
-    template = models.ForeignKey(ShieldTemplate, on_delete=models.CASCADE, related_name='items', verbose_name="Шаблон")
-    device = models.CharField(max_length=255, verbose_name="Устройство/Номинал")
-    zone = models.CharField(max_length=255, verbose_name="Зона/Потребитель")
-    catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
-
-    class Meta:
-        verbose_name = "Пункт шаблона щита"
-        verbose_name_plural = "Пункты шаблона щита"
-
-    def __str__(self):
-        return f"{self.device} - {self.zone}"
-
-
-class LedTemplate(models.Model):
-    """
-    Шаблон LED.
-    """
-    name = models.CharField(max_length=255, verbose_name="Название шаблона")
-    description = models.TextField(blank=True, verbose_name="Описание")
-
-    class Meta:
-        verbose_name = "Шаблон LED"
-        verbose_name_plural = "Шаблоны LED"
-
-    def __str__(self):
-        return self.name
-
-
-class LedTemplateItem(models.Model):
-    """
-    Пункт шаблона LED.
-    """
-    template = models.ForeignKey(LedTemplate, on_delete=models.CASCADE, related_name='items', verbose_name="Шаблон")
-    transformer = models.CharField(max_length=255, verbose_name="Трансформатор/Блок")
-    zone = models.CharField(max_length=255, verbose_name="Место установки/Лента")
-    catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
-
-    class Meta:
-        verbose_name = "Пункт шаблона LED"
-        verbose_name_plural = "Пункты шаблона LED"
-
-    def __str__(self):
-        return f"{self.transformer} - {self.zone}"
 
 # --- New Template System ---
 
@@ -708,23 +621,22 @@ class PowerShieldTemplateItem(models.Model):
         return f"{self.device_type} {self.rating} {self.poles} x{self.quantity}"
 
 
-class MultimediaTemplate(BaseTemplate):
+class LedShieldTemplate(BaseTemplate):
     class Meta:
-        verbose_name = "Шаблон мультимедиа"
-        verbose_name_plural = "Шаблоны мультимедиа"
+        verbose_name = "Шаблон LED-щита"
+        verbose_name_plural = "Шаблоны LED-щитов"
 
 
-class MultimediaTemplateItem(models.Model):
-    template = models.ForeignKey(MultimediaTemplate, on_delete=models.CASCADE, related_name='items', verbose_name="Шаблон")
-    
-    name = models.CharField(max_length=255, verbose_name="Название линии/устройства")
+class LedShieldTemplateItem(models.Model):
+    template = models.ForeignKey(LedShieldTemplate, on_delete=models.CASCADE, related_name='items', verbose_name="Шаблон")
+    transformer = models.CharField(max_length=255, verbose_name="Трансформатор/Блок")
+    zone = models.CharField(max_length=255, verbose_name="Зона/Лента")
     quantity = models.IntegerField(default=1, verbose_name="Количество")
-    
     catalog_item = models.ForeignKey(CatalogItem, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Товар (опционально)")
 
     class Meta:
-        verbose_name = "Позиция мультимедиа"
-        verbose_name_plural = "Позиции мультимедиа"
+        verbose_name = "Позиция LED-щита"
+        verbose_name_plural = "Позиции LED-щита"
 
     def __str__(self):
-         return f"{self.name} x{self.quantity}"
+         return f"{self.transformer} x{self.quantity}"

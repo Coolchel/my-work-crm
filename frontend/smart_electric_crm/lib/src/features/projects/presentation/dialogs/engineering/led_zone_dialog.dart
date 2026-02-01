@@ -19,6 +19,7 @@ class LedZoneDialog extends StatefulWidget {
 class _LedZoneDialogState extends State<LedZoneDialog> {
   late TextEditingController _transformerController;
   late TextEditingController _zoneController;
+  late TextEditingController _quantityController;
   bool _isSaving = false;
 
   @override
@@ -27,12 +28,15 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
     _transformerController =
         TextEditingController(text: widget.zone?.transformer ?? '');
     _zoneController = TextEditingController(text: widget.zone?.zone ?? '');
+    _quantityController =
+        TextEditingController(text: (widget.zone?.quantity ?? 1).toString());
   }
 
   @override
   void dispose() {
     _transformerController.dispose();
     _zoneController.dispose();
+    _quantityController.dispose();
     super.dispose();
   }
 
@@ -62,6 +66,16 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                 floatingLabelBehavior: FloatingLabelBehavior.always,
               ),
             ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _quantityController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Количество',
+                border: OutlineInputBorder(),
+                floatingLabelBehavior: FloatingLabelBehavior.always,
+              ),
+            ),
           ],
         ),
       ),
@@ -86,6 +100,8 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                             final data = {
                               'transformer': _transformerController.text,
                               'zone': _zoneController.text,
+                              'quantity':
+                                  int.tryParse(_quantityController.text) ?? 1,
                             };
                             if (isEdit) {
                               await ref

@@ -24,7 +24,7 @@ final powerShieldTemplatesProvider =
   return ref.watch(templateRepositoryProvider).getPowerShieldTemplates();
 });
 
-final multimediaTemplatesProvider =
-    FutureProvider<List<MultimediaTemplate>>((ref) async {
-  return ref.watch(templateRepositoryProvider).getMultimediaTemplates();
+final ledShieldTemplatesProvider =
+    FutureProvider<List<LedShieldTemplate>>((ref) async {
+  return ref.watch(templateRepositoryProvider).getLedShieldTemplates();
 });

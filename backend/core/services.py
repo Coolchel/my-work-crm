@@ -73,7 +73,7 @@ class EstimateAutomationService:
                 key = (group.device_type, group.poles, group.rating)
                 if key not in aggregated_items:
                     aggregated_items[key] = 0
-                aggregated_items[key] += 1
+                aggregated_items[key] += group.quantity
 
         for (device_type, poles, rating), quantity in aggregated_items.items():
             mapping_key = f"shield_{device_type}_{poles}"
@@ -112,7 +112,7 @@ class EstimateAutomationService:
             
             if shield.shield_type == 'power':
                 # --- Power Logic ---
-                total_modules = sum(g.modules_count for g in shield.groups.all())
+                total_modules = sum(g.modules_count * g.quantity for g in shield.groups.all())
                 if total_modules == 0: continue
                 
                 if total_modules > 144:
@@ -128,7 +128,7 @@ class EstimateAutomationService:
 
             elif shield.shield_type == 'led':
                 # --- LED Logic ---
-                drivers = shield.led_zones.count()
+                drivers = sum(z.quantity for z in shield.led_zones.all())
                 if drivers == 0: continue
                 
                 is_media = True
@@ -438,46 +438,65 @@ class TemplateService:
         created_count = 0
 
         for item in template.items.all():
-            # For ShieldGroups, we create multiple items based on quantity
-            # Because ShieldGroup is physical device representation
-            
-            for _ in range(item.quantity):
+            # Merge logic for PowerShield: check for same device spec
+            est_group = ShieldGroup.objects.filter(
+                shield=shield,
+                device_type=item.device_type,
+                rating=item.rating,
+                poles=item.poles,
+                catalog_item=item.catalog_item
+            ).first()
+
+            if est_group:
+                est_group.quantity += item.quantity
+                est_group.save()
+            else:
                 ShieldGroup.objects.create(
                     shield=shield,
                     device_type=item.device_type,
                     rating=item.rating,
                     poles=item.poles,
+                    quantity=item.quantity,
                     catalog_item=item.catalog_item
-                    # name/zone/modules_count generated in save()
                 )
                 created_count += 1
         
         return {"status": "success", "created": created_count}
 
     @staticmethod
-    def apply_multimedia_template(shield_id, template_id):
-        from .models import MultimediaTemplate, ShieldGroup
+    def apply_led_shield_template(shield_id, template_id):
+        from .models import LedShieldTemplate, LedZone
 
         try:
             shield = Shield.objects.get(id=shield_id)
-            template = MultimediaTemplate.objects.get(id=template_id)
-        except (Shield.DoesNotExist, MultimediaTemplate.DoesNotExist):
+            template = LedShieldTemplate.objects.get(id=template_id)
+        except (Shield.DoesNotExist, LedShieldTemplate.DoesNotExist):
             return {"status": "error", "message": "Shield or Template not found"}
 
         created_count = 0
+        updated_count = 0
 
         for item in template.items.all():
-            # Using ShieldGroup with generic type for multimedia items
-            # since there is no specialized MultimediaItem model
-            for _ in range(item.quantity):
-                ShieldGroup.objects.create(
+            # Merge logic for LED blocks: check by transformer and zone
+            est_zone = LedZone.objects.filter(
+                shield=shield,
+                transformer=item.transformer,
+                zone=item.zone,
+                catalog_item=item.catalog_item
+            ).first()
+
+            if est_zone:
+                est_zone.quantity += item.quantity
+                est_zone.save()
+                updated_count += 1
+            else:
+                LedZone.objects.create(
                     shield=shield,
-                    device_type='other', # Generic type
-                    rating='',
-                    poles='',
-                    device=item.name, # Explicitly set device name
+                    transformer=item.transformer,
+                    zone=item.zone,
+                    quantity=item.quantity,
                     catalog_item=item.catalog_item
                 )
                 created_count += 1
         
-        return {"status": "success", "created": created_count}
+        return {"status": "success", "created": created_count, "updated": updated_count}

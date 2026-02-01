@@ -85,28 +85,29 @@ class PowerShieldTemplateItem with _$PowerShieldTemplateItem {
 }
 
 @freezed
-class MultimediaTemplate with _$MultimediaTemplate {
-  const factory MultimediaTemplate({
+class LedShieldTemplate with _$LedShieldTemplate {
+  const factory LedShieldTemplate({
     required int id,
     required String name,
     required String description,
-    @Default([]) List<MultimediaTemplateItem> items,
-  }) = _MultimediaTemplate;
+    @Default([]) List<LedShieldTemplateItem> items,
+  }) = _LedShieldTemplate;
 
-  factory MultimediaTemplate.fromJson(Map<String, dynamic> json) =>
-      _$MultimediaTemplateFromJson(json);
+  factory LedShieldTemplate.fromJson(Map<String, dynamic> json) =>
+      _$LedShieldTemplateFromJson(json);
 }
 
 @freezed
-class MultimediaTemplateItem with _$MultimediaTemplateItem {
-  const factory MultimediaTemplateItem({
+class LedShieldTemplateItem with _$LedShieldTemplateItem {
+  const factory LedShieldTemplateItem({
     required int id,
-    required String name,
+    required String transformer,
+    required String zone,
     @Default(1) int quantity,
     @JsonKey(name: 'catalog_item') int? catalogItemId,
     @JsonKey(name: 'catalog_item_name') String? catalogItemName,
-  }) = _MultimediaTemplateItem;
+  }) = _LedShieldTemplateItem;
 
-  factory MultimediaTemplateItem.fromJson(Map<String, dynamic> json) =>
-      _$MultimediaTemplateItemFromJson(json);
+  factory LedShieldTemplateItem.fromJson(Map<String, dynamic> json) =>
+      _$LedShieldTemplateItemFromJson(json);
 }

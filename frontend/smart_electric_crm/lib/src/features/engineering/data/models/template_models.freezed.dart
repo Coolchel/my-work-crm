@@ -1347,40 +1347,40 @@ abstract class _PowerShieldTemplateItem implements PowerShieldTemplateItem {
       get copyWith => throw _privateConstructorUsedError;
 }
 
-MultimediaTemplate _$MultimediaTemplateFromJson(Map<String, dynamic> json) {
-  return _MultimediaTemplate.fromJson(json);
+LedShieldTemplate _$LedShieldTemplateFromJson(Map<String, dynamic> json) {
+  return _LedShieldTemplate.fromJson(json);
 }
 
 /// @nodoc
-mixin _$MultimediaTemplate {
+mixin _$LedShieldTemplate {
   int get id => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   String get description => throw _privateConstructorUsedError;
-  List<MultimediaTemplateItem> get items => throw _privateConstructorUsedError;
+  List<LedShieldTemplateItem> get items => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
-  $MultimediaTemplateCopyWith<MultimediaTemplate> get copyWith =>
+  $LedShieldTemplateCopyWith<LedShieldTemplate> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $MultimediaTemplateCopyWith<$Res> {
-  factory $MultimediaTemplateCopyWith(
-          MultimediaTemplate value, $Res Function(MultimediaTemplate) then) =
-      _$MultimediaTemplateCopyWithImpl<$Res, MultimediaTemplate>;
+abstract class $LedShieldTemplateCopyWith<$Res> {
+  factory $LedShieldTemplateCopyWith(
+          LedShieldTemplate value, $Res Function(LedShieldTemplate) then) =
+      _$LedShieldTemplateCopyWithImpl<$Res, LedShieldTemplate>;
   @useResult
   $Res call(
       {int id,
       String name,
       String description,
-      List<MultimediaTemplateItem> items});
+      List<LedShieldTemplateItem> items});
 }
 
 /// @nodoc
-class _$MultimediaTemplateCopyWithImpl<$Res, $Val extends MultimediaTemplate>
-    implements $MultimediaTemplateCopyWith<$Res> {
-  _$MultimediaTemplateCopyWithImpl(this._value, this._then);
+class _$LedShieldTemplateCopyWithImpl<$Res, $Val extends LedShieldTemplate>
+    implements $LedShieldTemplateCopyWith<$Res> {
+  _$LedShieldTemplateCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -1411,32 +1411,32 @@ class _$MultimediaTemplateCopyWithImpl<$Res, $Val extends MultimediaTemplate>
       items: null == items
           ? _value.items
           : items // ignore: cast_nullable_to_non_nullable
-              as List<MultimediaTemplateItem>,
+              as List<LedShieldTemplateItem>,
     ) as $Val);
   }
 }
 
 /// @nodoc
-abstract class _$$MultimediaTemplateImplCopyWith<$Res>
-    implements $MultimediaTemplateCopyWith<$Res> {
-  factory _$$MultimediaTemplateImplCopyWith(_$MultimediaTemplateImpl value,
-          $Res Function(_$MultimediaTemplateImpl) then) =
-      __$$MultimediaTemplateImplCopyWithImpl<$Res>;
+abstract class _$$LedShieldTemplateImplCopyWith<$Res>
+    implements $LedShieldTemplateCopyWith<$Res> {
+  factory _$$LedShieldTemplateImplCopyWith(_$LedShieldTemplateImpl value,
+          $Res Function(_$LedShieldTemplateImpl) then) =
+      __$$LedShieldTemplateImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
       {int id,
       String name,
       String description,
-      List<MultimediaTemplateItem> items});
+      List<LedShieldTemplateItem> items});
 }
 
 /// @nodoc
-class __$$MultimediaTemplateImplCopyWithImpl<$Res>
-    extends _$MultimediaTemplateCopyWithImpl<$Res, _$MultimediaTemplateImpl>
-    implements _$$MultimediaTemplateImplCopyWith<$Res> {
-  __$$MultimediaTemplateImplCopyWithImpl(_$MultimediaTemplateImpl _value,
-      $Res Function(_$MultimediaTemplateImpl) _then)
+class __$$LedShieldTemplateImplCopyWithImpl<$Res>
+    extends _$LedShieldTemplateCopyWithImpl<$Res, _$LedShieldTemplateImpl>
+    implements _$$LedShieldTemplateImplCopyWith<$Res> {
+  __$$LedShieldTemplateImplCopyWithImpl(_$LedShieldTemplateImpl _value,
+      $Res Function(_$LedShieldTemplateImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -1447,7 +1447,7 @@ class __$$MultimediaTemplateImplCopyWithImpl<$Res>
     Object? description = null,
     Object? items = null,
   }) {
-    return _then(_$MultimediaTemplateImpl(
+    return _then(_$LedShieldTemplateImpl(
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
@@ -1463,23 +1463,23 @@ class __$$MultimediaTemplateImplCopyWithImpl<$Res>
       items: null == items
           ? _value._items
           : items // ignore: cast_nullable_to_non_nullable
-              as List<MultimediaTemplateItem>,
+              as List<LedShieldTemplateItem>,
     ));
   }
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$MultimediaTemplateImpl implements _MultimediaTemplate {
-  const _$MultimediaTemplateImpl(
+class _$LedShieldTemplateImpl implements _LedShieldTemplate {
+  const _$LedShieldTemplateImpl(
       {required this.id,
       required this.name,
       required this.description,
-      final List<MultimediaTemplateItem> items = const []})
+      final List<LedShieldTemplateItem> items = const []})
       : _items = items;
 
-  factory _$MultimediaTemplateImpl.fromJson(Map<String, dynamic> json) =>
-      _$$MultimediaTemplateImplFromJson(json);
+  factory _$LedShieldTemplateImpl.fromJson(Map<String, dynamic> json) =>
+      _$$LedShieldTemplateImplFromJson(json);
 
   @override
   final int id;
@@ -1487,10 +1487,10 @@ class _$MultimediaTemplateImpl implements _MultimediaTemplate {
   final String name;
   @override
   final String description;
-  final List<MultimediaTemplateItem> _items;
+  final List<LedShieldTemplateItem> _items;
   @override
   @JsonKey()
-  List<MultimediaTemplateItem> get items {
+  List<LedShieldTemplateItem> get items {
     if (_items is EqualUnmodifiableListView) return _items;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_items);
@@ -1498,14 +1498,14 @@ class _$MultimediaTemplateImpl implements _MultimediaTemplate {
 
   @override
   String toString() {
-    return 'MultimediaTemplate(id: $id, name: $name, description: $description, items: $items)';
+    return 'LedShieldTemplate(id: $id, name: $name, description: $description, items: $items)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$MultimediaTemplateImpl &&
+            other is _$LedShieldTemplateImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
             (identical(other.description, description) ||
@@ -1521,27 +1521,27 @@ class _$MultimediaTemplateImpl implements _MultimediaTemplate {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$MultimediaTemplateImplCopyWith<_$MultimediaTemplateImpl> get copyWith =>
-      __$$MultimediaTemplateImplCopyWithImpl<_$MultimediaTemplateImpl>(
+  _$$LedShieldTemplateImplCopyWith<_$LedShieldTemplateImpl> get copyWith =>
+      __$$LedShieldTemplateImplCopyWithImpl<_$LedShieldTemplateImpl>(
           this, _$identity);
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$MultimediaTemplateImplToJson(
+    return _$$LedShieldTemplateImplToJson(
       this,
     );
   }
 }
 
-abstract class _MultimediaTemplate implements MultimediaTemplate {
-  const factory _MultimediaTemplate(
+abstract class _LedShieldTemplate implements LedShieldTemplate {
+  const factory _LedShieldTemplate(
       {required final int id,
       required final String name,
       required final String description,
-      final List<MultimediaTemplateItem> items}) = _$MultimediaTemplateImpl;
+      final List<LedShieldTemplateItem> items}) = _$LedShieldTemplateImpl;
 
-  factory _MultimediaTemplate.fromJson(Map<String, dynamic> json) =
-      _$MultimediaTemplateImpl.fromJson;
+  factory _LedShieldTemplate.fromJson(Map<String, dynamic> json) =
+      _$LedShieldTemplateImpl.fromJson;
 
   @override
   int get id;
@@ -1550,22 +1550,23 @@ abstract class _MultimediaTemplate implements MultimediaTemplate {
   @override
   String get description;
   @override
-  List<MultimediaTemplateItem> get items;
+  List<LedShieldTemplateItem> get items;
   @override
   @JsonKey(ignore: true)
-  _$$MultimediaTemplateImplCopyWith<_$MultimediaTemplateImpl> get copyWith =>
+  _$$LedShieldTemplateImplCopyWith<_$LedShieldTemplateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
-MultimediaTemplateItem _$MultimediaTemplateItemFromJson(
+LedShieldTemplateItem _$LedShieldTemplateItemFromJson(
     Map<String, dynamic> json) {
-  return _MultimediaTemplateItem.fromJson(json);
+  return _LedShieldTemplateItem.fromJson(json);
 }
 
 /// @nodoc
-mixin _$MultimediaTemplateItem {
+mixin _$LedShieldTemplateItem {
   int get id => throw _privateConstructorUsedError;
-  String get name => throw _privateConstructorUsedError;
+  String get transformer => throw _privateConstructorUsedError;
+  String get zone => throw _privateConstructorUsedError;
   int get quantity => throw _privateConstructorUsedError;
   @JsonKey(name: 'catalog_item')
   int? get catalogItemId => throw _privateConstructorUsedError;
@@ -1574,29 +1575,30 @@ mixin _$MultimediaTemplateItem {
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
-  $MultimediaTemplateItemCopyWith<MultimediaTemplateItem> get copyWith =>
+  $LedShieldTemplateItemCopyWith<LedShieldTemplateItem> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $MultimediaTemplateItemCopyWith<$Res> {
-  factory $MultimediaTemplateItemCopyWith(MultimediaTemplateItem value,
-          $Res Function(MultimediaTemplateItem) then) =
-      _$MultimediaTemplateItemCopyWithImpl<$Res, MultimediaTemplateItem>;
+abstract class $LedShieldTemplateItemCopyWith<$Res> {
+  factory $LedShieldTemplateItemCopyWith(LedShieldTemplateItem value,
+          $Res Function(LedShieldTemplateItem) then) =
+      _$LedShieldTemplateItemCopyWithImpl<$Res, LedShieldTemplateItem>;
   @useResult
   $Res call(
       {int id,
-      String name,
+      String transformer,
+      String zone,
       int quantity,
       @JsonKey(name: 'catalog_item') int? catalogItemId,
       @JsonKey(name: 'catalog_item_name') String? catalogItemName});
 }
 
 /// @nodoc
-class _$MultimediaTemplateItemCopyWithImpl<$Res,
-        $Val extends MultimediaTemplateItem>
-    implements $MultimediaTemplateItemCopyWith<$Res> {
-  _$MultimediaTemplateItemCopyWithImpl(this._value, this._then);
+class _$LedShieldTemplateItemCopyWithImpl<$Res,
+        $Val extends LedShieldTemplateItem>
+    implements $LedShieldTemplateItemCopyWith<$Res> {
+  _$LedShieldTemplateItemCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -1607,7 +1609,8 @@ class _$MultimediaTemplateItemCopyWithImpl<$Res,
   @override
   $Res call({
     Object? id = null,
-    Object? name = null,
+    Object? transformer = null,
+    Object? zone = null,
     Object? quantity = null,
     Object? catalogItemId = freezed,
     Object? catalogItemName = freezed,
@@ -1617,9 +1620,13 @@ class _$MultimediaTemplateItemCopyWithImpl<$Res,
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as int,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
+      transformer: null == transformer
+          ? _value.transformer
+          : transformer // ignore: cast_nullable_to_non_nullable
+              as String,
+      zone: null == zone
+          ? _value.zone
+          : zone // ignore: cast_nullable_to_non_nullable
               as String,
       quantity: null == quantity
           ? _value.quantity
@@ -1638,49 +1645,54 @@ class _$MultimediaTemplateItemCopyWithImpl<$Res,
 }
 
 /// @nodoc
-abstract class _$$MultimediaTemplateItemImplCopyWith<$Res>
-    implements $MultimediaTemplateItemCopyWith<$Res> {
-  factory _$$MultimediaTemplateItemImplCopyWith(
-          _$MultimediaTemplateItemImpl value,
-          $Res Function(_$MultimediaTemplateItemImpl) then) =
-      __$$MultimediaTemplateItemImplCopyWithImpl<$Res>;
+abstract class _$$LedShieldTemplateItemImplCopyWith<$Res>
+    implements $LedShieldTemplateItemCopyWith<$Res> {
+  factory _$$LedShieldTemplateItemImplCopyWith(
+          _$LedShieldTemplateItemImpl value,
+          $Res Function(_$LedShieldTemplateItemImpl) then) =
+      __$$LedShieldTemplateItemImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
       {int id,
-      String name,
+      String transformer,
+      String zone,
       int quantity,
       @JsonKey(name: 'catalog_item') int? catalogItemId,
       @JsonKey(name: 'catalog_item_name') String? catalogItemName});
 }
 
 /// @nodoc
-class __$$MultimediaTemplateItemImplCopyWithImpl<$Res>
-    extends _$MultimediaTemplateItemCopyWithImpl<$Res,
-        _$MultimediaTemplateItemImpl>
-    implements _$$MultimediaTemplateItemImplCopyWith<$Res> {
-  __$$MultimediaTemplateItemImplCopyWithImpl(
-      _$MultimediaTemplateItemImpl _value,
-      $Res Function(_$MultimediaTemplateItemImpl) _then)
+class __$$LedShieldTemplateItemImplCopyWithImpl<$Res>
+    extends _$LedShieldTemplateItemCopyWithImpl<$Res,
+        _$LedShieldTemplateItemImpl>
+    implements _$$LedShieldTemplateItemImplCopyWith<$Res> {
+  __$$LedShieldTemplateItemImplCopyWithImpl(_$LedShieldTemplateItemImpl _value,
+      $Res Function(_$LedShieldTemplateItemImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
   $Res call({
     Object? id = null,
-    Object? name = null,
+    Object? transformer = null,
+    Object? zone = null,
     Object? quantity = null,
     Object? catalogItemId = freezed,
     Object? catalogItemName = freezed,
   }) {
-    return _then(_$MultimediaTemplateItemImpl(
+    return _then(_$LedShieldTemplateItemImpl(
       id: null == id
           ? _value.id
           : id // ignore: cast_nullable_to_non_nullable
               as int,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
+      transformer: null == transformer
+          ? _value.transformer
+          : transformer // ignore: cast_nullable_to_non_nullable
+              as String,
+      zone: null == zone
+          ? _value.zone
+          : zone // ignore: cast_nullable_to_non_nullable
               as String,
       quantity: null == quantity
           ? _value.quantity
@@ -1700,21 +1712,24 @@ class __$$MultimediaTemplateItemImplCopyWithImpl<$Res>
 
 /// @nodoc
 @JsonSerializable()
-class _$MultimediaTemplateItemImpl implements _MultimediaTemplateItem {
-  const _$MultimediaTemplateItemImpl(
+class _$LedShieldTemplateItemImpl implements _LedShieldTemplateItem {
+  const _$LedShieldTemplateItemImpl(
       {required this.id,
-      required this.name,
+      required this.transformer,
+      required this.zone,
       this.quantity = 1,
       @JsonKey(name: 'catalog_item') this.catalogItemId,
       @JsonKey(name: 'catalog_item_name') this.catalogItemName});
 
-  factory _$MultimediaTemplateItemImpl.fromJson(Map<String, dynamic> json) =>
-      _$$MultimediaTemplateItemImplFromJson(json);
+  factory _$LedShieldTemplateItemImpl.fromJson(Map<String, dynamic> json) =>
+      _$$LedShieldTemplateItemImplFromJson(json);
 
   @override
   final int id;
   @override
-  final String name;
+  final String transformer;
+  @override
+  final String zone;
   @override
   @JsonKey()
   final int quantity;
@@ -1727,16 +1742,18 @@ class _$MultimediaTemplateItemImpl implements _MultimediaTemplateItem {
 
   @override
   String toString() {
-    return 'MultimediaTemplateItem(id: $id, name: $name, quantity: $quantity, catalogItemId: $catalogItemId, catalogItemName: $catalogItemName)';
+    return 'LedShieldTemplateItem(id: $id, transformer: $transformer, zone: $zone, quantity: $quantity, catalogItemId: $catalogItemId, catalogItemName: $catalogItemName)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$MultimediaTemplateItemImpl &&
+            other is _$LedShieldTemplateItemImpl &&
             (identical(other.id, id) || other.id == id) &&
-            (identical(other.name, name) || other.name == name) &&
+            (identical(other.transformer, transformer) ||
+                other.transformer == transformer) &&
+            (identical(other.zone, zone) || other.zone == zone) &&
             (identical(other.quantity, quantity) ||
                 other.quantity == quantity) &&
             (identical(other.catalogItemId, catalogItemId) ||
@@ -1747,40 +1764,43 @@ class _$MultimediaTemplateItemImpl implements _MultimediaTemplateItem {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, id, name, quantity, catalogItemId, catalogItemName);
+  int get hashCode => Object.hash(runtimeType, id, transformer, zone, quantity,
+      catalogItemId, catalogItemName);
 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$MultimediaTemplateItemImplCopyWith<_$MultimediaTemplateItemImpl>
-      get copyWith => __$$MultimediaTemplateItemImplCopyWithImpl<
-          _$MultimediaTemplateItemImpl>(this, _$identity);
+  _$$LedShieldTemplateItemImplCopyWith<_$LedShieldTemplateItemImpl>
+      get copyWith => __$$LedShieldTemplateItemImplCopyWithImpl<
+          _$LedShieldTemplateItemImpl>(this, _$identity);
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$MultimediaTemplateItemImplToJson(
+    return _$$LedShieldTemplateItemImplToJson(
       this,
     );
   }
 }
 
-abstract class _MultimediaTemplateItem implements MultimediaTemplateItem {
-  const factory _MultimediaTemplateItem(
+abstract class _LedShieldTemplateItem implements LedShieldTemplateItem {
+  const factory _LedShieldTemplateItem(
           {required final int id,
-          required final String name,
+          required final String transformer,
+          required final String zone,
           final int quantity,
           @JsonKey(name: 'catalog_item') final int? catalogItemId,
           @JsonKey(name: 'catalog_item_name') final String? catalogItemName}) =
-      _$MultimediaTemplateItemImpl;
+      _$LedShieldTemplateItemImpl;
 
-  factory _MultimediaTemplateItem.fromJson(Map<String, dynamic> json) =
-      _$MultimediaTemplateItemImpl.fromJson;
+  factory _LedShieldTemplateItem.fromJson(Map<String, dynamic> json) =
+      _$LedShieldTemplateItemImpl.fromJson;
 
   @override
   int get id;
   @override
-  String get name;
+  String get transformer;
+  @override
+  String get zone;
   @override
   int get quantity;
   @override
@@ -1791,6 +1811,6 @@ abstract class _MultimediaTemplateItem implements MultimediaTemplateItem {
   String? get catalogItemName;
   @override
   @JsonKey(ignore: true)
-  _$$MultimediaTemplateItemImplCopyWith<_$MultimediaTemplateItemImpl>
+  _$$LedShieldTemplateItemImplCopyWith<_$LedShieldTemplateItemImpl>
       get copyWith => throw _privateConstructorUsedError;
 }

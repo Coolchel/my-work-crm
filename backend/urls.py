@@ -19,9 +19,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from core.views import (
     ProjectViewSet, CatalogCategoryViewSet, CatalogItemViewSet, StageViewSet, 
-    ShieldGroupViewSet, LedZoneViewSet, ShieldTemplateViewSet, LedTemplateViewSet, 
-    ShieldViewSet, EstimateItemViewSet, EstimateTemplateViewSet,
-    WorkTemplateViewSet, MaterialTemplateViewSet, PowerShieldTemplateViewSet, MultimediaTemplateViewSet
+    ShieldGroupViewSet, LedZoneViewSet, ShieldViewSet, EstimateItemViewSet,
+    WorkTemplateViewSet, MaterialTemplateViewSet, PowerShieldTemplateViewSet, LedShieldTemplateViewSet
 )
 
 router = DefaultRouter()
@@ -31,15 +30,10 @@ router.register(r'shields', ShieldViewSet)
 router.register(r'categories', CatalogCategoryViewSet, basename='category')
 router.register(r'catalog-items', CatalogItemViewSet, basename='catalog-item')
 router.register(r'estimate-items', EstimateItemViewSet, basename='estimate-item')
-router.register(r'estimate-templates', EstimateTemplateViewSet, basename='estimate-template')
-router.register(r'shield-groups', ShieldGroupViewSet, basename='shield-group')
-router.register(r'led-zones', LedZoneViewSet, basename='led-zone')
-router.register(r'shield-templates', ShieldTemplateViewSet, basename='shield-template')
-router.register(r'led-templates', LedTemplateViewSet, basename='led-template')
 router.register(r'work-templates', WorkTemplateViewSet, basename='work-template')
 router.register(r'material-templates', MaterialTemplateViewSet, basename='material-template')
 router.register(r'powershield-templates', PowerShieldTemplateViewSet, basename='powershield-template')
-router.register(r'multimedia-templates', MultimediaTemplateViewSet, basename='multimedia-template')
+router.register(r'led-shield-templates', LedShieldTemplateViewSet, basename='led-shield-template')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

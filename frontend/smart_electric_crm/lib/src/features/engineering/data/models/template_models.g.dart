@@ -129,21 +129,21 @@ Map<String, dynamic> _$$PowerShieldTemplateItemImplToJson(
       'catalog_item_name': instance.catalogItemName,
     };
 
-_$MultimediaTemplateImpl _$$MultimediaTemplateImplFromJson(
+_$LedShieldTemplateImpl _$$LedShieldTemplateImplFromJson(
         Map<String, dynamic> json) =>
-    _$MultimediaTemplateImpl(
+    _$LedShieldTemplateImpl(
       id: (json['id'] as num).toInt(),
       name: json['name'] as String,
       description: json['description'] as String,
       items: (json['items'] as List<dynamic>?)
               ?.map((e) =>
-                  MultimediaTemplateItem.fromJson(e as Map<String, dynamic>))
+                  LedShieldTemplateItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
     );
 
-Map<String, dynamic> _$$MultimediaTemplateImplToJson(
-        _$MultimediaTemplateImpl instance) =>
+Map<String, dynamic> _$$LedShieldTemplateImplToJson(
+        _$LedShieldTemplateImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
@@ -151,21 +151,23 @@ Map<String, dynamic> _$$MultimediaTemplateImplToJson(
       'items': instance.items,
     };
 
-_$MultimediaTemplateItemImpl _$$MultimediaTemplateItemImplFromJson(
+_$LedShieldTemplateItemImpl _$$LedShieldTemplateItemImplFromJson(
         Map<String, dynamic> json) =>
-    _$MultimediaTemplateItemImpl(
+    _$LedShieldTemplateItemImpl(
       id: (json['id'] as num).toInt(),
-      name: json['name'] as String,
+      transformer: json['transformer'] as String,
+      zone: json['zone'] as String,
       quantity: (json['quantity'] as num?)?.toInt() ?? 1,
       catalogItemId: (json['catalog_item'] as num?)?.toInt(),
       catalogItemName: json['catalog_item_name'] as String?,
     );
 
-Map<String, dynamic> _$$MultimediaTemplateItemImplToJson(
-        _$MultimediaTemplateItemImpl instance) =>
+Map<String, dynamic> _$$LedShieldTemplateItemImplToJson(
+        _$LedShieldTemplateItemImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'name': instance.name,
+      'transformer': instance.transformer,
+      'zone': instance.zone,
       'quantity': instance.quantity,
       'catalog_item': instance.catalogItemId,
       'catalog_item_name': instance.catalogItemName,

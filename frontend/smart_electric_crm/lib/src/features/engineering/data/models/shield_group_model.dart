@@ -30,6 +30,10 @@ class ShieldGroupModel {
   @JsonKey(name: 'modules_count', defaultValue: 1)
   final int modulesCount;
 
+  /// Количество (для объединения позиций)
+  @JsonKey(defaultValue: 1)
+  final int quantity;
+
   /// ID товара из каталога (опционально)
   @JsonKey(name: 'catalog_item')
   final int? catalogItemId;
@@ -45,6 +49,7 @@ class ShieldGroupModel {
     required this.rating,
     required this.poles,
     required this.modulesCount,
+    this.quantity = 1,
     this.catalogItemId,
     required this.shieldId,
   });

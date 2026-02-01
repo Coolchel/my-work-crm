@@ -75,26 +75,26 @@ class TemplateRepository {
     }
   }
 
-  // --- Multimedia Templates ---
-  Future<List<MultimediaTemplate>> getMultimediaTemplates() async {
+  // --- LED Shield Templates ---
+  Future<List<LedShieldTemplate>> getLedShieldTemplates() async {
     try {
-      final response = await _dio.get('/multimedia-templates/');
+      final response = await _dio.get('/led-shield-templates/');
       return (response.data as List)
-          .map((e) => MultimediaTemplate.fromJson(e))
+          .map((e) => LedShieldTemplate.fromJson(e))
           .toList();
     } catch (e) {
-      throw Exception('Failed to load multimedia templates: $e');
+      throw Exception('Failed to load LED shield templates: $e');
     }
   }
 
-  Future<void> applyMultimediaTemplate(int shieldId, int templateId) async {
+  Future<void> applyLedShieldTemplate(int shieldId, int templateId) async {
     try {
       await _dio.post(
-        '/shields/$shieldId/apply_multimedia_template/',
+        '/shields/$shieldId/apply_led_shield_template/',
         data: {'template_id': templateId},
       );
     } catch (e) {
-      throw Exception('Failed to apply multimedia template: $e');
+      throw Exception('Failed to apply LED shield template: $e');
     }
   }
 }

@@ -1,10 +1,12 @@
 from django.contrib import admin
 from .models import (
     Project, Stage, EstimateItem, ProjectFile, 
-    CatalogCategory, CatalogItem, EstimateTemplate, TemplateItem,
-    ContractorNote, ShieldGroup, LedZone,
-    ShieldTemplate, ShieldTemplateItem, LedTemplate, LedTemplateItem,
-    Shield
+    CatalogCategory, CatalogItem, ContractorNote, 
+    ShieldGroup, LedZone, Shield,
+    WorkTemplate, WorkTemplateItem,
+    MaterialTemplate, MaterialTemplateItem,
+    PowerShieldTemplate, PowerShieldTemplateItem,
+    LedShieldTemplate, LedShieldTemplateItem
 )
 
 class ProjectFileInline(admin.TabularInline):
@@ -28,12 +30,7 @@ class StageInline(admin.TabularInline):
     verbose_name = "Этап"
     verbose_name_plural = "Этапы"
 
-class TemplateItemInline(admin.TabularInline):
-    model = TemplateItem
-    extra = 1
-    autocomplete_fields = ['catalog_item']
-    verbose_name = "Позиция шаблона"
-    verbose_name_plural = "Позиции шаблона"
+
 
 class ShieldGroupInline(admin.TabularInline):
     model = ShieldGroup
@@ -49,15 +46,7 @@ class LedZoneInline(admin.TabularInline):
     verbose_name_plural = "Конфигурация LED"
     autocomplete_fields = ['catalog_item']
 
-class ShieldTemplateItemInline(admin.TabularInline):
-    model = ShieldTemplateItem
-    extra = 1
-    autocomplete_fields = ['catalog_item']
 
-class LedTemplateItemInline(admin.TabularInline):
-    model = LedTemplateItem
-    extra = 1
-    autocomplete_fields = ['catalog_item']
 
 @admin.register(Shield)
 class ShieldAdmin(admin.ModelAdmin):
@@ -78,10 +67,7 @@ class CatalogItemAdmin(admin.ModelAdmin):
     search_fields = ('name', 'mapping_key')
     autocomplete_fields = ['related_work_item']
 
-@admin.register(EstimateTemplate)
-class EstimateTemplateAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description')
-    inlines = [TemplateItemInline]
+
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
@@ -141,25 +127,12 @@ class ContractorNoteAdmin(admin.ModelAdmin):
     list_filter = ('currency', 'is_paid', 'date')
     search_fields = ('title', 'description')
 
-@admin.register(ShieldTemplate)
-class ShieldTemplateAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    inlines = [ShieldTemplateItemInline]
 
-@admin.register(LedTemplate)
-class LedTemplateAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    inlines = [LedTemplateItemInline]
 
 
 # --- New Template System ---
 
-from .models import (
-    WorkTemplate, WorkTemplateItem,
-    MaterialTemplate, MaterialTemplateItem,
-    PowerShieldTemplate, PowerShieldTemplateItem,
-    MultimediaTemplate, MultimediaTemplateItem
-)
+
 
 class WorkTemplateItemInline(admin.TabularInline):
     model = WorkTemplateItem
@@ -191,12 +164,12 @@ class PowerShieldTemplateAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
     inlines = [PowerShieldTemplateItemInline]
 
-class MultimediaTemplateItemInline(admin.TabularInline):
-    model = MultimediaTemplateItem
+class LedShieldTemplateItemInline(admin.TabularInline):
+    model = LedShieldTemplateItem
     extra = 1
     autocomplete_fields = ['catalog_item']
 
-@admin.register(MultimediaTemplate)
-class MultimediaTemplateAdmin(admin.ModelAdmin):
+@admin.register(LedShieldTemplate)
+class LedShieldTemplateAdmin(admin.ModelAdmin):
     list_display = ('name', 'description')
-    inlines = [MultimediaTemplateItemInline]
+    inlines = [LedShieldTemplateItemInline]

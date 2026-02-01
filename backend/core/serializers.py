@@ -1,10 +1,12 @@
 from rest_framework import serializers
 from .models import (
     Project, Stage, EstimateItem, ProjectFile,
-    CatalogCategory, CatalogItem, EstimateTemplate, TemplateItem,
-    ContractorNote, ShieldGroup, LedZone,
-    ShieldTemplate, LedTemplate, ShieldTemplateItem, LedTemplateItem,
-    Shield
+    CatalogCategory, CatalogItem, ContractorNote, 
+    ShieldGroup, LedZone, Shield,
+    WorkTemplate, WorkTemplateItem,
+    MaterialTemplate, MaterialTemplateItem,
+    PowerShieldTemplate, PowerShieldTemplateItem,
+    LedShieldTemplate, LedShieldTemplateItem
 )
 
 class ProjectFileSerializer(serializers.ModelSerializer):
@@ -123,55 +125,18 @@ class CatalogItemSerializer(serializers.ModelSerializer):
         model = CatalogItem
         fields = '__all__'
 
-class TemplateItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TemplateItem
-        fields = '__all__'
 
-class EstimateTemplateSerializer(serializers.ModelSerializer):
-    items = TemplateItemSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = EstimateTemplate
-        fields = '__all__'
 
 class ContractorNoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractorNote
         fields = '__all__'
 
-class ShieldTemplateitemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ShieldTemplateItem
-        fields = '__all__'
 
-class LedTemplateItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LedTemplateItem
-        fields = '__all__'
-
-class ShieldTemplateSerializer(serializers.ModelSerializer):
-    items = ShieldTemplateitemSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = ShieldTemplate
-        fields = ['id', 'name', 'description', 'items']
-
-class LedTemplateSerializer(serializers.ModelSerializer):
-    items = LedTemplateItemSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = LedTemplate
-        fields = ['id', 'name', 'description', 'items']
 
 # --- New Template System Serializers ---
 
-from .models import (
-    WorkTemplate, WorkTemplateItem,
-    MaterialTemplate, MaterialTemplateItem,
-    PowerShieldTemplate, PowerShieldTemplateItem,
-    MultimediaTemplate, MultimediaTemplateItem
-)
+
 
 class WorkTemplateItemSerializer(serializers.ModelSerializer):
     catalog_item_name = serializers.ReadOnlyField(source='catalog_item.name')
@@ -209,14 +174,14 @@ class PowerShieldTemplateSerializer(serializers.ModelSerializer):
         model = PowerShieldTemplate
         fields = '__all__'
 
-class MultimediaTemplateItemSerializer(serializers.ModelSerializer):
+class LedShieldTemplateItemSerializer(serializers.ModelSerializer):
     catalog_item_name = serializers.ReadOnlyField(source='catalog_item.name')
     class Meta:
-        model = MultimediaTemplateItem
+        model = LedShieldTemplateItem
         fields = '__all__'
 
-class MultimediaTemplateSerializer(serializers.ModelSerializer):
-    items = MultimediaTemplateItemSerializer(many=True, read_only=True)
+class LedShieldTemplateSerializer(serializers.ModelSerializer):
+    items = LedShieldTemplateItemSerializer(many=True, read_only=True)
     class Meta:
-        model = MultimediaTemplate
+        model = LedShieldTemplate
         fields = '__all__'

@@ -6,7 +6,6 @@ import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/edit_shield_dialog.dart';
 import 'shield_content_power.dart';
 import 'shield_content_led.dart';
-import 'shield_content_multimedia.dart';
 import '../../../../engineering/presentation/dialogs/template_selection_dialog.dart';
 import '../../../../engineering/presentation/providers/template_providers.dart';
 import '../../../../engineering/data/models/template_models.dart';
@@ -146,8 +145,6 @@ class ShieldCard extends ConsumerWidget {
             ShieldContentPower(shield: shield, projectId: projectId),
           if (shield.shieldType == 'led')
             ShieldContentLed(shield: shield, projectId: projectId),
-          if (shield.shieldType == 'multimedia')
-            ShieldContentMultimedia(shield: shield, projectId: projectId),
 
           const Divider(height: 32),
 
@@ -167,8 +164,7 @@ class ShieldCard extends ConsumerWidget {
                 label: const Text('Изменить',
                     style: TextStyle(color: Colors.blue)),
               ),
-              if (shield.shieldType == 'power' ||
-                  shield.shieldType == 'multimedia')
+              if (shield.shieldType == 'power' || shield.shieldType == 'led')
                 IconButton(
                   onPressed: () => _showTemplateDialog(context, ref, shield),
                   icon: const Icon(Icons.copy_all, color: Colors.indigo),
@@ -235,7 +231,7 @@ class ShieldCard extends ConsumerWidget {
       final isPower = shield.shieldType == 'power';
       final templates = isPower
           ? await ref.read(powerShieldTemplatesProvider.future)
-          : await ref.read(multimediaTemplatesProvider.future);
+          : await ref.read(ledShieldTemplatesProvider.future);
 
       if (!context.mounted) return;
 
@@ -244,9 +240,7 @@ class ShieldCard extends ConsumerWidget {
         showDialog(
           context: context,
           builder: (ctx) => TemplateSelectionDialog<T>(
-            title: isPower
-                ? "Выберите силовой шаблон"
-                : "Выберите слаботочный шаблон",
+            title: isPower ? "Выберите силовой шаблон" : "Выберите LED шаблон",
             templates: items,
             getName: (t) => (t as dynamic).name,
             getDescription: (t) => (t as dynamic).description ?? '',
@@ -259,7 +253,7 @@ class ShieldCard extends ConsumerWidget {
       if (isPower) {
         showSelect<PowerShieldTemplate>(templates as List<PowerShieldTemplate>);
       } else {
-        showSelect<MultimediaTemplate>(templates as List<MultimediaTemplate>);
+        showSelect<LedShieldTemplate>(templates as List<LedShieldTemplate>);
       }
     } catch (e) {
       if (context.mounted) {
@@ -279,7 +273,7 @@ class ShieldCard extends ConsumerWidget {
       } else {
         await ref
             .read(templateRepositoryProvider)
-            .applyMultimediaTemplate(shield.id, templateId);
+            .applyLedShieldTemplate(shield.id, templateId);
       }
 
       ref.invalidate(projectListProvider);

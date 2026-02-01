@@ -12,6 +12,10 @@ class LedZoneModel {
   /// Зона установки/Лента
   final String zone;
 
+  /// Количество
+  @JsonKey(defaultValue: 1)
+  final int quantity;
+
   /// ID товара из каталога (опционально)
   @JsonKey(name: 'catalog_item')
   final int? catalogItemId;
@@ -23,6 +27,7 @@ class LedZoneModel {
     required this.id,
     required this.transformer,
     required this.zone,
+    this.quantity = 1,
     this.catalogItemId,
     required this.shieldId,
   });

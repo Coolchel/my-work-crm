@@ -20,6 +20,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
   late TextEditingController _zoneController;
   late TextEditingController _ratingController;
   late TextEditingController _polesController;
+  late TextEditingController _quantityController;
   String _selectedDeviceType = 'circuit_breaker';
   bool _isSaving = false;
 
@@ -43,6 +44,8 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
           TextEditingController(text: widget.group?.rating ?? '16A');
       _polesController =
           TextEditingController(text: widget.group?.poles ?? '1P');
+      _quantityController =
+          TextEditingController(text: (widget.group?.quantity ?? 1).toString());
       if (widget.group != null) {
         debugPrint('Editing group: ${widget.group!.id}');
         _selectedDeviceType = widget.group!.deviceType;
@@ -83,6 +86,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
     _zoneController.dispose();
     _ratingController.dispose();
     _polesController.dispose();
+    _quantityController.dispose();
     super.dispose();
   }
 
@@ -184,6 +188,16 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                 floatingLabelBehavior: FloatingLabelBehavior.always,
               ),
             ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _quantityController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Количество',
+                border: OutlineInputBorder(),
+                floatingLabelBehavior: FloatingLabelBehavior.always,
+              ),
+            ),
           ],
         ),
       ),
@@ -210,6 +224,8 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                               'rating': _ratingController.text,
                               'poles': _polesController.text,
                               'zone': _zoneController.text,
+                              'quantity':
+                                  int.tryParse(_quantityController.text) ?? 1,
                             };
                             if (isEdit) {
                               await ref

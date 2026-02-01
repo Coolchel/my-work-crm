@@ -67,8 +67,31 @@ class ShieldContentLed extends ConsumerWidget {
                   child: const Icon(Icons.lightbulb,
                       size: 20, color: Colors.purple),
                 ),
-                title: Text(zone.transformer,
-                    style: const TextStyle(fontWeight: FontWeight.w500)),
+                title: Row(
+                  children: [
+                    Expanded(
+                      child: Text(zone.transformer,
+                          style: const TextStyle(fontWeight: FontWeight.w500)),
+                    ),
+                    if (zone.quantity > 1)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'x${zone.quantity}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.purple,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
                 subtitle: Text(zone.zone),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, size: 16, color: Colors.grey),

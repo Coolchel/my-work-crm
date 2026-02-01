@@ -2,13 +2,15 @@ from rest_framework import viewsets, status, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Project, Stage, ShieldTemplate, LedTemplate, ShieldGroup, LedZone, CatalogCategory, CatalogItem, Shield, EstimateTemplate, EstimateItem
+from .models import (
+    Project, Stage, ShieldGroup, LedZone, CatalogCategory, CatalogItem, 
+    Shield, EstimateItem, WorkTemplate, MaterialTemplate, PowerShieldTemplate, LedShieldTemplate
+)
 from .serializers import (
     ProjectSerializer, StageSerializer, CatalogCategorySerializer, CatalogItemSerializer, 
-    ShieldGroupSerializer, LedZoneSerializer, ShieldTemplateSerializer, LedTemplateSerializer,
-    ShieldSerializer, EstimateItemSerializer, EstimateTemplateSerializer,
+    ShieldGroupSerializer, LedZoneSerializer, ShieldSerializer, EstimateItemSerializer,
     WorkTemplateSerializer, MaterialTemplateSerializer, 
-    PowerShieldTemplateSerializer, MultimediaTemplateSerializer
+    PowerShieldTemplateSerializer, LedShieldTemplateSerializer
 )
 from .services import TemplateService
 
@@ -48,66 +50,16 @@ class ShieldViewSet(viewsets.ModelViewSet):
         return Response(result)
 
     @action(detail=True, methods=['post'])
-    def apply_multimedia_template(self, request, pk=None):
+    def apply_led_shield_template(self, request, pk=None):
         shield = self.get_object()
         template_id = request.data.get('template_id')
         if not template_id: return Response({'error': 'template_id is required'}, status=400)
         
-        result = TemplateService.apply_multimedia_template(shield.id, template_id)
+        result = TemplateService.apply_led_shield_template(shield.id, template_id)
         if result.get("status") == "error": return Response(result, status=400)
         return Response(result)
     
-    @action(detail=True, methods=['post'])
-    def apply_shield_template(self, request, pk=None):
-        shield = self.get_object()
-        template_id = request.data.get('template_id')
-        
-        if not template_id:
-            return Response({'error': 'template_id is required'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            template = ShieldTemplate.objects.get(id=template_id)
-        except ShieldTemplate.DoesNotExist:
-            return Response({'error': 'Template not found'}, status=status.HTTP_404_NOT_FOUND)
-            
-        # Копируем элементы шаблона в щит
-        items_to_create = []
-        for item in template.items.all():
-            items_to_create.append(ShieldGroup(
-                shield=shield,
-                device=item.device,
-                zone=item.zone,
-                catalog_item=item.catalog_item
-            ))
-        
-        ShieldGroup.objects.bulk_create(items_to_create)
-        return Response({'status': 'Shield template applied', 'added_count': len(items_to_create)})
 
-    @action(detail=True, methods=['post'])
-    def apply_led_template(self, request, pk=None):
-        shield = self.get_object()
-        template_id = request.data.get('template_id')
-        
-        if not template_id:
-            return Response({'error': 'template_id is required'}, status=status.HTTP_400_BAD_REQUEST)
-            
-        try:
-            template = LedTemplate.objects.get(id=template_id)
-        except LedTemplate.DoesNotExist:
-            return Response({'error': 'Template not found'}, status=status.HTTP_404_NOT_FOUND)
-            
-        # Копируем элементы шаблона в щит
-        items_to_create = []
-        for item in template.items.all():
-            items_to_create.append(LedZone(
-                shield=shield,
-                transformer=item.transformer,
-                zone=item.zone,
-                catalog_item=item.catalog_item
-            ))
-            
-        LedZone.objects.bulk_create(items_to_create)
-        return Response({'status': 'LED template applied', 'added_count': len(items_to_create)})
 
 
 class ShieldGroupViewSet(viewsets.ModelViewSet):
@@ -124,14 +76,7 @@ class LedZoneViewSet(viewsets.ModelViewSet):
     filterset_fields = ['shield', 'shield__project']
 
 
-class ShieldTemplateViewSet(viewsets.ModelViewSet):
-    queryset = ShieldTemplate.objects.all()
-    serializer_class = ShieldTemplateSerializer
 
-
-class LedTemplateViewSet(viewsets.ModelViewSet):
-    queryset = LedTemplate.objects.all()
-    serializer_class = LedTemplateSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -170,9 +115,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 Stage.objects.bulk_create(stages_to_create)
 
 
-class EstimateTemplateViewSet(viewsets.ModelViewSet):
-    queryset = EstimateTemplate.objects.all()
-    serializer_class = EstimateTemplateSerializer
+
 
 class EstimateItemViewSet(viewsets.ModelViewSet):
     queryset = EstimateItem.objects.all()
@@ -227,56 +170,7 @@ class StageViewSet(viewsets.ModelViewSet):
         if result.get("status") == "error": return Response(result, status=400)
         return Response(result)
 
-    @action(detail=True, methods=['post'])
-    def apply_template(self, request, pk=None):
-        stage = self.get_object()
-        template_id = request.data.get('template_id')
-        
-        if not template_id:
-            return Response({'error': 'template_id is required'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            template = EstimateTemplate.objects.get(id=template_id)
-        except EstimateTemplate.DoesNotExist:
-            return Response({'error': 'Template not found'}, status=status.HTTP_404_NOT_FOUND)
-            
-        items_to_create = []
-        created_count = 0
-        updated_count = 0
-        
-        for item in template.items.all():
-            # Check if exists
-            est_item = EstimateItem.objects.filter(
-                stage=stage,
-                catalog_item=item.catalog_item,
-                item_type=item.catalog_item.item_type
-            ).first()
-            
-            if est_item:
-                # Update quantity (Additive for templates)
-                est_item.total_quantity += item.default_quantity
-                est_item.save()
-                updated_count += 1
-            else:
-                EstimateItem.objects.create(
-                    stage=stage,
-                    catalog_item=item.catalog_item,
-                    name=item.catalog_item.name,
-                    item_type=item.catalog_item.item_type,
-                    unit=item.catalog_item.unit,
-                    total_quantity=item.default_quantity,
-                    price_per_unit=item.catalog_item.default_price,
-                    currency=item.catalog_item.default_currency,
-                    employer_quantity=0,
-                    markup_percent=0
-                )
-                created_count += 1
-            
-        return Response({
-            'status': 'Template applied', 
-            'created': created_count, 
-            'updated': updated_count
-        })
+
 
     @action(detail=True, methods=['post'])
     def import_from_shields(self, request, pk=None):
@@ -315,7 +209,7 @@ class StageViewSet(viewsets.ModelViewSet):
 
 # --- New Template ViewSets ---
 
-from .models import WorkTemplate, MaterialTemplate, PowerShieldTemplate, MultimediaTemplate
+from .models import WorkTemplate, MaterialTemplate, PowerShieldTemplate, LedShieldTemplate
 
 class WorkTemplateViewSet(viewsets.ModelViewSet):
     queryset = WorkTemplate.objects.all()
@@ -329,6 +223,6 @@ class PowerShieldTemplateViewSet(viewsets.ModelViewSet):
     queryset = PowerShieldTemplate.objects.all()
     serializer_class = PowerShieldTemplateSerializer
 
-class MultimediaTemplateViewSet(viewsets.ModelViewSet):
-    queryset = MultimediaTemplate.objects.all()
-    serializer_class = MultimediaTemplateSerializer
+class LedShieldTemplateViewSet(viewsets.ModelViewSet):
+    queryset = LedShieldTemplate.objects.all()
+    serializer_class = LedShieldTemplateSerializer

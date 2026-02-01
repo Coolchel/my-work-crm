@@ -78,8 +78,8 @@ class ShieldContentPower extends ConsumerWidget {
         else
           ...sortedKeys.map((type) {
             final groupItems = groupedGroups[type]!;
-            final totalModules =
-                groupItems.fold<int>(0, (sum, item) => sum + item.modulesCount);
+            final totalModules = groupItems.fold<int>(
+                0, (sum, item) => sum + (item.modulesCount * item.quantity));
             final typeName = _getDeviceTypeName(type);
 
             return Column(
@@ -144,9 +144,33 @@ class ShieldContentPower extends ConsumerWidget {
                               size: 20,
                               color: _getDeviceColor(group.deviceType)),
                         ),
-                        title: Text(group.device,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w500)),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(group.device,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500)),
+                            ),
+                            if (group.quantity > 1)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: _getDeviceColor(group.deviceType)
+                                      .withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'x${group.quantity}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: _getDeviceColor(group.deviceType),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                         subtitle: Text(group.zone),
                         trailing: IconButton(
                           icon: const Icon(Icons.delete,

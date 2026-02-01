@@ -15,6 +15,7 @@ ShieldGroupModel _$ShieldGroupModelFromJson(Map<String, dynamic> json) =>
       rating: json['rating'] as String? ?? '16A',
       poles: json['poles'] as String? ?? '1P',
       modulesCount: (json['modules_count'] as num?)?.toInt() ?? 1,
+      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
       catalogItemId: (json['catalog_item'] as num?)?.toInt(),
       shieldId: (json['shield'] as num).toInt(),
     );
@@ -28,6 +29,7 @@ Map<String, dynamic> _$ShieldGroupModelToJson(ShieldGroupModel instance) =>
       'rating': instance.rating,
       'poles': instance.poles,
       'modules_count': instance.modulesCount,
+      'quantity': instance.quantity,
       'catalog_item': instance.catalogItemId,
       'shield': instance.shieldId,
     };
