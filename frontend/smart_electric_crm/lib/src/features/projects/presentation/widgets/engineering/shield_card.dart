@@ -171,13 +171,6 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                           shield: shield, projectId: widget.projectId),
                     if (shield.shieldType == 'multimedia')
                       _buildMultimediaInfo(context, themeColor),
-
-                    const SizedBox(height: 20),
-                    const Divider(height: 1),
-                    const SizedBox(height: 12),
-
-                    // Actions
-                    _buildActions(context, themeColor),
                   ],
                 ),
               ),
@@ -233,10 +226,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
               _buildMountingSegmented(themeColor),
             ],
           ),
-          if (shield.suggestedSize != null) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              if (shield.suggestedSize != null)
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -278,9 +271,70 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     ],
                   ),
                 ),
-              ],
-            ),
-          ],
+              if (shield.suggestedSize == null) const Spacer(),
+              if (shield.suggestedSize != null) const Spacer(),
+              // Actions Row
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Template Button (only for Power/LED)
+                  if (shield.shieldType == 'power' ||
+                      shield.shieldType == 'led') ...[
+                    OutlinedButton(
+                      onPressed: () =>
+                          _showTemplateDialog(context, ref, shield),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: themeColor,
+                        side: BorderSide(color: themeColor.withOpacity(0.3)),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        minimumSize: const Size(0, 36), // Match SegmentedButton
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Шаблон',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 12)),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  // Edit Button
+                  Tooltip(
+                    message: 'Редактировать щит',
+                    child: OutlinedButton(
+                      onPressed: () =>
+                          _showEditShieldDialog(context, ref, shield),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.grey.shade700,
+                        side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                        padding: EdgeInsets.zero, // Icon only
+                        minimumSize: const Size(36, 36), // Square 36x36
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Icon(Icons.edit_outlined, size: 18),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Delete Button
+                  Tooltip(
+                    message: 'Удалить щит',
+                    child: OutlinedButton(
+                      onPressed: () => _deleteShield(context, ref),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red.shade400,
+                        side: BorderSide(color: Colors.red.withOpacity(0.3)),
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(36, 36),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Icon(Icons.delete_outline_rounded, size: 18),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -417,58 +471,6 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
           ],
         ],
       ),
-    );
-  }
-
-  Widget _buildActions(BuildContext context, Color themeColor) {
-    final shield = widget.shield;
-    return Row(
-      children: [
-        IconButton(
-          onPressed: () => _deleteShield(context, ref),
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
-          style: IconButton.styleFrom(
-            foregroundColor: Colors.grey.shade400, // Neutral delete icon
-          ),
-          icon: const Icon(Icons.delete_outline_rounded, size: 20),
-          tooltip: "Удалить",
-        ),
-        const Spacer(),
-        if (shield.shieldType == 'power' || shield.shieldType == 'led')
-          OutlinedButton(
-            onPressed: () => _showTemplateDialog(context, ref, shield),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: shield.shieldType == 'power'
-                  ? Colors.amber
-                  : Colors.red, // Corrected brand colors
-              side: BorderSide(
-                  color:
-                      (shield.shieldType == 'power' ? Colors.amber : Colors.red)
-                          .withOpacity(0.2)),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              visualDensity: VisualDensity.compact,
-            ),
-            child: const Text('ШАБЛОН',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-          ),
-        const SizedBox(width: 8),
-        FilledButton(
-          onPressed: () => _showEditShieldDialog(context, ref, shield),
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF374151), // Neutral dark grey
-            foregroundColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            visualDensity: VisualDensity.compact,
-          ),
-          child: const Text('В ПАНЕЛЬ',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-        ),
-      ],
     );
   }
 

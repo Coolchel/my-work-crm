@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../engineering/data/models/shield_model.dart';
-import '../../../../engineering/data/models/led_zone_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
-import '../../../../engineering/presentation/providers/template_providers.dart';
-import '../../../../engineering/presentation/dialogs/template_selection_dialog.dart';
-import '../../../../../shared/presentation/dialogs/text_input_dialog.dart';
+import '../../../../engineering/data/models/led_zone_model.dart';
 import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
-import '../../../../engineering/data/models/template_models.dart';
 import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/led_zone_dialog.dart';
 // import '../../dialogs/engineering/apply_template_dialog.dart';
@@ -49,34 +45,12 @@ class ShieldContentLed extends ConsumerWidget {
             ),
             Row(
               children: [
-                if (zones.isNotEmpty)
-                  IconButton(
-                    onPressed: () => _showSaveTemplateDialog(context, ref),
-                    style: IconButton.styleFrom(
-                      foregroundColor: Colors.grey.shade600, // Neutral icon
-                      padding: const EdgeInsets.all(8),
-                    ),
-                    icon: const Icon(Icons.save_as_rounded, size: 20),
-                    tooltip: "В шаблон",
-                  ),
-                const SizedBox(width: 4),
-                OutlinedButton(
-                  onPressed: () => _showApplyTemplateDialog(context, ref),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF374151),
-                    side: BorderSide(color: Colors.grey.shade300),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  child: const Text('ШАБЛОН',
-                      style:
-                          TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
+                FilledButton.icon(
                   onPressed: () => _showAddZoneDialog(context, ref),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('ДОБАВИТЬ',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                   style: FilledButton.styleFrom(
                     backgroundColor:
                         const Color(0xFF374151), // Neutral dark grey
@@ -85,9 +59,6 @@ class ShieldContentLed extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(8)),
                     visualDensity: VisualDensity.compact,
                   ),
-                  child: const Text('ДОБАВИТЬ',
-                      style:
-                          TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
               ],
             )
@@ -254,81 +225,5 @@ class ShieldContentLed extends ConsumerWidget {
       builder: (context) =>
           LedZoneDialog(projectId: projectId, shieldId: shield.id, zone: zone),
     );
-  }
-
-  void _showApplyTemplateDialog(BuildContext context, WidgetRef ref) async {
-    try {
-      final templates = await ref.read(ledShieldTemplatesProvider.future);
-      // ignore: use_build_context_synchronously
-      if (!context.mounted) return;
-
-      showDialog(
-        context: context,
-        builder: (context) => TemplateSelectionDialog<LedShieldTemplate>(
-          title: "Шаблоны LED щита",
-          templates: templates,
-          getName: (t) => t.name,
-          getDescription: (t) => t.description,
-          onSelected: (t) async {
-            await ref
-                .read(engineeringRepositoryProvider)
-                .applyLedTemplate(shield.id, t.id);
-            ref.invalidate(projectListProvider);
-          },
-          onDelete: (t) async {
-            await ref
-                .read(templateRepositoryProvider)
-                .deleteLedShieldTemplate(t.id);
-            ref.invalidate(ledShieldTemplatesProvider);
-          },
-          themeColor: Colors.red,
-          onCreate: () => _showSaveTemplateDialog(context, ref),
-        ),
-      );
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
-      }
-    }
-  }
-
-  void _showSaveTemplateDialog(BuildContext context, WidgetRef ref) async {
-    final result = await showDialog<dynamic>(
-      context: context,
-      barrierColor: Colors.transparent,
-      builder: (context) => const TextInputDialog(
-        title: "Сохранить LED щит как шаблон",
-        labelText: "Название шаблона",
-        descriptionLabelText: "Описание (опционально)",
-        themeColor: Colors.red,
-      ),
-    );
-
-    if (result == null) return;
-
-    final name = result is Map ? result['text'] : result;
-    final description = result is Map ? result['description'] : '';
-
-    if (name == null || name.isEmpty) return;
-
-    try {
-      await ref
-          .read(templateRepositoryProvider)
-          .createLedShieldTemplateFromShield(shield.id, name,
-              description: description);
-      ref.invalidate(ledShieldTemplatesProvider);
-      // ignore: use_build_context_synchronously
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Шаблон '$name' создан")));
-      }
-    } catch (e) {
-      // ignore: use_build_context_synchronously
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Ошибка: $e")));
-      }
-    }
   }
 }
