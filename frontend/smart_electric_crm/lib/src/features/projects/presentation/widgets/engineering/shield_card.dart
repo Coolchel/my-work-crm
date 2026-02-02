@@ -163,14 +163,27 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     const SizedBox(height: 16),
 
                     // Shield Content based on type
-                    if (shield.shieldType == 'power')
-                      ShieldContentPower(
-                          shield: shield, projectId: widget.projectId),
-                    if (shield.shieldType == 'led')
-                      ShieldContentLed(
-                          shield: shield, projectId: widget.projectId),
-                    if (shield.shieldType == 'multimedia')
-                      _buildMultimediaInfo(context, themeColor),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                      ),
+                      child: Column(
+                        children: [
+                          if (shield.shieldType == 'power')
+                            ShieldContentPower(
+                                shield: shield, projectId: widget.projectId),
+                          if (shield.shieldType == 'led')
+                            ShieldContentLed(
+                                shield: shield, projectId: widget.projectId),
+                          if (shield.shieldType == 'multimedia')
+                            _buildMultimediaInfo(context, themeColor),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -280,20 +293,22 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                   // Template Button (only for Power/LED)
                   if (shield.shieldType == 'power' ||
                       shield.shieldType == 'led') ...[
-                    OutlinedButton(
-                      onPressed: () =>
-                          _showTemplateDialog(context, ref, shield),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: themeColor,
-                        side: BorderSide(color: themeColor.withOpacity(0.3)),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        minimumSize: const Size(0, 36), // Match SegmentedButton
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                    Tooltip(
+                      message: 'Шаблоны',
+                      child: OutlinedButton(
+                        onPressed: () =>
+                            _showTemplateDialog(context, ref, shield),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: themeColor,
+                          side: BorderSide(color: themeColor.withOpacity(0.3)),
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(36, 36),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Icon(Icons.dashboard_customize_outlined,
+                            size: 18),
                       ),
-                      child: const Text('Шаблон',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 12)),
                     ),
                     const SizedBox(width: 8),
                   ],
