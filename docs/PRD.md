@@ -24,9 +24,9 @@
 - **Stages:** Flexible configuration. Can include Stage 1, 2, 3, Extra, or custom combinations.
 - **Engineering Map:** Distinct module (ShieldGroups, LedZones, Multimedia) for technical documentation.
 - **Automation:** 
-    - **One-Click Import:** Engineering data (Shields) automatically generates Estimate Materials with intelligent mapping.
+    - **One-Click Import:** Engineering data (Shields) generates Estimate Materials with intelligent mapping. **Note:** Existing items are replaced or deleted (for shields) to ensure data synchronization.
     - **Fallback Logic:** System ensures no data loss; if a catalog item is missing, a placeholder warning is created.
-    - **Works Calculation:** Works are automatically generated from Materials based on predefined links (e.g., Cable -> Cable Installation).
+    - **Works Calculation:** Works are generated from Materials based on predefined links (e.g., Cable -> Cable Installation). **Note:** Calculations replace existing work items related to the recalculated materials.
 - **Financials:** Dual view (Client view vs. Internal view for calculations with **Partner (Контрагент)**). "Контрагент" is the standard term across the app.
 - **Smart Calculator:** Logic for work volume entry: Users input any 2 of 3 values (Total, Me, Partner), and the 3rd is auto-calculated (Total = Me + Partner).
 - **Numerical Formatting:** All amounts, quantities, and percentages must be formatted to a maximum of 2 decimal places, with trailing zeros removed (e.g., `10.00` becomes `10`, `10.50` becomes `10.5`). <!-- id: prd_formatting -->
