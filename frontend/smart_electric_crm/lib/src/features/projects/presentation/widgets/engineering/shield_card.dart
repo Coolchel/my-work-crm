@@ -190,71 +190,116 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
 
   Widget _buildTopInfo(BuildContext context, Color themeColor) {
     final shield = widget.shield;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
                   children: [
                     Icon(
                       shield.mounting == 'internal'
                           ? Icons.layers_outlined
                           : Icons.crop_square_rounded,
                       size: 18,
-                      color: Colors.grey.shade400, // Neutral icon
+                      color: Colors.grey.shade500,
                     ),
                     const SizedBox(width: 10),
-                    Text(
-                      shield.mounting == 'internal'
-                          ? 'Внутренняя установка'
-                          : 'Наружная установка',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700, // Neutral text
+                    Expanded(
+                      child: Text(
+                        shield.mounting == 'internal'
+                            ? 'Внутренняя установка'
+                            : 'Наружная установка',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade800,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-            _buildMountingSegmented(themeColor),
-          ],
-        ),
-        if (shield.suggestedSize != null) ...[
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50, // Neutral background
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.withOpacity(0.08)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+              ),
+              const SizedBox(width: 8),
+              _buildMountingSegmented(themeColor),
+            ],
+          ),
+          if (shield.suggestedSize != null) ...[
+            const SizedBox(height: 12),
+            Row(
               children: [
-                Icon(Icons.straighten_rounded,
-                    size: 14, color: Colors.grey.shade400),
-                const SizedBox(width: 8),
-                Text(
-                  '${shield.suggestedSize} мод.',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF1F2937), // Neutral dark
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.withOpacity(0.08)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: themeColor.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.straighten_rounded,
+                          size: 16, color: Colors.grey.shade400),
+                      const SizedBox(width: 10),
+                      RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade600),
+                          children: [
+                            const TextSpan(text: 'Рекомендовано: '),
+                            TextSpan(
+                              text: _formatSuggestedSize(shield.suggestedSize),
+                              style: TextStyle(
+                                color: themeColor.withOpacity(0.8),
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
+          ],
         ],
-      ],
+      ),
     );
+  }
+
+  String _formatSuggestedSize(String? size) {
+    if (size == null) return '';
+    final count = int.tryParse(size);
+    if (count == null) return size; // E.g. "Индивидуальный расчет"
+    return '$count ${_getModulesText(count)}';
+  }
+
+  String _getModulesText(int count) {
+    int n = count % 100;
+    if (n >= 11 && n <= 19) return "модулей";
+    n = count % 10;
+    if (n == 1) return "модуль";
+    if (n >= 2 && n <= 4) return "модуля";
+    return "модулей";
   }
 
   Widget _buildMountingSegmented(Color themeColor) {
@@ -515,7 +560,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             : "Сохранить LED щит как шаблон",
         labelText: "Название шаблона",
         descriptionLabelText: "Описание (опционально)",
-        themeColor: const Color(0xFF374151),
+        themeColor: shield.shieldType == 'power' ? Colors.amber : Colors.red,
       ),
     );
 
@@ -574,7 +619,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             getDescription: (t) => (t as dynamic).description ?? '',
             onSelected: (t) =>
                 _applyTemplate(context, ref, shield, (t as dynamic).id),
-            themeColor: const Color(0xFF374151),
+            themeColor: isPower ? Colors.amber : Colors.red,
             onCreate: () => _showSaveTemplateDialog(context, ref, shield),
           ),
         );

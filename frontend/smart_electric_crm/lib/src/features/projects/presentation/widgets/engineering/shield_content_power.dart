@@ -373,7 +373,7 @@ class ShieldContentPower extends ConsumerWidget {
                 .deletePowerShieldTemplate(t.id);
             ref.invalidate(powerShieldTemplatesProvider);
           },
-          themeColor: const Color(0xFF374151),
+          themeColor: Colors.amber,
           onCreate: () => _showSaveTemplateDialog(context, ref),
         ),
       );
@@ -393,6 +393,7 @@ class ShieldContentPower extends ConsumerWidget {
         title: "Сохранить щит как шаблон",
         labelText: "Название шаблона",
         descriptionLabelText: "Описание (опционально)",
+        themeColor: Colors.amber,
       ),
     );
 

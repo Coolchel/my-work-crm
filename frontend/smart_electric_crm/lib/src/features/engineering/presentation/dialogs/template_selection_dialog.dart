@@ -132,7 +132,7 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                         onCreate!(); // Trigger create action
                       },
                       icon: const Icon(Icons.add_circle_outline, size: 20),
-                      label: const Text("Сохранить текущую смету",
+                      label: const Text("Сохранить текущий щит",
                           style: TextStyle(fontSize: 13)),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),

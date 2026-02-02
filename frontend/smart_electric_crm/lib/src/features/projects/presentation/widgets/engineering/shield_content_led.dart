@@ -281,7 +281,7 @@ class ShieldContentLed extends ConsumerWidget {
                 .deleteLedShieldTemplate(t.id);
             ref.invalidate(ledShieldTemplatesProvider);
           },
-          themeColor: const Color(0xFF374151),
+          themeColor: Colors.red,
           onCreate: () => _showSaveTemplateDialog(context, ref),
         ),
       );
@@ -301,6 +301,7 @@ class ShieldContentLed extends ConsumerWidget {
         title: "Сохранить LED щит как шаблон",
         labelText: "Название шаблона",
         descriptionLabelText: "Описание (опционально)",
+        themeColor: Colors.red,
       ),
     );
 
