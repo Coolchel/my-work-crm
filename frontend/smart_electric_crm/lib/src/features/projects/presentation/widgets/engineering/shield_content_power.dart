@@ -76,19 +76,19 @@ class ShieldContentPower extends ConsumerWidget {
             ),
             Row(
               children: [
-                FilledButton.icon(
+                OutlinedButton.icon(
                   onPressed: () => _showAddGroupDialog(context, ref),
-                  icon: const Icon(Icons.add, size: 18),
+                  icon: const Icon(Icons.add, size: 16),
                   label: const Text('ДОБАВИТЬ',
                       style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  style: FilledButton.styleFrom(
-                    backgroundColor:
-                        const Color(0xFF374151), // Neutral dark grey
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.orange.shade800,
+                    side: BorderSide(color: Colors.orange.shade800),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
+                    minimumSize: const Size(0, 32),
                     visualDensity: VisualDensity.compact,
+                    shape: const StadiumBorder(),
                   ),
                 ),
               ],

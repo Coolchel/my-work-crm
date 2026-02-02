@@ -290,28 +290,23 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Template Button (only for Power/LED)
-                  if (shield.shieldType == 'power' ||
-                      shield.shieldType == 'led') ...[
-                    Tooltip(
-                      message: 'Шаблоны',
-                      child: OutlinedButton(
-                        onPressed: () =>
-                            _showTemplateDialog(context, ref, shield),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: themeColor,
-                          side: BorderSide(color: themeColor.withOpacity(0.3)),
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(36, 36),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: const Icon(Icons.dashboard_customize_outlined,
-                            size: 18),
+                  // Delete Button
+                  Tooltip(
+                    message: 'Удалить щит',
+                    child: OutlinedButton(
+                      onPressed: () => _deleteShield(context, ref),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.grey.shade600,
+                        side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(36, 36),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
                       ),
+                      child: const Icon(Icons.close_rounded, size: 18),
                     ),
-                    const SizedBox(width: 8),
-                  ],
+                  ),
+                  const SizedBox(width: 8),
                   // Edit Button
                   Tooltip(
                     message: 'Редактировать щит',
@@ -329,23 +324,27 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                       child: const Icon(Icons.edit_outlined, size: 18),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // Delete Button
-                  Tooltip(
-                    message: 'Удалить щит',
-                    child: OutlinedButton(
-                      onPressed: () => _deleteShield(context, ref),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red.shade400,
-                        side: BorderSide(color: Colors.red.withOpacity(0.3)),
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(36, 36),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                  // Template Button (only for Power/LED)
+                  if (shield.shieldType == 'power' ||
+                      shield.shieldType == 'led') ...[
+                    const SizedBox(width: 8),
+                    Tooltip(
+                      message: 'Шаблоны',
+                      child: OutlinedButton(
+                        onPressed: () =>
+                            _showTemplateDialog(context, ref, shield),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.grey.shade600,
+                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(36, 36),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Icon(Icons.copy_all_rounded, size: 18),
                       ),
-                      child: const Icon(Icons.delete_outline_rounded, size: 18),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ],
@@ -416,76 +415,72 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
 
   Widget _buildMultimediaInfo(BuildContext context, Color themeColor) {
     final shield = widget.shield;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.router_rounded,
-                  size: 18, color: Colors.grey.shade400), // Neutral icon
-              const SizedBox(width: 10),
-              const Text(
-                'СЛАБОТОЧНЫЙ ЩИТ',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 10,
-                  letterSpacing: 0.8,
-                  color: Color(0xFF374151), // Neutral dark
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100, // Neutral background
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '${shield.internetLinesCount} лин.',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'СЛАБОТОЧНЫЙ ЩИТ',
                   style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade700, // Neutral text
+                    fontWeight: FontWeight.w900,
+                    fontSize: 10,
+                    letterSpacing: 0.8,
+                    color: Color(0xFF374151), // Neutral dark
                   ),
                 ),
-              ),
-            ],
-          ),
-          if (shield.multimediaNotes.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.grey.withOpacity(0.05)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.notes_rounded,
-                      size: 14, color: Colors.grey.shade400),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      shield.multimediaNotes,
-                      style:
-                          TextStyle(color: Colors.grey.shade700, fontSize: 11),
-                    ),
-                  ),
-                ],
+                Text(
+                  '${shield.internetLinesCount} линий интернет',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                ),
+              ],
+            ),
+            OutlinedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('ДОБАВИТЬ',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.teal.shade600,
+                side: BorderSide(color: Colors.teal.shade600),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                minimumSize: const Size(0, 32),
+                visualDensity: VisualDensity.compact,
+                shape: const StadiumBorder(),
               ),
             ),
           ],
+        ),
+        if (shield.multimediaNotes.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey.withOpacity(0.05)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.notes_rounded,
+                    size: 14, color: Colors.grey.shade400),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    shield.multimediaNotes,
+                    style: TextStyle(color: Colors.grey.shade700, fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
-      ),
+      ],
     );
   }
 
