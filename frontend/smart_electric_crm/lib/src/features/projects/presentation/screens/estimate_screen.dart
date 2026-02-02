@@ -108,22 +108,22 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               ],
             ),
             actions: [
-              // PDF Actions Button (Yellowish)
+              // PDF Actions Button (Deep Purple - Analytics/Graph)
               _buildActionButton(
                 context,
-                icon: Icons.picture_as_pdf,
-                color: Colors.amber,
+                icon: Icons.auto_graph_rounded,
+                color: Colors.deepPurple,
                 onTap: () => _showPdfActionsDialog(context),
-                tooltip: "PDF действия",
+                tooltip: "Аналитика и PDF",
               ),
               const SizedBox(width: 8),
-              // Text Actions Button (Indigo)
+              // Text Actions Button (Teal - Structure/Segments)
               _buildActionButton(
                 context,
-                icon: Icons.description,
-                color: Colors.indigo,
+                icon: Icons.segment_rounded,
+                color: Colors.teal,
                 onTap: () => _showTextActionsDialog(context),
-                tooltip: "Текстовые действия",
+                tooltip: "Текстовая смета",
               ),
               const SizedBox(width: 8),
             ],
