@@ -119,7 +119,7 @@ mixin EstimateDialogHelpers {
   }
 
   Widget buildBtn(String label, Color bg, Color fg, VoidCallback onTap,
-      {bool isGradient = false, bool enabled = true}) {
+      {bool isGradient = false, bool enabled = true, IconData? icon}) {
     return Opacity(
       opacity: enabled ? 1.0 : 0.4,
       child: Container(
@@ -152,14 +152,23 @@ mixin EstimateDialogHelpers {
                 : fg.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
             child: Center(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: fg,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, color: fg, size: 18),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: fg,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
           ),
@@ -599,7 +608,8 @@ class ReportPreviewDialog extends StatefulWidget {
   State<ReportPreviewDialog> createState() => _ReportPreviewDialogState();
 }
 
-class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
+class _ReportPreviewDialogState extends State<ReportPreviewDialog>
+    with EstimateDialogHelpers {
   late String _viewMode;
 
   List<String> get _availableModes {
@@ -696,82 +706,87 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
   @override
   Widget build(BuildContext context) {
     final modes = _availableModes;
+    final themeColor = _themeColor;
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        width: 720, // Increased width (~20% more than 600)
-        height: 800,
-        padding: const EdgeInsets.all(24),
+    return buildPremiumContainer(
+      context: context,
+      themeColor: themeColor,
+      maxWidth: 720,
+      child: SizedBox(
+        height: 760, // Fixed height to prevent "jumping"
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Предварительный просмотр",
-                    style:
-                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Colors.black))
-              ],
+            buildPremiumHeader(
+              context: context,
+              title: "Предварительный просмотр",
+              icon: Icons.article_rounded, // Changed icon
+              themeColor: themeColor,
             ),
+
             const SizedBox(height: 16),
 
             // Chips (Wrap for responsiveness)
             if (modes.isNotEmpty) ...[
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.center,
-                children: modes.map((mode) {
-                  String label = "";
-                  MaterialColor color = Colors.grey;
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.center,
+                  children: modes.map((mode) {
+                    String label = "";
+                    MaterialColor color = Colors.grey;
 
-                  switch (mode) {
-                    case 'work_total':
-                      label = "Работа";
-                      color = Colors.green;
-                      break;
-                    case 'work_employer':
-                      label = "Контрагент";
-                      color = Colors.green;
-                      break;
-                    case 'work_our':
-                      label = "Наши";
-                      color = Colors.green;
-                      break;
-                    case 'mat_noprice':
-                      label = "Материал";
-                      color = Colors.blue;
-                      break;
-                    case 'mat_price':
-                      label = "С ценами";
-                      color = Colors.blue;
-                      break;
-                    case 'mat_markup':
-                      label = "С наценкой";
-                      color = Colors.blue;
-                      break;
-                  }
-                  return _buildChip(mode, label, color);
-                }).toList(),
+                    switch (mode) {
+                      case 'work_total':
+                        label = "Работа";
+                        color = Colors.green;
+                        break;
+                      case 'work_employer':
+                        label = "Контрагент";
+                        color = Colors.green;
+                        break;
+                      case 'work_our':
+                        label = "Наши";
+                        color = Colors.green;
+                        break;
+                      case 'mat_noprice':
+                        label = "Материал";
+                        color = Colors.blue;
+                        break;
+                      case 'mat_price':
+                        label = "С ценами";
+                        color = Colors.blue;
+                        break;
+                      case 'mat_markup':
+                        label = "С наценкой";
+                        color = Colors.blue;
+                        break;
+                    }
+                    return _buildChip(mode, label, color);
+                  }).toList(),
+                ),
               ),
               const SizedBox(height: 12),
-              Divider(color: _themeColor.withOpacity(0.5), thickness: 2),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child:
+                    Divider(color: themeColor.withOpacity(0.12), thickness: 1),
+              ),
               const SizedBox(height: 12),
             ],
 
             // Content
             Expanded(
               child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
                 ),
                 child: SingleChildScrollView(
                   child: SelectableText(_currentText,
@@ -780,29 +795,32 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
 
-            // Copy Button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _themeColor.withOpacity(0.1),
-                    foregroundColor: _themeColor.shade800,
-                    elevation: 0,
+            const SizedBox(height: 24),
+
+            // Action Buttons
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Center(
+                child: SizedBox(
+                  width: 220, // Increased width as requested
+                  child: buildBtn(
+                    "Копировать",
+                    themeColor.shade100,
+                    themeColor.shade800,
+                    () {
+                      Clipboard.setData(ClipboardData(text: _currentText));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Скопировано в буфер!")),
+                      );
+                    },
+                    icon: Icons.copy_rounded, // Added icon
                   ),
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: _currentText));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Скопировано!")),
-                    );
-                  },
-                  icon: const Icon(Icons.copy, size: 18),
-                  label: const Text("Копировать"),
                 ),
-              ],
+              ),
             ),
+
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -818,17 +836,15 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
         if (val) setState(() => _viewMode = mode);
       },
       selectedColor: color.shade200,
-      backgroundColor: color.shade100, // Always colored background, lighter
+      backgroundColor: color.shade100,
+      mouseCursor: SystemMouseCursors.click,
       labelStyle: TextStyle(
-        color:
-            isSelected ? color.shade900 : color.shade700, // Always colored text
+        color: isSelected ? color.shade900 : color.shade700,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontSize: 12,
       ),
-      side: BorderSide(
-        color: isSelected
-            ? color.shade400
-            : color.shade200, // Always colored border
-      ),
+      side: BorderSide.none, // Removed borders
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
 }
