@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/project_model.dart';
 import '../widgets/engineering/shield_card.dart';
+import '../../../engineering/data/models/shield_model.dart';
 import '../dialogs/engineering/add_shield_dialog.dart';
 
 class EngineeringTab extends ConsumerWidget {
@@ -11,6 +12,12 @@ class EngineeringTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final sortedShields = List<ShieldModel>.from(project.shields)
+      ..sort((a, b) {
+        final order = {'power': 0, 'multimedia': 1, 'led': 2};
+        return (order[a.shieldType] ?? 99).compareTo(order[b.shieldType] ?? 99);
+      });
+
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () =>
@@ -31,7 +38,7 @@ class EngineeringTab extends ConsumerWidget {
                 ),
               )
             else
-              ...project.shields.map((shield) => ShieldCard(
+              ...sortedShields.map((shield) => ShieldCard(
                     shield: shield,
                     projectId: project.id.toString(),
                   )),

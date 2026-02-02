@@ -54,164 +54,278 @@ class ShieldContentPower extends ConsumerWidget {
         return indexA.compareTo(indexB);
       });
 
+    const themeColor = Colors.amber; // Amber for Power
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Группы (${groups.length})',
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'УСТРОЙСТВА ЩИТА',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 10,
+                    letterSpacing: 0.8,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+                Text(
+                  '${groups.length} позиций спецификации',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                ),
+              ],
+            ),
             Row(
               children: [
                 if (groups.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: IconButton(
-                      onPressed: () => _showSaveTemplateDialog(context, ref),
-                      icon: const Icon(Icons.save_as,
-                          size: 20, color: Colors.blue),
-                      tooltip: "Сохранить как шаблон",
+                  IconButton(
+                    onPressed: () => _showSaveTemplateDialog(context, ref),
+                    style: IconButton.styleFrom(
+                      foregroundColor: Colors.blue.shade700,
+                      padding: const EdgeInsets.all(8),
                     ),
+                    icon: const Icon(Icons.save_as_rounded, size: 20),
+                    tooltip: "В шаблон",
                   ),
-                TextButton.icon(
+                const SizedBox(width: 4),
+                OutlinedButton(
                   onPressed: () => _showApplyTemplateDialog(context, ref),
-                  icon: const Icon(Icons.copy, size: 16),
-                  label: const Text('Шаблон'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.indigo.shade800,
+                    side: BorderSide(color: Colors.indigo.shade100),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: const Text('ШАБЛОН',
+                      style:
+                          TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
-                FilledButton.icon(
+                const SizedBox(width: 8),
+                FilledButton(
                   onPressed: () => _showAddGroupDialog(context, ref),
-                  icon: const Icon(Icons.add, size: 16),
-                  label: const Text('Добавить'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: themeColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  child: const Text('ДОБАВИТЬ',
+                      style:
+                          TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
               ],
             )
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         if (groups.isEmpty)
-          const Text('Нет групп', style: TextStyle(color: Colors.grey))
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 40.0),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade100),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.inventory_2_outlined,
+                    size: 40, color: Colors.grey.shade300),
+                const SizedBox(height: 12),
+                const Text('Список групп пуст',
+                    style: TextStyle(color: Colors.grey, fontSize: 13)),
+              ],
+            ),
+          )
         else
           ...sortedKeys.map((type) {
             final groupItems = groupedGroups[type]!;
             final totalModules = groupItems.fold<int>(
                 0, (sum, item) => sum + (item.modulesCount * item.quantity));
             final typeName = _getDeviceTypeName(type);
+            final typeColor = _getDeviceColor(type);
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Group Header
+                // Group Header (Estimate style)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
                   child: Row(
                     children: [
-                      Text(
-                        typeName,
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                      Container(
+                        width: 4,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          color: typeColor.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceVariant,
-                          borderRadius: BorderRadius.circular(12),
+                      Text(
+                        typeName.toUpperCase(),
+                        style: TextStyle(
+                          color: typeColor.withOpacity(0.8),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                          letterSpacing: 0.5,
                         ),
-                        child: Text(
-                          '$totalModules mod',
-                          style: TextStyle(
-                              fontSize: 10,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Divider(
+                            color: typeColor.withOpacity(0.05), thickness: 1),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$totalModules mod',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.grey.shade400,
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Group Items
-                ...groupItems.map((group) => Card(
-                      elevation: 0,
-                      margin: const EdgeInsets.only(bottom: 4),
-                      color: Theme.of(context).colorScheme.surface,
-                      shape: RoundedRectangleBorder(
-                          side: BorderSide(color: Colors.grey.withOpacity(0.2)),
-                          borderRadius: BorderRadius.circular(8)),
-                      child: ListTile(
-                        dense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 0),
-                        onTap: () =>
-                            _showAddGroupDialog(context, ref, group: group),
-                        // Leading Icon with Color
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: _getDeviceColor(group.deviceType)
-                                .withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(_getDeviceIcon(group.deviceType),
-                              size: 20,
-                              color: _getDeviceColor(group.deviceType)),
+                // Group Items (ListTile style)
+                ...groupItems.map((group) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 1),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border:
+                              Border.all(color: Colors.grey.withOpacity(0.15)),
                         ),
-                        title: Row(
-                          children: [
-                            Expanded(
-                              child: Text(group.device,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w500)),
-                            ),
-                            if (group.quantity > 1)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: _getDeviceColor(group.deviceType)
-                                      .withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'x${group.quantity}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: _getDeviceColor(group.deviceType),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(6),
+                            onTap: () =>
+                                _showAddGroupDialog(context, ref, group: group),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 6),
+                              child: Row(
+                                children: [
+                                  // Device Icon Badge
+                                  Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: BoxDecoration(
+                                      color: typeColor.withOpacity(0.12),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      _getDeviceIcon(group.deviceType),
+                                      size: 14,
+                                      color: typeColor,
+                                    ),
                                   ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        subtitle: Text(group.zone),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete,
-                              size: 16, color: Colors.grey),
-                          onPressed: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              barrierColor: Colors.transparent,
-                              builder: (context) => const ConfirmationDialog(
-                                title: "Удалить группу?",
-                                content:
-                                    "Вы уверены, что хотите удалить эту группу устройств?",
-                                confirmText: "Удалить",
-                                isDestructive: true,
-                                themeColor: Colors.teal,
-                              ),
-                            );
+                                  const SizedBox(width: 10),
+                                  // Device Info
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          group.device,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 13,
+                                            height: 1.2,
+                                            color: Color(0xFF1F2937),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          group.zone,
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Right side info and actions
+                                  Row(
+                                    children: [
+                                      // Quantity badge
+                                      if (group.quantity > 1)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade50,
+                                            borderRadius:
+                                                BorderRadius.circular(5),
+                                          ),
+                                          child: Text(
+                                            '${group.quantity} шт.',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFF4B5563),
+                                            ),
+                                          ),
+                                        ),
+                                      const SizedBox(width: 4),
+                                      // Close button (Delete)
+                                      SizedBox(
+                                        width: 28,
+                                        height: 28,
+                                        child: IconButton(
+                                          icon: Icon(Icons.close,
+                                              size: 14,
+                                              color: Colors.grey.shade300),
+                                          padding: EdgeInsets.zero,
+                                          onPressed: () async {
+                                            final confirm =
+                                                await showDialog<bool>(
+                                              context: context,
+                                              barrierColor: Colors.transparent,
+                                              builder: (context) =>
+                                                  const ConfirmationDialog(
+                                                title: "Удалить группу?",
+                                                content:
+                                                    "Вы уверены, что хотите удалить эту группу устройств?",
+                                                confirmText: "Удалить",
+                                                isDestructive: true,
+                                                themeColor: Color(0xFF1E3A8A),
+                                              ),
+                                            );
 
-                            if (confirm != true) return;
+                                            if (confirm != true) return;
 
-                            await ref
-                                .read(engineeringRepositoryProvider)
-                                .deleteShieldGroup(group.id);
-                            ref.invalidate(projectListProvider);
-                          },
+                                            await ref
+                                                .read(
+                                                    engineeringRepositoryProvider)
+                                                .deleteShieldGroup(group.id);
+                                            ref.invalidate(projectListProvider);
+                                            ref.invalidate(
+                                                projectByIdProvider(projectId));
+                                          },
+                                          tooltip: "Удалить",
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     )),
@@ -342,20 +456,20 @@ class ShieldContentPower extends ConsumerWidget {
 
   Color _getDeviceColor(String type) {
     switch (type) {
-      case 'circuit_breaker':
-        return Colors.orange;
-      case 'diff_breaker':
-        return Colors.blue;
-      case 'rcd':
-        return Colors.indigo;
-      case 'relay':
-        return Colors.red;
-      case 'contactor':
-        return Colors.teal;
       case 'load_switch':
-        return Colors.green;
+        return Colors.amber.shade800;
+      case 'relay':
+        return Colors.amber.shade600;
+      case 'circuit_breaker':
+        return Colors.amber.shade500;
+      case 'diff_breaker':
+        return Colors.amber.shade400;
+      case 'rcd':
+        return Colors.amber.shade300;
+      case 'contactor':
+        return Colors.amber.shade700;
       default:
-        return Colors.blueGrey;
+        return Colors.amber.shade100;
     }
   }
 }

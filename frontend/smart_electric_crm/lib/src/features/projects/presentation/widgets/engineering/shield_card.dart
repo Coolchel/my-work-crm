@@ -12,137 +12,407 @@ import '../../../../engineering/data/models/template_models.dart';
 import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../../shared/presentation/dialogs/text_input_dialog.dart';
 
-class ShieldCard extends ConsumerWidget {
+class ShieldCard extends ConsumerStatefulWidget {
   final ShieldModel shield;
   final String projectId;
 
   const ShieldCard({required this.shield, required this.projectId, super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 3,
-      child: ExpansionTile(
-        initiallyExpanded: false, // Collapsed by default
-        title: Row(
+  ConsumerState<ShieldCard> createState() => _ShieldCardState();
+}
+
+class _ShieldCardState extends ConsumerState<ShieldCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _expandController;
+  late Animation<double> _expandAnimation;
+  bool _isExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _expandController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _expandAnimation = CurvedAnimation(
+      parent: _expandController,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _expandController.dispose();
+    super.dispose();
+  }
+
+  void _toggleExpand() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+      if (_isExpanded) {
+        _expandController.forward();
+      } else {
+        _expandController.reverse();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeColor = _getColorForType(widget.shield.shieldType);
+    final shield = widget.shield;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+            color: themeColor
+                .withOpacity(0.12)), // Use theme color for card border
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(_getIconForType(shield.shieldType),
-                color: _getColorForType(shield.shieldType)),
-            const SizedBox(width: 8),
-            Text(shield.name,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+            // Header (Tappable, Estimate-like)
+            Material(
+              color: themeColor
+                  .withOpacity(0.08), // Slightly more saturated (was 0.05)
+              child: InkWell(
+                onTap: _toggleExpand,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                          color: themeColor
+                              .withOpacity(0.1)), // Use theme color for border
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: themeColor.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _getIconForType(shield.shieldType),
+                          color: themeColor,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              shield.name,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF1F2937),
+                              ),
+                            ),
+                            Text(
+                              _getTypeName(shield.shieldType).toUpperCase(),
+                              style: TextStyle(
+                                color: themeColor.withOpacity(0.8),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      RotationTransition(
+                        turns: Tween(begin: 0.0, end: 0.5)
+                            .animate(_expandAnimation),
+                        child: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: themeColor.withOpacity(0.4),
+                          size: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Content
+            SizeTransition(
+              sizeFactor: _expandAnimation,
+              child: Container(
+                color: themeColor
+                    .withOpacity(0.015), // Very subtle background (was 0.04)
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Mounting Toggle & Recommended Size
+                    _buildTopInfo(context, themeColor),
+
+                    const SizedBox(height: 16),
+
+                    // Shield Content based on type
+                    if (shield.shieldType == 'power')
+                      ShieldContentPower(
+                          shield: shield, projectId: widget.projectId),
+                    if (shield.shieldType == 'led')
+                      ShieldContentLed(
+                          shield: shield, projectId: widget.projectId),
+                    if (shield.shieldType == 'multimedia')
+                      _buildMultimediaInfo(context, themeColor),
+
+                    const SizedBox(height: 20),
+                    const Divider(height: 1),
+                    const SizedBox(height: 12),
+
+                    // Actions
+                    _buildActions(context, themeColor),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
-        subtitle: Text(
-          _getTypeName(shield.shieldType),
-          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+      ),
+    );
+  }
+
+  Widget _buildTopInfo(BuildContext context, Color themeColor) {
+    final shield = widget.shield;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'КОНФИГУРАЦИЯ',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: themeColor.withOpacity(0.6),
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                Text(
+                  shield.mounting == 'internal'
+                      ? 'Внутренний монтаж'
+                      : 'Наружный монтаж',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                ),
+              ],
+            ),
+            _buildMountingSegmented(themeColor),
+          ],
         ),
-        childrenPadding: const EdgeInsets.all(16),
-        children: [
-          // Mounting Toggle
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16.0),
+        if (shield.suggestedSize != null) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey.withOpacity(0.1)),
+            ),
             child: Row(
               children: [
-                const Text('Монтаж:',
-                    style: TextStyle(fontWeight: FontWeight.w500)),
-                const SizedBox(width: 12),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(
-                      value: 'internal',
-                      label: Text('Внутренний'),
-                      icon: Icon(Icons.grid_view, size: 16),
+                Icon(Icons.inventory_2_outlined,
+                    size: 14, color: themeColor.withOpacity(0.5)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Рекомендуемый корпус: ${shield.suggestedSize}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade700,
+                      fontSize: 11,
                     ),
-                    ButtonSegment(
-                      value: 'external',
-                      label: Text('Наружный'),
-                      icon: Icon(Icons.check_box_outline_blank, size: 16),
-                    ),
-                  ],
-                  selected: {shield.mounting},
-                  onSelectionChanged: (Set<String> newSelection) async {
-                    final newValue = newSelection.first;
-                    try {
-                      await ref
-                          .read(engineeringRepositoryProvider)
-                          .updateShield(shield.id, {'mounting': newValue});
-                      ref.invalidate(projectListProvider);
-                      // Invalidate specific project provider too just in case
-                      ref.invalidate(projectByIdProvider(projectId));
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Ошибка обновления: $e')));
-                      }
-                    }
-                  },
-                  showSelectedIcon: false,
-                  style: ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    padding: MaterialStateProperty.all(EdgeInsets.zero),
                   ),
                 ),
               ],
             ),
           ),
+        ],
+      ],
+    );
+  }
 
-          // Shield Info / Stats
-          if (shield.suggestedSize != null)
-            Container(
-                padding: const EdgeInsets.all(8),
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                    color: _getColorForType(shield.shieldType).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8)),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                          'Рекомендуемый корпус: ${shield.suggestedSize}',
-                          style: const TextStyle(fontWeight: FontWeight.w500)),
-                    ),
-                  ],
-                )),
+  Widget _buildMountingSegmented(Color themeColor) {
+    final shield = widget.shield;
+    return SegmentedButton<String>(
+      segments: const [
+        ButtonSegment(
+          value: 'internal',
+          label: Text('Внутр.',
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+        ),
+        ButtonSegment(
+          value: 'external',
+          label: Text('Наруж.',
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+        ),
+      ],
+      selected: {shield.mounting},
+      onSelectionChanged: (Set<String> newSelection) async {
+        final newValue = newSelection.first;
+        try {
+          await ref
+              .read(engineeringRepositoryProvider)
+              .updateShield(shield.id, {'mounting': newValue});
+          ref.invalidate(projectListProvider);
+          ref.invalidate(projectByIdProvider(widget.projectId));
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text('Ошибка обновления: $e')));
+          }
+        }
+      },
+      showSelectedIcon: false,
+      style: SegmentedButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        padding: EdgeInsets.zero,
+        selectedBackgroundColor: themeColor.withOpacity(0.1),
+        selectedForegroundColor: themeColor,
+        side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      ),
+    );
+  }
 
-          // Content based on type
-          if (shield.shieldType == 'power')
-            ShieldContentPower(shield: shield, projectId: projectId),
-          if (shield.shieldType == 'led')
-            ShieldContentLed(shield: shield, projectId: projectId),
-
-          const Divider(height: 32),
-
-          // Actions
+  Widget _buildMultimediaInfo(BuildContext context, Color themeColor) {
+    final shield = widget.shield;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TextButton.icon(
-                onPressed: () => _deleteShield(context, ref),
-                icon: const Icon(Icons.delete, size: 16, color: Colors.grey),
-                label: const Text('Удалить щит',
-                    style: TextStyle(color: Colors.grey)),
-              ),
-              TextButton.icon(
-                onPressed: () => _showEditShieldDialog(context, ref, shield),
-                icon: const Icon(Icons.edit, size: 16, color: Colors.blue),
-                label: const Text('Изменить',
-                    style: TextStyle(color: Colors.blue)),
-              ),
-              if (shield.shieldType == 'power' || shield.shieldType == 'led')
-                IconButton(
-                  onPressed: () => _showTemplateDialog(context, ref, shield),
-                  icon: const Icon(Icons.copy_all, color: Colors.indigo),
-                  tooltip: "Применить шаблон",
+              Icon(Icons.router_rounded,
+                  size: 18, color: themeColor.withOpacity(0.7)),
+              const SizedBox(width: 10),
+              Text(
+                'СЛАБОТОЧНЫЙ ЩИТ',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 10,
+                  letterSpacing: 0.8,
+                  color: themeColor,
                 ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: themeColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '${shield.internetLinesCount} лин.',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: themeColor,
+                  ),
+                ),
+              ),
             ],
-          )
+          ),
+          if (shield.multimediaNotes.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.grey.withOpacity(0.05)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.notes_rounded,
+                      size: 14, color: Colors.grey.shade400),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      shield.multimediaNotes,
+                      style:
+                          TextStyle(color: Colors.grey.shade700, fontSize: 11),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _buildActions(BuildContext context, Color themeColor) {
+    final shield = widget.shield;
+    return Row(
+      children: [
+        IconButton(
+          onPressed: () => _deleteShield(context, ref),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          style: IconButton.styleFrom(
+            foregroundColor: Colors.red.shade300,
+          ),
+          icon: const Icon(Icons.delete_outline_rounded, size: 20),
+          tooltip: "Удалить",
+        ),
+        const Spacer(),
+        if (shield.shieldType == 'power' || shield.shieldType == 'led')
+          OutlinedButton(
+            onPressed: () => _showTemplateDialog(context, ref, shield),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: themeColor.withOpacity(0.8),
+              side: BorderSide(color: themeColor.withOpacity(0.1)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              visualDensity: VisualDensity.compact,
+            ),
+            child: const Text('ШАБЛОН',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          ),
+        const SizedBox(width: 8),
+        FilledButton(
+          onPressed: () => _showEditShieldDialog(context, ref, shield),
+          style: FilledButton.styleFrom(
+            backgroundColor: themeColor,
+            foregroundColor: Colors.white,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            visualDensity: VisualDensity.compact,
+          ),
+          child: const Text('В ПАНЕЛЬ',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+        ),
+      ],
     );
   }
 
@@ -162,13 +432,13 @@ class ShieldCard extends ConsumerWidget {
   Color _getColorForType(String type) {
     switch (type) {
       case 'power':
-        return Colors.teal;
+        return Colors.amber; // Yellowish
       case 'led':
-        return Colors.purple;
+        return Colors.red; // Reddish
       case 'multimedia':
-        return Colors.blue;
+        return Colors.green; // Greenish
       default:
-        return Colors.grey;
+        return Colors.grey.shade700;
     }
   }
 
@@ -190,13 +460,12 @@ class ShieldCard extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) =>
-          EditShieldDialog(shield: shield, projectId: projectId),
+          EditShieldDialog(shield: shield, projectId: widget.projectId),
     );
   }
 
   Future<void> _deleteShield(BuildContext context, WidgetRef ref) async {
-    final themeColor =
-        shield.shieldType == 'power' ? Colors.teal : Colors.purple;
+    final themeColor = _getColorForType(widget.shield.shieldType);
     final confirm = await showDialog<bool>(
       context: context,
       barrierColor: Colors.transparent,
@@ -211,9 +480,11 @@ class ShieldCard extends ConsumerWidget {
 
     if (confirm == true) {
       try {
-        await ref.read(engineeringRepositoryProvider).deleteShield(shield.id);
+        await ref
+            .read(engineeringRepositoryProvider)
+            .deleteShield(widget.shield.id);
         ref.invalidate(projectListProvider);
-        ref.invalidate(projectByIdProvider(projectId));
+        ref.invalidate(projectByIdProvider(widget.projectId));
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context)
@@ -227,8 +498,7 @@ class ShieldCard extends ConsumerWidget {
 
   void _showSaveTemplateDialog(
       BuildContext context, WidgetRef ref, ShieldModel shield) async {
-    final themeColor =
-        shield.shieldType == 'power' ? Colors.teal : Colors.purple;
+    final themeColor = _getColorForType(shield.shieldType);
     final result = await showDialog<dynamic>(
       context: context,
       barrierColor: Colors.transparent,
@@ -333,7 +603,6 @@ class ShieldCard extends ConsumerWidget {
           content:
               "Применение шаблона приведет к удалению всех текущих позиций в этом щите. Продолжить?",
           confirmText: "Применить",
-          // isDestructive removed to use themeColor
           themeColor:
               shield.shieldType == 'power' ? Colors.teal : Colors.purple,
         ),
@@ -353,7 +622,7 @@ class ShieldCard extends ConsumerWidget {
       }
 
       ref.invalidate(projectListProvider);
-      ref.invalidate(projectByIdProvider(projectId));
+      ref.invalidate(projectByIdProvider(widget.projectId));
 
       if (context.mounted) {
         ScaffoldMessenger.of(context)
