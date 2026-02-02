@@ -54,8 +54,6 @@ class ShieldContentPower extends ConsumerWidget {
         return indexA.compareTo(indexB);
       });
 
-    const themeColor = Colors.amber; // Amber for Power
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -86,7 +84,7 @@ class ShieldContentPower extends ConsumerWidget {
                   IconButton(
                     onPressed: () => _showSaveTemplateDialog(context, ref),
                     style: IconButton.styleFrom(
-                      foregroundColor: Colors.blue.shade700,
+                      foregroundColor: Colors.grey.shade600, // Neutral icon
                       padding: const EdgeInsets.all(8),
                     ),
                     icon: const Icon(Icons.save_as_rounded, size: 20),
@@ -96,8 +94,8 @@ class ShieldContentPower extends ConsumerWidget {
                 OutlinedButton(
                   onPressed: () => _showApplyTemplateDialog(context, ref),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.indigo.shade800,
-                    side: BorderSide(color: Colors.indigo.shade100),
+                    foregroundColor: const Color(0xFF374151),
+                    side: BorderSide(color: Colors.grey.shade300),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
@@ -111,7 +109,8 @@ class ShieldContentPower extends ConsumerWidget {
                 FilledButton(
                   onPressed: () => _showAddGroupDialog(context, ref),
                   style: FilledButton.styleFrom(
-                    backgroundColor: themeColor,
+                    backgroundColor:
+                        const Color(0xFF374151), // Neutral dark grey
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
@@ -151,7 +150,6 @@ class ShieldContentPower extends ConsumerWidget {
             final totalModules = groupItems.fold<int>(
                 0, (sum, item) => sum + (item.modulesCount * item.quantity));
             final typeName = _getDeviceTypeName(type);
-            final typeColor = _getDeviceColor(type);
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,15 +163,15 @@ class ShieldContentPower extends ConsumerWidget {
                         width: 4,
                         height: 14,
                         decoration: BoxDecoration(
-                          color: typeColor.withOpacity(0.5),
+                          color: Colors.grey.shade300, // Neutral strip
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         typeName.toUpperCase(),
-                        style: TextStyle(
-                          color: typeColor.withOpacity(0.8),
+                        style: const TextStyle(
+                          color: Color(0xFF374151), // Neutral dark grey
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                           letterSpacing: 0.5,
@@ -182,7 +180,7 @@ class ShieldContentPower extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Divider(
-                            color: typeColor.withOpacity(0.05), thickness: 1),
+                            color: Colors.grey.withOpacity(0.08), thickness: 1),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -222,13 +220,15 @@ class ShieldContentPower extends ConsumerWidget {
                                     width: 28,
                                     height: 28,
                                     decoration: BoxDecoration(
-                                      color: typeColor.withOpacity(0.12),
+                                      color: Colors
+                                          .grey.shade50, // Neutral background
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
                                       _getDeviceIcon(group.deviceType),
                                       size: 14,
-                                      color: typeColor,
+                                      color:
+                                          Colors.grey.shade400, // Neutral icon
                                     ),
                                   ),
                                   const SizedBox(width: 10),
@@ -240,11 +240,12 @@ class ShieldContentPower extends ConsumerWidget {
                                       children: [
                                         Text(
                                           group.device,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.w500,
                                             fontSize: 13,
                                             height: 1.2,
-                                            color: Color(0xFF1F2937),
+                                            color: const Color(
+                                                0xFF1F2937), // Reverting to dark grey for text
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -297,13 +298,14 @@ class ShieldContentPower extends ConsumerWidget {
                                               context: context,
                                               barrierColor: Colors.transparent,
                                               builder: (context) =>
-                                                  const ConfirmationDialog(
+                                                  ConfirmationDialog(
                                                 title: "Удалить группу?",
                                                 content:
                                                     "Вы уверены, что хотите удалить эту группу устройств?",
                                                 confirmText: "Удалить",
                                                 isDestructive: true,
-                                                themeColor: Color(0xFF1E3A8A),
+                                                themeColor:
+                                                    const Color(0xFF374151),
                                               ),
                                             );
 
@@ -371,7 +373,7 @@ class ShieldContentPower extends ConsumerWidget {
                 .deletePowerShieldTemplate(t.id);
             ref.invalidate(powerShieldTemplatesProvider);
           },
-          themeColor: Colors.teal,
+          themeColor: const Color(0xFF374151),
           onCreate: () => _showSaveTemplateDialog(context, ref),
         ),
       );
@@ -391,7 +393,6 @@ class ShieldContentPower extends ConsumerWidget {
         title: "Сохранить щит как шаблон",
         labelText: "Название шаблона",
         descriptionLabelText: "Описание (опционально)",
-        themeColor: Colors.teal,
       ),
     );
 
@@ -451,25 +452,6 @@ class ShieldContentPower extends ConsumerWidget {
         return Icons.power_settings_new;
       default:
         return Icons.electrical_services;
-    }
-  }
-
-  Color _getDeviceColor(String type) {
-    switch (type) {
-      case 'load_switch':
-        return Colors.amber.shade800;
-      case 'relay':
-        return Colors.amber.shade600;
-      case 'circuit_breaker':
-        return Colors.amber.shade500;
-      case 'diff_breaker':
-        return Colors.amber.shade400;
-      case 'rcd':
-        return Colors.amber.shade300;
-      case 'contactor':
-        return Colors.amber.shade700;
-      default:
-        return Colors.amber.shade100;
     }
   }
 }

@@ -23,8 +23,6 @@ class ShieldContentLed extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final zones = shield.ledZones;
 
-    const themeColor = Colors.red; // Red for LED
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -40,7 +38,7 @@ class ShieldContentLed extends ConsumerWidget {
                     fontWeight: FontWeight.w900,
                     fontSize: 10,
                     letterSpacing: 0.8,
-                    color: themeColor,
+                    color: Color(0xFF374151), // Neutral dark grey
                   ),
                 ),
                 Text(
@@ -55,7 +53,7 @@ class ShieldContentLed extends ConsumerWidget {
                   IconButton(
                     onPressed: () => _showSaveTemplateDialog(context, ref),
                     style: IconButton.styleFrom(
-                      foregroundColor: Colors.blue.shade700,
+                      foregroundColor: Colors.grey.shade600, // Neutral icon
                       padding: const EdgeInsets.all(8),
                     ),
                     icon: const Icon(Icons.save_as_rounded, size: 20),
@@ -65,8 +63,8 @@ class ShieldContentLed extends ConsumerWidget {
                 OutlinedButton(
                   onPressed: () => _showApplyTemplateDialog(context, ref),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.indigo.shade800,
-                    side: BorderSide(color: Colors.indigo.shade100),
+                    foregroundColor: const Color(0xFF374151),
+                    side: BorderSide(color: Colors.grey.shade300),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
@@ -80,7 +78,8 @@ class ShieldContentLed extends ConsumerWidget {
                 FilledButton(
                   onPressed: () => _showAddZoneDialog(context, ref),
                   style: FilledButton.styleFrom(
-                    backgroundColor: themeColor,
+                    backgroundColor:
+                        const Color(0xFF374151), // Neutral dark grey
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
@@ -119,7 +118,7 @@ class ShieldContentLed extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 1),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.white, // Reverted to original color
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: Colors.grey.withOpacity(0.15)),
                   ),
@@ -138,13 +137,14 @@ class ShieldContentLed extends ConsumerWidget {
                               width: 28,
                               height: 28,
                               decoration: BoxDecoration(
-                                color: Colors.red.shade50,
+                                color:
+                                    Colors.grey.shade50, // Neutral background
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 Icons.wb_incandescent_rounded,
                                 size: 14,
-                                color: Colors.red.shade400,
+                                color: Colors.grey.shade400, // Neutral icon
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -207,13 +207,13 @@ class ShieldContentLed extends ConsumerWidget {
                                         context: context,
                                         barrierColor: Colors.transparent,
                                         builder: (context) =>
-                                            const ConfirmationDialog(
+                                            ConfirmationDialog(
                                           title: "Удалить зону?",
                                           content:
                                               "Вы уверены, что хотите удалить эту LED зону?",
                                           confirmText: "Удалить",
                                           isDestructive: true,
-                                          themeColor: Color(0xFF374151),
+                                          themeColor: const Color(0xFF374151),
                                         ),
                                       );
 
@@ -281,7 +281,7 @@ class ShieldContentLed extends ConsumerWidget {
                 .deleteLedShieldTemplate(t.id);
             ref.invalidate(ledShieldTemplatesProvider);
           },
-          themeColor: Colors.purple,
+          themeColor: const Color(0xFF374151),
           onCreate: () => _showSaveTemplateDialog(context, ref),
         ),
       );
@@ -301,7 +301,6 @@ class ShieldContentLed extends ConsumerWidget {
         title: "Сохранить LED щит как шаблон",
         labelText: "Название шаблона",
         descriptionLabelText: "Описание (опционально)",
-        themeColor: Colors.purple,
       ),
     );
 

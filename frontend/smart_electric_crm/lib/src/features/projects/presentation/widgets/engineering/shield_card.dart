@@ -137,8 +137,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                         turns: Tween(begin: 0.0, end: 0.5)
                             .animate(_expandAnimation),
                         child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: themeColor.withOpacity(0.4),
+                          Icons.expand_more_rounded,
+                          color: Colors.grey.shade400, // Neutral expand icon
                           size: 20,
                         ),
                       ),
@@ -199,20 +199,27 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'КОНФИГУРАЦИЯ',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    color: themeColor.withOpacity(0.6),
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                Text(
-                  shield.mounting == 'internal'
-                      ? 'Внутренний монтаж'
-                      : 'Наружный монтаж',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                Row(
+                  children: [
+                    Icon(
+                      shield.mounting == 'internal'
+                          ? Icons.layers_outlined
+                          : Icons.crop_square_rounded,
+                      size: 18,
+                      color: Colors.grey.shade400, // Neutral icon
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      shield.mounting == 'internal'
+                          ? 'Внутренняя установка'
+                          : 'Наружная установка',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700, // Neutral text
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -222,25 +229,24 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
         if (shield.suggestedSize != null) ...[
           const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.grey.withOpacity(0.1)),
+              color: Colors.grey.shade50, // Neutral background
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.withOpacity(0.08)),
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.inventory_2_outlined,
-                    size: 14, color: themeColor.withOpacity(0.5)),
+                Icon(Icons.straighten_rounded,
+                    size: 14, color: Colors.grey.shade400),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Рекомендуемый корпус: ${shield.suggestedSize}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade700,
-                      fontSize: 11,
-                    ),
+                Text(
+                  '${shield.suggestedSize} мод.',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF1F2937), // Neutral dark
                   ),
                 ),
               ],
@@ -309,22 +315,22 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
           Row(
             children: [
               Icon(Icons.router_rounded,
-                  size: 18, color: themeColor.withOpacity(0.7)),
+                  size: 18, color: Colors.grey.shade400), // Neutral icon
               const SizedBox(width: 10),
-              Text(
+              const Text(
                 'СЛАБОТОЧНЫЙ ЩИТ',
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 10,
                   letterSpacing: 0.8,
-                  color: themeColor,
+                  color: Color(0xFF374151), // Neutral dark
                 ),
               ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: themeColor.withOpacity(0.1),
+                  color: Colors.grey.shade100, // Neutral background
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -332,7 +338,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: themeColor,
+                    color: Colors.grey.shade700, // Neutral text
                   ),
                 ),
               ),
@@ -378,7 +384,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
           style: IconButton.styleFrom(
-            foregroundColor: Colors.red.shade300,
+            foregroundColor: Colors.grey.shade400, // Neutral delete icon
           ),
           icon: const Icon(Icons.delete_outline_rounded, size: 20),
           tooltip: "Удалить",
@@ -388,8 +394,13 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
           OutlinedButton(
             onPressed: () => _showTemplateDialog(context, ref, shield),
             style: OutlinedButton.styleFrom(
-              foregroundColor: themeColor.withOpacity(0.8),
-              side: BorderSide(color: themeColor.withOpacity(0.1)),
+              foregroundColor: shield.shieldType == 'power'
+                  ? Colors.amber
+                  : Colors.red, // Corrected brand colors
+              side: BorderSide(
+                  color:
+                      (shield.shieldType == 'power' ? Colors.amber : Colors.red)
+                          .withOpacity(0.2)),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -402,7 +413,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
         FilledButton(
           onPressed: () => _showEditShieldDialog(context, ref, shield),
           style: FilledButton.styleFrom(
-            backgroundColor: themeColor,
+            backgroundColor: const Color(0xFF374151), // Neutral dark grey
             foregroundColor: Colors.white,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -465,16 +476,15 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   }
 
   Future<void> _deleteShield(BuildContext context, WidgetRef ref) async {
-    final themeColor = _getColorForType(widget.shield.shieldType);
     final confirm = await showDialog<bool>(
       context: context,
       barrierColor: Colors.transparent,
-      builder: (context) => ConfirmationDialog(
+      builder: (context) => const ConfirmationDialog(
         title: 'Удалить щит?',
         content: 'Все группы внутри будут удалены.',
         confirmText: 'Удалить',
         isDestructive: true,
-        themeColor: themeColor,
+        themeColor: Color(0xFF374151),
       ),
     );
 
@@ -494,11 +504,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     }
   }
 
-// ... (in _showSaveTemplateDialog)
-
   void _showSaveTemplateDialog(
       BuildContext context, WidgetRef ref, ShieldModel shield) async {
-    final themeColor = _getColorForType(shield.shieldType);
     final result = await showDialog<dynamic>(
       context: context,
       barrierColor: Colors.transparent,
@@ -508,7 +515,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             : "Сохранить LED щит как шаблон",
         labelText: "Название шаблона",
         descriptionLabelText: "Описание (опционально)",
-        themeColor: themeColor,
+        themeColor: const Color(0xFF374151),
       ),
     );
 
@@ -567,7 +574,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             getDescription: (t) => (t as dynamic).description ?? '',
             onSelected: (t) =>
                 _applyTemplate(context, ref, shield, (t as dynamic).id),
-            themeColor: isPower ? Colors.teal : Colors.purple,
+            themeColor: const Color(0xFF374151),
             onCreate: () => _showSaveTemplateDialog(context, ref, shield),
           ),
         );
@@ -603,8 +610,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
           content:
               "Применение шаблона приведет к удалению всех текущих позиций в этом щите. Продолжить?",
           confirmText: "Применить",
-          themeColor:
-              shield.shieldType == 'power' ? Colors.teal : Colors.purple,
+          themeColor: const Color(0xFF374151),
         ),
       );
       if (confirm != true) return;
