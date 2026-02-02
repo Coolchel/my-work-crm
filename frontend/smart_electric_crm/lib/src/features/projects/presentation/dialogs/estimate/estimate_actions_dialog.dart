@@ -163,7 +163,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
             const Padding(
               padding: EdgeInsets.only(bottom: 8),
               child: Center(
-                child: Text("Текстовые действия",
+                child: Text("Текстовые сметы",
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -709,7 +709,7 @@ class EstimatePdfActionsDialog extends ConsumerWidget
             const Padding(
               padding: EdgeInsets.only(bottom: 8),
               child: Center(
-                child: Text("PDF Действия",
+                child: Text("PDF сметы",
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,

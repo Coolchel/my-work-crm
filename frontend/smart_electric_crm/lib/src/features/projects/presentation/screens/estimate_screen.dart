@@ -114,16 +114,16 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
                 icon: Icons.auto_graph_rounded,
                 color: Colors.deepPurple,
                 onTap: () => _showPdfActionsDialog(context),
-                tooltip: "Аналитика и PDF",
+                tooltip: "PDF смета",
               ),
               const SizedBox(width: 8),
-              // Text Actions Button (Teal - Structure/Segments)
+              // Text Actions Button (Orange - Structure/Segments)
               _buildActionButton(
                 context,
                 icon: Icons.segment_rounded,
-                color: Colors.teal,
+                color: Colors.orange,
                 onTap: () => _showTextActionsDialog(context),
-                tooltip: "Текстовая смета",
+                tooltip: "Текстовые сметы",
               ),
               const SizedBox(width: 8),
             ],
