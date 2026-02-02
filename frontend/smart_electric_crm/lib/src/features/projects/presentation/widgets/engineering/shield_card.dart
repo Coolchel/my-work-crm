@@ -505,11 +505,11 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   Color _getColorForType(String type) {
     switch (type) {
       case 'power':
-        return Colors.amber; // Yellowish
+        return Colors.orange.shade800;
       case 'led':
-        return Colors.red; // Reddish
+        return Colors.purple.shade600;
       case 'multimedia':
-        return Colors.green; // Greenish
+        return Colors.teal.shade600;
       default:
         return Colors.grey.shade700;
     }
@@ -577,7 +577,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             : "Сохранить LED щит как шаблон",
         labelText: "Название шаблона",
         descriptionLabelText: "Описание (опционально)",
-        themeColor: shield.shieldType == 'power' ? Colors.amber : Colors.red,
+        themeColor: _getColorForType(shield.shieldType),
       ),
     );
 
@@ -636,7 +636,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             getDescription: (t) => (t as dynamic).description ?? '',
             onSelected: (t) =>
                 _applyTemplate(context, ref, shield, (t as dynamic).id),
-            themeColor: isPower ? Colors.amber : Colors.red,
+            themeColor: _getColorForType(shield.shieldType),
             onCreate: () => _showSaveTemplateDialog(context, ref, shield),
           ),
         );
