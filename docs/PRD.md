@@ -36,6 +36,7 @@
 ## Rules for AI:
 - Follow PEP8.
 - Use Django built-in Permission classes.
-- Design: Material 3, focus on expert-level UX (speed of input, normalization of data).
 - **Aesthetics:** Premium/Rich look (Gradients, Glassmorphism, specific Color Palettes) is a critical requirement.
+    - **Detailed UI/UX Standards:** See [DESIGN.md](./DESIGN.md) for specifics on dialogs, buttons, icons, and interactive elements.
+- **Safety & Confirmations:** All destructive or bulk actions (deleting all items, applying templates, importing large data sets, re-calculating estimates) MUST trigger a `ConfirmationDialog` to prevent accidental data loss.
 - Data Integrity: Always use input normalization (e.g., RegEx for technical units) on the backend.
