@@ -15,18 +15,104 @@ import '../../../services/pdf_service.dart';
 // --- SHARED HELPERS & MIXINS ---
 
 mixin EstimateDialogHelpers {
+  Widget buildPremiumContainer({
+    required BuildContext context,
+    required Color themeColor,
+    required Widget child,
+    double maxWidth = 400,
+  }) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: themeColor.withOpacity(0.15),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            )
+          ],
+        ),
+        child: child,
+      ),
+    );
+  }
+
+  Widget buildPremiumHeader({
+    required BuildContext context,
+    required String title,
+    required IconData icon,
+    required Color themeColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: themeColor.withOpacity(0.12),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Icon(icon, color: themeColor, size: 22),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: themeColor.withOpacity(0.8),
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Tooltip(
+              message: "Закрыть",
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: Icon(Icons.close, color: themeColor),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                iconSize: 20,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget buildHeader(IconData icon, String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: Colors.grey.shade700),
+          Icon(icon, size: 16, color: Colors.grey.shade600),
           const SizedBox(width: 8),
-          Text(title,
-              style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade700)),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade600,
+              letterSpacing: 0.5,
+            ),
+          ),
         ],
       ),
     );
@@ -35,29 +121,46 @@ mixin EstimateDialogHelpers {
   Widget buildBtn(String label, Color bg, Color fg, VoidCallback onTap,
       {bool isGradient = false, bool enabled = true}) {
     return Opacity(
-      opacity: enabled ? 1.0 : 0.3,
+      opacity: enabled ? 1.0 : 0.4,
       child: Container(
-        height: 38,
+        height: 40,
         decoration: BoxDecoration(
-          color: isGradient ? null : bg,
+          color: isGradient ? null : (bg == Colors.transparent ? bg : bg),
           gradient: isGradient
               ? LinearGradient(
                   colors: [Colors.green.shade200, Colors.blue.shade200])
               : null,
           borderRadius: BorderRadius.circular(12),
+          boxShadow: bg == Colors.transparent
+              ? null
+              : [
+                  BoxShadow(
+                    color: bg.withOpacity(0.15),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  )
+                ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: enabled ? onTap : null,
+            mouseCursor:
+                enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+            hoverColor: bg == Colors.transparent
+                ? Colors.grey.withOpacity(0.1)
+                : fg.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
             child: Center(
-              child: Text(label,
-                  style: TextStyle(
-                      color: fg, fontSize: 12, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: fg,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
         ),
@@ -65,16 +168,45 @@ mixin EstimateDialogHelpers {
     );
   }
 
+  Widget buildPopupItem({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 12),
+        Text(
+          text,
+          style: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+            fontSize: 13,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget buildPopupBtn(BuildContext context, String label, Color bg, Color fg,
       List<PopupMenuEntry<String>> items, ValueChanged<String> onSelected,
       {bool enabled = true}) {
     return Opacity(
-      opacity: enabled ? 1.0 : 0.3,
+      opacity: enabled ? 1.0 : 0.4,
       child: Container(
-        height: 38,
+        height: 40,
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: bg.withOpacity(0.15),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            )
+          ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
@@ -82,32 +214,46 @@ mixin EstimateDialogHelpers {
             color: Colors.transparent,
             child: Theme(
               data: Theme.of(context).copyWith(
+                dividerTheme: const DividerThemeData(thickness: 1, space: 1),
                 popupMenuTheme: PopupMenuThemeData(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                   elevation: 4,
+                  color: Colors.white,
+                  // Setting a more compact default height for menu items if possible
+                  // (Flutter doesn't have a direct 'height' in theme, but we can use constraints)
                 ),
               ),
               child: PopupMenuButton<String>(
                 tooltip: label,
                 enabled: enabled,
-                offset: const Offset(0, 38),
+                offset: const Offset(0, 44),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 onSelected: onSelected,
                 itemBuilder: (context) => items,
-                child: Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(label,
+                child: InkWell(
+                  onTap: null, // PopupMenuButton handles tap
+                  mouseCursor: enabled
+                      ? SystemMouseCursors.click
+                      : SystemMouseCursors.basic,
+                  hoverColor: fg.withOpacity(0.1),
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          label,
                           style: TextStyle(
-                              color: fg,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold)),
-                      const SizedBox(width: 4),
-                      Icon(Icons.arrow_drop_down, color: fg, size: 16),
-                    ],
+                            color: fg,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(Icons.arrow_drop_down, color: fg, size: 20),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -145,72 +291,48 @@ class EstimateTextActionsDialog extends ConsumerWidget
     final hasWorks = works.isNotEmpty;
     final hasMaterials = materials.isNotEmpty;
     final hasPartnerWorks = works.any((w) => w.employerQuantity > 0);
+    const themeColor = Colors.orange;
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        width: 360,
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Title
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: Center(
-                child: Text("Текстовые сметы",
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black)),
-              ),
-            ),
+    return buildPremiumContainer(
+      context: context,
+      themeColor: themeColor,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          buildPremiumHeader(
+            context: context,
+            title: "Текстовые сметы",
+            icon: Icons.segment_rounded,
+            themeColor: themeColor,
+          ),
 
-            // 1. View
-            buildHeader(Icons.remove_red_eye, "Просмотр"),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: buildBtn(
-                  "Все сметы (TXT)", Colors.transparent, Colors.white, () {
-                Navigator.pop(context);
-                _showReport(context, ref);
-              }, isGradient: true, enabled: hasWorks || hasMaterials),
-            ),
+          const SizedBox(height: 8),
 
-            // 2. Copy Text (Original Buttons)
-            buildHeader(Icons.copy, "Копировать текст"),
-            _buildCopySection(context, ref, hasWorks, hasPartnerWorks,
-                hasMaterials, false), // share = false
+          // 1. View
+          buildHeader(Icons.remove_red_eye_rounded, "Просмотр"),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: buildBtn("Все сметы (TXT)", Colors.transparent, Colors.white,
+                () {
+              Navigator.pop(context);
+              _showReport(context, ref);
+            }, isGradient: true, enabled: hasWorks || hasMaterials),
+          ),
 
-            // 3. Share Text (Smart Dropdowns)
-            buildHeader(Icons.share, "Поделиться текстом"),
-            _buildShareSection(context, ref, hasWorks, hasPartnerWorks,
-                hasMaterials, true), // share = true
+          // 2. Copy Text (Original Buttons)
+          buildHeader(Icons.copy_rounded, "Копировать текст"),
+          _buildCopySection(context, ref, hasWorks, hasPartnerWorks,
+              hasMaterials, false), // share = false
 
-            const SizedBox(height: 16),
+          // 3. Share Text (Smart Dropdowns)
+          buildHeader(Icons.share_rounded, "Поделиться текстом"),
+          _buildShareSection(context, ref, hasWorks, hasPartnerWorks,
+              hasMaterials, true), // share = true
 
-            // Close Button
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text("Закрыть",
-                        style: TextStyle(
-                            color: Colors.grey.shade600, fontSize: 12)),
-                  ),
-                ],
-              ),
-            )
-          ],
-        ),
+          const SizedBox(height: 32),
+        ],
       ),
     );
   }
@@ -223,7 +345,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
         children: [
           Expanded(
             child: buildBtn(
-                "Заказчик", Colors.green.shade50, Colors.green.shade800,
+                "Заказчик", Colors.green.shade100, Colors.green.shade800,
                 () async {
               Navigator.pop(context);
               await _processAction(context, ref,
@@ -234,7 +356,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
             const SizedBox(width: 8),
             Expanded(
               child: buildBtn(
-                  "Контрагент", Colors.green.shade50, Colors.green.shade800,
+                  "Контрагент", Colors.green.shade100, Colors.green.shade800,
                   () async {
                 Navigator.pop(context);
                 await _processAction(context, ref,
@@ -244,9 +366,9 @@ class EstimateTextActionsDialog extends ConsumerWidget
           ],
           const SizedBox(width: 8),
           Expanded(
-            child:
-                buildBtn("Материалы", Colors.blue.shade50, Colors.blue.shade800,
-                    () async {
+            child: buildBtn(
+                "Материалы", Colors.blue.shade100, Colors.blue.shade800,
+                () async {
               Navigator.pop(context);
               await _processAction(context, ref,
                   isWork: false, type: 'total', share: share);
@@ -267,15 +389,38 @@ class EstimateTextActionsDialog extends ConsumerWidget
             child: buildPopupBtn(
               context,
               "Работы",
-              Colors.green.shade50,
+              Colors.green.shade100,
               Colors.green.shade800,
               [
-                const PopupMenuItem(
-                    value: 'total', child: Text("Для Заказчика")),
+                PopupMenuItem(
+                  value: 'total',
+                  height: 40,
+                  child: buildPopupItem(
+                    icon: Icons.person_rounded,
+                    text: "Для Заказчика",
+                    color: Colors.green.shade700,
+                  ),
+                ),
                 if (hasPartnerWorks) ...[
-                  const PopupMenuItem(
-                      value: 'employer', child: Text("Для Контрагента")),
-                  const PopupMenuItem(value: 'our', child: Text("Наши")),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'employer',
+                    height: 40,
+                    child: buildPopupItem(
+                      icon: Icons.handshake_rounded,
+                      text: "Для Контрагента",
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'our',
+                    height: 40,
+                    child: buildPopupItem(
+                      icon: Icons.engineering_rounded,
+                      text: "Наши",
+                      color: Colors.green.shade700,
+                    ),
+                  ),
                 ]
               ],
               (val) async {
@@ -291,17 +436,40 @@ class EstimateTextActionsDialog extends ConsumerWidget
             child: buildPopupBtn(
               context,
               "Материалы",
-              Colors.blue.shade50,
+              Colors.blue.shade100,
               Colors.blue.shade800,
               [
-                const PopupMenuItem(value: 'noprice', child: Text("Без цен")),
+                PopupMenuItem(
+                  value: 'noprice',
+                  height: 40,
+                  child: buildPopupItem(
+                    icon: Icons.list_alt_rounded,
+                    text: "Без цен",
+                    color: Colors.blue.shade700,
+                  ),
+                ),
                 if (showPrices) ...[
-                  const PopupMenuItem(value: 'price', child: Text("С ценами")),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'price',
+                    height: 40,
+                    child: buildPopupItem(
+                      icon: Icons.attach_money_rounded,
+                      text: "С ценами",
+                      color: Colors.blue.shade700,
+                    ),
+                  ),
                   if (markupPercent > 0)
                     PopupMenuItem(
-                        value: 'markup',
-                        child: Text(
-                            "С наценкой (+${markupPercent.toStringAsFixed(0)}%)")),
+                      value: 'markup',
+                      height: 40,
+                      child: buildPopupItem(
+                        icon: Icons.trending_up_rounded,
+                        text:
+                            "С наценкой (+${markupPercent.toStringAsFixed(0)}%)",
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
                 ]
               ],
               (val) async {
@@ -601,7 +769,7 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.grey.shade200),
                 ),
@@ -650,7 +818,7 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog> {
         if (val) setState(() => _viewMode = mode);
       },
       selectedColor: color.shade200,
-      backgroundColor: color.shade50, // Always colored background, lighter
+      backgroundColor: color.shade100, // Always colored background, lighter
       labelStyle: TextStyle(
         color:
             isSelected ? color.shade900 : color.shade700, // Always colored text
@@ -691,61 +859,37 @@ class EstimatePdfActionsDialog extends ConsumerWidget
     final hasWorks = works.isNotEmpty;
     final hasMaterials = materials.isNotEmpty;
     final hasPartnerWorks = works.any((w) => w.employerQuantity > 0);
+    const themeColor = Colors.deepPurple;
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        width: 360,
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Title
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8),
-              child: Center(
-                child: Text("PDF сметы",
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black)),
-              ),
-            ),
+    return buildPremiumContainer(
+      context: context,
+      themeColor: themeColor,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          buildPremiumHeader(
+            context: context,
+            title: "PDF сметы",
+            icon: Icons.auto_graph_rounded,
+            themeColor: themeColor,
+          ),
 
-            // 1. Export PDF
-            buildHeader(Icons.picture_as_pdf, "Экспорт в PDF"),
-            _buildPdfSection(context, ref, hasWorks, hasPartnerWorks,
-                hasMaterials, false), // share = false
+          const SizedBox(height: 8),
 
-            // 2. Share PDF
-            buildHeader(Icons.share, "Поделиться PDF"),
-            _buildPdfSection(context, ref, hasWorks, hasPartnerWorks,
-                hasMaterials, true), // share = true
+          // 1. Export PDF
+          buildHeader(Icons.picture_as_pdf_rounded, "Экспорт в PDF"),
+          _buildPdfSection(context, ref, hasWorks, hasPartnerWorks,
+              hasMaterials, false), // share = false
 
-            const SizedBox(height: 16),
+          // 2. Share PDF
+          buildHeader(Icons.share_rounded, "Поделиться PDF"),
+          _buildPdfSection(context, ref, hasWorks, hasPartnerWorks,
+              hasMaterials, true), // share = true
 
-            // Close Button
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text("Закрыть",
-                        style: TextStyle(
-                            color: Colors.grey.shade600, fontSize: 12)),
-                  ),
-                ],
-              ),
-            )
-          ],
-        ),
+          const SizedBox(height: 32),
+        ],
       ),
     );
   }
@@ -760,15 +904,38 @@ class EstimatePdfActionsDialog extends ConsumerWidget
             child: buildPopupBtn(
               context,
               "Работы",
-              Colors.green.shade50,
+              Colors.green.shade100,
               Colors.green.shade800,
               [
-                const PopupMenuItem(
-                    value: 'total', child: Text("Для Заказчика")),
+                PopupMenuItem(
+                  value: 'total',
+                  height: 40,
+                  child: buildPopupItem(
+                    icon: Icons.person_rounded,
+                    text: "Для Заказчика",
+                    color: Colors.green.shade700,
+                  ),
+                ),
                 if (hasPartnerWorks) ...[
-                  const PopupMenuItem(
-                      value: 'employer', child: Text("Для Контрагента")),
-                  const PopupMenuItem(value: 'our', child: Text("Наши")),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'employer',
+                    height: 40,
+                    child: buildPopupItem(
+                      icon: Icons.handshake_rounded,
+                      text: "Для Контрагента",
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'our',
+                    height: 40,
+                    child: buildPopupItem(
+                      icon: Icons.engineering_rounded,
+                      text: "Наши",
+                      color: Colors.green.shade700,
+                    ),
+                  ),
                 ]
               ],
               (val) {
@@ -792,17 +959,40 @@ class EstimatePdfActionsDialog extends ConsumerWidget
             child: buildPopupBtn(
               context,
               "Материалы",
-              Colors.blue.shade50,
+              Colors.blue.shade100,
               Colors.blue.shade800,
               [
-                const PopupMenuItem(value: 'noprice', child: Text("Без цен")),
+                PopupMenuItem(
+                  value: 'noprice',
+                  height: 40,
+                  child: buildPopupItem(
+                    icon: Icons.list_alt_rounded,
+                    text: "Без цен",
+                    color: Colors.blue.shade700,
+                  ),
+                ),
                 if (showPrices) ...[
-                  const PopupMenuItem(value: 'price', child: Text("С ценами")),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'price',
+                    height: 40,
+                    child: buildPopupItem(
+                      icon: Icons.attach_money_rounded,
+                      text: "С ценами",
+                      color: Colors.blue.shade700,
+                    ),
+                  ),
                   if (markupPercent > 0)
                     PopupMenuItem(
-                        value: 'markup',
-                        child: Text(
-                            "С наценкой (+${markupPercent.toStringAsFixed(0)}%)")),
+                      value: 'markup',
+                      height: 40,
+                      child: buildPopupItem(
+                        icon: Icons.trending_up_rounded,
+                        text:
+                            "С наценкой (+${markupPercent.toStringAsFixed(0)}%)",
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
                 ]
               ],
               (val) {
