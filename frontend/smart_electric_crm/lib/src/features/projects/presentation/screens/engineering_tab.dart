@@ -19,11 +19,19 @@ class EngineeringTab extends ConsumerWidget {
       });
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () =>
-            _showAddShieldDialog(context, ref, project.id.toString()),
-        icon: const Icon(Icons.add),
-        label: const Text('Добавить щит'),
+      floatingActionButton: Tooltip(
+        message: 'Добавить щит',
+        verticalOffset: 40,
+        child: FloatingActionButton(
+          heroTag: 'add_shield_fab',
+          onPressed: () =>
+              _showAddShieldDialog(context, ref, project.id.toString()),
+          backgroundColor: Colors.brown.shade200,
+          foregroundColor: Colors.black87,
+          elevation: 2,
+          tooltip: null, // Disable built-in tooltip
+          child: const Icon(Icons.add),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
