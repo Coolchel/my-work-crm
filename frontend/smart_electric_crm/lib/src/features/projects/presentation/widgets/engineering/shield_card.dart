@@ -441,16 +441,22 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             ),
             OutlinedButton.icon(
               onPressed: () {},
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('ДОБАВИТЬ',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              icon: Icon(Icons.add_rounded,
+                  size: 16, color: Colors.grey.shade600),
+              label: Text('Добавить',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                    color: Colors.grey.shade700,
+                  )),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.teal.shade600,
-                side: BorderSide(color: Colors.teal.shade600),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                minimumSize: const Size(0, 32),
-                visualDensity: VisualDensity.compact,
-                shape: const StadiumBorder(),
+                side: BorderSide(color: Colors.grey.shade300),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                minimumSize: const Size(0, 34),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
           ],
