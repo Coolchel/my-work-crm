@@ -116,63 +116,120 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: _type,
-                      items: const [
-                        DropdownMenuItem(
-                            value: 'power', child: Text('Силовой')),
-                        DropdownMenuItem(value: 'led', child: Text('LED')),
-                        DropdownMenuItem(
-                            value: 'multimedia', child: Text('Слаботочка')),
+                    // Type Dropdown
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            "Тип",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.brown.shade700,
+                            ),
+                          ),
+                        ),
+                        _buildPopupBtn(
+                          _getTypeLabel(_type),
+                          [
+                            PopupMenuItem(
+                              value: 'power',
+                              height: 40,
+                              child: Row(
+                                children: [
+                                  Icon(Icons.bolt,
+                                      color: Colors.orange.shade700, size: 20),
+                                  const SizedBox(width: 12),
+                                  const Text('Силовой',
+                                      style: TextStyle(fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'led',
+                              height: 40,
+                              child: Row(
+                                children: [
+                                  Icon(Icons.lightbulb,
+                                      color: Colors.purple.shade700, size: 20),
+                                  const SizedBox(width: 12),
+                                  const Text('LED',
+                                      style: TextStyle(fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'multimedia',
+                              height: 40,
+                              child: Row(
+                                children: [
+                                  Icon(Icons.router,
+                                      color: Colors.teal.shade700, size: 20),
+                                  const SizedBox(width: 12),
+                                  const Text('Слаботочка',
+                                      style: TextStyle(fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                          ],
+                          (value) => setState(() => _type = value),
+                        ),
                       ],
-                      onChanged: (v) => setState(() => _type = v!),
-                      decoration: InputDecoration(
-                        labelText: "Тип",
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: themeColor.withOpacity(0.2)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: themeColor.withOpacity(0.2)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: themeColor, width: 2),
-                        ),
-                      ),
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: _mounting,
-                      items: const [
-                        DropdownMenuItem(
-                            value: 'internal', child: Text('Внутренний')),
-                        DropdownMenuItem(
-                            value: 'external', child: Text('Наружный')),
+                    // Mounting Dropdown
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            "Монтаж",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.brown.shade700,
+                            ),
+                          ),
+                        ),
+                        _buildPopupBtn(
+                          _getMountingLabel(_mounting),
+                          [
+                            PopupMenuItem(
+                              value: 'internal',
+                              height: 40,
+                              child: Row(
+                                children: [
+                                  Icon(Icons.door_front_door,
+                                      color: Colors.brown.shade700, size: 20),
+                                  const SizedBox(width: 12),
+                                  const Text('Внутренний',
+                                      style: TextStyle(fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              value: 'external',
+                              height: 40,
+                              child: Row(
+                                children: [
+                                  Icon(Icons.apartment,
+                                      color: Colors.brown.shade700, size: 20),
+                                  const SizedBox(width: 12),
+                                  const Text('Наружный',
+                                      style: TextStyle(fontSize: 13)),
+                                ],
+                              ),
+                            ),
+                          ],
+                          (value) => setState(() => _mounting = value),
+                        ),
                       ],
-                      onChanged: (v) => setState(() => _mounting = v!),
-                      decoration: InputDecoration(
-                        labelText: "Монтаж",
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: themeColor.withOpacity(0.2)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: themeColor.withOpacity(0.2)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: themeColor, width: 2),
-                        ),
-                      ),
                     ),
                   ],
                 ),
@@ -226,6 +283,95 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getTypeLabel(String type) {
+    switch (type) {
+      case 'power':
+        return 'Силовой';
+      case 'led':
+        return 'LED';
+      case 'multimedia':
+        return 'Слаботочка';
+      default:
+        return '';
+    }
+  }
+
+  String _getMountingLabel(String mounting) {
+    switch (mounting) {
+      case 'internal':
+        return 'Внутренний';
+      case 'external':
+        return 'Наружный';
+      default:
+        return '';
+    }
+  }
+
+  Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,
+      ValueChanged<String> onSelected) {
+    const bg = Colors.brown;
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: bg.shade100,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: bg.shade100.withOpacity(0.15),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Material(
+          color: Colors.transparent,
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              dividerTheme: const DividerThemeData(thickness: 1, space: 1),
+              popupMenuTheme: PopupMenuThemeData(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                elevation: 4,
+                color: Colors.white,
+              ),
+            ),
+            child: PopupMenuButton<String>(
+              tooltip: label,
+              offset: const Offset(0, 48),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              onSelected: onSelected,
+              itemBuilder: (context) => items,
+              child: InkWell(
+                onTap: null, // PopupMenuButton handles tap
+                hoverColor: bg.shade700.withOpacity(0.1),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          color: bg.shade800,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Icon(Icons.arrow_drop_down, color: bg.shade800, size: 24),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
