@@ -147,18 +147,6 @@ class Command(BaseCommand):
                 }
             )
 
-        # 3.7.X Enclosure 18 Internal (Legacy/Specific request)
-        CatalogItem.objects.update_or_create(
-            mapping_key="shield_enclosure_18_internal",
-            defaults={
-                'name': "Щит встраиваемый 18 модулей",
-                'category': cat_mat,
-                'item_type': 'material',
-                'unit': 'шт',
-                'default_price': 40.00,
-                'related_work_item': work_shield
-            }
-        )
 
         self.stdout.write("Catalog Items updated/created.")
 
@@ -200,14 +188,10 @@ class Command(BaseCommand):
         # 5.5. Load Switch 3P 63A (x1)
         ShieldGroup.objects.create(shield=shield, device_type='load_switch', rating='63A', poles='3P', zone='Main Switch', modules_count=3)
 
-        # Total modules: 1+1+2+2+2+3 = 11 modules. 
-        # Should pick matching enclosure -> 12 modules? 
-        # But we only seeded 18 and 24.
-        # Let's add 12 to catalog just in case, or force higher modules count.
-        # Let's add more params to force 18 modules (need 13+ modules).
-        # Add another 3P switch
+        # Total modules: 1+1+2+2+2+3 = 11 modules.
+        # Add another 3P switch to reach 14 modules -> Should pick 24.
         ShieldGroup.objects.create(shield=shield, device_type='load_switch', rating='32A', poles='3P', zone='Backup', modules_count=3)
-        # Total: 14 modules -> Should pick 18.
+        # Total: 14 modules -> Should pick 24.
         
         # 5.6. MISSING ITEM TEST
         # Add a device that definitely doesn't exist in catalog to instructions
@@ -222,7 +206,7 @@ class Command(BaseCommand):
 
         self.stdout.write(f"Project ID: {project.id}, Stage ID: {stage.id}")
         self.stdout.write("Shield populated with 14 modules + 1 Mystery item (15 total).")
-        self.stdout.write("Expect: Enclosure 18 (fits 15) and ONE 'Warning' line in estimate.")
+        self.stdout.write("Expect: Enclosure 24 and ONE 'Warning' line in estimate.")
         
         # 9. Create Mega Shield (> 144 modules)
         mega_shield = Shield.objects.create(

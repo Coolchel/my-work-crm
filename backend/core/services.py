@@ -97,7 +97,7 @@ class EstimateAutomationService:
                 
         # --- 2. Logic for Enclosures (Shields) ---
         
-        standard_sizes = [2, 4, 6, 8, 12, 18, 24, 36, 48, 60, 72, 96, 120, 144]
+        standard_sizes = [2, 4, 6, 8, 12, 24, 36, 48, 60, 72, 96, 120, 144]
 
         # Structure: (size, mounting) -> count
         power_enclosure_requirements = {} 
