@@ -20,7 +20,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
   late TextEditingController _zoneController;
   String _selectedDeviceType = 'diff_breaker';
   String _selectedRating = '16A';
-  String _selectedPoles = '1P';
+  String _selectedPoles = '2P';
   bool _isSaving = false;
 
   final Map<String, String> _deviceTypes = {
@@ -40,7 +40,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
     try {
       _zoneController = TextEditingController(text: widget.group?.zone ?? '');
       _selectedRating = widget.group?.rating ?? '16A';
-      _selectedPoles = widget.group?.poles ?? '1P';
+      _selectedPoles = widget.group?.poles ?? '2P';
 
       if (widget.group != null) {
         debugPrint('Editing group: ${widget.group!.id}');
@@ -159,9 +159,20 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 16),
                                         alignment: Alignment.centerLeft,
-                                        child: Text(e.value,
-                                            style:
-                                                const TextStyle(fontSize: 13)),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              _getDeviceIcon(e.key),
+                                              size: 18,
+                                              color: _getDeviceTypeColor(e.key)
+                                                  .withOpacity(0.7),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Text(e.value,
+                                                style: const TextStyle(
+                                                    fontSize: 13)),
+                                          ],
+                                        ),
                                       ),
                                     ))
                                 .toList(),
@@ -464,5 +475,45 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
         );
       },
     );
+  }
+
+  // Определяет иконку для типа устройства
+  IconData _getDeviceIcon(String type) {
+    switch (type) {
+      case 'circuit_breaker':
+        return Icons.bolt;
+      case 'diff_breaker':
+        return Icons.shield_outlined;
+      case 'rcd':
+        return Icons.gpp_maybe_outlined;
+      case 'relay':
+        return Icons.av_timer;
+      case 'contactor':
+        return Icons.settings_input_component;
+      case 'load_switch':
+        return Icons.power_settings_new;
+      default:
+        return Icons.electrical_services;
+    }
+  }
+
+  // Определяет цвет для типа устройства
+  Color _getDeviceTypeColor(String type) {
+    switch (type) {
+      case 'load_switch':
+        return Colors.red.shade600;
+      case 'rcd':
+        return Colors.amber.shade700;
+      case 'circuit_breaker':
+        return Colors.blue.shade600;
+      case 'diff_breaker':
+        return Colors.purple.shade600;
+      case 'relay':
+        return Colors.teal.shade600;
+      case 'contactor':
+        return Colors.orange.shade700;
+      default:
+        return Colors.blueGrey.shade600;
+    }
   }
 }

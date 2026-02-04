@@ -24,35 +24,20 @@ class ShieldContentPower extends ConsumerWidget {
     // ... (same as before until Row with buttons)
     final groups = shield.groups;
 
-    // Group items by device type
+    // Group items by device type, preserving insertion order
     final Map<String, List<ShieldGroupModel>> groupedGroups = {};
+    final List<String> keyOrder = []; // Порядок первого появления типа
+
     for (var group in groups) {
       if (!groupedGroups.containsKey(group.deviceType)) {
         groupedGroups[group.deviceType] = [];
+        keyOrder.add(group.deviceType); // Запоминаем порядок
       }
       groupedGroups[group.deviceType]!.add(group);
     }
 
-    // Define custom order for groups
-    final List<String> typeOrder = [
-      'load_switch',
-      'relay',
-      'circuit_breaker',
-      'diff_breaker',
-      'rcd',
-      'contactor',
-      'other'
-    ];
-
-    // Sort keys based on defined order
-    final sortedKeys = groupedGroups.keys.toList()
-      ..sort((a, b) {
-        int indexA = typeOrder.indexOf(a);
-        int indexB = typeOrder.indexOf(b);
-        if (indexA == -1) indexA = 999;
-        if (indexB == -1) indexB = 999;
-        return indexA.compareTo(indexB);
-      });
+    // Используем порядок добавления
+    final sortedKeys = keyOrder;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,8 +109,8 @@ class ShieldContentPower extends ConsumerWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              _getRatingColor(groupItems).withOpacity(0.7),
-                              _getRatingColor(groupItems).withOpacity(0.3),
+                              _getDeviceTypeColor(type).withOpacity(0.7),
+                              _getDeviceTypeColor(type).withOpacity(0.3),
                             ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
@@ -193,13 +178,17 @@ class ShieldContentPower extends ConsumerWidget {
                                     width: 28,
                                     height: 28,
                                     decoration: BoxDecoration(
-                                      color: themeColor.withOpacity(0.08),
+                                      color:
+                                          _getDeviceTypeColor(group.deviceType)
+                                              .withOpacity(0.08),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
                                       _getDeviceIcon(group.deviceType),
                                       size: 14,
-                                      color: themeColor.withOpacity(0.6),
+                                      color:
+                                          _getDeviceTypeColor(group.deviceType)
+                                              .withOpacity(0.7),
                                     ),
                                   ),
                                   const SizedBox(width: 10),
@@ -334,28 +323,23 @@ class ShieldContentPower extends ConsumerWidget {
     }
   }
 
-  // Определяет цвет на основе максимального номинала в группе устройств
-  Color _getRatingColor(List<ShieldGroupModel> groupItems) {
-    int maxRating = 0;
-    for (var item in groupItems) {
-      final ratingValue = _parseRating(item.rating);
-      if (ratingValue > maxRating) maxRating = ratingValue;
+  // Определяет цвет иконки на основе типа устройства (семантическое кодирование)
+  Color _getDeviceTypeColor(String type) {
+    switch (type) {
+      case 'load_switch':
+        return Colors.red.shade600; // Рубильники - критичное устройство
+      case 'rcd':
+        return Colors.amber.shade700; // УЗО - предупреждение, защита от утечки
+      case 'circuit_breaker':
+        return Colors.blue.shade600; // Автоматы - основная защита, стабильность
+      case 'diff_breaker':
+        return Colors.purple.shade600; // Диф. автоматы - премиум защита
+      case 'relay':
+        return Colors.teal.shade600; // Реле - автоматизация, технологии
+      case 'contactor':
+        return Colors.orange.shade700; // Контакторы - силовая коммутация
+      default:
+        return Colors.blueGrey.shade600; // Другое - нейтральность
     }
-
-    // Цветовое кодирование по мощности
-    if (maxRating <= 16) {
-      return Colors.green.shade600; // Низкая нагрузка
-    } else if (maxRating <= 40) {
-      return Colors.orange.shade700; // Средняя нагрузка
-    } else {
-      return Colors.red.shade600; // Высокая нагрузка
-    }
-  }
-
-  // Извлекает числовое значение номинала из строки (например, "16A", "25А", "40 A")
-  int _parseRating(String rating) {
-    final regex = RegExp(r'(\d+)');
-    final match = regex.firstMatch(rating);
-    return match != null ? int.parse(match.group(1)!) : 0;
   }
 }
