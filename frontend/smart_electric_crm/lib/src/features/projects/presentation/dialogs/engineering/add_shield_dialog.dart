@@ -137,42 +137,59 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                             PopupMenuItem(
                               value: 'power',
                               height: 40,
-                              child: Row(
-                                children: [
-                                  Icon(Icons.bolt,
-                                      color: Colors.orange.shade700, size: 20),
-                                  const SizedBox(width: 12),
-                                  const Text('Силовой',
-                                      style: TextStyle(fontSize: 13)),
-                                ],
+                              padding: EdgeInsets.zero,
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.bolt,
+                                        color: Colors.orange.shade700,
+                                        size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('Силовой',
+                                        style: TextStyle(fontSize: 13)),
+                                  ],
+                                ),
                               ),
                             ),
                             const PopupMenuDivider(),
                             PopupMenuItem(
                               value: 'led',
                               height: 40,
-                              child: Row(
-                                children: [
-                                  Icon(Icons.lightbulb,
-                                      color: Colors.purple.shade700, size: 20),
-                                  const SizedBox(width: 12),
-                                  const Text('LED',
-                                      style: TextStyle(fontSize: 13)),
-                                ],
+                              padding: EdgeInsets.zero,
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.lightbulb,
+                                        color: Colors.purple.shade700,
+                                        size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('LED',
+                                        style: TextStyle(fontSize: 13)),
+                                  ],
+                                ),
                               ),
                             ),
                             const PopupMenuDivider(),
                             PopupMenuItem(
                               value: 'multimedia',
                               height: 40,
-                              child: Row(
-                                children: [
-                                  Icon(Icons.router,
-                                      color: Colors.teal.shade700, size: 20),
-                                  const SizedBox(width: 12),
-                                  const Text('Слаботочка',
-                                      style: TextStyle(fontSize: 13)),
-                                ],
+                              padding: EdgeInsets.zero,
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.router,
+                                        color: Colors.teal.shade700, size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('Слаботочка',
+                                        style: TextStyle(fontSize: 13)),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -202,28 +219,38 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                             PopupMenuItem(
                               value: 'internal',
                               height: 40,
-                              child: Row(
-                                children: [
-                                  Icon(Icons.door_front_door,
-                                      color: Colors.brown.shade700, size: 20),
-                                  const SizedBox(width: 12),
-                                  const Text('Внутренний',
-                                      style: TextStyle(fontSize: 13)),
-                                ],
+                              padding: EdgeInsets.zero,
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.door_front_door,
+                                        color: Colors.brown.shade700, size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('Внутренний',
+                                        style: TextStyle(fontSize: 13)),
+                                  ],
+                                ),
                               ),
                             ),
                             const PopupMenuDivider(),
                             PopupMenuItem(
                               value: 'external',
                               height: 40,
-                              child: Row(
-                                children: [
-                                  Icon(Icons.apartment,
-                                      color: Colors.brown.shade700, size: 20),
-                                  const SizedBox(width: 12),
-                                  const Text('Наружный',
-                                      style: TextStyle(fontSize: 13)),
-                                ],
+                              padding: EdgeInsets.zero,
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.apartment,
+                                        color: Colors.brown.shade700, size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('Наружный',
+                                        style: TextStyle(fontSize: 13)),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -331,53 +358,59 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: bg.withOpacity(0.15)),
           ),
-          child: ClipRRect(
+          child: Material(
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(12),
-            child: Material(
-              color: Colors.transparent,
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  dividerTheme: const DividerThemeData(thickness: 1, space: 1),
-                  popupMenuTheme: PopupMenuThemeData(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    elevation: 4,
-                    color: fieldColor,
+            child: InkWell(
+              onTap: () {
+                final RenderBox box = context.findRenderObject() as RenderBox;
+                final Offset position = box.localToGlobal(Offset.zero);
+                final Size size = box.size;
+
+                // Configure Theme to remove dividers/decorations from showMenu
+                showMenu<String>(
+                  context: context,
+                  position: RelativeRect.fromLTRB(
+                    position.dx,
+                    position.dy + size.height + 4, // 4px offset
+                    position.dx + size.width,
+                    position.dy + size.height + 300,
                   ),
-                ),
-                child: PopupMenuButton<String>(
-                  tooltip: '', // Remove tooltip
-                  offset: const Offset(0, 48),
-                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                  items: items,
+                  elevation: 4,
+                  shadowColor: Colors.black.withOpacity(0.2),
+                  surfaceTintColor: Colors.transparent, // Disable M3 tint
+                  color: fieldColor,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
-                  onSelected: onSelected,
-                  itemBuilder: (context) => items,
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: InkWell(
-                      onTap: null, // PopupMenuButton handles tap
-                      hoverColor: bg.shade700.withOpacity(0.05),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              label,
-                              style: TextStyle(
-                                color: bg.shade800,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Icon(Icons.arrow_drop_down,
-                                color: bg.shade800, size: 24),
-                          ],
-                        ),
+                  constraints: BoxConstraints(
+                    minWidth: size.width,
+                    maxWidth: size.width,
+                  ),
+                ).then((value) {
+                  if (value != null) {
+                    onSelected(value);
+                  }
+                });
+              },
+              borderRadius: BorderRadius.circular(12),
+              mouseCursor: SystemMouseCursors.click,
+              hoverColor: bg.shade700.withOpacity(0.05),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: bg.shade800,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
+                    Icon(Icons.arrow_drop_down, color: bg.shade800, size: 24),
+                  ],
                 ),
               ),
             ),

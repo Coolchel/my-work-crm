@@ -268,7 +268,6 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
               color: Colors.transparent,
               child: Theme(
                 data: Theme.of(context).copyWith(
-                  dividerTheme: const DividerThemeData(thickness: 1, space: 1),
                   popupMenuTheme: PopupMenuThemeData(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
