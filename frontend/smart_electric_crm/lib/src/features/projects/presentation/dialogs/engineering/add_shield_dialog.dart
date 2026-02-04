@@ -98,7 +98,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                       decoration: InputDecoration(
                         labelText: "Название щита",
                         floatingLabelBehavior: FloatingLabelBehavior.always,
-                        hintText: "ЩЭ-1",
+                        hintText: "Щит квартирный",
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide:
@@ -251,12 +251,15 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                     Consumer(builder: (context, ref, _) {
                       return FilledButton(
                         onPressed: () async {
-                          if (_nameController.text.isEmpty) return;
+                          // Use default name if field is empty
+                          final shieldName = _nameController.text.isEmpty
+                              ? 'Щит квартирный'
+                              : _nameController.text;
                           try {
                             await ref
                                 .read(engineeringRepositoryProvider)
                                 .addShield(widget.projectId, {
-                              'name': _nameController.text,
+                              'name': shieldName,
                               'shield_type': _type,
                               'mounting': _mounting,
                             });
@@ -270,13 +273,14 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                         },
                         style: FilledButton.styleFrom(
                           backgroundColor: themeColor,
+                          minimumSize: const Size(120, 44),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(24),
                           ),
                         ),
-                        child: const Text('Создать'),
+                        child: const Text('Добавить'),
                       );
                     }),
                   ],
@@ -316,65 +320,70 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
   Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,
       ValueChanged<String> onSelected) {
     const bg = Colors.brown;
-    return Container(
-      height: 44,
-      decoration: BoxDecoration(
-        color: bg.shade100,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: bg.shade100.withOpacity(0.15),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          )
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Material(
-          color: Colors.transparent,
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              dividerTheme: const DividerThemeData(thickness: 1, space: 1),
-              popupMenuTheme: PopupMenuThemeData(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                elevation: 4,
-                color: Colors.white,
-              ),
-            ),
-            child: PopupMenuButton<String>(
-              tooltip: label,
-              offset: const Offset(0, 48),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              onSelected: onSelected,
-              itemBuilder: (context) => items,
-              child: InkWell(
-                onTap: null, // PopupMenuButton handles tap
-                hoverColor: bg.shade700.withOpacity(0.1),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        label,
-                        style: TextStyle(
-                          color: bg.shade800,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+    const fieldColor = Color(0xFFEFEBE9); // brown.shade50 with more opacity
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          height: 44,
+          decoration: BoxDecoration(
+            color: fieldColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: bg.withOpacity(0.15)),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Material(
+              color: Colors.transparent,
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  dividerTheme: const DividerThemeData(thickness: 1, space: 1),
+                  popupMenuTheme: PopupMenuThemeData(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 4,
+                    color: fieldColor,
+                  ),
+                ),
+                child: PopupMenuButton<String>(
+                  tooltip: '', // Remove tooltip
+                  offset: const Offset(0, 48),
+                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  onSelected: onSelected,
+                  itemBuilder: (context) => items,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: InkWell(
+                      onTap: null, // PopupMenuButton handles tap
+                      hoverColor: bg.shade700.withOpacity(0.05),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              label,
+                              style: TextStyle(
+                                color: bg.shade800,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Icon(Icons.arrow_drop_down,
+                                color: bg.shade800, size: 24),
+                          ],
                         ),
                       ),
-                      Icon(Icons.arrow_drop_down, color: bg.shade800, size: 24),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
