@@ -37,6 +37,7 @@
 - Follow PEP8.
 - Use Django built-in Permission classes.
 - **Aesthetics:** Premium/Rich look (Gradients, Glassmorphism, specific Color Palettes) is a critical requirement.
+    - **Custom UI Components:** Do not rely on default Material widgets (e.g., standard Dropdowns) if they produce visual artifacts (lines, padding bugs). Use custom implementations (e.g., `showMenu` + `InkWell`) to ensure pixel-perfect rendering.
     - **Detailed UI/UX Standards:** See [DESIGN.md](./DESIGN.md) for specifics on dialogs, buttons, icons, and interactive elements.
 - **Safety & Confirmations:** All destructive or bulk actions (deleting all items, applying templates, importing large data sets, re-calculating estimates) MUST trigger a `ConfirmationDialog` to prevent accidental data loss.
 - Data Integrity: Always use input normalization (e.g., RegEx for technical units) on the backend.

@@ -23,53 +23,31 @@ class ShieldContentLed extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'ЗОНЫ УПРАВЛЕНИЯ',
+            OutlinedButton.icon(
+              onPressed: () => _showAddZoneDialog(context, ref),
+              icon: Icon(Icons.add_rounded,
+                  size: 16, color: Colors.grey.shade600),
+              label: Text('Добавить',
                   style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 10,
-                    letterSpacing: 0.8,
-                    color: Color(0xFF374151), // Neutral dark grey
-                  ),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                    color: Colors.grey.shade700,
+                  )),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: Colors.grey.shade300),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                minimumSize: const Size(0, 34),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                Text(
-                  '${zones.length} линий в щите',
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
-                ),
-              ],
+              ),
             ),
-            Row(
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () => _showAddZoneDialog(context, ref),
-                  icon: Icon(Icons.add_rounded,
-                      size: 16, color: Colors.grey.shade600),
-                  label: Text('Добавить',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                        color: Colors.grey.shade700,
-                      )),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey.shade300),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    minimumSize: const Size(0, 34),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ],
-            )
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         if (zones.isEmpty)
           Container(
             width: double.infinity,
@@ -153,24 +131,8 @@ class ShieldContentLed extends ConsumerWidget {
                             // Right side info and actions
                             Row(
                               children: [
-                                // Quantity indicator
-                                if (zone.quantity > 1)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade50,
-                                      borderRadius: BorderRadius.circular(5),
-                                    ),
-                                    child: Text(
-                                      '${zone.quantity} шт.',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF4B5563),
-                                      ),
-                                    ),
-                                  ),
+                                // Quantity badge removed
+                                // if (zone.quantity > 1) ...
                                 const SizedBox(width: 4),
                                 // Small Delete button
                                 SizedBox(

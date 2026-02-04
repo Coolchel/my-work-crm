@@ -54,53 +54,31 @@ class ShieldContentPower extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'УСТРОЙСТВА ЩИТА',
+            OutlinedButton.icon(
+              onPressed: () => _showAddGroupDialog(context, ref),
+              icon: Icon(Icons.add_rounded,
+                  size: 16, color: Colors.grey.shade600),
+              label: Text('Добавить',
                   style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 10,
-                    letterSpacing: 0.8,
-                    color: Color(0xFF374151),
-                  ),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13,
+                    color: Colors.grey.shade700,
+                  )),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: Colors.grey.shade300),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                minimumSize: const Size(0, 34),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                Text(
-                  '${groups.length} позиций спецификации',
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
-                ),
-              ],
+              ),
             ),
-            Row(
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () => _showAddGroupDialog(context, ref),
-                  icon: Icon(Icons.add_rounded,
-                      size: 16, color: Colors.grey.shade600),
-                  label: Text('Добавить',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                        color: Colors.grey.shade700,
-                      )),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey.shade300),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    minimumSize: const Size(0, 34),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ],
-            )
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         if (groups.isEmpty)
           Container(
             width: double.infinity,
@@ -160,7 +138,7 @@ class ShieldContentPower extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '$totalModules mod',
+                        '$totalModules мод',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -239,25 +217,8 @@ class ShieldContentPower extends ConsumerWidget {
                                   // Right side info and actions
                                   Row(
                                     children: [
-                                      // Quantity badge
-                                      if (group.quantity > 1)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey.shade50,
-                                            borderRadius:
-                                                BorderRadius.circular(5),
-                                          ),
-                                          child: Text(
-                                            '${group.quantity} шт.',
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFF4B5563),
-                                            ),
-                                          ),
-                                        ),
+                                      // Quantity badge removed
+                                      // if (group.quantity > 1) ...
                                       const SizedBox(width: 4),
                                       // Close button (Delete)
                                       SizedBox(
