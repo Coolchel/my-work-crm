@@ -175,7 +175,9 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                         children: [
                           if (shield.shieldType == 'power')
                             ShieldContentPower(
-                                shield: shield, projectId: widget.projectId),
+                                shield: shield,
+                                projectId: widget.projectId,
+                                themeColor: themeColor),
                           if (shield.shieldType == 'led')
                             ShieldContentLed(
                                 shield: shield, projectId: widget.projectId),

@@ -11,9 +11,13 @@ import '../../dialogs/engineering/shield_group_dialog.dart';
 class ShieldContentPower extends ConsumerWidget {
   final ShieldModel shield;
   final String projectId;
+  final Color themeColor;
 
   const ShieldContentPower(
-      {required this.shield, required this.projectId, super.key});
+      {required this.shield,
+      required this.projectId,
+      required this.themeColor,
+      super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,7 +63,7 @@ class ShieldContentPower extends ConsumerWidget {
             OutlinedButton.icon(
               onPressed: () => _showAddGroupDialog(context, ref),
               icon: Icon(Icons.add_rounded,
-                  size: 16, color: Colors.grey.shade600),
+                  size: 16, color: themeColor.withOpacity(0.7)),
               label: Text('Добавить',
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
@@ -67,7 +71,8 @@ class ShieldContentPower extends ConsumerWidget {
                     color: Colors.grey.shade700,
                   )),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.grey.shade300),
+                side: BorderSide(color: themeColor.withOpacity(0.15)),
+                backgroundColor: themeColor.withOpacity(0.02),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 minimumSize: const Size(0, 34),
@@ -117,15 +122,22 @@ class ShieldContentPower extends ConsumerWidget {
                         width: 4,
                         height: 14,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade300, // Neutral strip
+                          gradient: LinearGradient(
+                            colors: [
+                              themeColor.withOpacity(0.6),
+                              themeColor.withOpacity(0.3),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         typeName.toUpperCase(),
-                        style: const TextStyle(
-                          color: Color(0xFF374151), // Neutral dark grey
+                        style: TextStyle(
+                          color: const Color(0xFF374151),
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                           letterSpacing: 0.5,
@@ -134,7 +146,7 @@ class ShieldContentPower extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Divider(
-                            color: Colors.grey.withOpacity(0.08), thickness: 1),
+                            color: themeColor.withOpacity(0.1), thickness: 1),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -142,7 +154,7 @@ class ShieldContentPower extends ConsumerWidget {
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          color: Colors.grey.shade400,
+                          color: themeColor.withOpacity(0.5),
                         ),
                       ),
                     ],
@@ -156,7 +168,14 @@ class ShieldContentPower extends ConsumerWidget {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(6),
                           border:
-                              Border.all(color: Colors.grey.withOpacity(0.15)),
+                              Border.all(color: themeColor.withOpacity(0.08)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: themeColor.withOpacity(0.02),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
                         ),
                         child: Material(
                           color: Colors.transparent,
@@ -174,15 +193,13 @@ class ShieldContentPower extends ConsumerWidget {
                                     width: 28,
                                     height: 28,
                                     decoration: BoxDecoration(
-                                      color: Colors
-                                          .grey.shade50, // Neutral background
+                                      color: themeColor.withOpacity(0.08),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
                                       _getDeviceIcon(group.deviceType),
                                       size: 14,
-                                      color:
-                                          Colors.grey.shade400, // Neutral icon
+                                      color: themeColor.withOpacity(0.6),
                                     ),
                                   ),
                                   const SizedBox(width: 10),
