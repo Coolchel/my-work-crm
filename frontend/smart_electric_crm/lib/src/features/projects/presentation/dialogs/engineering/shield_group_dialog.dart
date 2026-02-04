@@ -18,7 +18,6 @@ class ShieldGroupDialog extends StatefulWidget {
 
 class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
   late TextEditingController _zoneController;
-  late TextEditingController _quantityController;
   String _selectedDeviceType = 'diff_breaker';
   String _selectedRating = '16A';
   String _selectedPoles = '1P';
@@ -42,8 +41,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
       _zoneController = TextEditingController(text: widget.group?.zone ?? '');
       _selectedRating = widget.group?.rating ?? '16A';
       _selectedPoles = widget.group?.poles ?? '1P';
-      _quantityController =
-          TextEditingController(text: (widget.group?.quantity ?? 1).toString());
+
       if (widget.group != null) {
         debugPrint('Editing group: ${widget.group!.id}');
         _selectedDeviceType = widget.group!.deviceType;
@@ -56,7 +54,6 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
   @override
   void dispose() {
     _zoneController.dispose();
-    _quantityController.dispose();
     super.dispose();
   }
 
@@ -285,37 +282,13 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 32),
                       TextField(
                         controller: _zoneController,
                         decoration: InputDecoration(
                           labelText: "Зона / Потребитель",
                           floatingLabelBehavior: FloatingLabelBehavior.always,
                           hintText: "Например: Кухня",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: themeColor.withOpacity(0.2)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: themeColor.withOpacity(0.2)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: themeColor, width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _quantityController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: "Количество",
-                          floatingLabelBehavior: FloatingLabelBehavior.always,
-                          hintText: "1",
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide:
@@ -362,9 +335,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                     'rating': _selectedRating,
                                     'poles': _selectedPoles,
                                     'zone': _zoneController.text,
-                                    'quantity': int.tryParse(
-                                            _quantityController.text) ??
-                                        1,
+                                    'quantity': 1,
                                   };
                                   if (isEdit) {
                                     await ref

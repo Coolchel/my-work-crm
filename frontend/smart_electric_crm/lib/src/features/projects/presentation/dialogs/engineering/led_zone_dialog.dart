@@ -19,7 +19,6 @@ class LedZoneDialog extends StatefulWidget {
 class _LedZoneDialogState extends State<LedZoneDialog> {
   late TextEditingController _transformerController;
   late TextEditingController _zoneController;
-  late TextEditingController _quantityController;
   bool _isSaving = false;
 
   @override
@@ -28,15 +27,12 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
     _transformerController =
         TextEditingController(text: widget.zone?.transformer ?? '');
     _zoneController = TextEditingController(text: widget.zone?.zone ?? '');
-    _quantityController =
-        TextEditingController(text: (widget.zone?.quantity ?? 1).toString());
   }
 
   @override
   void dispose() {
     _transformerController.dispose();
     _zoneController.dispose();
-    _quantityController.dispose();
     super.dispose();
   }
 
@@ -112,7 +108,8 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
               // Content
               Flexible(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.only(
+                      left: 24, right: 24, top: 24, bottom: 16),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -161,30 +158,6 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _quantityController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: "Количество",
-                          floatingLabelBehavior: FloatingLabelBehavior.always,
-                          hintText: "1",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: themeColor.withOpacity(0.2)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: themeColor.withOpacity(0.2)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: themeColor, width: 2),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -192,7 +165,8 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
 
               // Footer
               Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.only(
+                    left: 24, right: 24, bottom: 24, top: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -213,9 +187,7 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                                   final data = {
                                     'transformer': _transformerController.text,
                                     'zone': _zoneController.text,
-                                    'quantity': int.tryParse(
-                                            _quantityController.text) ??
-                                        1,
+                                    'quantity': 1,
                                   };
                                   if (isEdit) {
                                     await ref
