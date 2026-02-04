@@ -180,7 +180,9 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                 themeColor: themeColor),
                           if (shield.shieldType == 'led')
                             ShieldContentLed(
-                                shield: shield, projectId: widget.projectId),
+                                shield: shield,
+                                projectId: widget.projectId,
+                                themeColor: themeColor),
                           if (shield.shieldType == 'multimedia')
                             _buildMultimediaInfo(context, themeColor),
                         ],

@@ -11,9 +11,13 @@ import '../../dialogs/engineering/led_zone_dialog.dart';
 class ShieldContentLed extends ConsumerWidget {
   final ShieldModel shield;
   final String projectId;
+  final Color themeColor;
 
   const ShieldContentLed(
-      {required this.shield, required this.projectId, super.key});
+      {required this.shield,
+      required this.projectId,
+      required this.themeColor,
+      super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,7 +32,7 @@ class ShieldContentLed extends ConsumerWidget {
             OutlinedButton.icon(
               onPressed: () => _showAddZoneDialog(context, ref),
               icon: Icon(Icons.add_rounded,
-                  size: 16, color: Colors.grey.shade600),
+                  size: 16, color: themeColor.withOpacity(0.7)),
               label: Text('Добавить',
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
@@ -36,7 +40,8 @@ class ShieldContentLed extends ConsumerWidget {
                     color: Colors.grey.shade700,
                   )),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.grey.shade300),
+                side: BorderSide(color: themeColor.withOpacity(0.15)),
+                backgroundColor: themeColor.withOpacity(0.02),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 minimumSize: const Size(0, 34),
@@ -72,9 +77,16 @@ class ShieldContentLed extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 1),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white, // Reverted to original color
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.grey.withOpacity(0.15)),
+                    border: Border.all(color: themeColor.withOpacity(0.08)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: themeColor.withOpacity(0.02),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -91,14 +103,13 @@ class ShieldContentLed extends ConsumerWidget {
                               width: 28,
                               height: 28,
                               decoration: BoxDecoration(
-                                color:
-                                    Colors.grey.shade50, // Neutral background
+                                color: themeColor.withOpacity(0.08),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
                                 Icons.wb_incandescent_rounded,
                                 size: 14,
-                                color: Colors.grey.shade400, // Neutral icon
+                                color: themeColor.withOpacity(0.6),
                               ),
                             ),
                             const SizedBox(width: 10),

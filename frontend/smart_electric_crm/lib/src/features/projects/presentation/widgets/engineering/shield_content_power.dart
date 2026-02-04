@@ -124,8 +124,8 @@ class ShieldContentPower extends ConsumerWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              themeColor.withOpacity(0.6),
-                              themeColor.withOpacity(0.3),
+                              _getRatingColor(groupItems).withOpacity(0.7),
+                              _getRatingColor(groupItems).withOpacity(0.3),
                             ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
@@ -332,5 +332,30 @@ class ShieldContentPower extends ConsumerWidget {
       default:
         return Icons.electrical_services;
     }
+  }
+
+  // Определяет цвет на основе максимального номинала в группе устройств
+  Color _getRatingColor(List<ShieldGroupModel> groupItems) {
+    int maxRating = 0;
+    for (var item in groupItems) {
+      final ratingValue = _parseRating(item.rating);
+      if (ratingValue > maxRating) maxRating = ratingValue;
+    }
+
+    // Цветовое кодирование по мощности
+    if (maxRating <= 16) {
+      return Colors.green.shade600; // Низкая нагрузка
+    } else if (maxRating <= 40) {
+      return Colors.orange.shade700; // Средняя нагрузка
+    } else {
+      return Colors.red.shade600; // Высокая нагрузка
+    }
+  }
+
+  // Извлекает числовое значение номинала из строки (например, "16A", "25А", "40 A")
+  int _parseRating(String rating) {
+    final regex = RegExp(r'(\d+)');
+    final match = regex.firstMatch(rating);
+    return match != null ? int.parse(match.group(1)!) : 0;
   }
 }
