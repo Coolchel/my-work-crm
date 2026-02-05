@@ -99,7 +99,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade200), // Neutral border
+        border: Border.all(
+          color:
+              _isExpanded ? themeColor.withOpacity(0.3) : Colors.grey.shade200,
+        ), // Accent when expanded
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.06),
@@ -132,7 +135,9 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                   children: [
                     // Header (Tappable, neutral)
                     Material(
-                      color: Colors.grey.shade50, // Neutral header
+                      color: _isExpanded
+                          ? themeColor.withOpacity(0.08)
+                          : Colors.grey.shade50, // Accent when expanded
                       child: InkWell(
                         onTap: _toggleExpand,
                         child: Container(
@@ -151,13 +156,14 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  color:
-                                      Colors.grey.shade100, // Neutral icon bg
+                                  color: themeColor
+                                      .withOpacity(0.1), // Accent icon bg
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   _getIconForType(shield.shieldType),
-                                  color: Colors.grey.shade600, // Neutral icon
+                                  color: themeColor.withOpacity(
+                                      0.7), // Accent icon with opacity
                                   size: 18,
                                 ),
                               ),
@@ -221,10 +227,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                               width: double.infinity,
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.grey.shade50.withOpacity(0.5),
+                                color: Colors.grey
+                                    .shade50, // Full opacity for better contrast
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                    color: Colors.grey.withOpacity(0.1)),
+                                border: Border.all(color: Colors.grey.shade300),
                               ),
                               child: Column(
                                 children: [
@@ -265,9 +271,9 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50.withOpacity(0.5),
+        color: Colors.grey.shade50, // Full opacity for better contrast
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
