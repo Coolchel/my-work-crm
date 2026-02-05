@@ -322,7 +322,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Row(
+                  const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
@@ -757,12 +757,12 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
       final confirm = await showDialog<bool>(
         context: context,
         barrierColor: Colors.transparent,
-        builder: (ctx) => ConfirmationDialog(
+        builder: (ctx) => const ConfirmationDialog(
           title: "Применить шаблон?",
           content:
               "Применение шаблона приведет к удалению всех текущих позиций в этом щите. Продолжить?",
           confirmText: "Применить",
-          themeColor: const Color(0xFF374151),
+          themeColor: Color(0xFF374151),
         ),
       );
       if (confirm != true) return;

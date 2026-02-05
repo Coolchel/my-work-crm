@@ -31,11 +31,11 @@ class ShieldContentMultimedia extends ConsumerWidget {
               onPressed: () => _showEthernetLinesDialog(context, ref),
               icon: Icon(Icons.add_rounded,
                   size: 16, color: themeColor.withOpacity(0.7)),
-              label: Text('Добавить',
+              label: const Text('Добавить',
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 13,
-                    color: Colors.grey.shade700,
+                    color: Color(0xFF616161),
                   )),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: themeColor.withOpacity(0.15)),
@@ -98,13 +98,13 @@ class ShieldContentMultimedia extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Ethernet кабель',
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 13,
                                 height: 1.2,
-                                color: const Color(0xFF1F2937),
+                                color: Color(0xFF1F2937),
                               ),
                             ),
                             Text(
@@ -130,13 +130,13 @@ class ShieldContentMultimedia extends ConsumerWidget {
                             final confirm = await showDialog<bool>(
                               context: context,
                               barrierColor: Colors.transparent,
-                              builder: (context) => ConfirmationDialog(
+                              builder: (context) => const ConfirmationDialog(
                                 title: "Удалить линии?",
                                 content:
                                     "Вы уверены, что хотите удалить все Ethernet линии из этого щита?",
                                 confirmText: "Удалить",
                                 isDestructive: true,
-                                themeColor: const Color(0xFF374151),
+                                themeColor: Color(0xFF374151),
                               ),
                             );
 

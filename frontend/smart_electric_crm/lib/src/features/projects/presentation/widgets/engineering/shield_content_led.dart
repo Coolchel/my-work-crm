@@ -156,13 +156,13 @@ class ShieldContentLed extends ConsumerWidget {
                                         context: context,
                                         barrierColor: Colors.transparent,
                                         builder: (context) =>
-                                            ConfirmationDialog(
+                                            const ConfirmationDialog(
                                           title: "Удалить зону?",
                                           content:
                                               "Вы уверены, что хотите удалить эту LED зону?",
                                           confirmText: "Удалить",
                                           isDestructive: true,
-                                          themeColor: const Color(0xFF374151),
+                                          themeColor: Color(0xFF374151),
                                         ),
                                       );
 

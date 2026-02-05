@@ -99,7 +99,9 @@ class EstimateListTile extends StatelessWidget {
                       Text(
                         item.name,
                         style: const TextStyle(
-                            fontWeight: FontWeight.w500, fontSize: 13, height: 1.2),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                            height: 1.2),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -181,8 +183,8 @@ class EstimateListTile extends StatelessWidget {
                     // Main amount badge - only border is orange when markup is active
                     if (!hidePrices)
                       Container(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 5),
                         decoration: BoxDecoration(
                           color: amountBgColor,
                           borderRadius: BorderRadius.circular(5),

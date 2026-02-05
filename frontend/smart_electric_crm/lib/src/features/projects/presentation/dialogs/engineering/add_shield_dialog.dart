@@ -114,7 +114,8 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: themeColor, width: 2),
+                          borderSide:
+                              const BorderSide(color: themeColor, width: 2),
                         ),
                       ),
                     ),
@@ -144,13 +145,12 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
+                                child: const Row(
                                   children: [
                                     Icon(Icons.bolt,
-                                        color: Colors.orange.shade700,
-                                        size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('Силовой',
+                                        color: Color(0xFFF57C00), size: 20),
+                                    SizedBox(width: 12),
+                                    Text('Силовой',
                                         style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
@@ -164,12 +164,12 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
+                                child: const Row(
                                   children: [
                                     Icon(Icons.router,
-                                        color: Colors.teal.shade700, size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('Слаботочка',
+                                        color: Color(0xFF00796B), size: 20),
+                                    SizedBox(width: 12),
+                                    Text('Слаботочка',
                                         style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
@@ -183,14 +183,12 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
+                                child: const Row(
                                   children: [
                                     Icon(Icons.lightbulb,
-                                        color: Colors.purple.shade700,
-                                        size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('LED',
-                                        style: TextStyle(fontSize: 13)),
+                                        color: Color(0xFF7B1FA2), size: 20),
+                                    SizedBox(width: 12),
+                                    Text('LED', style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
                               ),
@@ -226,12 +224,12 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
+                                child: const Row(
                                   children: [
                                     Icon(Icons.door_front_door,
-                                        color: Colors.brown.shade700, size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('Внутренний',
+                                        color: Color(0xFF5D4037), size: 20),
+                                    SizedBox(width: 12),
+                                    Text('Внутренний',
                                         style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
@@ -245,12 +243,12 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
+                                child: const Row(
                                   children: [
                                     Icon(Icons.apartment,
-                                        color: Colors.brown.shade700, size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('Наружный',
+                                        color: Color(0xFF5D4037), size: 20),
+                                    SizedBox(width: 12),
+                                    Text('Наружный',
                                         style: TextStyle(fontSize: 13)),
                                   ],
                                 ),

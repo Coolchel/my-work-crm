@@ -121,8 +121,8 @@ class ShieldContentPower extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         typeName.toUpperCase(),
-                        style: TextStyle(
-                          color: const Color(0xFF374151),
+                        style: const TextStyle(
+                          color: Color(0xFF374151),
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                           letterSpacing: 0.5,
@@ -200,11 +200,11 @@ class ShieldContentPower extends ConsumerWidget {
                                       children: [
                                         Text(
                                           group.device,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.w500,
                                             fontSize: 13,
                                             height: 1.2,
-                                            color: const Color(
+                                            color: Color(
                                                 0xFF1F2937), // Reverting to dark grey for text
                                           ),
                                           maxLines: 1,
@@ -241,14 +241,13 @@ class ShieldContentPower extends ConsumerWidget {
                                               context: context,
                                               barrierColor: Colors.transparent,
                                               builder: (context) =>
-                                                  ConfirmationDialog(
+                                                  const ConfirmationDialog(
                                                 title: "Удалить группу?",
                                                 content:
                                                     "Вы уверены, что хотите удалить эту группу устройств?",
                                                 confirmText: "Удалить",
                                                 isDestructive: true,
-                                                themeColor:
-                                                    const Color(0xFF374151),
+                                                themeColor: Color(0xFF374151),
                                               ),
                                             );
 

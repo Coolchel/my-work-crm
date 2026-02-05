@@ -120,7 +120,8 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: themeColor, width: 2),
+                          borderSide:
+                              const BorderSide(color: themeColor, width: 2),
                         ),
                       ),
                     ),
@@ -146,28 +147,36 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                             PopupMenuItem(
                               value: 'internal',
                               height: 40,
-                              child: Row(
-                                children: [
-                                  Icon(Icons.door_front_door,
-                                      color: Colors.brown.shade700, size: 20),
-                                  const SizedBox(width: 12),
-                                  const Text('Внутренний',
-                                      style: TextStyle(fontSize: 13)),
-                                ],
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.door_front_door,
+                                        color: Colors.brown, size: 20),
+                                    SizedBox(width: 12),
+                                    Text('Внутренний',
+                                        style: TextStyle(fontSize: 13)),
+                                  ],
+                                ),
                               ),
                             ),
                             const PopupMenuDivider(),
                             PopupMenuItem(
                               value: 'external',
                               height: 40,
-                              child: Row(
-                                children: [
-                                  Icon(Icons.apartment,
-                                      color: Colors.brown.shade700, size: 20),
-                                  const SizedBox(width: 12),
-                                  const Text('Наружный',
-                                      style: TextStyle(fontSize: 13)),
-                                ],
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.apartment,
+                                        color: Colors.brown, size: 20),
+                                    SizedBox(width: 12),
+                                    Text('Наружный',
+                                        style: TextStyle(fontSize: 13)),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
