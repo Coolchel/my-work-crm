@@ -158,6 +158,25 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                             ),
                             const PopupMenuDivider(),
                             PopupMenuItem(
+                              value: 'multimedia',
+                              height: 40,
+                              padding: EdgeInsets.zero,
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.router,
+                                        color: Colors.teal.shade700, size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('Слаботочка',
+                                        style: TextStyle(fontSize: 13)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
                               value: 'led',
                               height: 40,
                               padding: EdgeInsets.zero,
@@ -171,25 +190,6 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                                         size: 20),
                                     const SizedBox(width: 12),
                                     const Text('LED',
-                                        style: TextStyle(fontSize: 13)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                            PopupMenuItem(
-                              value: 'multimedia',
-                              height: 40,
-                              padding: EdgeInsets.zero,
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.router,
-                                        color: Colors.teal.shade700, size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('Слаботочка',
                                         style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
