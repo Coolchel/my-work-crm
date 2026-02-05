@@ -6,6 +6,7 @@ import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/edit_shield_dialog.dart';
 import 'shield_content_power.dart';
 import 'shield_content_led.dart';
+import 'shield_content_multimedia.dart';
 import '../../../../engineering/presentation/dialogs/template_selection_dialog.dart';
 import '../../../../engineering/presentation/providers/template_providers.dart';
 import '../../../../engineering/data/models/template_models.dart';
@@ -184,7 +185,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                 projectId: widget.projectId,
                                 themeColor: themeColor),
                           if (shield.shieldType == 'multimedia')
-                            _buildMultimediaInfo(context, themeColor),
+                            ShieldContentMultimedia(
+                                shield: shield,
+                                projectId: widget.projectId,
+                                themeColor: themeColor),
                         ],
                       ),
                     ),
@@ -453,66 +457,6 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     );
   }
 
-  Widget _buildMultimediaInfo(BuildContext context, Color themeColor) {
-    final shield = widget.shield;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            // Text removed found in TopInfo
-            OutlinedButton.icon(
-              onPressed: () {},
-              icon: Icon(Icons.add_rounded,
-                  size: 16, color: Colors.grey.shade600),
-              label: Text('Добавить',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
-                    color: Colors.grey.shade700,
-                  )),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.grey.shade300),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                minimumSize: const Size(0, 34),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ],
-        ),
-        if (shield.multimediaNotes.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.grey.withOpacity(0.05)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.notes_rounded,
-                    size: 14, color: Colors.grey.shade400),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    shield.multimediaNotes,
-                    style: TextStyle(color: Colors.grey.shade700, fontSize: 11),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
   IconData _getIconForType(String type) {
     switch (type) {
       case 'power':
@@ -750,7 +694,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
       case 'led':
         return '${shield.ledZones.length} линий LED';
       case 'multimedia':
-        return '${shield.internetLinesCount} линий интернет';
+        return '${shield.internetLinesCount} линий Ethernet';
       default:
         return '';
     }
