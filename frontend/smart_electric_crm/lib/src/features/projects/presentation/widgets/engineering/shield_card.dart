@@ -748,7 +748,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             0, (sum, group) => sum + (group.modulesCount * group.quantity));
         return '${shield.groups.length} позиций, $totalModules ${_getModulesText(totalModules)}';
       case 'led':
-        return '${shield.ledZones.length} линий в щите';
+        return '${shield.ledZones.length} линий LED';
       case 'multimedia':
         return '${shield.internetLinesCount} линий интернет';
       default:

@@ -8,9 +8,14 @@ class LedZoneDialog extends StatefulWidget {
   final String projectId;
   final int shieldId;
   final LedZoneModel? zone;
+  final int existingZonesCount;
 
   const LedZoneDialog(
-      {required this.projectId, required this.shieldId, this.zone, super.key});
+      {required this.projectId,
+      required this.shieldId,
+      this.zone,
+      this.existingZonesCount = 0,
+      super.key});
 
   @override
   State<LedZoneDialog> createState() => _LedZoneDialogState();
@@ -24,8 +29,12 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
   @override
   void initState() {
     super.initState();
-    _transformerController =
-        TextEditingController(text: widget.zone?.transformer ?? '');
+    // Автоматическая нумерация блоков питания для новых зон
+    final defaultTransformer = widget.zone?.transformer ??
+        (widget.existingZonesCount > 0
+            ? 'Блок питания №${widget.existingZonesCount + 1}'
+            : 'Блок питания №1');
+    _transformerController = TextEditingController(text: defaultTransformer);
     _zoneController = TextEditingController(text: widget.zone?.zone ?? '');
   }
 
@@ -119,6 +128,9 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                           labelText: "Трансформатор / Блок питания",
                           floatingLabelBehavior: FloatingLabelBehavior.always,
                           hintText: "Например: 12V 60W",
+                          hintStyle: TextStyle(
+                            color: Colors.grey.withOpacity(0.35),
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide:
@@ -142,6 +154,9 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                           labelText: "Зона подсветки / Лента",
                           floatingLabelBehavior: FloatingLabelBehavior.always,
                           hintText: "Например: Потолок",
+                          hintStyle: TextStyle(
+                            color: Colors.grey.withOpacity(0.35),
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide:

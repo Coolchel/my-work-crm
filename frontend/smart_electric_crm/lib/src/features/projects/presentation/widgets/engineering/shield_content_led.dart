@@ -200,8 +200,12 @@ class ShieldContentLed extends ConsumerWidget {
       {LedZoneModel? zone}) {
     showDialog(
       context: context,
-      builder: (context) =>
-          LedZoneDialog(projectId: projectId, shieldId: shield.id, zone: zone),
+      builder: (context) => LedZoneDialog(
+        projectId: projectId,
+        shieldId: shield.id,
+        zone: zone,
+        existingZonesCount: shield.ledZones.length,
+      ),
     );
   }
 }

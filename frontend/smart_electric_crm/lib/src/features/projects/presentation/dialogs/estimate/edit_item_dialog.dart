@@ -216,6 +216,9 @@ class _EditItemDialogState extends State<EditItemDialog> {
                             labelText: "Название",
                             floatingLabelBehavior: FloatingLabelBehavior.always,
                             hintText: isWork ? "Штроба" : "Кабель",
+                            hintStyle: TextStyle(
+                              color: Colors.grey.withOpacity(0.35),
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
@@ -240,6 +243,9 @@ class _EditItemDialogState extends State<EditItemDialog> {
                             labelText: "Ед. изм.",
                             floatingLabelBehavior: FloatingLabelBehavior.always,
                             hintText: "шт",
+                            hintStyle: TextStyle(
+                              color: Colors.grey.withOpacity(0.35),
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(

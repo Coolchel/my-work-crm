@@ -99,6 +99,9 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                         labelText: "Название щита",
                         floatingLabelBehavior: FloatingLabelBehavior.always,
                         hintText: "Щит квартирный",
+                        hintStyle: TextStyle(
+                          color: Colors.grey.withOpacity(0.35),
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide:

@@ -300,6 +300,9 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                           labelText: "Зона / Потребитель",
                           floatingLabelBehavior: FloatingLabelBehavior.always,
                           hintText: "Например: Кухня",
+                          hintStyle: TextStyle(
+                            color: Colors.grey.withOpacity(0.35),
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide:

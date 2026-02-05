@@ -141,6 +141,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                     style: const TextStyle(fontSize: 14),
                     decoration: InputDecoration(
                       hintText: "Начните вводить название...",
+                      hintStyle: TextStyle(
+                        color: Colors.grey.withOpacity(0.35),
+                      ),
                       prefixIcon:
                           Icon(Icons.search, color: themeColor, size: 20),
                       filled: true,
