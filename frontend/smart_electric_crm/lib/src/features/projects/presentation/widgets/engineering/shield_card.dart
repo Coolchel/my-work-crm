@@ -99,134 +99,162 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-            color: themeColor
-                .withOpacity(0.12)), // Use theme color for card border
+        border: Border.all(color: Colors.grey.shade200), // Neutral border
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header (Tappable, Estimate-like)
-            Material(
-              color: themeColor
-                  .withOpacity(0.08), // Slightly more saturated (was 0.05)
-              child: InkWell(
-                onTap: _toggleExpand,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                          color: themeColor
-                              .withOpacity(0.1)), // Use theme color for border
-                    ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Accent stripe on the left
+              Container(
+                width: 4,
+                decoration: BoxDecoration(
+                  color: themeColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    bottomLeft: Radius.circular(8),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: themeColor.withOpacity(0.12),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          _getIconForType(shield.shieldType),
-                          color: themeColor,
-                          size: 18,
+                ),
+              ),
+              // Main content
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header (Tappable, neutral)
+                    Material(
+                      color: Colors.grey.shade50, // Neutral header
+                      child: InkWell(
+                        onTap: _toggleExpand,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                  color:
+                                      Colors.grey.shade200), // Neutral border
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color:
+                                      Colors.grey.shade100, // Neutral icon bg
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  _getIconForType(shield.shieldType),
+                                  color: Colors.grey.shade600, // Neutral icon
+                                  size: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      shield.name,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF1F2937),
+                                      ),
+                                    ),
+                                    Text(
+                                      _getTypeName(shield.shieldType)
+                                          .toUpperCase(),
+                                      style: TextStyle(
+                                        color: Colors.grey
+                                            .shade500, // Neutral type label
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              RotationTransition(
+                                turns: Tween(begin: 0.0, end: 0.5)
+                                    .animate(_expandAnimation),
+                                child: Icon(
+                                  Icons.expand_more_rounded,
+                                  color: Colors.grey.shade400,
+                                  size: 20,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
+                    ),
+                    // Content
+                    SizeTransition(
+                      sizeFactor: _expandAnimation,
+                      child: Container(
+                        color: Colors.white, // Clean white background
+                        padding: const EdgeInsets.all(12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              shield.name,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1F2937),
+                            // Mounting Toggle & Recommended Size
+                            _buildTopInfo(context, themeColor),
+
+                            const SizedBox(height: 16),
+
+                            // Shield Content based on type
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: Colors.grey.withOpacity(0.1)),
                               ),
-                            ),
-                            Text(
-                              _getTypeName(shield.shieldType).toUpperCase(),
-                              style: TextStyle(
-                                color: themeColor.withOpacity(0.8),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5,
+                              child: Column(
+                                children: [
+                                  if (shield.shieldType == 'power')
+                                    ShieldContentPower(
+                                        shield: shield,
+                                        projectId: widget.projectId,
+                                        themeColor: themeColor),
+                                  if (shield.shieldType == 'led')
+                                    ShieldContentLed(
+                                        shield: shield,
+                                        projectId: widget.projectId,
+                                        themeColor: themeColor),
+                                  if (shield.shieldType == 'multimedia')
+                                    ShieldContentMultimedia(
+                                        shield: shield,
+                                        projectId: widget.projectId,
+                                        themeColor: themeColor),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                      RotationTransition(
-                        turns: Tween(begin: 0.0, end: 0.5)
-                            .animate(_expandAnimation),
-                        child: Icon(
-                          Icons.expand_more_rounded,
-                          color: Colors.grey.shade400, // Neutral expand icon
-                          size: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // Content
-            SizeTransition(
-              sizeFactor: _expandAnimation,
-              child: Container(
-                color: themeColor
-                    .withOpacity(0.015), // Very subtle background (was 0.04)
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Mounting Toggle & Recommended Size
-                    _buildTopInfo(context, themeColor),
-
-                    const SizedBox(height: 16),
-
-                    // Shield Content based on type
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.withOpacity(0.1)),
-                      ),
-                      child: Column(
-                        children: [
-                          if (shield.shieldType == 'power')
-                            ShieldContentPower(
-                                shield: shield,
-                                projectId: widget.projectId,
-                                themeColor: themeColor),
-                          if (shield.shieldType == 'led')
-                            ShieldContentLed(
-                                shield: shield,
-                                projectId: widget.projectId,
-                                themeColor: themeColor),
-                          if (shield.shieldType == 'multimedia')
-                            ShieldContentMultimedia(
-                                shield: shield,
-                                projectId: widget.projectId,
-                                themeColor: themeColor),
-                        ],
-                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -257,7 +285,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     Row(
                       children: [
                         Icon(Icons.tune_rounded,
-                            size: 14, color: themeColor.withOpacity(0.7)),
+                            size: 14, color: Colors.grey.shade500),
                         const SizedBox(width: 6),
                         Text(
                           _getStatsTitle(shield),
