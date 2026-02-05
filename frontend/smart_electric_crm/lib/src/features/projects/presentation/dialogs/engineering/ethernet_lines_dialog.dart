@@ -8,11 +8,13 @@ class EthernetLinesDialog extends StatefulWidget {
   final String projectId;
   final int shieldId;
   final int currentLinesCount;
+  final Color themeColor;
 
   const EthernetLinesDialog({
     required this.projectId,
     required this.shieldId,
     required this.currentLinesCount,
+    required this.themeColor,
     super.key,
   });
 
@@ -45,7 +47,7 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const themeColor = Colors.brown;
+    final themeColor = widget.themeColor;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -101,7 +103,7 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                       alignment: Alignment.centerRight,
                       child: IconButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close, color: themeColor),
+                        icon: Icon(Icons.close, color: themeColor),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         iconSize: 20,

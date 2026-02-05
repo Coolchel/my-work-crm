@@ -7,11 +7,13 @@ class ShieldNotesDialog extends StatefulWidget {
   final String projectId;
   final int shieldId;
   final String currentNotes;
+  final Color themeColor;
 
   const ShieldNotesDialog({
     required this.projectId,
     required this.shieldId,
     required this.currentNotes,
+    required this.themeColor,
     super.key,
   });
 
@@ -37,7 +39,7 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const themeColor = Colors.brown;
+    final themeColor = widget.themeColor;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -101,7 +103,7 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
                       alignment: Alignment.centerRight,
                       child: IconButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close, color: themeColor),
+                        icon: Icon(Icons.close, color: themeColor),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         iconSize: 20,

@@ -189,6 +189,7 @@ class ShieldContentMultimedia extends ConsumerWidget {
         projectId: projectId,
         shieldId: shield.id,
         currentLinesCount: shield.internetLinesCount,
+        themeColor: themeColor,
       ),
     );
   }

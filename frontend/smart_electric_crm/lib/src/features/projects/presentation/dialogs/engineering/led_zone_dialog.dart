@@ -9,12 +9,14 @@ class LedZoneDialog extends StatefulWidget {
   final int shieldId;
   final LedZoneModel? zone;
   final int existingZonesCount;
+  final Color themeColor;
 
   const LedZoneDialog(
       {required this.projectId,
       required this.shieldId,
       this.zone,
       this.existingZonesCount = 0,
+      required this.themeColor,
       super.key});
 
   @override
@@ -48,7 +50,7 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.zone != null;
-    const themeColor = Colors.brown;
+    final themeColor = widget.themeColor;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -104,7 +106,7 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                       alignment: Alignment.centerRight,
                       child: IconButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close, color: themeColor),
+                        icon: Icon(Icons.close, color: themeColor),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         iconSize: 20,

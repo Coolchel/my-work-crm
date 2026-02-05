@@ -435,15 +435,15 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                 _showNotesDialog(context, ref, shield),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: hasNotes
-                                  ? Colors.brown.shade600
+                                  ? themeColor.withOpacity(0.8)
                                   : Colors.grey.shade600,
                               side: BorderSide(
                                 color: hasNotes
-                                    ? Colors.brown.withOpacity(0.4)
+                                    ? themeColor.withOpacity(0.4)
                                     : Colors.grey.withOpacity(0.3),
                               ),
                               backgroundColor: hasNotes
-                                  ? Colors.brown.withOpacity(0.05)
+                                  ? themeColor.withOpacity(0.05)
                                   : Colors.transparent,
                               padding: EdgeInsets.zero,
                               minimumSize: const Size(36, 36),
@@ -462,7 +462,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                       width: 8,
                                       height: 8,
                                       decoration: BoxDecoration(
-                                        color: Colors.brown,
+                                        color: themeColor,
                                         shape: BoxShape.circle,
                                         border: Border.all(
                                             color: Colors.white, width: 1.5),
@@ -796,12 +796,14 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
 
   void _showNotesDialog(
       BuildContext context, WidgetRef ref, ShieldModel shield) {
+    final themeColor = _getColorForType(shield.shieldType);
     showDialog(
       context: context,
       builder: (context) => ShieldNotesDialog(
         projectId: widget.projectId,
         shieldId: shield.id,
         currentNotes: shield.notes,
+        themeColor: themeColor,
       ),
     );
   }

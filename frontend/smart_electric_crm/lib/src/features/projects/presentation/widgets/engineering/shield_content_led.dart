@@ -205,6 +205,7 @@ class ShieldContentLed extends ConsumerWidget {
         shieldId: shield.id,
         zone: zone,
         existingZonesCount: shield.ledZones.length,
+        themeColor: themeColor,
       ),
     );
   }

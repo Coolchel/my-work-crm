@@ -287,7 +287,10 @@ class ShieldContentPower extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => ShieldGroupDialog(
-          projectId: projectId, shieldId: shield.id, group: group),
+          projectId: projectId,
+          shieldId: shield.id,
+          group: group,
+          themeColor: themeColor),
     );
   }
 

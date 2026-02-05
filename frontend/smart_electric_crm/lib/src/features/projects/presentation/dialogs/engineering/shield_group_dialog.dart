@@ -8,9 +8,14 @@ class ShieldGroupDialog extends StatefulWidget {
   final String projectId;
   final int shieldId;
   final ShieldGroupModel? group;
+  final Color themeColor;
 
   const ShieldGroupDialog(
-      {required this.projectId, required this.shieldId, this.group, super.key});
+      {required this.projectId,
+      required this.shieldId,
+      this.group,
+      required this.themeColor,
+      super.key});
 
   @override
   State<ShieldGroupDialog> createState() => _ShieldGroupDialogState();
@@ -60,7 +65,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.group != null;
-    const themeColor = Colors.brown;
+    final themeColor = widget.themeColor;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -116,7 +121,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                       alignment: Alignment.centerRight,
                       child: IconButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close, color: themeColor),
+                        icon: Icon(Icons.close, color: themeColor),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         iconSize: 20,
