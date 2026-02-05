@@ -12,6 +12,7 @@ import '../../../../engineering/presentation/providers/template_providers.dart';
 import '../../../../engineering/data/models/template_models.dart';
 import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../../shared/presentation/dialogs/text_input_dialog.dart';
+import '../../dialogs/engineering/shield_notes_dialog.dart';
 
 class ShieldCard extends ConsumerStatefulWidget {
   final ShieldModel shield;
@@ -24,9 +25,11 @@ class ShieldCard extends ConsumerStatefulWidget {
 }
 
 class _ShieldCardState extends ConsumerState<ShieldCard>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _expandController;
   late Animation<double> _expandAnimation;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
   bool _isExpanded = false;
 
   @override
@@ -40,11 +43,38 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
       parent: _expandController,
       curve: Curves.easeInOut,
     );
+
+    // Pulse animation for notes button
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    // Start pulse if notes exist
+    if (widget.shield.notes.isNotEmpty) {
+      _pulseController.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(ShieldCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update pulse animation when notes change
+    if (widget.shield.notes.isNotEmpty && !_pulseController.isAnimating) {
+      _pulseController.repeat(reverse: true);
+    } else if (widget.shield.notes.isEmpty && _pulseController.isAnimating) {
+      _pulseController.stop();
+      _pulseController.reset();
+    }
   }
 
   @override
   void dispose() {
     _expandController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -355,6 +385,64 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     ),
                     const SizedBox(width: 8),
                   ],
+                  // Notes Button (with pulsing animation when has notes)
+                  Tooltip(
+                    message: shield.notes.isEmpty
+                        ? 'Добавить заметку'
+                        : 'Редактировать заметку',
+                    child: AnimatedBuilder(
+                      animation: _pulseAnimation,
+                      builder: (context, child) {
+                        final hasNotes = shield.notes.isNotEmpty;
+                        return Transform.scale(
+                          scale: hasNotes ? _pulseAnimation.value : 1.0,
+                          child: OutlinedButton(
+                            onPressed: () =>
+                                _showNotesDialog(context, ref, shield),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: hasNotes
+                                  ? Colors.brown.shade600
+                                  : Colors.grey.shade600,
+                              side: BorderSide(
+                                color: hasNotes
+                                    ? Colors.brown.withOpacity(0.4)
+                                    : Colors.grey.withOpacity(0.3),
+                              ),
+                              backgroundColor: hasNotes
+                                  ? Colors.brown.withOpacity(0.05)
+                                  : Colors.transparent,
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(36, 36),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                            ),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                const Icon(Icons.note_alt_outlined, size: 18),
+                                if (hasNotes)
+                                  Positioned(
+                                    right: -2,
+                                    top: -2,
+                                    child: Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: Colors.brown,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: Colors.white, width: 1.5),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   // Edit Button
                   Tooltip(
                     message: 'Редактировать щит',
@@ -670,6 +758,18 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             .showSnackBar(SnackBar(content: Text("Ошибка применения: $e")));
       }
     }
+  }
+
+  void _showNotesDialog(
+      BuildContext context, WidgetRef ref, ShieldModel shield) {
+    showDialog(
+      context: context,
+      builder: (context) => ShieldNotesDialog(
+        projectId: widget.projectId,
+        shieldId: shield.id,
+        currentNotes: shield.notes,
+      ),
+    );
   }
 
   String _getStatsTitle(ShieldModel shield) {

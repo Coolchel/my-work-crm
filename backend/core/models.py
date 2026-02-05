@@ -422,6 +422,9 @@ class Shield(models.Model):
     # Специфичные поля для мультимедиа (теперь здесь, а не в Project)
     internet_lines_count = models.IntegerField(default=0, verbose_name="Кол-во интернет-линий")
     multimedia_notes = models.TextField(blank=True, verbose_name="Заметки по мультимедиа")
+    
+    # Универсальные заметки для всех типов щитов
+    notes = models.TextField(blank=True, verbose_name="Заметки")
 
     class Meta:
         verbose_name = "Щит"

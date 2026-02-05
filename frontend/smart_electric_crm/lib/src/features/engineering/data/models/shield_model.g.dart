@@ -22,6 +22,7 @@ ShieldModel _$ShieldModelFromJson(Map<String, dynamic> json) => ShieldModel(
           [],
       internetLinesCount: (json['internet_lines_count'] as num?)?.toInt() ?? 0,
       multimediaNotes: json['multimedia_notes'] as String? ?? '',
+      notes: json['notes'] as String? ?? '',
       suggestedSize: json['suggested_size'] as String?,
     );
 
@@ -36,5 +37,6 @@ Map<String, dynamic> _$ShieldModelToJson(ShieldModel instance) =>
       'led_zones': instance.ledZones,
       'internet_lines_count': instance.internetLinesCount,
       'multimedia_notes': instance.multimediaNotes,
+      'notes': instance.notes,
       'suggested_size': instance.suggestedSize,
     };

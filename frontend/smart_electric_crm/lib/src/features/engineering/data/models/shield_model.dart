@@ -32,6 +32,10 @@ class ShieldModel {
   @JsonKey(name: 'multimedia_notes', defaultValue: '')
   final String multimediaNotes;
 
+  // Универсальные заметки для всех типов щитов
+  @JsonKey(defaultValue: '')
+  final String notes;
+
   // Calculated
   @JsonKey(name: 'suggested_size')
   final String? suggestedSize;
@@ -46,6 +50,7 @@ class ShieldModel {
     this.ledZones = const [],
     this.internetLinesCount = 0,
     this.multimediaNotes = '',
+    this.notes = '',
     this.suggestedSize,
   });
 
