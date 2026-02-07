@@ -62,14 +62,16 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     return formatted;
   }
 
-  Widget _buildAmountDisplay(double usd, double byn, {double fontSize = 13}) {
+  Widget _buildAmountDisplay(double usd, double byn,
+      {double fontSize = 13, Color? color}) {
     final List<TextSpan> spans = [];
+    final effectiveColor = color ?? const Color(0xFF2E7D32);
 
     if (usd > 0) {
       spans.add(TextSpan(
         text: '${_formatAmount(usd)} \$',
         style: TextStyle(
-          color: const Color(0xFF2E7D32),
+          color: effectiveColor,
           fontWeight: FontWeight.w600,
           fontSize: fontSize,
         ),
@@ -87,7 +89,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       spans.add(TextSpan(
         text: '${_formatAmount(byn)} р',
         style: TextStyle(
-          color: const Color(0xFF2E7D32),
+          color: effectiveColor,
           fontWeight: FontWeight.w600,
           fontSize: fontSize,
         ),
@@ -353,10 +355,15 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isExpanded ? const Color(0xFF2E7D32) : Colors.grey.shade200,
+          width: isExpanded ? 2.0 : 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: isExpanded
+                ? const Color(0xFF2E7D32).withOpacity(0.08)
+                : Colors.black.withOpacity(0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -385,21 +392,25 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                         });
                       },
                       hoverColor: const Color(0xFF2E7D32).withOpacity(0.03),
-                      child: Padding(
+                      child: Container(
+                        // Добавляем подсветку при раскрытии
+                        color: isExpanded
+                            ? const Color(0xFF2E7D32).withOpacity(0.06)
+                            : Colors.transparent,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
+                            horizontal: 12, vertical: 8),
                         child: Row(
                           children: [
-                            // Порядковый номер слева (на месте бывшей стрелки)
+                            // Порядковый номер слева
                             Text(
                               '$index.',
                               style: TextStyle(
                                 color: const Color(0xFF2E7D32).withOpacity(0.5),
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                                fontSize: 13,
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,45 +419,48 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                     project.address,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      fontSize: 15,
+                                      fontSize: 14, // Уменьшили с 15
                                       letterSpacing: -0.2,
                                     ),
                                   ),
-                                  const SizedBox(height: 3),
-                                  Row(
-                                    children: [
-                                      _buildAmountDisplay(
-                                          project.totalUsd, project.totalByn,
-                                          fontSize: 13),
-                                      if (project.source != null &&
-                                          project.source!.isNotEmpty) ...[
-                                        const SizedBox(width: 8),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 6, vertical: 1),
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey[100],
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                            border: Border.all(
-                                                color: Colors.grey[300]!,
-                                                width: 0.5),
-                                          ),
-                                          child: Text(
-                                            project.source!,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: Colors.grey[600],
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
+                                  if (project.source != null &&
+                                      project.source!.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[100],
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(
+                                            color: Colors.grey[300]!,
+                                            width: 0.5),
+                                      ),
+                                      child: Text(
+                                        project.source!,
+                                        style: TextStyle(
+                                          fontSize: 9, // Уменьшили с 10
+                                          color: Colors.grey[600],
+                                          fontWeight: FontWeight.w500,
                                         ),
-                                      ],
-                                    ],
-                                  ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
+                            const SizedBox(width: 8),
+                            // Перенесли суммы сюда
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                _buildAmountDisplay(
+                                    project.totalUsd, project.totalByn,
+                                    fontSize: 12,
+                                    color: Colors.black), // Чисто черный
+                              ],
+                            ),
+                            const SizedBox(width: 12),
                             const SizedBox(width: 8),
                             // Красивая плашка с количеством этапов
                             Container(
@@ -506,9 +520,19 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                         padding: const EdgeInsets.only(
                             left: 12, right: 12, bottom: 12),
                         child: Column(
-                          children: project.stages
-                              .map((stage) => _buildStageRow(project, stage))
-                              .toList(),
+                          children: [
+                            for (var i = 0; i < project.stages.length; i++) ...[
+                              _buildStageRow(project, project.stages[i]),
+                              if (i < project.stages.length - 1)
+                                Divider(
+                                  height: 1, // Минимум пространства
+                                  thickness: 0.5,
+                                  color: Colors.grey[200],
+                                  indent: 0,
+                                  endIndent: 0,
+                                ),
+                            ],
+                          ],
                         ),
                       ),
                   ],
@@ -525,124 +549,118 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     final hasExternalAmount =
         stage.externalAmountUsd > 0 || stage.externalAmountByn > 0;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 5),
-      child: Row(
-        children: [
-          Expanded(
-            child: InkWell(
-              onTap: () async {
-                final projects = ref.read(projectListProvider).valueOrNull;
-                if (projects != null) {
-                  try {
-                    final realProject =
-                        projects.firstWhere((p) => p.id == project.id);
-                    final realStage =
-                        realProject.stages.firstWhere((s) => s.id == stage.id);
+    return InkWell(
+      onTap: () async {
+        final projects = ref.read(projectListProvider).valueOrNull;
+        if (projects != null) {
+          try {
+            final realProject = projects.firstWhere((p) => p.id == project.id);
+            final realStage =
+                realProject.stages.firstWhere((s) => s.id == stage.id);
 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EstimateScreen(
-                          projectId: realProject.id.toString(),
-                          stage: realStage,
-                        ),
-                      ),
-                    );
-                  } catch (e) {
-                    debugPrint("Navigation error: $e");
-                  }
-                }
-              },
-              borderRadius: BorderRadius.circular(6),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      margin: const EdgeInsets.only(right: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2E7D32).withOpacity(0.5),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            stage.titleDisplay,
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                          // Дата изменения этапа
-                          if (stage.updatedAt != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                _getStageDateInfo(stage.updatedAt!).text,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color:
-                                      _getStageDateInfo(stage.updatedAt!).color,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EstimateScreen(
+                  projectId: realProject.id.toString(),
+                  stage: realStage,
                 ),
               ),
+            );
+          } catch (e) {
+            debugPrint("Navigation error: $e");
+          }
+        }
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2E7D32).withOpacity(0.5),
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              _buildAmountDisplay(stage.ourAmountUsd, stage.ourAmountByn,
-                  fontSize: 12),
-              if (hasExternalAmount) ...[
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    'из ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    stage.titleDisplay,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  if (stage.updatedAt != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        _getStageDateInfo(stage.updatedAt!).text,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: _getStageDateInfo(stage.updatedAt!).color,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                // Мини-бар прогресса (доля "Наши")
-                Container(
-                  width: 60,
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                  child: FractionallySizedBox(
-                    alignment: Alignment.centerRight,
-                    widthFactor: _calculateOurShareFactor(stage),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2E7D32).withOpacity(0.6),
-                        borderRadius: BorderRadius.circular(2),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _buildAmountDisplay(stage.ourAmountUsd, stage.ourAmountByn,
+                    fontSize: 12),
+                if (hasExternalAmount) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      'из ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Container(
+                    width: 60,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(2),
+                      border: Border.all(color: Colors.grey[300]!, width: 0.5),
+                    ),
+                    child: Stack(
+                      children: [
+                        FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: _calculateOurShareFactor(stage),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2E7D32).withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
-            ],
-          ),
-          const SizedBox(width: 8),
-          _PayStageButton(
-            onPressed: () => _markStagePaid(stage.id, stage.titleDisplay),
-          ),
-        ],
+            ),
+            const SizedBox(width: 8),
+            _PayStageButton(
+              onPressed: () => _markStagePaid(stage.id, stage.titleDisplay),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -768,6 +786,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               ),
             ),
           ],
+          const SizedBox(height: 20), // Фиксированный отступ снизу
         ],
       ),
     );
@@ -785,40 +804,34 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: Colors.grey[600],
             fontWeight: FontWeight.w500,
+            color: Colors.grey[500],
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 5),
         TextField(
           controller: controller,
-          minLines: 2,
-          maxLines: null,
-          onChanged: (_) {
-            if (!_hasChanges) {
-              setState(() => _hasChanges = true);
-            }
-          },
+          maxLines: maxLines,
+          style: const TextStyle(fontSize: 13),
           decoration: InputDecoration(
-            hintText: 'Введите...',
-            filled: true,
+            isDense: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             fillColor: Colors.grey[50],
+            filled: true,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade200),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade200),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFF2E7D32)),
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1),
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           ),
-          style: const TextStyle(fontSize: 13),
         ),
       ],
     );
@@ -833,7 +846,6 @@ class _StageDateInfo {
 
 class _PayStageButton extends StatefulWidget {
   final VoidCallback onPressed;
-
   const _PayStageButton({required this.onPressed});
 
   @override
@@ -848,36 +860,19 @@ class _PayStageButtonState extends State<_PayStageButton> {
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: Tooltip(
-        message: 'Закрыть этап',
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 100, // Явно фиксируем ширину
+        height: 28, // Явно фиксируем высоту
         child: Material(
-          color: Colors.transparent,
+          color: _isHovered
+              ? const Color(0xFF2E7D32)
+              : const Color(0xFF2E7D32).withOpacity(0.05),
+          borderRadius: BorderRadius.circular(6),
           child: InkWell(
             onTap: widget.onPressed,
-            borderRadius: BorderRadius.circular(8),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: _isHovered
-                    ? const Color(0xFF2E7D32)
-                    : const Color(0xFF2E7D32).withOpacity(0.08),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color:
-                      const Color(0xFF2E7D32).withOpacity(_isHovered ? 1 : 0.3),
-                  width: 1,
-                ),
-                boxShadow: _isHovered
-                    ? [
-                        BoxShadow(
-                          color: const Color(0xFF2E7D32).withOpacity(0.3),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        )
-                      ]
-                    : [],
-              ),
+            borderRadius: BorderRadius.circular(6),
+            child: Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -886,15 +881,15 @@ class _PayStageButtonState extends State<_PayStageButton> {
                         ? Icons.check_circle
                         : Icons.radio_button_unchecked,
                     color: _isHovered ? Colors.white : const Color(0xFF2E7D32),
-                    size: 16,
+                    size: 14, // Уменьшили с 16
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4), // Уменьшили с 8
                   Text(
                     _isHovered ? 'Оплачено' : 'Не оплачено',
                     style: TextStyle(
                       color:
                           _isHovered ? Colors.white : const Color(0xFF2E7D32),
-                      fontSize: 12,
+                      fontSize: 11, // Уменьшили с 12
                       fontWeight: FontWeight.w600,
                     ),
                   ),
