@@ -354,7 +354,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             },
             borderRadius: BorderRadius.circular(8),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
                 children: [
                   // Иконка раскрытия
@@ -381,22 +381,41 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                       ],
                     ),
                   ),
-                  // Badge с количеством этапов
+                  // Красивая плашка с количеством этапов
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Text(
-                      'Этапов: ${project.stages.length}',
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF2E7D32).withOpacity(0.1),
+                          const Color(0xFF2E7D32).withOpacity(0.05),
+                        ],
                       ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF2E7D32).withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.layers_outlined,
+                          size: 14,
+                          color: const Color(0xFF2E7D32),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${project.stages.length}',
+                          style: const TextStyle(
+                            color: Color(0xFF2E7D32),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -451,8 +470,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                     child: Text(
                       _formatStageDate(stage.updatedAt!),
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 11,
                         color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -470,21 +490,36 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                   child: Text(
                     'из ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 11,
                       color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: () => _markStagePaid(stage.id, stage.titleDisplay),
-            icon: const Icon(Icons.check_circle_outline),
-            color: const Color(0xFF2E7D32),
-            iconSize: 20,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+          const SizedBox(width: 8),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _markStagePaid(stage.id, stage.titleDisplay),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFF2E7D32).withOpacity(0.3),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  color: Color(0xFF2E7D32),
+                  size: 20,
+                ),
+              ),
+            ),
           ),
         ],
       ),
