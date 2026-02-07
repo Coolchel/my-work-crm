@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -161,16 +162,6 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              ref.invalidate(unpaidProjectsProvider);
-              ref.invalidate(financeSettingsProvider);
-            },
-            tooltip: 'Обновить',
-          ),
-        ],
       ),
       body: projectsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -204,29 +195,37 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       }
     });
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // Список проектов
-          if (data.projects.isEmpty)
-            _buildEmptyState()
-          else
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                children:
-                    data.projects.map((p) => _buildProjectCard(p)).toList(),
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(unpaidProjectsProvider);
+        ref.invalidate(financeSettingsProvider);
+        // Даём время на обновление
+        await Future.delayed(const Duration(milliseconds: 500));
+      },
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Список проектов
+            if (data.projects.isEmpty)
+              _buildEmptyState()
+            else
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  children:
+                      data.projects.map((p) => _buildProjectCard(p)).toList(),
+                ),
               ),
-            ),
 
-          // Блок "Итого к получению" внизу
-          _buildTotalSection(data.totalUsd, data.totalByn),
+            // Блок "Итого к получению" внизу
+            _buildTotalSection(data.totalUsd, data.totalByn),
 
-          // Глобальные поля заметок
-          _buildGlobalSettingsSection(),
+            // Глобальные поля заметок
+            _buildGlobalSettingsSection(),
 
-          const SizedBox(height: 80), // Отступ снизу
-        ],
+            const SizedBox(height: 80), // Отступ снизу
+          ],
+        ),
       ),
     );
   }
@@ -384,33 +383,17 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                   ),
                   // Badge с количеством этапов
                   Container(
-                    margin: const EdgeInsets.only(right: 4),
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2E7D32).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: Text(
-                      '${project.stages.length}',
-                      style: const TextStyle(
-                        color: Color(0xFF2E7D32),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(project.status).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _getStatusLabel(project.status),
+                      'Этапов: ${project.stages.length}',
                       style: TextStyle(
-                        color: _getStatusColor(project.status),
+                        color: Colors.grey.shade700,
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
                       ),
@@ -437,6 +420,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   Widget _buildStageRow(UnpaidStageModel stage) {
+    final hasExternalAmount =
+        stage.externalAmountUsd > 0 || stage.externalAmountByn > 0;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 5),
       child: Row(
@@ -451,13 +437,46 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             ),
           ),
           Expanded(
-            child: Text(
-              stage.titleDisplay,
-              style: const TextStyle(fontSize: 13),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  stage.titleDisplay,
+                  style: const TextStyle(fontSize: 13),
+                ),
+                // Дата изменения этапа
+                if (stage.updatedAt != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      _formatStageDate(stage.updatedAt!),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
-          _buildAmountDisplay(stage.ourAmountUsd, stage.ourAmountByn,
-              fontSize: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _buildAmountDisplay(stage.ourAmountUsd, stage.ourAmountByn,
+                  fontSize: 12),
+              if (hasExternalAmount)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    'из ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+            ],
+          ),
           const SizedBox(width: 4),
           IconButton(
             onPressed: () => _markStagePaid(stage.id, stage.titleDisplay),
@@ -470,6 +489,34 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         ],
       ),
     );
+  }
+
+  String _formatExternalAmount(double usd, double byn) {
+    final parts = <String>[];
+    if (usd > 0) parts.add('${usd.toStringAsFixed(0)}\$');
+    if (byn > 0) parts.add('${byn.toStringAsFixed(0)}р');
+    return parts.join(' + ');
+  }
+
+  String _formatStageDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final diff = now.difference(date);
+
+      if (diff.inDays == 0) {
+        return 'Сегодня';
+      } else if (diff.inDays == 1) {
+        return 'Вчера';
+      } else if (diff.inDays < 7) {
+        return '${diff.inDays} дн. назад';
+      } else {
+        // Формат: 07.02.2026
+        return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+      }
+    } catch (e) {
+      return '';
+    }
   }
 
   Widget _buildGlobalSettingsSection() {
@@ -578,31 +625,5 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         ),
       ],
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'new':
-        return Colors.blue;
-      case 'in_progress':
-        return Colors.orange;
-      case 'completed':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getStatusLabel(String status) {
-    switch (status) {
-      case 'new':
-        return 'Новый';
-      case 'in_progress':
-        return 'В работе';
-      case 'completed':
-        return 'Завершен';
-      default:
-        return status;
-    }
   }
 }

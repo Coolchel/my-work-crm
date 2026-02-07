@@ -43,8 +43,10 @@ class FinanceRepository {
   /// Получает глобальные финансовые настройки
   Future<FinanceSettingsModel> getSettings() async {
     try {
-      final response = await _dio.get('/finance/settings/');
-      return FinanceSettingsModel.fromJson(response.data);
+      final response = await _dio.get('/finance/');
+      // API возвращает список с одним элементом, берем первый
+      final data = response.data is List ? response.data[0] : response.data;
+      return FinanceSettingsModel.fromJson(data);
     } catch (e) {
       debugPrint("❌ Get Finance Settings Error: $e");
       rethrow;
@@ -64,7 +66,7 @@ class FinanceRepository {
       if (financialNotes != null) {
         data['financial_notes'] = financialNotes;
       }
-      final response = await _dio.patch('/finance/settings/', data: data);
+      final response = await _dio.patch('/finance/1/', data: data);
       return FinanceSettingsModel.fromJson(response.data);
     } catch (e) {
       debugPrint("❌ Update Finance Settings Error: $e");

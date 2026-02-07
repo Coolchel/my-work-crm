@@ -17,12 +17,24 @@ class UnpaidStageModel {
   @JsonKey(name: 'our_amount_byn')
   final double ourAmountByn;
 
+  @JsonKey(name: 'external_amount_usd', defaultValue: 0.0)
+  final double externalAmountUsd;
+
+  @JsonKey(name: 'external_amount_byn', defaultValue: 0.0)
+  final double externalAmountByn;
+
+  @JsonKey(name: 'updated_at')
+  final String? updatedAt;
+
   UnpaidStageModel({
     required this.id,
     required this.title,
     required this.titleDisplay,
     required this.ourAmountUsd,
     required this.ourAmountByn,
+    this.externalAmountUsd = 0.0,
+    this.externalAmountByn = 0.0,
+    this.updatedAt,
   });
 
   factory UnpaidStageModel.fromJson(Map<String, dynamic> json) =>

@@ -161,12 +161,16 @@ class ProjectViewSet(viewsets.ModelViewSet):
             for stage in unpaid_stages:
                 stage_usd = 0.0
                 stage_byn = 0.0
+                stage_external_usd = 0.0
+                stage_external_byn = 0.0
                 
                 for item in stage.estimate_items.all():
                     if item.currency == 'USD':
                         stage_usd += item.my_amount
+                        stage_external_usd += item.employer_amount
                     else:
                         stage_byn += item.my_amount
+                        stage_external_byn += item.employer_amount
                 
                 stage_data = {
                     'id': stage.id,
@@ -174,6 +178,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
                     'title_display': stage.get_title_display(),
                     'our_amount_usd': round(stage_usd, 2),
                     'our_amount_byn': round(stage_byn, 2),
+                    'external_amount_usd': round(stage_external_usd, 2),
+                    'external_amount_byn': round(stage_external_byn, 2),
+                    'updated_at': stage.updated_at.isoformat() if hasattr(stage, 'updated_at') and stage.updated_at else None,
                 }
                 project_data['stages'].append(stage_data)
                 project_data['total_usd'] += stage_usd
@@ -365,18 +372,17 @@ class FinanceSettingsViewSet(viewsets.ViewSet):
     Singleton модель - всегда одна запись.
     """
     
-    @action(detail=False, methods=['get', 'patch'])
-    def settings(self, request):
-        """Получить или обновить финансовые настройки"""
+    def list(self, request):
+        """Получить финансовые настройки"""
         finance_settings = FinanceSettings.load()
-        
-        if request.method == 'GET':
-            serializer = FinanceSettingsSerializer(finance_settings)
+        serializer = FinanceSettingsSerializer(finance_settings)
+        return Response(serializer.data)
+    
+    def partial_update(self, request, pk=None):
+        """Обновить финансовые настройки"""
+        finance_settings = FinanceSettings.load()
+        serializer = FinanceSettingsSerializer(finance_settings, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
             return Response(serializer.data)
-        
-        elif request.method == 'PATCH':
-            serializer = FinanceSettingsSerializer(finance_settings, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

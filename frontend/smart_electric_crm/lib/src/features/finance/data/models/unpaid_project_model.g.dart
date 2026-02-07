@@ -13,6 +13,11 @@ UnpaidStageModel _$UnpaidStageModelFromJson(Map<String, dynamic> json) =>
       titleDisplay: json['title_display'] as String,
       ourAmountUsd: (json['our_amount_usd'] as num).toDouble(),
       ourAmountByn: (json['our_amount_byn'] as num).toDouble(),
+      externalAmountUsd:
+          (json['external_amount_usd'] as num?)?.toDouble() ?? 0.0,
+      externalAmountByn:
+          (json['external_amount_byn'] as num?)?.toDouble() ?? 0.0,
+      updatedAt: json['updated_at'] as String?,
     );
 
 Map<String, dynamic> _$UnpaidStageModelToJson(UnpaidStageModel instance) =>
@@ -22,6 +27,9 @@ Map<String, dynamic> _$UnpaidStageModelToJson(UnpaidStageModel instance) =>
       'title_display': instance.titleDisplay,
       'our_amount_usd': instance.ourAmountUsd,
       'our_amount_byn': instance.ourAmountByn,
+      'external_amount_usd': instance.externalAmountUsd,
+      'external_amount_byn': instance.externalAmountByn,
+      'updated_at': instance.updatedAt,
     };
 
 UnpaidProjectModel _$UnpaidProjectModelFromJson(Map<String, dynamic> json) =>

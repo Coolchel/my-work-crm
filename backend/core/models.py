@@ -145,6 +145,10 @@ class Stage(models.Model):
     is_paid = models.BooleanField(default=False, verbose_name="Оплачено")
     started_at = models.DateField(null=True, blank=True, verbose_name="Дата начала")
     ended_at = models.DateField(null=True, blank=True, verbose_name="Дата конца")
+    
+    # Даты создания и изменения
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
 
     work_notes = models.TextField(blank=True, verbose_name="Заметки по работам")
     material_notes = models.TextField(blank=True, verbose_name="Заметки по материалам")
