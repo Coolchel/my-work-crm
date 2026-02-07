@@ -37,6 +37,7 @@ UnpaidProjectModel _$UnpaidProjectModelFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       address: json['address'] as String,
       status: json['status'] as String,
+      source: json['source'] as String?,
       totalUsd: (json['total_usd'] as num).toDouble(),
       totalByn: (json['total_byn'] as num).toDouble(),
       stages: (json['stages'] as List<dynamic>)
@@ -49,6 +50,7 @@ Map<String, dynamic> _$UnpaidProjectModelToJson(UnpaidProjectModel instance) =>
       'id': instance.id,
       'address': instance.address,
       'status': instance.status,
+      'source': instance.source,
       'total_usd': instance.totalUsd,
       'total_byn': instance.totalByn,
       'stages': instance.stages,

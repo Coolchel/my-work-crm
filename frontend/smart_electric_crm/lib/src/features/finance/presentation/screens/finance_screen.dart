@@ -6,6 +6,8 @@ import '../../data/models/unpaid_project_model.dart';
 import '../../data/models/finance_settings_model.dart';
 import '../../data/repositories/finance_repository.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
+import '../../../projects/presentation/providers/project_providers.dart';
+import '../../../projects/presentation/screens/estimate_screen.dart';
 
 part 'finance_screen.g.dart';
 
@@ -212,8 +214,19 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: Column(
-                  children:
-                      data.projects.map((p) => _buildProjectCard(p)).toList(),
+                  children: [
+                    // Сортировка: сверху - старые, снизу - новые
+                    ...(data.projects.toList()
+                          ..sort((a, b) {
+                            final aDate = _getEarliestStageDate(a);
+                            final bDate = _getEarliestStageDate(b);
+                            return aDate.compareTo(bDate);
+                          }))
+                        .asMap()
+                        .entries
+                        .map((entry) =>
+                            _buildProjectCard(entry.value, entry.key + 1)),
+                  ],
                 ),
               ),
 
@@ -235,15 +248,22 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       margin: const EdgeInsets.fromLTRB(8, 16, 8, 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        gradient: LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            const Color(0xFF2E7D32).withOpacity(0.05),
+            const Color(0xFF2E7D32).withOpacity(0.2),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: const Color(0xFF2E7D32).withOpacity(0.3), width: 1.5),
+            color: const Color(0xFF2E7D32).withOpacity(0.2), width: 1),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2E7D32).withOpacity(0.08),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: const Color(0xFF2E7D32).withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -325,120 +345,183 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  Widget _buildProjectCard(UnpaidProjectModel project) {
+  Widget _buildProjectCard(UnpaidProjectModel project, int index) {
     final isExpanded = _expandedProjects[project.id] ?? false;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 3,
-            offset: const Offset(0, 1),
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Кликабельный заголовок проекта
-          InkWell(
-            onTap: () {
-              setState(() {
-                _expandedProjects[project.id] = !isExpanded;
-              });
-            },
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                children: [
-                  // Иконка раскрытия
-                  Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: const Color(0xFF2E7D32),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          project.address,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        _buildAmountDisplay(project.totalUsd, project.totalByn,
-                            fontSize: 13),
-                      ],
-                    ),
-                  ),
-                  // Красивая плашка с количеством этапов
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF2E7D32).withOpacity(0.1),
-                          const Color(0xFF2E7D32).withOpacity(0.05),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFF2E7D32).withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.layers_outlined,
-                          size: 14,
-                          color: const Color(0xFF2E7D32),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${project.stages.length}',
-                          style: const TextStyle(
-                            color: Color(0xFF2E7D32),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Акцентная полоса слева
+              Container(
+                width: 4,
+                color: const Color(0xFF2E7D32).withOpacity(0.7),
               ),
-            ),
-          ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Кликабельный заголовок проекта
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _expandedProjects[project.id] = !isExpanded;
+                        });
+                      },
+                      hoverColor: const Color(0xFF2E7D32).withOpacity(0.03),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        child: Row(
+                          children: [
+                            // Порядковый номер слева (на месте бывшей стрелки)
+                            Text(
+                              '$index.',
+                              style: TextStyle(
+                                color: const Color(0xFF2E7D32).withOpacity(0.5),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    project.address,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 15,
+                                      letterSpacing: -0.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Row(
+                                    children: [
+                                      _buildAmountDisplay(
+                                          project.totalUsd, project.totalByn,
+                                          fontSize: 13),
+                                      if (project.source != null &&
+                                          project.source!.isNotEmpty) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 1),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[100],
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                            border: Border.all(
+                                                color: Colors.grey[300]!,
+                                                width: 0.5),
+                                          ),
+                                          child: Text(
+                                            project.source!,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.grey[600],
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Красивая плашка с количеством этапов
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    const Color(0xFF2E7D32).withOpacity(0.12),
+                                    const Color(0xFF2E7D32).withOpacity(0.06),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color:
+                                      const Color(0xFF2E7D32).withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.layers_outlined,
+                                    size: 14,
+                                    color: Color(0xFF2E7D32),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${project.stages.length}',
+                                    style: const TextStyle(
+                                      color: Color(0xFF2E7D32),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Декоративная стрелочка перенесена вправо и стала серой
+                            Icon(
+                              isExpanded
+                                  ? Icons.expand_less
+                                  : Icons.expand_more,
+                              color: Colors.grey[400],
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
 
-          // Раскрывающийся список этапов
-          if (isExpanded)
-            Padding(
-              padding: const EdgeInsets.only(left: 12, right: 12, bottom: 8),
-              child: Column(
-                children: project.stages
-                    .map((stage) => _buildStageRow(stage))
-                    .toList(),
+                    // Раскрывающийся список этапов
+                    if (isExpanded)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            left: 12, right: 12, bottom: 12),
+                        child: Column(
+                          children: project.stages
+                              .map((stage) => _buildStageRow(project, stage))
+                              .toList(),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildStageRow(UnpaidStageModel stage) {
+  Widget _buildStageRow(UnpaidProjectModel project, UnpaidStageModel stage) {
     final hasExternalAmount =
         stage.externalAmountUsd > 0 || stage.externalAmountByn > 0;
 
@@ -446,37 +529,73 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       padding: const EdgeInsets.only(bottom: 5),
       child: Row(
         children: [
-          Container(
-            width: 6,
-            height: 6,
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2E7D32).withOpacity(0.5),
-              shape: BoxShape.circle,
-            ),
-          ),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  stage.titleDisplay,
-                  style: const TextStyle(fontSize: 13),
-                ),
-                // Дата изменения этапа
-                if (stage.updatedAt != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      _formatStageDate(stage.updatedAt!),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
+            child: InkWell(
+              onTap: () async {
+                final projects = ref.read(projectListProvider).valueOrNull;
+                if (projects != null) {
+                  try {
+                    final realProject =
+                        projects.firstWhere((p) => p.id == project.id);
+                    final realStage =
+                        realProject.stages.firstWhere((s) => s.id == stage.id);
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EstimateScreen(
+                          projectId: realProject.id.toString(),
+                          stage: realStage,
+                        ),
+                      ),
+                    );
+                  } catch (e) {
+                    debugPrint("Navigation error: $e");
+                  }
+                }
+              },
+              borderRadius: BorderRadius.circular(6),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2E7D32).withOpacity(0.5),
+                        shape: BoxShape.circle,
                       ),
                     ),
-                  ),
-              ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            stage.titleDisplay,
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                          // Дата изменения этапа
+                          if (stage.updatedAt != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                _getStageDateInfo(stage.updatedAt!).text,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color:
+                                      _getStageDateInfo(stage.updatedAt!).color,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
           Column(
@@ -484,7 +603,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             children: [
               _buildAmountDisplay(stage.ourAmountUsd, stage.ourAmountByn,
                   fontSize: 12),
-              if (hasExternalAmount)
+              if (hasExternalAmount) ...[
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
@@ -496,30 +615,32 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 4),
+                // Мини-бар прогресса (доля "Наши")
+                Container(
+                  width: 60,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerRight,
+                    widthFactor: _calculateOurShareFactor(stage),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2E7D32).withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(width: 8),
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _markStagePaid(stage.id, stage.titleDisplay),
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2E7D32).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: const Color(0xFF2E7D32).withOpacity(0.3),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.check_circle,
-                  color: Color(0xFF2E7D32),
-                  size: 20,
-                ),
-              ),
-            ),
+          _PayStageButton(
+            onPressed: () => _markStagePaid(stage.id, stage.titleDisplay),
           ),
         ],
       ),
@@ -533,25 +654,64 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     return parts.join(' + ');
   }
 
-  String _formatStageDate(String dateString) {
+  _StageDateInfo _getStageDateInfo(String dateString) {
     try {
       final date = DateTime.parse(dateString);
       final now = DateTime.now();
       final diff = now.difference(date);
 
       if (diff.inDays == 0) {
-        return 'Сегодня';
+        return _StageDateInfo('Сегодня', Colors.blue.shade700);
       } else if (diff.inDays == 1) {
-        return 'Вчера';
+        return _StageDateInfo('Вчера', Colors.blue.shade600);
+      } else if (diff.inDays < 4) {
+        return _StageDateInfo(
+            '${diff.inDays} дн. назад', Colors.orange.shade700);
       } else if (diff.inDays < 7) {
-        return '${diff.inDays} дн. назад';
+        return _StageDateInfo('${diff.inDays} дн. назад', Colors.red.shade400);
       } else {
-        // Формат: 07.02.2026
-        return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+        final formatted =
+            '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+        return _StageDateInfo(formatted, Colors.red.shade700);
       }
     } catch (e) {
-      return '';
+      return _StageDateInfo('', Colors.grey);
     }
+  }
+
+  double _calculateOurShareFactor(UnpaidStageModel stage) {
+    final totalUsd = stage.ourAmountUsd + stage.externalAmountUsd;
+    final totalByn = stage.ourAmountByn + stage.externalAmountByn;
+
+    if (totalUsd > 0) {
+      return (stage.ourAmountUsd / totalUsd).clamp(0.0, 1.0);
+    }
+    if (totalByn > 0) {
+      return (stage.ourAmountByn / totalByn).clamp(0.0, 1.0);
+    }
+    return 1.0;
+  }
+
+  // Получить самую раннюю дату обновления из этапов проекта
+  DateTime _getEarliestStageDate(UnpaidProjectModel project) {
+    if (project.stages.isEmpty) {
+      return DateTime.now();
+    }
+
+    DateTime earliest = DateTime.now();
+    for (final stage in project.stages) {
+      if (stage.updatedAt != null) {
+        try {
+          final date = DateTime.parse(stage.updatedAt!);
+          if (date.isBefore(earliest)) {
+            earliest = date;
+          }
+        } catch (e) {
+          // Игнорируем ошибки парсинга
+        }
+      }
+    }
+    return earliest;
   }
 
   Widget _buildGlobalSettingsSection() {
@@ -566,11 +726,11 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.notes, size: 18, color: Color(0xFF2E7D32)),
-              const SizedBox(width: 8),
-              const Text(
+              Icon(Icons.notes, size: 18, color: Color(0xFF2E7D32)),
+              SizedBox(width: 8),
+              Text(
                 'Финансовые заметки',
                 style: TextStyle(
                   fontSize: 14,
@@ -595,14 +755,15 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.centerRight,
-              child: FilledButton.icon(
+              child: OutlinedButton.icon(
                 onPressed: _saveSettings,
-                icon: const Icon(Icons.save, size: 16),
+                icon: const Icon(Icons.save, size: 14),
                 label: const Text('Сохранить'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E7D32),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF2E7D32),
+                  side: const BorderSide(color: Color(0xFF2E7D32)),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 ),
               ),
             ),
@@ -631,7 +792,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         const SizedBox(height: 4),
         TextField(
           controller: controller,
-          maxLines: maxLines,
+          minLines: 2,
+          maxLines: null,
           onChanged: (_) {
             if (!_hasChanges) {
               setState(() => _hasChanges = true);
@@ -659,6 +821,89 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           style: const TextStyle(fontSize: 13),
         ),
       ],
+    );
+  }
+}
+
+class _StageDateInfo {
+  final String text;
+  final Color color;
+  _StageDateInfo(this.text, this.color);
+}
+
+class _PayStageButton extends StatefulWidget {
+  final VoidCallback onPressed;
+
+  const _PayStageButton({required this.onPressed});
+
+  @override
+  State<_PayStageButton> createState() => _PayStageButtonState();
+}
+
+class _PayStageButtonState extends State<_PayStageButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Tooltip(
+        message: 'Закрыть этап',
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onPressed,
+            borderRadius: BorderRadius.circular(8),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: _isHovered
+                    ? const Color(0xFF2E7D32)
+                    : const Color(0xFF2E7D32).withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color:
+                      const Color(0xFF2E7D32).withOpacity(_isHovered ? 1 : 0.3),
+                  width: 1,
+                ),
+                boxShadow: _isHovered
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF2E7D32).withOpacity(0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        )
+                      ]
+                    : [],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _isHovered
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
+                    color: _isHovered ? Colors.white : const Color(0xFF2E7D32),
+                    size: 16,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _isHovered ? 'Оплачено' : 'Не оплачено',
+                    style: TextStyle(
+                      color:
+                          _isHovered ? Colors.white : const Color(0xFF2E7D32),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

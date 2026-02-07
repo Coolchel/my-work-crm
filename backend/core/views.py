@@ -150,6 +150,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project_data = {
                 'id': project.id,
                 'address': project.address,
+                'source': project.source,
                 'status': project.status,
                 'total_usd': 0.0,
                 'total_byn': 0.0,

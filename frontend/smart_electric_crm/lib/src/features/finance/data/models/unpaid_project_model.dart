@@ -50,6 +50,8 @@ class UnpaidProjectModel {
   final String address;
   final String status;
 
+  final String? source;
+
   @JsonKey(name: 'total_usd')
   final double totalUsd;
 
@@ -62,6 +64,7 @@ class UnpaidProjectModel {
     required this.id,
     required this.address,
     required this.status,
+    this.source,
     required this.totalUsd,
     required this.totalByn,
     required this.stages,
