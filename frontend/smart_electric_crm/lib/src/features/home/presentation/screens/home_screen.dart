@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../projects/presentation/screens/project_list_screen.dart';
 import '../../../catalog/presentation/category_list_screen.dart';
+import '../../../finance/presentation/screens/finance_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [
     const ProjectListScreen(),
     const CategoryListScreen(),
+    const FinanceScreen(),
   ];
 
   @override
@@ -41,6 +43,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.folder_open_outlined),
             selectedIcon: Icon(Icons.folder_open),
             label: 'Справочник',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            selectedIcon: Icon(Icons.account_balance_wallet),
+            label: 'Финансы',
           ),
         ],
       ),

@@ -20,7 +20,8 @@ from rest_framework.routers import DefaultRouter
 from core.views import (
     ProjectViewSet, CatalogCategoryViewSet, CatalogItemViewSet, StageViewSet, 
     ShieldGroupViewSet, LedZoneViewSet, ShieldViewSet, EstimateItemViewSet,
-    WorkTemplateViewSet, MaterialTemplateViewSet, PowerShieldTemplateViewSet, LedShieldTemplateViewSet
+    WorkTemplateViewSet, MaterialTemplateViewSet, PowerShieldTemplateViewSet, LedShieldTemplateViewSet,
+    FinanceSettingsViewSet
 )
 
 router = DefaultRouter()
@@ -36,6 +37,7 @@ router.register(r'powershield-templates', PowerShieldTemplateViewSet, basename='
 router.register(r'led-shield-templates', LedShieldTemplateViewSet, basename='led-shield-template')
 router.register(r'shield-groups', ShieldGroupViewSet, basename='shield-group')
 router.register(r'led-zones', LedZoneViewSet, basename='led-zone')
+router.register(r'finance', FinanceSettingsViewSet, basename='finance')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

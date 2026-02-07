@@ -643,3 +643,37 @@ class LedShieldTemplateItem(models.Model):
 
     def __str__(self):
          return f"{self.transformer} x{self.quantity}"
+
+
+class FinanceSettings(models.Model):
+    """
+    Singleton модель для глобальных финансовых настроек.
+    Должна существовать только одна запись.
+    """
+    partner_external_estimate = models.TextField(blank=True, verbose_name="Смета контрагента")
+    financial_notes = models.TextField(blank=True, verbose_name="Финансовые заметки")
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Финансовые настройки"
+        verbose_name_plural = "Финансовые настройки"
+
+    def save(self, *args, **kwargs):
+        # Singleton: разрешаем только одну запись
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Запрещаем удаление
+        pass
+
+    @classmethod
+    def load(cls):
+        """Получить или создать единственную запись настроек"""
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return "Финансовые настройки"

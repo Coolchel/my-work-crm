@@ -4,13 +4,15 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import (
     Project, Stage, ShieldGroup, LedZone, CatalogCategory, CatalogItem, 
-    Shield, EstimateItem, WorkTemplate, MaterialTemplate, PowerShieldTemplate, LedShieldTemplate
+    Shield, EstimateItem, WorkTemplate, MaterialTemplate, PowerShieldTemplate, LedShieldTemplate,
+    FinanceSettings
 )
 from .serializers import (
     ProjectSerializer, StageSerializer, CatalogCategorySerializer, CatalogItemSerializer, 
     ShieldGroupSerializer, LedZoneSerializer, ShieldSerializer, EstimateItemSerializer,
     WorkTemplateSerializer, MaterialTemplateSerializer, 
-    PowerShieldTemplateSerializer, LedShieldTemplateSerializer
+    PowerShieldTemplateSerializer, LedShieldTemplateSerializer,
+    FinanceSettingsSerializer
 )
 from .services import TemplateService
 
@@ -113,6 +115,83 @@ class ProjectViewSet(viewsets.ModelViewSet):
             
             if stages_to_create:
                 Stage.objects.bulk_create(stages_to_create)
+    
+    @action(detail=False, methods=['get'])
+    def unpaid_projects(self, request):
+        """
+        Возвращает проекты с неоплаченными этапами (кроме «Предпросчет»).
+        Вычисляет суммы «Наши» для каждого этапа и проекта.
+        """
+        from django.db.models import Prefetch
+        
+        # Получаем неоплаченные этапы (кроме precalc)
+        unpaid_stages_prefetch = Prefetch(
+            'stages',
+            queryset=Stage.objects.filter(is_paid=False).exclude(title='precalc'),
+            to_attr='unpaid_stages_list'
+        )
+        
+        # Проекты с хотя бы одним неоплаченным этапом (кроме precalc)
+        projects = Project.objects.filter(
+            stages__is_paid=False
+        ).distinct().prefetch_related(
+            unpaid_stages_prefetch,
+            'stages__estimate_items'
+        ).order_by('-created_at')
+        
+        # Формируем ответ
+        result = {
+            'total_usd': 0.0,
+            'total_byn': 0.0,
+            'projects': []
+        }
+        
+        for project in projects:
+            project_data = {
+                'id': project.id,
+                'address': project.address,
+                'status': project.status,
+                'total_usd': 0.0,
+                'total_byn': 0.0,
+                'stages': []
+            }
+            
+            unpaid_stages = getattr(project, 'unpaid_stages_list', [])
+            
+            for stage in unpaid_stages:
+                stage_usd = 0.0
+                stage_byn = 0.0
+                
+                for item in stage.estimate_items.all():
+                    if item.currency == 'USD':
+                        stage_usd += item.my_amount
+                    else:
+                        stage_byn += item.my_amount
+                
+                stage_data = {
+                    'id': stage.id,
+                    'title': stage.title,
+                    'title_display': stage.get_title_display(),
+                    'our_amount_usd': round(stage_usd, 2),
+                    'our_amount_byn': round(stage_byn, 2),
+                }
+                project_data['stages'].append(stage_data)
+                project_data['total_usd'] += stage_usd
+                project_data['total_byn'] += stage_byn
+            
+            # Округляем итоги проекта
+            project_data['total_usd'] = round(project_data['total_usd'], 2)
+            project_data['total_byn'] = round(project_data['total_byn'], 2)
+            
+            if project_data['stages']:  # Добавляем только если есть неоплаченные этапы (без precalc)
+                result['projects'].append(project_data)
+                result['total_usd'] += project_data['total_usd']
+                result['total_byn'] += project_data['total_byn']
+        
+        result['total_usd'] = round(result['total_usd'], 2)
+        result['total_byn'] = round(result['total_byn'], 2)
+        
+        return Response(result)
 
 
 
@@ -278,3 +357,26 @@ class LedShieldTemplateViewSet(viewsets.ModelViewSet):
         result = TemplateService.create_ledshield_template_from_shield(shield_id, name, description)
         if result.get("status") == "error": return Response(result, status=400)
         return Response(result)
+
+
+class FinanceSettingsViewSet(viewsets.ViewSet):
+    """
+    ViewSet для глобальных финансовых настроек.
+    Singleton модель - всегда одна запись.
+    """
+    
+    @action(detail=False, methods=['get', 'patch'])
+    def settings(self, request):
+        """Получить или обновить финансовые настройки"""
+        finance_settings = FinanceSettings.load()
+        
+        if request.method == 'GET':
+            serializer = FinanceSettingsSerializer(finance_settings)
+            return Response(serializer.data)
+        
+        elif request.method == 'PATCH':
+            serializer = FinanceSettingsSerializer(finance_settings, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

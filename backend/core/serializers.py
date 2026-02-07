@@ -6,7 +6,8 @@ from .models import (
     WorkTemplate, WorkTemplateItem,
     MaterialTemplate, MaterialTemplateItem,
     PowerShieldTemplate, PowerShieldTemplateItem,
-    LedShieldTemplate, LedShieldTemplateItem
+    LedShieldTemplate, LedShieldTemplateItem,
+    FinanceSettings
 )
 
 class ProjectFileSerializer(serializers.ModelSerializer):
@@ -34,6 +35,11 @@ class EstimateItemSerializer(serializers.ModelSerializer):
 
 class StageSerializer(serializers.ModelSerializer):
     estimate_items = EstimateItemSerializer(many=True, read_only=True)
+    
+    # Вычисляемые поля для финансового монитора
+    our_amount_usd = serializers.SerializerMethodField()
+    our_amount_byn = serializers.SerializerMethodField()
+    title_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Stage
@@ -46,6 +52,24 @@ class StageSerializer(serializers.ModelSerializer):
             'markup_percent': {'required': False},
             'show_prices': {'required': False},
         }
+    
+    def get_our_amount_usd(self, obj):
+        """Сумма «Наши» в USD: (client_amount - employer_amount) для позиций с currency=USD"""
+        total = 0.0
+        for item in obj.estimate_items.filter(currency='USD'):
+            total += item.my_amount
+        return round(total, 2)
+    
+    def get_our_amount_byn(self, obj):
+        """Сумма «Наши» в BYN: (client_amount - employer_amount) для позиций с currency=BYN"""
+        total = 0.0
+        for item in obj.estimate_items.filter(currency='BYN'):
+            total += item.my_amount
+        return round(total, 2)
+    
+    def get_title_display(self, obj):
+        """Человекочитаемое название этапа"""
+        return obj.get_title_display()
 
 class ShieldGroupSerializer(serializers.ModelSerializer):
     class Meta:
@@ -184,4 +208,10 @@ class LedShieldTemplateSerializer(serializers.ModelSerializer):
     items = LedShieldTemplateItemSerializer(many=True, read_only=True)
     class Meta:
         model = LedShieldTemplate
+        fields = '__all__'
+
+
+class FinanceSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FinanceSettings
         fields = '__all__'
