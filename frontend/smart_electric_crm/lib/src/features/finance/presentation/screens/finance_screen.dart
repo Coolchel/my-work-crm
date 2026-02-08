@@ -804,10 +804,19 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 icon: const Icon(Icons.save, size: 14),
                 label: const Text('Сохранить'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF2E7D32),
-                  side: const BorderSide(color: Color(0xFF2E7D32)),
+                  foregroundColor: const Color(0xFF43A047),
+                  side: const BorderSide(color: Color(0xFF43A047)),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                ).copyWith(
+                  overlayColor: WidgetStateProperty.resolveWith<Color?>(
+                    (states) {
+                      if (states.contains(WidgetState.hovered)) {
+                        return const Color(0xFF43A047).withOpacity(0.08);
+                      }
+                      return null;
+                    },
+                  ),
                 ),
               ),
             ),
@@ -888,41 +897,34 @@ class _PayStageButtonState extends State<_PayStageButton> {
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 100, // Явно фиксируем ширину
-        height: 28, // Явно фиксируем высоту
-        child: Material(
-          color: _isHovered
-              ? const Color(0xFF2E7D32)
-              : const Color(0xFF2E7D32).withOpacity(0.05),
-          borderRadius: BorderRadius.circular(6),
-          child: InkWell(
-            onTap: widget.onPressed,
-            borderRadius: BorderRadius.circular(6),
-            child: Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _isHovered
-                        ? Icons.check_circle
-                        : Icons.radio_button_unchecked,
-                    color: _isHovered ? Colors.white : const Color(0xFF2E7D32),
-                    size: 14, // Уменьшили с 16
-                  ),
-                  const SizedBox(width: 4), // Уменьшили с 8
-                  Text(
-                    _isHovered ? 'Оплачено' : 'Не оплачено',
-                    style: TextStyle(
-                      color:
-                          _isHovered ? Colors.white : const Color(0xFF2E7D32),
-                      fontSize: 11, // Уменьшили с 12
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+      child: SizedBox(
+        width: 110, // Slightly wider to accommodate icon and text comfortably
+        height: 28,
+        child: OutlinedButton.icon(
+          onPressed: widget.onPressed,
+          icon: Icon(
+            _isHovered ? Icons.check_circle : Icons.radio_button_unchecked,
+            size: 14,
+          ),
+          label: Text(
+            _isHovered ? 'Оплачено' : 'Не оплачено',
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+          ),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: const Color(0xFF43A047),
+            side: const BorderSide(color: Color(0xFF43A047)),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ).copyWith(
+            overlayColor: WidgetStateProperty.resolveWith<Color?>(
+              (states) {
+                if (states.contains(WidgetState.hovered)) {
+                  return const Color(0xFF43A047).withOpacity(0.08);
+                }
+                return null;
+              },
             ),
           ),
         ),
