@@ -82,6 +82,8 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   bool _hasUnsavedNote = false;
   bool _hasUnsavedRemarks = false;
 
+  static const _defaultMaterialsRemarks = "Не учтен вводной кабель.";
+
   @override
   void initState() {
     super.initState();
@@ -91,8 +93,9 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     // Default text logic for Materials
     String initialRemarks = widget.remarks;
     if (!_isWorkTab && initialRemarks.trim().isEmpty) {
-      initialRemarks = "Не учтен вводной кабель.";
-      _hasUnsavedRemarks = true; // Mark as unsaved so user sees the save button
+      initialRemarks = _defaultMaterialsRemarks;
+      // Do NOT set _hasUnsavedRemarks = true here anymore.
+      // Button will only appear if user changes this default text.
     }
 
     _remarksCtrl = TextEditingController(text: initialRemarks);
@@ -218,32 +221,26 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
 
   void _onRemarksChanged(String value) {
     setState(() {
-      _hasUnsavedRemarks = value != _lastSavedRemarks;
+      // If it's Materials and was initially empty, and now it's the default text,
+      // we consider it "unsaved" but we want to HIDE the button per user request.
+      final isDefaultSpecialCase = !_isWorkTab &&
+          widget.remarks.trim().isEmpty &&
+          value == _defaultMaterialsRemarks;
+
+      if (isDefaultSpecialCase) {
+        _hasUnsavedRemarks = false;
+      } else {
+        _hasUnsavedRemarks = value != _lastSavedRemarks;
+      }
     });
   }
 
-  Widget? _buildNoteSuffix() {
-    return _buildSuffix(
-      saving: _savingNote,
-      hasUnsaved: _hasUnsavedNote,
-      onSave: widget.isDisabled ? null : _saveNote,
-    );
-  }
-
-  Widget? _buildRemarksSuffix() {
-    return _buildSuffix(
-      saving: _savingRemarks,
-      hasUnsaved: _hasUnsavedRemarks,
-      onSave: widget.isDisabled ? null : _saveRemarks,
-    );
-  }
+// Methods _buildNoteSuffix and _buildRemarksSuffix are replaced by _buildSaveButton logic below.
 
   Widget? _buildSuffix({
-    required bool saving,
-    required bool hasUnsaved,
-    required VoidCallback? onSave,
+    bool isSaving = false,
   }) {
-    if (saving) {
+    if (isSaving) {
       return const Padding(
         padding: EdgeInsets.all(12.0),
         child: SizedBox(
@@ -252,26 +249,110 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             child: CircularProgressIndicator(strokeWidth: 2)),
       );
     }
-    if (hasUnsaved) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: IconButton(
-            onPressed: onSave,
-            icon: Icon(Icons.save, color: _primaryColor, size: 20),
-            padding: EdgeInsets.zero,
-            tooltip: "Сохранить",
-            constraints: const BoxConstraints(),
-            style: IconButton.styleFrom(
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+    return null;
+  }
+
+  Widget _buildSaveButton({
+    required bool hasUnsaved,
+    required bool saving,
+    required VoidCallback onSave,
+  }) {
+    if (!hasUnsaved && !saving) return const SizedBox.shrink();
+
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: OutlinedButton.icon(
+          onPressed: widget.isDisabled || saving ? null : onSave,
+          icon: saving
+              ? const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.save, size: 14),
+          label: Text(saving ? 'Сохранение...' : 'Сохранить'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _primaryColor,
+            side: BorderSide(color: _primaryColor),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ).copyWith(
+            overlayColor: WidgetStateProperty.resolveWith<Color?>(
+              (states) {
+                if (states.contains(WidgetState.hovered)) {
+                  return _primaryColor.withOpacity(0.08);
+                }
+                return null;
+              },
+            ),
           ),
         ),
-      );
-    }
-    return Icon(Icons.check_circle,
-        color: _primaryColor.withOpacity(0.5), size: 18);
+      ),
+    );
+  }
+
+  Widget _buildInputField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    required ValueChanged<String> onChanged,
+    Widget? suffix,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 14, color: _primaryColor.withOpacity(0.8)),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: _primaryColor.withOpacity(0.8),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          maxLines: null,
+          minLines: 2,
+          keyboardType: TextInputType.multiline,
+          style: const TextStyle(fontSize: 12),
+          onChanged: onChanged,
+          readOnly: widget.isDisabled,
+          decoration: InputDecoration(
+            isDense: true,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            fillColor: _primaryColor.withOpacity(0.08),
+            filled: true,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                  color: _primaryColor.withOpacity(0.12), width: 0.5),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                  color: _primaryColor.withOpacity(0.12), width: 0.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: _primaryColor, width: 1.0),
+            ),
+            suffixIcon: suffix,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildMarkupControl() {
@@ -698,118 +779,48 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             ),
 
           // Notes & Remarks Section - at the bottom
+          // Notes & Remarks Section - at the bottom
           SliverToBoxAdapter(
-              child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 1. Remarks (For Report) - Now Top
-                Row(
-                  children: [
-                    Icon(Icons.description_outlined,
-                        size: 14, color: _primaryColor.withOpacity(0.8)),
-                    const SizedBox(width: 6),
-                    Text(
-                      "Примечания (для сметы)",
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: _primaryColor.withOpacity(0.8)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _remarksCtrl,
-                  maxLines: null,
-                  minLines: 1,
-                  keyboardType: TextInputType.multiline,
-                  style: const TextStyle(fontSize: 13),
-                  onChanged: _onRemarksChanged,
-                  readOnly: widget.isDisabled,
-                  decoration: InputDecoration(
-                    hintText: "Добавить примечание...",
-                    hintStyle: TextStyle(color: Colors.grey.withOpacity(0.6)),
-                    filled: true,
-                    fillColor: _primaryColorLight,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 10),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                            color: Colors.white.withOpacity(0.5), width: 1.5)),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                            color: _primaryColor.withOpacity(0.12),
-                            width: 0.8)),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            BorderSide(color: _primaryColor, width: 1.0)),
-                    suffixIcon: _buildRemarksSuffix(),
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+              decoration: BoxDecoration(
+                color: _primaryColorLight.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: _primaryColor.withOpacity(0.12)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInputField(
+                    label: "Примечания (для сметы)",
+                    controller: _remarksCtrl,
+                    icon: Icons.description_outlined,
+                    onChanged: _onRemarksChanged,
+                    suffix: _buildSuffix(isSaving: _savingRemarks),
                   ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // 2. Notes (Internal) - Now Bottom
-                Row(
-                  children: [
-                    Icon(Icons.sticky_note_2_outlined,
-                        size: 14, color: _primaryColor.withOpacity(0.8)),
-                    const SizedBox(width: 6),
-                    Text(
-                      "Заметки (для себя)",
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: _primaryColor.withOpacity(0.8)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _noteCtrl,
-                  maxLines: null,
-                  minLines: 1,
-                  keyboardType: TextInputType.multiline,
-                  style: const TextStyle(fontSize: 13),
-                  onChanged: _onNoteChanged,
-                  readOnly: widget.isDisabled,
-                  decoration: InputDecoration(
-                    hintText: "Добавить заметку...",
-                    hintStyle: TextStyle(color: Colors.grey.withOpacity(0.6)),
-                    filled: true,
-                    // Match TotalDashboard background (primary shade50)
-                    fillColor: _primaryColorLight,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 10),
-                    // Glassmorphic border (Offline state)
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                            color: Colors.white.withOpacity(0.5), width: 1.5)),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        // Soft border matching Total
-                        borderSide: BorderSide(
-                            color: _primaryColor.withOpacity(0.12),
-                            width: 0.8)),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            BorderSide(color: _primaryColor, width: 1.0)),
-                    suffixIcon: _buildNoteSuffix(),
+                  _buildSaveButton(
+                    hasUnsaved: _hasUnsavedRemarks,
+                    saving: _savingRemarks,
+                    onSave: _saveRemarks,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  _buildInputField(
+                    label: "Заметки (для себя)",
+                    controller: _noteCtrl,
+                    icon: Icons.sticky_note_2_outlined,
+                    onChanged: _onNoteChanged,
+                    suffix: _buildSuffix(isSaving: _savingNote),
+                  ),
+                  _buildSaveButton(
+                    hasUnsaved: _hasUnsavedNote,
+                    saving: _savingNote,
+                    onSave: _saveNote,
+                  ),
+                ],
+              ),
             ),
-          )),
+          ),
 
           // Bottom Padding for FAB
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
