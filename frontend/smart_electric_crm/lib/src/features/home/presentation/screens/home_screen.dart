@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../projects/presentation/screens/project_list_screen.dart';
 import '../../../catalog/presentation/category_list_screen.dart';
 import '../../../finance/presentation/screens/finance_screen.dart';
+import '../../../statistics/presentation/screens/statistics_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const ProjectListScreen(),
     const CategoryListScreen(),
     const FinanceScreen(),
+    const StatisticsScreen(),
   ];
 
   @override
@@ -48,6 +50,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.account_balance_wallet_outlined),
             selectedIcon: Icon(Icons.account_balance_wallet),
             label: 'Финансы',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.bar_chart_outlined),
+            selectedIcon: Icon(Icons.bar_chart),
+            label: 'Статистика',
           ),
         ],
       ),

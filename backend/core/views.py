@@ -379,11 +379,96 @@ class FinanceSettingsViewSet(viewsets.ViewSet):
         serializer = FinanceSettingsSerializer(finance_settings)
         return Response(serializer.data)
     
-    def partial_update(self, request, pk=None):
-        """Обновить финансовые настройки"""
-        finance_settings = FinanceSettings.load()
-        serializer = FinanceSettingsSerializer(finance_settings, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class StatisticsViewSet(viewsets.ViewSet):
+    """
+    ViewSet для получения статистики по проекту.
+    """
+    def list(self, request):
+        # 1. Pipeline (Воронка)
+        # Оплачено - этапы с is_paid=True
+        # Ожидает оплаты - этапы с is_paid=False и status='completed'
+        # В работе - этапы с is_paid=False и status!='completed'
+
+        # stages = Stage.objects.filter(title__ne='precalc')  # <-- Ошибочная строка удалена
+        
+        paid_usd = 0.0
+        paid_byn = 0.0
+        pending_usd = 0.0
+        pending_byn = 0.0
+        work_usd = 0.0
+        work_byn = 0.0
+
+        for stage in Stage.objects.exclude(title='precalc'):
+            # Считаем суммы для этапа
+            usd = 0.0
+            byn = 0.0
+            for item in stage.estimate_items.all():
+                if item.currency == 'USD':
+                    usd += item.client_amount
+                else:
+                    byn += item.client_amount
+            
+            if stage.is_paid:
+                paid_usd += usd
+                paid_byn += byn
+            elif stage.status == 'completed':
+                pending_usd += usd
+                pending_byn += byn
+            else:
+                work_usd += usd
+                work_byn += byn
+
+        # 2. Источники (Sources)
+        sources_data = {}
+        for project in Project.objects.all():
+            src = project.source or "Не указан"
+            if src not in sources_data:
+                sources_data[src] = {'count': 0, 'usd': 0.0, 'byn': 0.0}
+            
+            sources_data[src]['count'] += 1
+            
+            # Считаем общую сумму проекта
+            for stage in project.stages.exclude(title='precalc'):
+                for item in stage.estimate_items.all():
+                    if item.currency == 'USD':
+                        sources_data[src]['usd'] += item.client_amount
+                    else:
+                        sources_data[src]['byn'] += item.client_amount
+
+        # 3. Типы объектов (Object Types)
+        types_data = {}
+        type_labels = dict(Project.OBJECT_TYPE_CHOICES)
+        for project in Project.objects.all():
+            obj_type = project.object_type
+            label = type_labels.get(obj_type, obj_type)
+            
+            if label not in types_data:
+                types_data[label] = {'count': 0, 'usd': 0.0, 'byn': 0.0}
+            
+            types_data[label]['count'] += 1
+            
+            for stage in project.stages.exclude(title='precalc'):
+                for item in stage.estimate_items.all():
+                    if item.currency == 'USD':
+                        types_data[label]['usd'] += item.client_amount
+                    else:
+                        types_data[label]['byn'] += item.client_amount
+
+        return Response({
+            'pipeline': {
+                'paid': {'usd': round(paid_usd, 2), 'byn': round(paid_byn, 2)},
+                'pending': {'usd': round(pending_usd, 2), 'byn': round(pending_byn, 2)},
+                'in_work': {'usd': round(work_usd, 2), 'byn': round(work_byn, 2)},
+            },
+            'sources': [
+                {'name': k, 'count': v['count'], 'usd': round(v['usd'], 2), 'byn': round(v['byn'], 2)}
+                for k, v in sources_data.items()
+            ],
+            'object_types': [
+                {'name': k, 'count': v['count'], 'usd': round(v['usd'], 2), 'byn': round(v['byn'], 2)}
+                for k, v in types_data.items()
+            ]
+        })
