@@ -37,9 +37,23 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   final _estimateController = TextEditingController();
   final _notesController = TextEditingController();
   bool _hasChanges = false;
+  bool _isDataLoaded = false;
 
   // Состояние раскрытых проектов (ID проекта -> раскрыт ли)
   final Map<int, bool> _expandedProjects = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _estimateController.addListener(_onTextChanged);
+    _notesController.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    if (_isDataLoaded && !_hasChanges) {
+      if (mounted) setState(() => _hasChanges = true);
+    }
+  }
 
   @override
   void dispose() {
@@ -159,6 +173,18 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     final projectsAsync = ref.watch(unpaidProjectsProvider);
     final settingsAsync = ref.watch(financeSettingsProvider);
 
+    // Безопасная инициализация данных
+    if (!_isDataLoaded && settingsAsync.hasValue && !settingsAsync.isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_isDataLoaded && mounted) {
+          final settings = settingsAsync.value!;
+          _estimateController.text = settings.partnerExternalEstimate;
+          _notesController.text = settings.financialNotes;
+          _isDataLoaded = true;
+        }
+      });
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -191,13 +217,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildContent(UnpaidProjectsResponse data,
       AsyncValue<FinanceSettingsModel> settingsAsync) {
-    // Инициализация контроллеров при получении настроек
-    settingsAsync.whenData((settings) {
-      if (_estimateController.text.isEmpty && _notesController.text.isEmpty) {
-        _estimateController.text = settings.partnerExternalEstimate;
-        _notesController.text = settings.financialNotes;
-      }
-    });
+    // Инициализация контроллеров перенесена в build с использованием addPostFrameCallback
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -214,7 +234,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               _buildEmptyState()
             else
               Padding(
-                padding: const EdgeInsets.all(8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Column(
                   children: [
                     // Сортировка: сверху - старые, снизу - новые
@@ -247,7 +268,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildTotalSection(double totalUsd, double totalByn) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(8, 16, 8, 12),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -356,8 +377,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isExpanded ? const Color(0xFF2E7D32) : Colors.grey.shade200,
-          width: isExpanded ? 2.0 : 1.0,
+          color: isExpanded
+              ? const Color(0xFF2E7D32).withOpacity(0.3)
+              : Colors.grey.shade200,
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
@@ -518,7 +541,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                     if (isExpanded)
                       Padding(
                         padding: const EdgeInsets.only(
-                            left: 12, right: 12, bottom: 12),
+                            left: 12, right: 12, bottom: 4),
                         child: Column(
                           children: [
                             for (var i = 0; i < project.stages.length; i++) ...[
@@ -734,7 +757,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildGlobalSettingsSection() {
     return Container(
-      margin: const EdgeInsets.all(12),
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -758,16 +781,19 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             ],
           ),
           const SizedBox(height: 12),
+          const SizedBox(height: 12),
           _buildInputField(
             label: 'Смета контрагента',
             controller: _estimateController,
-            maxLines: 2,
+            minLines: 2,
+            maxLines: null,
           ),
           const SizedBox(height: 10),
           _buildInputField(
             label: 'Заметки',
             controller: _notesController,
-            maxLines: 2,
+            minLines: 2,
+            maxLines: null,
           ),
           if (_hasChanges) ...[
             const SizedBox(height: 12),
@@ -795,7 +821,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   Widget _buildInputField({
     required String label,
     required TextEditingController controller,
-    int maxLines = 1,
+    int minLines = 1,
+    int? maxLines = 1,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -811,12 +838,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         const SizedBox(height: 5),
         TextField(
           controller: controller,
+          minLines: minLines,
           maxLines: maxLines,
           style: const TextStyle(fontSize: 13),
           decoration: InputDecoration(
             isDense: true,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             fillColor: Colors.grey[50],
             filled: true,
             border: OutlineInputBorder(
