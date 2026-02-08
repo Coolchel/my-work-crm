@@ -853,7 +853,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           decoration: InputDecoration(
             isDense: true,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             fillColor: Colors.grey[50],
             filled: true,
             border: OutlineInputBorder(
