@@ -21,6 +21,10 @@ ProjectModel _$ProjectModelFromJson(Map<String, dynamic> json) => ProjectModel(
               ?.map((e) => ShieldModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      files: (json['files'] as List<dynamic>?)
+              ?.map((e) => ProjectFileModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
 
 Map<String, dynamic> _$ProjectModelToJson(ProjectModel instance) =>
@@ -34,4 +38,5 @@ Map<String, dynamic> _$ProjectModelToJson(ProjectModel instance) =>
       'created_at': instance.createdAt.toIso8601String(),
       'stages': instance.stages,
       'shields': instance.shields,
+      'files': instance.files,
     };

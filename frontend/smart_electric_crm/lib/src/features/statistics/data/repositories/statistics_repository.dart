@@ -19,12 +19,12 @@ class StatisticsRepository {
   StatisticsRepository({required Dio dio}) : _dio = dio;
 
   /// Получает данные статистики
-  Future<StatisticsModel> fetchStatistics() async {
+  /// [period] - 'all', 'year', 'month'
+  Future<StatisticsModel> fetchStatistics({String period = 'all'}) async {
     try {
-      final response = await _dio.get('/statistics/');
-      // API возвращает данные напрямую для list, если зарегистрировано как ViewSet без поиска
-      // Но обычно DRF ViewSet.list возвращает список или объект.
-      // Наш StatisticsViewSet.list возвращает Response({...}) напрямую.
+      final response = await _dio.get('/statistics/', queryParameters: {
+        'period': period,
+      });
       return StatisticsModel.fromJson(response.data);
     } catch (e) {
       debugPrint("❌ Fetch Statistics Error: $e");
@@ -33,7 +33,21 @@ class StatisticsRepository {
   }
 }
 
+// Провайдер для хранения текущего фильтра
+@riverpod
+class StatisticsFilter extends _$StatisticsFilter {
+  @override
+  String build() => 'month'; // По умолчанию "За текущий месяц"
+
+  void setPeriod(String period) {
+    state = period;
+  }
+}
+
 @riverpod
 Future<StatisticsModel> statisticsData(Ref ref) {
-  return ref.watch(statisticsRepositoryProvider).fetchStatistics();
+  final period = ref.watch(statisticsFilterProvider);
+  return ref
+      .watch(statisticsRepositoryProvider)
+      .fetchStatistics(period: period);
 }

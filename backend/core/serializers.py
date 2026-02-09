@@ -13,7 +13,14 @@ from .models import (
 class ProjectFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectFile
-        fields = ['id', 'file', 'description']
+        fields = ['id', 'project', 'file', 'description', 'category', 'original_name']
+
+    def create(self, validated_data):
+        file_obj = validated_data.get('file')
+        if file_obj and not validated_data.get('original_name'):
+            # Берем имя из объекта загруженного файла (MultipartFile.filename из фронтенда)
+            validated_data['original_name'] = file_obj.name
+        return super().create(validated_data)
 
 class EstimateItemSerializer(serializers.ModelSerializer):
     client_amount = serializers.ReadOnlyField()

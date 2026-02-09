@@ -1,0 +1,6 @@
+﻿Analyzing smart_electric_crm...                                 
+
+   info - Don't use 'BuildContext's across async gaps - lib\src\features\projects\presentation\screens\project_detail_screen.dart:561:54 - use_build_context_synchronously
+warning - The annotation 'JsonKey.new' can only be used on fields or getters - lib\src\features\statistics\data\models\statistics_model.dart:11:6 - invalid_annotation_target
+warning - The annotation 'JsonKey.new' can only be used on fields or getters - lib\src\features\statistics\data\models\statistics_model.dart:12:6 - invalid_annotation_target
+

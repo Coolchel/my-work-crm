@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'stage_model.dart';
+import 'project_file_model.dart';
 import 'package:smart_electric_crm/src/features/engineering/data/models/shield_model.dart';
 
 part 'project_model.g.dart';
@@ -37,6 +38,10 @@ class ProjectModel {
   @JsonKey(defaultValue: [])
   final List<ShieldModel> shields;
 
+  /// Список файлов (New)
+  @JsonKey(defaultValue: [])
+  final List<ProjectFileModel> files;
+
   ProjectModel({
     required this.id,
     required this.address,
@@ -47,6 +52,7 @@ class ProjectModel {
     required this.createdAt,
     required this.stages,
     this.shields = const [],
+    this.files = const [],
   });
 
   /// Создает экземпляр из JSON
@@ -67,6 +73,7 @@ class ProjectModel {
     DateTime? createdAt,
     List<StageModel>? stages,
     List<ShieldModel>? shields,
+    List<ProjectFileModel>? files,
   }) {
     return ProjectModel(
       id: id ?? this.id,
@@ -78,6 +85,7 @@ class ProjectModel {
       createdAt: createdAt ?? this.createdAt,
       stages: stages ?? this.stages,
       shields: shields ?? this.shields,
+      files: files ?? this.files,
     );
   }
 }

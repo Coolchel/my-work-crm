@@ -24,6 +24,8 @@ mixin _$StatisticsModel {
   List<SourceData> get sources => throw _privateConstructorUsedError;
   @JsonKey(name: 'object_types')
   List<ObjectTypeData> get objectTypes => throw _privateConstructorUsedError;
+  @JsonKey(name: 'work_dynamics')
+  List<WorkDynamicsData> get workDynamics => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -40,7 +42,8 @@ abstract class $StatisticsModelCopyWith<$Res> {
   $Res call(
       {PipelineData pipeline,
       List<SourceData> sources,
-      @JsonKey(name: 'object_types') List<ObjectTypeData> objectTypes});
+      @JsonKey(name: 'object_types') List<ObjectTypeData> objectTypes,
+      @JsonKey(name: 'work_dynamics') List<WorkDynamicsData> workDynamics});
 
   $PipelineDataCopyWith<$Res> get pipeline;
 }
@@ -61,6 +64,7 @@ class _$StatisticsModelCopyWithImpl<$Res, $Val extends StatisticsModel>
     Object? pipeline = null,
     Object? sources = null,
     Object? objectTypes = null,
+    Object? workDynamics = null,
   }) {
     return _then(_value.copyWith(
       pipeline: null == pipeline
@@ -75,6 +79,10 @@ class _$StatisticsModelCopyWithImpl<$Res, $Val extends StatisticsModel>
           ? _value.objectTypes
           : objectTypes // ignore: cast_nullable_to_non_nullable
               as List<ObjectTypeData>,
+      workDynamics: null == workDynamics
+          ? _value.workDynamics
+          : workDynamics // ignore: cast_nullable_to_non_nullable
+              as List<WorkDynamicsData>,
     ) as $Val);
   }
 
@@ -98,7 +106,8 @@ abstract class _$$StatisticsModelImplCopyWith<$Res>
   $Res call(
       {PipelineData pipeline,
       List<SourceData> sources,
-      @JsonKey(name: 'object_types') List<ObjectTypeData> objectTypes});
+      @JsonKey(name: 'object_types') List<ObjectTypeData> objectTypes,
+      @JsonKey(name: 'work_dynamics') List<WorkDynamicsData> workDynamics});
 
   @override
   $PipelineDataCopyWith<$Res> get pipeline;
@@ -118,6 +127,7 @@ class __$$StatisticsModelImplCopyWithImpl<$Res>
     Object? pipeline = null,
     Object? sources = null,
     Object? objectTypes = null,
+    Object? workDynamics = null,
   }) {
     return _then(_$StatisticsModelImpl(
       pipeline: null == pipeline
@@ -132,6 +142,10 @@ class __$$StatisticsModelImplCopyWithImpl<$Res>
           ? _value._objectTypes
           : objectTypes // ignore: cast_nullable_to_non_nullable
               as List<ObjectTypeData>,
+      workDynamics: null == workDynamics
+          ? _value._workDynamics
+          : workDynamics // ignore: cast_nullable_to_non_nullable
+              as List<WorkDynamicsData>,
     ));
   }
 }
@@ -143,9 +157,12 @@ class _$StatisticsModelImpl implements _StatisticsModel {
       {required this.pipeline,
       required final List<SourceData> sources,
       @JsonKey(name: 'object_types')
-      required final List<ObjectTypeData> objectTypes})
+      required final List<ObjectTypeData> objectTypes,
+      @JsonKey(name: 'work_dynamics')
+      required final List<WorkDynamicsData> workDynamics})
       : _sources = sources,
-        _objectTypes = objectTypes;
+        _objectTypes = objectTypes,
+        _workDynamics = workDynamics;
 
   factory _$StatisticsModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$StatisticsModelImplFromJson(json);
@@ -169,9 +186,18 @@ class _$StatisticsModelImpl implements _StatisticsModel {
     return EqualUnmodifiableListView(_objectTypes);
   }
 
+  final List<WorkDynamicsData> _workDynamics;
+  @override
+  @JsonKey(name: 'work_dynamics')
+  List<WorkDynamicsData> get workDynamics {
+    if (_workDynamics is EqualUnmodifiableListView) return _workDynamics;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_workDynamics);
+  }
+
   @override
   String toString() {
-    return 'StatisticsModel(pipeline: $pipeline, sources: $sources, objectTypes: $objectTypes)';
+    return 'StatisticsModel(pipeline: $pipeline, sources: $sources, objectTypes: $objectTypes, workDynamics: $workDynamics)';
   }
 
   @override
@@ -183,7 +209,9 @@ class _$StatisticsModelImpl implements _StatisticsModel {
                 other.pipeline == pipeline) &&
             const DeepCollectionEquality().equals(other._sources, _sources) &&
             const DeepCollectionEquality()
-                .equals(other._objectTypes, _objectTypes));
+                .equals(other._objectTypes, _objectTypes) &&
+            const DeepCollectionEquality()
+                .equals(other._workDynamics, _workDynamics));
   }
 
   @JsonKey(ignore: true)
@@ -192,7 +220,8 @@ class _$StatisticsModelImpl implements _StatisticsModel {
       runtimeType,
       pipeline,
       const DeepCollectionEquality().hash(_sources),
-      const DeepCollectionEquality().hash(_objectTypes));
+      const DeepCollectionEquality().hash(_objectTypes),
+      const DeepCollectionEquality().hash(_workDynamics));
 
   @JsonKey(ignore: true)
   @override
@@ -211,10 +240,13 @@ class _$StatisticsModelImpl implements _StatisticsModel {
 
 abstract class _StatisticsModel implements StatisticsModel {
   const factory _StatisticsModel(
-      {required final PipelineData pipeline,
-      required final List<SourceData> sources,
-      @JsonKey(name: 'object_types')
-      required final List<ObjectTypeData> objectTypes}) = _$StatisticsModelImpl;
+          {required final PipelineData pipeline,
+          required final List<SourceData> sources,
+          @JsonKey(name: 'object_types')
+          required final List<ObjectTypeData> objectTypes,
+          @JsonKey(name: 'work_dynamics')
+          required final List<WorkDynamicsData> workDynamics}) =
+      _$StatisticsModelImpl;
 
   factory _StatisticsModel.fromJson(Map<String, dynamic> json) =
       _$StatisticsModelImpl.fromJson;
@@ -226,6 +258,9 @@ abstract class _StatisticsModel implements StatisticsModel {
   @override
   @JsonKey(name: 'object_types')
   List<ObjectTypeData> get objectTypes;
+  @override
+  @JsonKey(name: 'work_dynamics')
+  List<WorkDynamicsData> get workDynamics;
   @override
   @JsonKey(ignore: true)
   _$$StatisticsModelImplCopyWith<_$StatisticsModelImpl> get copyWith =>
@@ -240,8 +275,6 @@ PipelineData _$PipelineDataFromJson(Map<String, dynamic> json) {
 mixin _$PipelineData {
   CurrencyAmount get paid => throw _privateConstructorUsedError;
   CurrencyAmount get pending => throw _privateConstructorUsedError;
-  @JsonKey(name: 'in_work')
-  CurrencyAmount get inWork => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -255,14 +288,10 @@ abstract class $PipelineDataCopyWith<$Res> {
           PipelineData value, $Res Function(PipelineData) then) =
       _$PipelineDataCopyWithImpl<$Res, PipelineData>;
   @useResult
-  $Res call(
-      {CurrencyAmount paid,
-      CurrencyAmount pending,
-      @JsonKey(name: 'in_work') CurrencyAmount inWork});
+  $Res call({CurrencyAmount paid, CurrencyAmount pending});
 
   $CurrencyAmountCopyWith<$Res> get paid;
   $CurrencyAmountCopyWith<$Res> get pending;
-  $CurrencyAmountCopyWith<$Res> get inWork;
 }
 
 /// @nodoc
@@ -280,7 +309,6 @@ class _$PipelineDataCopyWithImpl<$Res, $Val extends PipelineData>
   $Res call({
     Object? paid = null,
     Object? pending = null,
-    Object? inWork = null,
   }) {
     return _then(_value.copyWith(
       paid: null == paid
@@ -290,10 +318,6 @@ class _$PipelineDataCopyWithImpl<$Res, $Val extends PipelineData>
       pending: null == pending
           ? _value.pending
           : pending // ignore: cast_nullable_to_non_nullable
-              as CurrencyAmount,
-      inWork: null == inWork
-          ? _value.inWork
-          : inWork // ignore: cast_nullable_to_non_nullable
               as CurrencyAmount,
     ) as $Val);
   }
@@ -313,14 +337,6 @@ class _$PipelineDataCopyWithImpl<$Res, $Val extends PipelineData>
       return _then(_value.copyWith(pending: value) as $Val);
     });
   }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $CurrencyAmountCopyWith<$Res> get inWork {
-    return $CurrencyAmountCopyWith<$Res>(_value.inWork, (value) {
-      return _then(_value.copyWith(inWork: value) as $Val);
-    });
-  }
 }
 
 /// @nodoc
@@ -331,17 +347,12 @@ abstract class _$$PipelineDataImplCopyWith<$Res>
       __$$PipelineDataImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {CurrencyAmount paid,
-      CurrencyAmount pending,
-      @JsonKey(name: 'in_work') CurrencyAmount inWork});
+  $Res call({CurrencyAmount paid, CurrencyAmount pending});
 
   @override
   $CurrencyAmountCopyWith<$Res> get paid;
   @override
   $CurrencyAmountCopyWith<$Res> get pending;
-  @override
-  $CurrencyAmountCopyWith<$Res> get inWork;
 }
 
 /// @nodoc
@@ -357,7 +368,6 @@ class __$$PipelineDataImplCopyWithImpl<$Res>
   $Res call({
     Object? paid = null,
     Object? pending = null,
-    Object? inWork = null,
   }) {
     return _then(_$PipelineDataImpl(
       paid: null == paid
@@ -368,10 +378,6 @@ class __$$PipelineDataImplCopyWithImpl<$Res>
           ? _value.pending
           : pending // ignore: cast_nullable_to_non_nullable
               as CurrencyAmount,
-      inWork: null == inWork
-          ? _value.inWork
-          : inWork // ignore: cast_nullable_to_non_nullable
-              as CurrencyAmount,
     ));
   }
 }
@@ -379,10 +385,7 @@ class __$$PipelineDataImplCopyWithImpl<$Res>
 /// @nodoc
 @JsonSerializable()
 class _$PipelineDataImpl implements _PipelineData {
-  const _$PipelineDataImpl(
-      {required this.paid,
-      required this.pending,
-      @JsonKey(name: 'in_work') required this.inWork});
+  const _$PipelineDataImpl({required this.paid, required this.pending});
 
   factory _$PipelineDataImpl.fromJson(Map<String, dynamic> json) =>
       _$$PipelineDataImplFromJson(json);
@@ -391,13 +394,10 @@ class _$PipelineDataImpl implements _PipelineData {
   final CurrencyAmount paid;
   @override
   final CurrencyAmount pending;
-  @override
-  @JsonKey(name: 'in_work')
-  final CurrencyAmount inWork;
 
   @override
   String toString() {
-    return 'PipelineData(paid: $paid, pending: $pending, inWork: $inWork)';
+    return 'PipelineData(paid: $paid, pending: $pending)';
   }
 
   @override
@@ -406,13 +406,12 @@ class _$PipelineDataImpl implements _PipelineData {
         (other.runtimeType == runtimeType &&
             other is _$PipelineDataImpl &&
             (identical(other.paid, paid) || other.paid == paid) &&
-            (identical(other.pending, pending) || other.pending == pending) &&
-            (identical(other.inWork, inWork) || other.inWork == inWork));
+            (identical(other.pending, pending) || other.pending == pending));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, paid, pending, inWork);
+  int get hashCode => Object.hash(runtimeType, paid, pending);
 
   @JsonKey(ignore: true)
   @override
@@ -430,10 +429,8 @@ class _$PipelineDataImpl implements _PipelineData {
 
 abstract class _PipelineData implements PipelineData {
   const factory _PipelineData(
-          {required final CurrencyAmount paid,
-          required final CurrencyAmount pending,
-          @JsonKey(name: 'in_work') required final CurrencyAmount inWork}) =
-      _$PipelineDataImpl;
+      {required final CurrencyAmount paid,
+      required final CurrencyAmount pending}) = _$PipelineDataImpl;
 
   factory _PipelineData.fromJson(Map<String, dynamic> json) =
       _$PipelineDataImpl.fromJson;
@@ -442,9 +439,6 @@ abstract class _PipelineData implements PipelineData {
   CurrencyAmount get paid;
   @override
   CurrencyAmount get pending;
-  @override
-  @JsonKey(name: 'in_work')
-  CurrencyAmount get inWork;
   @override
   @JsonKey(ignore: true)
   _$$PipelineDataImplCopyWith<_$PipelineDataImpl> get copyWith =>
@@ -988,5 +982,178 @@ abstract class _ObjectTypeData implements ObjectTypeData {
   @override
   @JsonKey(ignore: true)
   _$$ObjectTypeDataImplCopyWith<_$ObjectTypeDataImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+WorkDynamicsData _$WorkDynamicsDataFromJson(Map<String, dynamic> json) {
+  return _WorkDynamicsData.fromJson(json);
+}
+
+/// @nodoc
+mixin _$WorkDynamicsData {
+  String get date => throw _privateConstructorUsedError;
+  double get usd => throw _privateConstructorUsedError;
+  double get byn => throw _privateConstructorUsedError;
+
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  $WorkDynamicsDataCopyWith<WorkDynamicsData> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $WorkDynamicsDataCopyWith<$Res> {
+  factory $WorkDynamicsDataCopyWith(
+          WorkDynamicsData value, $Res Function(WorkDynamicsData) then) =
+      _$WorkDynamicsDataCopyWithImpl<$Res, WorkDynamicsData>;
+  @useResult
+  $Res call({String date, double usd, double byn});
+}
+
+/// @nodoc
+class _$WorkDynamicsDataCopyWithImpl<$Res, $Val extends WorkDynamicsData>
+    implements $WorkDynamicsDataCopyWith<$Res> {
+  _$WorkDynamicsDataCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? date = null,
+    Object? usd = null,
+    Object? byn = null,
+  }) {
+    return _then(_value.copyWith(
+      date: null == date
+          ? _value.date
+          : date // ignore: cast_nullable_to_non_nullable
+              as String,
+      usd: null == usd
+          ? _value.usd
+          : usd // ignore: cast_nullable_to_non_nullable
+              as double,
+      byn: null == byn
+          ? _value.byn
+          : byn // ignore: cast_nullable_to_non_nullable
+              as double,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$WorkDynamicsDataImplCopyWith<$Res>
+    implements $WorkDynamicsDataCopyWith<$Res> {
+  factory _$$WorkDynamicsDataImplCopyWith(_$WorkDynamicsDataImpl value,
+          $Res Function(_$WorkDynamicsDataImpl) then) =
+      __$$WorkDynamicsDataImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({String date, double usd, double byn});
+}
+
+/// @nodoc
+class __$$WorkDynamicsDataImplCopyWithImpl<$Res>
+    extends _$WorkDynamicsDataCopyWithImpl<$Res, _$WorkDynamicsDataImpl>
+    implements _$$WorkDynamicsDataImplCopyWith<$Res> {
+  __$$WorkDynamicsDataImplCopyWithImpl(_$WorkDynamicsDataImpl _value,
+      $Res Function(_$WorkDynamicsDataImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? date = null,
+    Object? usd = null,
+    Object? byn = null,
+  }) {
+    return _then(_$WorkDynamicsDataImpl(
+      date: null == date
+          ? _value.date
+          : date // ignore: cast_nullable_to_non_nullable
+              as String,
+      usd: null == usd
+          ? _value.usd
+          : usd // ignore: cast_nullable_to_non_nullable
+              as double,
+      byn: null == byn
+          ? _value.byn
+          : byn // ignore: cast_nullable_to_non_nullable
+              as double,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$WorkDynamicsDataImpl implements _WorkDynamicsData {
+  const _$WorkDynamicsDataImpl(
+      {required this.date, required this.usd, required this.byn});
+
+  factory _$WorkDynamicsDataImpl.fromJson(Map<String, dynamic> json) =>
+      _$$WorkDynamicsDataImplFromJson(json);
+
+  @override
+  final String date;
+  @override
+  final double usd;
+  @override
+  final double byn;
+
+  @override
+  String toString() {
+    return 'WorkDynamicsData(date: $date, usd: $usd, byn: $byn)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$WorkDynamicsDataImpl &&
+            (identical(other.date, date) || other.date == date) &&
+            (identical(other.usd, usd) || other.usd == usd) &&
+            (identical(other.byn, byn) || other.byn == byn));
+  }
+
+  @JsonKey(ignore: true)
+  @override
+  int get hashCode => Object.hash(runtimeType, date, usd, byn);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$WorkDynamicsDataImplCopyWith<_$WorkDynamicsDataImpl> get copyWith =>
+      __$$WorkDynamicsDataImplCopyWithImpl<_$WorkDynamicsDataImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$WorkDynamicsDataImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _WorkDynamicsData implements WorkDynamicsData {
+  const factory _WorkDynamicsData(
+      {required final String date,
+      required final double usd,
+      required final double byn}) = _$WorkDynamicsDataImpl;
+
+  factory _WorkDynamicsData.fromJson(Map<String, dynamic> json) =
+      _$WorkDynamicsDataImpl.fromJson;
+
+  @override
+  String get date;
+  @override
+  double get usd;
+  @override
+  double get byn;
+  @override
+  @JsonKey(ignore: true)
+  _$$WorkDynamicsDataImplCopyWith<_$WorkDynamicsDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

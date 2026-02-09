@@ -2,7 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../../data/models/estimate_template_model.dart';
 import '../../data/models/project_model.dart';
+import '../../data/models/project_file_model.dart';
 import '../../data/models/stage_model.dart';
+import 'package:http_parser/http_parser.dart';
+import 'dart:io';
+import 'package:path/path.dart' as p;
 
 class ProjectRepository {
   final Dio _dio;
@@ -219,10 +223,68 @@ class ProjectRepository {
       final response = await _dio.post('/stages/$stageId/calculate_works/');
       return response.data as Map<String, dynamic>;
     } catch (e) {
+      if (e is DioException) {}
+      rethrow;
+    }
+  }
+
+  /// Загружает файл проекта.
+  Future<ProjectFileModel> uploadFile({
+    required int projectId,
+    required String filePath,
+    required String category,
+    String? fileName,
+    String description = '',
+  }) async {
+    try {
+      final file = File(filePath);
+      final finalFileName = fileName ?? p.basename(file.path);
+
+      final formData = FormData.fromMap({
+        'project': projectId,
+        'category': category,
+        'description': description,
+        'file': await MultipartFile.fromFile(
+          file.path,
+          filename: finalFileName,
+          contentType: _getMediaType(finalFileName),
+        ),
+      });
+
+      final response = await _dio.post('/project-files/', data: formData);
+      return ProjectFileModel.fromJson(response.data);
+    } catch (e) {
       if (e is DioException) {
-        debugPrint("❌ Calculate Works Error: ${e.response?.data}");
+        debugPrint("❌ Upload File Error: ${e.response?.data}");
       }
       rethrow;
+    }
+  }
+
+  /// Удаляет файл проекта.
+  Future<void> deleteProjectFile(int fileId) async {
+    try {
+      await _dio.delete('/project-files/$fileId/');
+    } catch (e) {
+      if (e is DioException) {
+        debugPrint("❌ Delete File Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  MediaType _getMediaType(String fileName) {
+    final ext = p.extension(fileName).toLowerCase();
+    switch (ext) {
+      case '.pdf':
+        return MediaType('application', 'pdf');
+      case '.jpg':
+      case '.jpeg':
+        return MediaType('image', 'jpeg');
+      case '.png':
+        return MediaType('image', 'png');
+      default:
+        return MediaType('application', 'octet-stream');
     }
   }
 }

@@ -1,0 +1,10 @@
+﻿Analyzing smart_electric_crm...                                 
+
+   info - The imported package 'http_parser' isn't a dependency of the importing package - lib\src\features\projects\data\repositories\project_repository.dart:7:8 - depend_on_referenced_packages
+  error - The body might complete normally, causing 'null' to be returned, but the return type, 'FutureOr<Map<String, dynamic>>', is a potentially non-nullable type - lib\src\features\projects\data\repositories\project_repository.dart:221:32 - body_might_complete_normally
+   info - The imported package 'http' isn't a dependency of the importing package - lib\src\features\projects\presentation\screens\file_viewer_screen.dart:6:8 - depend_on_referenced_packages
+   info - The imported package 'http' isn't a dependency of the importing package - lib\src\features\projects\presentation\screens\project_detail_screen.dart:11:8 - depend_on_referenced_packages
+   info - Don't use 'BuildContext's across async gaps - lib\src\features\projects\presentation\screens\project_detail_screen.dart:561:54 - use_build_context_synchronously
+warning - The annotation 'JsonKey.new' can only be used on fields or getters - lib\src\features\statistics\data\models\statistics_model.dart:11:6 - invalid_annotation_target
+warning - The annotation 'JsonKey.new' can only be used on fields or getters - lib\src\features\statistics\data\models\statistics_model.dart:12:6 - invalid_annotation_target
+

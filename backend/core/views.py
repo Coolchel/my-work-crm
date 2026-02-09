@@ -5,16 +5,29 @@ from rest_framework.response import Response
 from .models import (
     Project, Stage, ShieldGroup, LedZone, CatalogCategory, CatalogItem, 
     Shield, EstimateItem, WorkTemplate, MaterialTemplate, PowerShieldTemplate, LedShieldTemplate,
-    FinanceSettings
+    FinanceSettings, ProjectFile
 )
 from .serializers import (
     ProjectSerializer, StageSerializer, CatalogCategorySerializer, CatalogItemSerializer, 
     ShieldGroupSerializer, LedZoneSerializer, ShieldSerializer, EstimateItemSerializer,
     WorkTemplateSerializer, MaterialTemplateSerializer, 
     PowerShieldTemplateSerializer, LedShieldTemplateSerializer,
-    FinanceSettingsSerializer
+    FinanceSettingsSerializer, ProjectFileSerializer
 )
 from .services import TemplateService
+
+class ProjectFileViewSet(viewsets.ModelViewSet):
+    queryset = ProjectFile.objects.all()
+    serializer_class = ProjectFileSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['project', 'category']
+
+    def perform_destroy(self, instance):
+        # Физическое удаление файла с диска
+        if instance.file:
+            instance.file.delete(save=False)
+        instance.delete()
+
 
 class CatalogCategoryViewSet(viewsets.ModelViewSet):
     queryset = CatalogCategory.objects.all()
@@ -82,7 +95,7 @@ class LedZoneViewSet(viewsets.ModelViewSet):
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
-    queryset = Project.objects.all().order_by('-created_at')
+    queryset = Project.objects.all().order_by('-created_at').prefetch_related('files')
     serializer_class = ProjectSerializer
 
     def create(self, request, *args, **kwargs):
@@ -387,21 +400,40 @@ class StatisticsViewSet(viewsets.ViewSet):
     ViewSet для получения статистики по проекту.
     """
     def list(self, request):
+        from django.utils import timezone
+        import datetime
+
+        # 0. Фильтрация по времени (Time Filter)
+        period = request.query_params.get('period', 'all')  # 'month', 'year', 'all'
+        
+        # Определяем диапазон дат
+        start_date = None
+        end_date = timezone.now()
+
+        if period == 'month':
+            start_date = end_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        elif period == 'year':
+            start_date = end_date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # Базовый QuerySet для этапов (исключая предпросчет)
+        stages_qs = Stage.objects.exclude(title='precalc')
+        
+        # Фильтруем этапы:
+        if start_date:
+            stages_qs = stages_qs.filter(updated_at__gte=start_date)
+
         # 1. Pipeline (Воронка)
         # Оплачено - этапы с is_paid=True
         # Ожидает оплаты - этапы с is_paid=False и status='completed'
-        # В работе - этапы с is_paid=False и status!='completed'
+        # В работе - УБРАНО из статистики по требованию
 
-        # stages = Stage.objects.filter(title__ne='precalc')  # <-- Ошибочная строка удалена
-        
         paid_usd = 0.0
         paid_byn = 0.0
         pending_usd = 0.0
         pending_byn = 0.0
-        work_usd = 0.0
-        work_byn = 0.0
 
-        for stage in Stage.objects.exclude(title='precalc'):
+        # Получаем этапы, попавшие в выборку
+        for stage in stages_qs:
             # Считаем суммы для этапа
             usd = 0.0
             byn = 0.0
@@ -415,53 +447,94 @@ class StatisticsViewSet(viewsets.ViewSet):
                 paid_usd += usd
                 paid_byn += byn
             elif stage.status == 'completed':
-                pending_usd += usd
-                pending_byn += byn
-            else:
-                work_usd += usd
-                work_byn += byn
+                if not stage.is_paid: # Доп проверка
+                    pending_usd += usd
+                    pending_byn += byn
 
-        # 2. Источники (Sources)
+        # 2. Источники (Sources) & 3. Типы объектов (Object Types)
+        
+        projects_qs = Project.objects.all()
+        if start_date:
+            # Считаем проект активным, если он был обновлен в этот период
+            projects_qs = projects_qs.filter(updated_at__gte=start_date)
+
         sources_data = {}
-        for project in Project.objects.all():
+        types_data = {}
+        type_labels = dict(Project.OBJECT_TYPE_CHOICES)
+
+        for project in projects_qs:
+            # --- Sources ---
             src = project.source or "Не указан"
             if src not in sources_data:
                 sources_data[src] = {'count': 0, 'usd': 0.0, 'byn': 0.0}
             
             sources_data[src]['count'] += 1
             
-            # Считаем общую сумму проекта
-            for stage in project.stages.exclude(title='precalc'):
+            # --- Types ---
+            obj_type = project.object_type
+            label = type_labels.get(obj_type, obj_type)
+            if label not in types_data:
+                types_data[label] = {'count': 0, 'usd': 0.0, 'byn': 0.0}
+            types_data[label]['count'] += 1
+
+            # Считаем общую сумму проекта (только по этапам, попавшим в период)
+            project_stages = stages_qs.filter(project=project)
+            
+            for stage in project_stages:
                 for item in stage.estimate_items.all():
                     if item.currency == 'USD':
                         sources_data[src]['usd'] += item.client_amount
-                    else:
-                        sources_data[src]['byn'] += item.client_amount
-
-        # 3. Типы объектов (Object Types)
-        types_data = {}
-        type_labels = dict(Project.OBJECT_TYPE_CHOICES)
-        for project in Project.objects.all():
-            obj_type = project.object_type
-            label = type_labels.get(obj_type, obj_type)
-            
-            if label not in types_data:
-                types_data[label] = {'count': 0, 'usd': 0.0, 'byn': 0.0}
-            
-            types_data[label]['count'] += 1
-            
-            for stage in project.stages.exclude(title='precalc'):
-                for item in stage.estimate_items.all():
-                    if item.currency == 'USD':
                         types_data[label]['usd'] += item.client_amount
                     else:
+                        sources_data[src]['byn'] += item.client_amount
                         types_data[label]['byn'] += item.client_amount
+
+        # 4. Динамика работ (Work Dynamics)
+        # Агрегация по created_at (когда работа была зафиксирована)
+        
+        dynamics_data = {} # "YYYY-MM-DD" -> {usd, byn}
+        
+        # Используем stages_qs, который уже отфильтрован по дате (start_date) при необходимости
+        # Но для динамики нам, возможно, нужны более старые данные если period='all',
+        # хотя stages_qs уже учитывает start_date.
+        
+        # Для 'all' и 'year' группируем по месяцам ("YYYY-MM"), для 'month' по дням ("YYYY-MM-DD")
+        is_monthly_grouping = period in ['year', 'all']
+
+        for stage in stages_qs:
+            # Определяем ключ даты
+            date_key = ""
+            if is_monthly_grouping:
+                date_key = stage.created_at.strftime("%Y-%m") # Group by Month
+            else:
+                date_key = stage.created_at.strftime("%Y-%m-%d") # Group by Day
+
+            if date_key not in dynamics_data:
+                dynamics_data[date_key] = {'usd': 0.0, 'byn': 0.0}
+
+            # Суммируем предметы
+            for item in stage.estimate_items.all():
+                if item.currency == 'USD':
+                    dynamics_data[date_key]['usd'] += item.client_amount
+                else:
+                    dynamics_data[date_key]['byn'] += item.client_amount
+
+        # Преобразуем в список и сортируем
+        dynamics_list = []
+        for k, v in dynamics_data.items():
+            # print(f"DEBUG DATE KEY: '{k}'") # Debug
+            dynamics_list.append({
+                'date': k,
+                'usd': round(v['usd'], 2),
+                'byn': round(v['byn'], 2)
+            })
+        
+        dynamics_list.sort(key=lambda x: x['date'])
 
         return Response({
             'pipeline': {
                 'paid': {'usd': round(paid_usd, 2), 'byn': round(paid_byn, 2)},
                 'pending': {'usd': round(pending_usd, 2), 'byn': round(pending_byn, 2)},
-                'in_work': {'usd': round(work_usd, 2), 'byn': round(work_byn, 2)},
             },
             'sources': [
                 {'name': k, 'count': v['count'], 'usd': round(v['usd'], 2), 'byn': round(v['byn'], 2)}
@@ -470,5 +543,6 @@ class StatisticsViewSet(viewsets.ViewSet):
             'object_types': [
                 {'name': k, 'count': v['count'], 'usd': round(v['usd'], 2), 'byn': round(v['byn'], 2)}
                 for k, v in types_data.items()
-            ]
+            ],
+            'work_dynamics': dynamics_list
         })

@@ -16,6 +16,9 @@ _$StatisticsModelImpl _$$StatisticsModelImplFromJson(
       objectTypes: (json['object_types'] as List<dynamic>)
           .map((e) => ObjectTypeData.fromJson(e as Map<String, dynamic>))
           .toList(),
+      workDynamics: (json['work_dynamics'] as List<dynamic>)
+          .map((e) => WorkDynamicsData.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$$StatisticsModelImplToJson(
@@ -24,20 +27,19 @@ Map<String, dynamic> _$$StatisticsModelImplToJson(
       'pipeline': instance.pipeline,
       'sources': instance.sources,
       'object_types': instance.objectTypes,
+      'work_dynamics': instance.workDynamics,
     };
 
 _$PipelineDataImpl _$$PipelineDataImplFromJson(Map<String, dynamic> json) =>
     _$PipelineDataImpl(
       paid: CurrencyAmount.fromJson(json['paid'] as Map<String, dynamic>),
       pending: CurrencyAmount.fromJson(json['pending'] as Map<String, dynamic>),
-      inWork: CurrencyAmount.fromJson(json['in_work'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$$PipelineDataImplToJson(_$PipelineDataImpl instance) =>
     <String, dynamic>{
       'paid': instance.paid,
       'pending': instance.pending,
-      'in_work': instance.inWork,
     };
 
 _$CurrencyAmountImpl _$$CurrencyAmountImplFromJson(Map<String, dynamic> json) =>
@@ -82,6 +84,22 @@ Map<String, dynamic> _$$ObjectTypeDataImplToJson(
     <String, dynamic>{
       'name': instance.name,
       'count': instance.count,
+      'usd': instance.usd,
+      'byn': instance.byn,
+    };
+
+_$WorkDynamicsDataImpl _$$WorkDynamicsDataImplFromJson(
+        Map<String, dynamic> json) =>
+    _$WorkDynamicsDataImpl(
+      date: json['date'] as String,
+      usd: (json['usd'] as num).toDouble(),
+      byn: (json['byn'] as num).toDouble(),
+    );
+
+Map<String, dynamic> _$$WorkDynamicsDataImplToJson(
+        _$WorkDynamicsDataImpl instance) =>
+    <String, dynamic>{
+      'date': instance.date,
       'usd': instance.usd,
       'byn': instance.byn,
     };

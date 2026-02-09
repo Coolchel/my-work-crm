@@ -9,6 +9,8 @@ class StatisticsModel with _$StatisticsModel {
     required PipelineData pipeline,
     required List<SourceData> sources,
     @JsonKey(name: 'object_types') required List<ObjectTypeData> objectTypes,
+    @JsonKey(name: 'work_dynamics')
+    required List<WorkDynamicsData> workDynamics,
   }) = _StatisticsModel;
 
   factory StatisticsModel.fromJson(Map<String, dynamic> json) =>
@@ -20,7 +22,6 @@ class PipelineData with _$PipelineData {
   const factory PipelineData({
     required CurrencyAmount paid,
     required CurrencyAmount pending,
-    @JsonKey(name: 'in_work') required CurrencyAmount inWork,
   }) = _PipelineData;
 
   factory PipelineData.fromJson(Map<String, dynamic> json) =>
@@ -62,4 +63,16 @@ class ObjectTypeData with _$ObjectTypeData {
 
   factory ObjectTypeData.fromJson(Map<String, dynamic> json) =>
       _$ObjectTypeDataFromJson(json);
+}
+
+@freezed
+class WorkDynamicsData with _$WorkDynamicsData {
+  const factory WorkDynamicsData({
+    required String date,
+    required double usd,
+    required double byn,
+  }) = _WorkDynamicsData;
+
+  factory WorkDynamicsData.fromJson(Map<String, dynamic> json) =>
+      _$WorkDynamicsDataFromJson(json);
 }

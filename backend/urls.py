@@ -16,12 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from core.views import (
     ProjectViewSet, CatalogCategoryViewSet, CatalogItemViewSet, StageViewSet, 
     ShieldGroupViewSet, LedZoneViewSet, ShieldViewSet, EstimateItemViewSet,
     WorkTemplateViewSet, MaterialTemplateViewSet, PowerShieldTemplateViewSet, LedShieldTemplateViewSet,
-    FinanceSettingsViewSet, StatisticsViewSet
+    FinanceSettingsViewSet, StatisticsViewSet, ProjectFileViewSet
 )
 
 router = DefaultRouter()
@@ -38,10 +40,14 @@ router.register(r'led-shield-templates', LedShieldTemplateViewSet, basename='led
 router.register(r'shield-groups', ShieldGroupViewSet, basename='shield-group')
 router.register(r'led-zones', LedZoneViewSet, basename='led-zone')
 router.register(r'finance', FinanceSettingsViewSet, basename='finance')
+router.register(r'project-files', ProjectFileViewSet, basename='project-file')
 router.register(r'statistics', StatisticsViewSet, basename='statistics')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

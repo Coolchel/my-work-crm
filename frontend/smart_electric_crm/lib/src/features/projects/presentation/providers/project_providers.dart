@@ -79,6 +79,34 @@ class ProjectList extends _$ProjectList {
     ref.invalidateSelf();
     await future;
   }
+
+  /// Загружает файл проекта.
+  Future<void> uploadFile({
+    required int projectId,
+    required String filePath,
+    required String category,
+    String? fileName,
+    String description = '',
+  }) async {
+    final repository = ref.read(projectRepositoryProvider);
+    await repository.uploadFile(
+      projectId: projectId,
+      filePath: filePath,
+      category: category,
+      fileName: fileName,
+      description: description,
+    );
+    ref.invalidateSelf();
+    await future;
+  }
+
+  /// Удаляет файл проекта.
+  Future<void> deleteFile(int fileId) async {
+    final repository = ref.read(projectRepositoryProvider);
+    await repository.deleteProjectFile(fileId);
+    ref.invalidateSelf();
+    await future;
+  }
 }
 
 @riverpod

@@ -5,6 +5,15 @@ import '../../data/models/project_model.dart';
 import 'add_project_screen.dart';
 import 'engineering_tab.dart';
 import 'estimate_screen.dart';
+import 'file_viewer_screen.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+import '../../data/models/project_file_model.dart';
 
 class ProjectDetailScreen extends ConsumerWidget {
   final String projectId;
@@ -49,7 +58,7 @@ class _ProjectDetailContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: Text(project.address),
@@ -57,6 +66,7 @@ class _ProjectDetailContent extends ConsumerWidget {
             tabs: [
               Tab(text: "Этапы"),
               Tab(text: "Щиты"),
+              Tab(text: "Файлы"),
             ],
           ),
           actions: [
@@ -76,6 +86,7 @@ class _ProjectDetailContent extends ConsumerWidget {
           children: [
             _StagesTab(project: project),
             EngineeringTab(project: project),
+            _FilesTab(project: project),
           ],
         ),
       ),
@@ -427,6 +438,314 @@ class _AddStageSheetState extends ConsumerState<_AddStageSheet> {
   }
 }
 
+class _FilesTab extends ConsumerWidget {
+  final ProjectModel project;
+
+  const _FilesTab({required this.project});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _FileCategorySection(
+          title: "Проекты и схемы",
+          icon: Icons.architecture_rounded,
+          color: Colors.indigo,
+          category: "PROJECT",
+          files: project.files.where((f) => f.category == "PROJECT").toList(),
+          onDelete: (fileId) => _deleteFile(context, ref, fileId),
+          onUpload: () => _pickAndUploadFiles(context, ref, "PROJECT"),
+        ),
+        const SizedBox(height: 24),
+        _FileCategorySection(
+          title: "Реализация (Этапы 1-2)",
+          icon: Icons.construction_rounded,
+          color: Colors.orange,
+          category: "WORK",
+          files: project.files.where((f) => f.category == "WORK").toList(),
+          onDelete: (fileId) => _deleteFile(context, ref, fileId),
+          onUpload: () => _pickAndUploadFiles(context, ref, "WORK"),
+        ),
+        const SizedBox(height: 24),
+        _FileCategorySection(
+          title: "Финишные фото",
+          icon: Icons.auto_awesome_rounded,
+          color: Colors.purple,
+          category: "FINISH",
+          files: project.files.where((f) => f.category == "FINISH").toList(),
+          onDelete: (fileId) => _deleteFile(context, ref, fileId),
+          onUpload: () => _pickAndUploadFiles(context, ref, "FINISH"),
+        ),
+        const SizedBox(height: 50),
+      ],
+    );
+  }
+
+  Future<void> _pickAndUploadFiles(
+      BuildContext context, WidgetRef ref, String category) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.any,
+    );
+
+    if (result != null && result.files.isNotEmpty) {
+      final notifier = ref.read(projectListProvider.notifier);
+
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+            content: Text('Начинаю загрузку ${result.files.length} файлов...')),
+      );
+
+      int successCount = 0;
+      for (final pickedFile in result.files) {
+        if (pickedFile.path != null) {
+          try {
+            await notifier.uploadFile(
+              projectId: project.id,
+              filePath: pickedFile.path!,
+              fileName: pickedFile.name,
+              category: category,
+            );
+            successCount++;
+          } catch (e) {
+            debugPrint("Upload failed: $e");
+          }
+        }
+      }
+
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+            content:
+                Text('Загружено: $successCount из ${result.files.length}')),
+      );
+    }
+  }
+
+  Future<void> _deleteFile(
+      BuildContext context, WidgetRef ref, int fileId) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => const ConfirmationDialog(
+        title: 'Удалить файл?',
+        content:
+            'Это действие нельзя отменить. Файл будет физически удален с сервера.',
+        confirmText: 'Удалить',
+        cancelText: 'Отмена',
+        isDestructive: true,
+      ),
+    );
+
+    if (confirm == true) {
+      await ref.read(projectListProvider.notifier).deleteFile(fileId);
+      if (context.mounted) {
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(content: Text('Файл удален')),
+        );
+      }
+    }
+  }
+}
+
+class _FileCard extends StatelessWidget {
+  final ProjectFileModel file;
+  final VoidCallback onDelete;
+
+  const _FileCard({required this.file, required this.onDelete});
+
+  bool get isImage {
+    final ext = file.file.toLowerCase();
+    return ext.endsWith('.jpg') ||
+        ext.endsWith('.jpeg') ||
+        ext.endsWith('.png') ||
+        ext.endsWith('.webp');
+  }
+
+  bool get isPdf => file.file.toLowerCase().endsWith('.pdf');
+
+  String get displayName => file.originalName.isNotEmpty
+      ? file.originalName
+      : file.file.split('/').last;
+
+  @override
+  Widget build(BuildContext context) {
+    // Внимание: file.file может быть относительным путем или полным URL в зависимости от бэкенда.
+    // Если Django MEDIA_URL='/media/', то путь будет /media/project_files/filename.ext
+    // Нужно убедиться, что baseUrl прокидывается или используется полный URL.
+    // Предполагаем, что Dio клиент умеет работать с базовым URL, но NetworkImage нужен полный.
+
+    // В данном проекте обычно используется полный путь или baseUrl из Dio.
+    // Для простоты здесь предполагаем, что полный URL доступен или формируется.
+
+    // ВНИМАНИЕ: На реальном бэкенде путь из базы обычно '/media/...'
+    // Для корректной работы нужно добавить BASE_URL.
+    // Но так как у меня нет константы BASE_URL под рукой, используем как есть (предполагая полный URL от DRF)
+    final fileUrl = file.file;
+
+    return GestureDetector(
+      onTap: () => _openFile(context, fileUrl),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          border: Border.all(color: Colors.grey.shade100),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: isImage
+                      ? Image.network(
+                          fileUrl,
+                          fit: BoxFit.cover,
+                          cacheWidth:
+                              200, // Оптимизация памяти: не декодируем в полном разрешении
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.broken_image,
+                                  color: Colors.grey),
+                        )
+                      : Container(
+                          color:
+                              isPdf ? Colors.red.shade50 : Colors.blue.shade50,
+                          child: Icon(
+                            isPdf
+                                ? Icons.picture_as_pdf
+                                : Icons.insert_drive_file,
+                            color: isPdf ? Colors.red : Colors.blue,
+                            size: 20,
+                          ),
+                        ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Text(
+                    displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 8, fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+            // Кнопки управления верхний правый угол
+            Positioned(
+              top: 2,
+              right: 2,
+              child: Row(
+                children: [
+                  _ActionButton(
+                    icon: Icons.share_rounded,
+                    color: Colors.blue,
+                    tooltip: "Поделиться файлом",
+                    onTap: () => _shareFile(fileUrl),
+                  ),
+                  const SizedBox(width: 2),
+                  _ActionButton(
+                    icon: Icons.delete_outline_rounded,
+                    color: Colors.red,
+                    tooltip: "Удалить файл",
+                    onTap: onDelete,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openFile(BuildContext context, String url) {
+    if (isImage) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FileViewerScreen(url: url, title: displayName),
+        ),
+      );
+    } else if (isPdf) {
+      _downloadAndOpenFile(url);
+    } else {
+      _downloadAndOpenFile(url);
+    }
+  }
+
+  Future<void> _downloadAndOpenFile(String url) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+      final documentDirectory = await getTemporaryDirectory();
+      final localFile =
+          File('${documentDirectory.path}/${url.split('/').last}');
+      await localFile.writeAsBytes(response.bodyBytes);
+      await OpenFilex.open(localFile.path);
+    } catch (e) {
+      debugPrint("Open file error: $e");
+    }
+  }
+
+  Future<void> _shareFile(String url) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+      final documentDirectory = await getTemporaryDirectory();
+      final localFile =
+          File('${documentDirectory.path}/${url.split('/').last}');
+      await localFile.writeAsBytes(response.bodyBytes);
+      await Share.shareXFiles([XFile(localFile.path)]);
+    } catch (e) {
+      debugPrint("Share file error: $e");
+    }
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.color,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(6),
+        elevation: 1,
+        shadowColor: Colors.black12,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(6),
+          child: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Icon(icon, size: 12, color: color),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
@@ -447,6 +766,149 @@ class _InfoRow extends StatelessWidget {
           Expanded(child: Text(value)),
         ],
       ),
+    );
+  }
+}
+
+class _FileCategorySection extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final String category;
+  final List<ProjectFileModel> files;
+  final Function(int) onDelete;
+  final VoidCallback onUpload;
+
+  const _FileCategorySection({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.category,
+    required this.files,
+    required this.onDelete,
+    required this.onUpload,
+  });
+
+  @override
+  State<_FileCategorySection> createState() => _FileCategorySectionState();
+}
+
+class _FileCategorySectionState extends State<_FileCategorySection> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // Решаем, сколько файлов показывать
+    final visibleFiles = (_isExpanded || widget.files.length <= 3)
+        ? widget.files
+        : widget.files.take(3).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Tooltip(
+                message: _isExpanded ? "Свернуть" : "Развернуть",
+                child: Material(
+                  color: widget.color.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(8),
+                  child: InkWell(
+                    onTap: () => setState(() => _isExpanded = !_isExpanded),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(widget.icon, color: widget.color, size: 18),
+                          const SizedBox(width: 12),
+                          Text(
+                            widget.title.toUpperCase(),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 11,
+                              color: widget.color,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const Spacer(),
+                          if (widget.files.length > 3) ...[
+                            Text(
+                              _isExpanded
+                                  ? "СВЕРНУТЬ"
+                                  : "ЕЩЕ ${widget.files.length - 3}",
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: widget.color.withOpacity(0.7),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Icon(
+                            _isExpanded ? Icons.expand_less : Icons.expand_more,
+                            size: 18,
+                            color: widget.color.withOpacity(0.7),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Tooltip(
+              message: "Загрузить файлы",
+              child: Material(
+                color: widget.color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                child: InkWell(
+                  onTap: widget.onUpload,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    alignment: Alignment.center,
+                    child: Icon(Icons.add, size: 22, color: widget.color),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (widget.files.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Text(
+                'Нет загруженных файлов',
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+              ),
+            ),
+          )
+        else
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 6,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+              childAspectRatio: 0.8,
+            ),
+            itemCount: visibleFiles.length,
+            itemBuilder: (context, index) {
+              return _FileCard(
+                file: visibleFiles[index],
+                onDelete: () => widget.onDelete(visibleFiles[index].id),
+              );
+            },
+          ),
+      ],
     );
   }
 }

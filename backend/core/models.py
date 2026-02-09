@@ -368,16 +368,35 @@ class EstimateItem(models.Model):
 
 
 class ProjectFile(models.Model):
+    CATEGORY_CHOICES = [
+        ('PROJECT', 'Проект и схемы'),
+        ('WORK', 'Реализация (Этапы 1-2)'),
+        ('FINISH', 'Финишные фото'),
+    ]
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='files', verbose_name="Проект")
-    file = models.FileField(upload_to='project_files/', verbose_name="Файл")
+    file = models.FileField(upload_to='project_files/%Y/%m/', verbose_name="Файл")
     description = models.CharField(max_length=255, blank=True, verbose_name="Описание")
+    category = models.CharField(
+        max_length=20, 
+        choices=CATEGORY_CHOICES, 
+        default='PROJECT', 
+        verbose_name="Категория"
+    )
+    original_name = models.CharField(max_length=255, blank=True, verbose_name="Оригинальное имя")
 
     class Meta:
         verbose_name = "Файл проекта"
         verbose_name_plural = "Файлы проектов"
 
+    def save(self, *args, **kwargs):
+        if not self.original_name and self.file:
+            # Пытаемся взять имя из атрибута name объекта файла (если он загружен из памяти или диска)
+            import os
+            self.original_name = os.path.basename(self.file.name)
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.description or str(self.file)
+        return f"[{self.get_category_display()}] {self.original_name or self.description or str(self.file)}"
 
 
 class ContractorNote(models.Model):

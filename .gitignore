@@ -6,6 +6,9 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# ignore media folder in repo root
+/media/
+
 # Backend (Django)
 backend/db.sqlite3
 backend/media/
@@ -24,3 +27,5 @@ frontend/android/.gradle
 frontend/android/local.properties
 frontend/ios/Flutter/Generated.xcconfig
 frontend/ios/Flutter/flutter_export_environment.sh
+
+
