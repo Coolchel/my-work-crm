@@ -42,6 +42,7 @@
 - **Compact UI**: Prioritize information density and minimal whitespace to maximize visible data on screen, especially for tables and lists.
 - **Safety & Confirmations**: All destructive or bulk actions (deleting all items, applying templates, importing large data sets, re-calculating estimates, deleting project files) MUST trigger a `ConfirmationDialog` to prevent accidental data loss.
 - **File Integrity**: Original filenames are preserved (`original_name`). Categories with ≤ 5 files auto-expand. Deleting a file record triggers physical deletion.
+- **Upload Limits:** Strict validation: Max **12 files** per project, Max **20 MB** per file. Allowed extensions: images, docs, pdf, zip, video.
 - Data Integrity: Always use input normalization (e.g., RegEx for technical units) on the backend.
 
 ## Statistics & Analytics:
