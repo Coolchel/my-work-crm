@@ -581,6 +581,7 @@ class _FileCardState extends State<_FileCard> {
     final fileUrl = widget.file.file;
 
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedScale(
@@ -614,6 +615,7 @@ class _FileCardState extends State<_FileCard> {
                   children: [
                     Expanded(
                       child: Container(
+                        width: double.infinity,
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,
                         ),
@@ -623,26 +625,35 @@ class _FileCardState extends State<_FileCard> {
                                 fit: BoxFit.cover,
                                 cacheWidth: 300,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.broken_image,
-                                        color: Colors.grey),
+                                    Icon(Icons.broken_image_rounded,
+                                        size: 40, color: Colors.grey.shade300),
                               )
-                            : Container(
-                                color: isPdf
-                                    ? Colors.red.shade50
-                                    : Colors.blue.shade50,
-                                child: Icon(
-                                  isPdf
-                                      ? Icons.picture_as_pdf
-                                      : Icons.insert_drive_file,
-                                  color: isPdf ? Colors.red : Colors.blue,
-                                  size: 30,
+                            : Center(
+                                child: Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: isPdf
+                                        ? Colors.red.withOpacity(0.1)
+                                        : Colors.blue.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    isPdf
+                                        ? Icons.picture_as_pdf_rounded
+                                        : Icons.insert_drive_file_rounded,
+                                    color: isPdf
+                                        ? Colors.red.withOpacity(0.8)
+                                        : Colors.blue.withOpacity(0.8),
+                                    size: 28,
+                                  ),
                                 ),
                               ),
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8.0, vertical: 10.0),
+                          horizontal: 8.0, vertical: 12.0),
                       decoration: const BoxDecoration(
                         color: Colors.white,
                       ),
@@ -670,19 +681,19 @@ class _FileCardState extends State<_FileCard> {
                     opacity: _isHovered ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 150),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         _ActionButton(
                           icon: Icons.share_rounded,
-                          color: Colors.blue,
                           tooltip: "Поделиться",
                           onTap: () => _shareFile(fileUrl),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         _ActionButton(
-                          icon: Icons.delete_outline_rounded,
-                          color: Colors.red,
+                          icon: Icons.close_rounded, // Cross icon
                           tooltip: "Удалить",
                           onTap: widget.onDelete,
+                          isDestructive: true,
                         ),
                       ],
                     ),
@@ -740,15 +751,15 @@ class _FileCardState extends State<_FileCard> {
 
 class _ActionButton extends StatelessWidget {
   final IconData icon;
-  final Color color;
   final String tooltip;
   final VoidCallback onTap;
+  final bool isDestructive;
 
   const _ActionButton({
     required this.icon,
-    required this.color,
     required this.tooltip,
     required this.onTap,
+    this.isDestructive = false,
   });
 
   @override
@@ -756,16 +767,31 @@ class _ActionButton extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: Colors.white.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.white.withOpacity(0.9),
+        shape: const CircleBorder(),
         elevation: 2,
-        shadowColor: Colors.black26,
+        shadowColor: Colors.black12,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.all(5.0),
-            child: Icon(icon, size: 13, color: color),
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: 32,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isDestructive
+                    ? Colors.red.withOpacity(0.1)
+                    : Colors.grey.withOpacity(0.1),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              icon,
+              size: 18,
+              color: isDestructive ? Colors.red : Colors.black87,
+            ),
           ),
         ),
       ),

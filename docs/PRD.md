@@ -41,7 +41,7 @@
     - **Detailed UI/UX Standards:** See [DESIGN.md](./DESIGN.md) for specifics on dialogs, buttons, icons, and interactive elements.
 - **Compact UI**: Prioritize information density and minimal whitespace to maximize visible data on screen, especially for tables and lists.
 - **Safety & Confirmations**: All destructive or bulk actions (deleting all items, applying templates, importing large data sets, re-calculating estimates, deleting project files) MUST trigger a `ConfirmationDialog` to prevent accidental data loss.
-- **File Integrity**: Original filenames are preserved upon upload (`original_name`). Deleting a file record in the system triggers physical deletion from the storage/server to maintain data hygiene.
+- **File Integrity**: Original filenames are preserved (`original_name`). Categories with ≤ 5 files auto-expand. Deleting a file record triggers physical deletion.
 - Data Integrity: Always use input normalization (e.g., RegEx for technical units) on the backend.
 
 ## Statistics & Analytics:
