@@ -273,6 +273,18 @@ class ProjectRepository {
     }
   }
 
+  /// Обновляет данные файла проекта (например, имя)
+  Future<void> updateProjectFile(int fileId, Map<String, dynamic> data) async {
+    try {
+      await _dio.patch('/project-files/$fileId/', data: data);
+    } catch (e) {
+      if (e is DioException) {
+        debugPrint("❌ Update File Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
   MediaType _getMediaType(String fileName) {
     final ext = p.extension(fileName).toLowerCase();
     switch (ext) {

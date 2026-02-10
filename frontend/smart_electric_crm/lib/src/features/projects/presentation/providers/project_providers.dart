@@ -107,6 +107,14 @@ class ProjectList extends _$ProjectList {
     ref.invalidateSelf();
     await future;
   }
+
+  /// Переименовывает файл проекта.
+  Future<void> renameFile(int fileId, String newName) async {
+    final repository = ref.read(projectRepositoryProvider);
+    await repository.updateProjectFile(fileId, {'original_name': newName});
+    ref.invalidateSelf();
+    await future;
+  }
 }
 
 @riverpod

@@ -102,19 +102,44 @@ class ConfirmationDialog extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.grey,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                  if (cancelText.isNotEmpty) ...[
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.grey,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Text(cancelText),
                       ),
-                      child: Text(cancelText),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton(
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ButtonStyle(
+                          backgroundColor:
+                              WidgetStateProperty.resolveWith((states) {
+                            if (states.contains(WidgetState.hovered) ||
+                                states.contains(WidgetState.pressed)) {
+                              return effectiveColor;
+                            }
+                            return effectiveColor.withOpacity(0.8);
+                          }),
+                          padding: WidgetStateProperty.all(
+                            const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          shape: WidgetStateProperty.all(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                        child: Text(confirmText),
+                      ),
+                    ),
+                  ] else
+                    FilledButton(
                       onPressed: () => Navigator.pop(context, true),
                       style: ButtonStyle(
                         backgroundColor:
@@ -126,7 +151,8 @@ class ConfirmationDialog extends StatelessWidget {
                           return effectiveColor.withOpacity(0.8);
                         }),
                         padding: WidgetStateProperty.all(
-                          const EdgeInsets.symmetric(vertical: 12),
+                          const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 24),
                         ),
                         shape: WidgetStateProperty.all(
                           RoundedRectangleBorder(
@@ -136,7 +162,6 @@ class ConfirmationDialog extends StatelessWidget {
                       ),
                       child: Text(confirmText),
                     ),
-                  ),
                 ],
               ),
             ),

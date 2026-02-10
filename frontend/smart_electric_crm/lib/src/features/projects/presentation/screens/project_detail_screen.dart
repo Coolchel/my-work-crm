@@ -12,8 +12,10 @@ import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_dialog.dart';
 import 'dart:io';
 import '../../data/models/project_file_model.dart';
+import '../../../../shared/services/temp_file_service.dart';
 
 class ProjectDetailScreen extends ConsumerWidget {
   final String projectId;
@@ -445,62 +447,153 @@ class _FilesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return Column(
       children: [
-        _FileCategorySection(
-          title: "Проекты и схемы",
-          icon: Icons.architecture_rounded,
-          color: Colors.brown,
-          category: "PROJECT",
-          files: project.files.where((f) => f.category == "PROJECT").toList(),
-          onDelete: (fileId) => _deleteFile(context, ref, fileId),
-          onUpload: () => _pickAndUploadFiles(context, ref, "PROJECT"),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              _FileCategorySection(
+                title: "Проекты и схемы",
+                icon: Icons.architecture_rounded,
+                color: Colors.brown,
+                category: "PROJECT",
+                files: project.files
+                    .where((f) => f.category == "PROJECT")
+                    .toList(),
+                onDelete: (fileId) => _deleteFile(context, ref, fileId),
+                onUpload: () => _pickAndUploadFiles(context, ref, "PROJECT"),
+              ),
+              const SizedBox(height: 24),
+              _FileCategorySection(
+                title: "Реализация (Этапы 1-2)",
+                icon: Icons.construction_rounded,
+                color: Colors.brown,
+                category: "WORK",
+                files:
+                    project.files.where((f) => f.category == "WORK").toList(),
+                onDelete: (fileId) => _deleteFile(context, ref, fileId),
+                onUpload: () => _pickAndUploadFiles(context, ref, "WORK"),
+              ),
+              const SizedBox(height: 24),
+              _FileCategorySection(
+                title: "Финишные фото",
+                icon: Icons.auto_awesome_rounded,
+                color: Colors.brown,
+                category: "FINISH",
+                files:
+                    project.files.where((f) => f.category == "FINISH").toList(),
+                onDelete: (fileId) => _deleteFile(context, ref, fileId),
+                onUpload: () => _pickAndUploadFiles(context, ref, "FINISH"),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
-        const SizedBox(height: 24),
-        _FileCategorySection(
-          title: "Реализация (Этапы 1-2)",
-          icon: Icons.construction_rounded,
-          color: Colors.brown,
-          category: "WORK",
-          files: project.files.where((f) => f.category == "WORK").toList(),
-          onDelete: (fileId) => _deleteFile(context, ref, fileId),
-          onUpload: () => _pickAndUploadFiles(context, ref, "WORK"),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Text(
+              "Лимит загрузки: до 12 файлов на проект, до 20 МБ каждый",
+              style: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 12,
+              ),
+            ),
+          ),
         ),
-        const SizedBox(height: 24),
-        _FileCategorySection(
-          title: "Финишные фото",
-          icon: Icons.auto_awesome_rounded,
-          color: Colors.brown,
-          category: "FINISH",
-          files: project.files.where((f) => f.category == "FINISH").toList(),
-          onDelete: (fileId) => _deleteFile(context, ref, fileId),
-          onUpload: () => _pickAndUploadFiles(context, ref, "FINISH"),
-        ),
-        const SizedBox(height: 50),
       ],
     );
   }
 
   Future<void> _pickAndUploadFiles(
       BuildContext context, WidgetRef ref, String category) async {
+    // 1. Проверка лимита количества файлов (Макс 12 на проект)
+    if (project.files.length >= 12) {
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => const ConfirmationDialog(
+            title: 'Лимит файлов',
+            content:
+                'Достигнут лимит в 12 файлов на проект. Удалите старые файлы, чтобы загрузить новые.',
+            confirmText: 'Закрыть',
+            cancelText: '', // Скрываем кнопку отмены
+            isDestructive: false,
+            themeColor: Colors.brown,
+          ),
+        );
+      }
+      return;
+    }
+
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    // 2. Выбор файлов с фильтрацией по расширению
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: true,
-      type: FileType.any,
+      type: FileType.custom,
+      allowedExtensions: [
+        'jpg',
+        'jpeg',
+        'png',
+        'webp',
+        'heic',
+        'heif',
+        'pdf',
+        'docx',
+        'xls',
+        'xlsx',
+        'txt',
+        'zip',
+        'mp4',
+        'mov'
+      ],
     );
 
     if (result != null && result.files.isNotEmpty) {
+      // Проверка: не превысит ли добавление новых файлов общий лимит
+      if (project.files.length + result.files.length > 12) {
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => ConfirmationDialog(
+              title: 'Слишком много файлов',
+              content:
+                  'Вы выбрали ${result.files.length} файлов для загрузки. В текущий проект можно загрузить еще не более ${12 - project.files.length} файлов.',
+              confirmText: 'Закрыть',
+              cancelText: '',
+              isDestructive: false,
+              themeColor: Colors.brown,
+            ),
+          );
+        }
+        return;
+      }
+
       final notifier = ref.read(projectListProvider.notifier);
+      int successCount = 0;
+      List<String> sizeErrors = [];
 
       scaffoldMessenger.showSnackBar(
         SnackBar(
             content: Text('Начинаю загрузку ${result.files.length} файлов...')),
       );
 
-      int successCount = 0;
       for (final pickedFile in result.files) {
         if (pickedFile.path != null) {
+          // 3. Проверка размера файла (Макс 20 МБ)
+          final file = File(pickedFile.path!);
+          final sizeInBytes = await file.length();
+          final sizeInMb = sizeInBytes / (1024 * 1024);
+
+          if (sizeInMb > 20) {
+            sizeErrors
+                .add('${pickedFile.name} (${sizeInMb.toStringAsFixed(1)} МБ)');
+            continue;
+          }
+
           try {
             await notifier.uploadFile(
               projectId: project.id,
@@ -515,11 +608,29 @@ class _FilesTab extends ConsumerWidget {
         }
       }
 
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
+      // 4. Итоговый отчет
+      if (sizeErrors.isNotEmpty && context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => ConfirmationDialog(
+            title: 'Некоторые файлы не загружены',
             content:
-                Text('Загружено: $successCount из ${result.files.length}')),
-      );
+                'Следующие файлы превышают лимит в 20 МБ:\n\n${sizeErrors.join('\n')}',
+            confirmText: 'Закрыть',
+            cancelText: '',
+            isDestructive: false,
+            themeColor: Colors.brown,
+          ),
+        );
+      }
+
+      if (successCount > 0) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Успешно загружено: $successCount из ${result.files.length}')),
+        );
+      }
     }
   }
 
@@ -549,17 +660,17 @@ class _FilesTab extends ConsumerWidget {
   }
 }
 
-class _FileCard extends StatefulWidget {
+class _FileCard extends ConsumerStatefulWidget {
   final ProjectFileModel file;
   final VoidCallback onDelete;
 
   const _FileCard({required this.file, required this.onDelete});
 
   @override
-  State<_FileCard> createState() => _FileCardState();
+  ConsumerState<_FileCard> createState() => _FileCardState();
 }
 
-class _FileCardState extends State<_FileCard> {
+class _FileCardState extends ConsumerState<_FileCard> {
   bool _isHovered = false;
 
   bool get isImage {
@@ -684,6 +795,18 @@ class _FileCardState extends State<_FileCard> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _ActionButton(
+                          icon: Icons.edit_rounded,
+                          tooltip: "Переименовать",
+                          onTap: () => _renameFile(context),
+                        ),
+                        const SizedBox(width: 8),
+                        _ActionButton(
+                          icon: Icons.download_rounded,
+                          tooltip: "Сохранить как...",
+                          onTap: () => _saveAsFile(context, fileUrl),
+                        ),
+                        const SizedBox(width: 8),
+                        _ActionButton(
                           icon: Icons.share_rounded,
                           tooltip: "Поделиться",
                           onTap: () => _shareFile(fileUrl),
@@ -715,10 +838,87 @@ class _FileCardState extends State<_FileCard> {
           builder: (context) => FileViewerScreen(url: url, title: displayName),
         ),
       );
-    } else if (isPdf) {
-      _downloadAndOpenFile(url);
     } else {
       _downloadAndOpenFile(url);
+    }
+  }
+
+  Future<void> _renameFile(BuildContext context) async {
+    final extension = displayName.contains('.')
+        ? displayName.substring(displayName.lastIndexOf('.'))
+        : '';
+    final nameWithoutExtension = displayName.contains('.')
+        ? displayName.substring(0, displayName.lastIndexOf('.'))
+        : displayName;
+
+    final result = await showDialog<dynamic>(
+      context: context,
+      builder: (context) => TextInputDialog(
+        title: 'Переименовать файл',
+        labelText: 'Новое имя',
+        initialValue: nameWithoutExtension,
+        confirmText: 'Сохранить',
+        themeColor: Colors.brown,
+      ),
+    );
+
+    if (result is String && result.isNotEmpty) {
+      final newName = '$result$extension';
+      if (newName != displayName) {
+        if (context.mounted) {
+          try {
+            await ref
+                .read(projectListProvider.notifier)
+                .renameFile(widget.file.id, newName);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Файл переименован')),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Ошибка переименования: $e')),
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  Future<void> _saveAsFile(BuildContext context, String url) async {
+    try {
+      // 1. Сначала скачиваем во временную папку
+      final response = await http.get(Uri.parse(url));
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/${displayName}');
+      await tempFile.writeAsBytes(response.bodyBytes);
+
+      // Регистрируем временный файл для очистки
+      TempFileService().track(tempFile);
+
+      // 2. Открываем диалог сохранения (Desktop)
+      String? outputFile = await FilePicker.platform.saveFile(
+        dialogTitle: 'Сохранить файл как...',
+        fileName: displayName,
+      );
+
+      if (outputFile != null) {
+        await tempFile.copy(outputFile);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Файл сохранен: $outputFile')),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Save file error: $e");
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка сохранения: $e')),
+        );
+      }
     }
   }
 
@@ -729,6 +929,10 @@ class _FileCardState extends State<_FileCard> {
       final localFile =
           File('${documentDirectory.path}/${url.split('/').last}');
       await localFile.writeAsBytes(response.bodyBytes);
+
+      // Регистрируем временный файл для очистки
+      TempFileService().track(localFile);
+
       await OpenFilex.open(localFile.path);
     } catch (e) {
       debugPrint("Open file error: $e");
@@ -742,6 +946,10 @@ class _FileCardState extends State<_FileCard> {
       final localFile =
           File('${documentDirectory.path}/${url.split('/').last}');
       await localFile.writeAsBytes(response.bodyBytes);
+
+      // Регистрируем временный файл для очистки
+      TempFileService().track(localFile);
+
       await Share.shareXFiles([XFile(localFile.path)]);
     } catch (e) {
       debugPrint("Share file error: $e");
