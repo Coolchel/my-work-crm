@@ -451,7 +451,7 @@ class _FilesTab extends ConsumerWidget {
         _FileCategorySection(
           title: "Проекты и схемы",
           icon: Icons.architecture_rounded,
-          color: Colors.indigo,
+          color: Colors.brown,
           category: "PROJECT",
           files: project.files.where((f) => f.category == "PROJECT").toList(),
           onDelete: (fileId) => _deleteFile(context, ref, fileId),
@@ -461,7 +461,7 @@ class _FilesTab extends ConsumerWidget {
         _FileCategorySection(
           title: "Реализация (Этапы 1-2)",
           icon: Icons.construction_rounded,
-          color: Colors.orange,
+          color: Colors.brown,
           category: "WORK",
           files: project.files.where((f) => f.category == "WORK").toList(),
           onDelete: (fileId) => _deleteFile(context, ref, fileId),
@@ -471,7 +471,7 @@ class _FilesTab extends ConsumerWidget {
         _FileCategorySection(
           title: "Финишные фото",
           icon: Icons.auto_awesome_rounded,
-          color: Colors.purple,
+          color: Colors.brown,
           category: "FINISH",
           files: project.files.where((f) => f.category == "FINISH").toList(),
           onDelete: (fileId) => _deleteFile(context, ref, fileId),
@@ -549,121 +549,148 @@ class _FilesTab extends ConsumerWidget {
   }
 }
 
-class _FileCard extends StatelessWidget {
+class _FileCard extends StatefulWidget {
   final ProjectFileModel file;
   final VoidCallback onDelete;
 
   const _FileCard({required this.file, required this.onDelete});
 
+  @override
+  State<_FileCard> createState() => _FileCardState();
+}
+
+class _FileCardState extends State<_FileCard> {
+  bool _isHovered = false;
+
   bool get isImage {
-    final ext = file.file.toLowerCase();
+    final ext = widget.file.file.toLowerCase();
     return ext.endsWith('.jpg') ||
         ext.endsWith('.jpeg') ||
         ext.endsWith('.png') ||
         ext.endsWith('.webp');
   }
 
-  bool get isPdf => file.file.toLowerCase().endsWith('.pdf');
+  bool get isPdf => widget.file.file.toLowerCase().endsWith('.pdf');
 
-  String get displayName => file.originalName.isNotEmpty
-      ? file.originalName
-      : file.file.split('/').last;
+  String get displayName => widget.file.originalName.isNotEmpty
+      ? widget.file.originalName
+      : widget.file.file.split('/').last;
 
   @override
   Widget build(BuildContext context) {
-    // Внимание: file.file может быть относительным путем или полным URL в зависимости от бэкенда.
-    // Если Django MEDIA_URL='/media/', то путь будет /media/project_files/filename.ext
-    // Нужно убедиться, что baseUrl прокидывается или используется полный URL.
-    // Предполагаем, что Dio клиент умеет работать с базовым URL, но NetworkImage нужен полный.
+    final fileUrl = widget.file.file;
 
-    // В данном проекте обычно используется полный путь или baseUrl из Dio.
-    // Для простоты здесь предполагаем, что полный URL доступен или формируется.
-
-    // ВНИМАНИЕ: На реальном бэкенде путь из базы обычно '/media/...'
-    // Для корректной работы нужно добавить BASE_URL.
-    // Но так как у меня нет константы BASE_URL под рукой, используем как есть (предполагая полный URL от DRF)
-    final fileUrl = file.file;
-
-    return GestureDetector(
-      onTap: () => _openFile(context, fileUrl),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-          border: Border.all(color: Colors.grey.shade100),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: isImage
-                      ? Image.network(
-                          fileUrl,
-                          fit: BoxFit.cover,
-                          cacheWidth:
-                              200, // Оптимизация памяти: не декодируем в полном разрешении
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.broken_image,
-                                  color: Colors.grey),
-                        )
-                      : Container(
-                          color:
-                              isPdf ? Colors.red.shade50 : Colors.blue.shade50,
-                          child: Icon(
-                            isPdf
-                                ? Icons.picture_as_pdf
-                                : Icons.insert_drive_file,
-                            color: isPdf ? Colors.red : Colors.blue,
-                            size: 20,
-                          ),
-                        ),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedScale(
+        scale: _isHovered ? 1.05 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        child: GestureDetector(
+          onTap: () => _openFile(context, fileUrl),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20), // Больший радиус
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(_isHovered ? 0.12 : 0.06),
+                  blurRadius: _isHovered ? 20 : 12,
+                  offset: Offset(0, _isHovered ? 8 : 4),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Text(
-                    displayName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 8, fontWeight: FontWeight.w500),
-                    textAlign: TextAlign.center,
+              ],
+              border: Border.all(
+                color: _isHovered
+                    ? Colors.brown.withOpacity(0.2)
+                    : Colors.grey.shade100,
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                        ),
+                        child: isImage
+                            ? Image.network(
+                                fileUrl,
+                                fit: BoxFit.cover,
+                                cacheWidth: 300,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.broken_image,
+                                        color: Colors.grey),
+                              )
+                            : Container(
+                                color: isPdf
+                                    ? Colors.red.shade50
+                                    : Colors.blue.shade50,
+                                child: Icon(
+                                  isPdf
+                                      ? Icons.picture_as_pdf
+                                      : Icons.insert_drive_file,
+                                  color: isPdf ? Colors.red : Colors.blue,
+                                  size: 30,
+                                ),
+                              ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 10.0),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                      ),
+                      child: Text(
+                        displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: _isHovered
+                              ? Colors.brown.shade700
+                              : Colors.grey.shade800,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+                // Кнопки управления (появляются при наведении)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: AnimatedOpacity(
+                    opacity: _isHovered ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 150),
+                    child: Row(
+                      children: [
+                        _ActionButton(
+                          icon: Icons.share_rounded,
+                          color: Colors.blue,
+                          tooltip: "Поделиться",
+                          onTap: () => _shareFile(fileUrl),
+                        ),
+                        const SizedBox(width: 6),
+                        _ActionButton(
+                          icon: Icons.delete_outline_rounded,
+                          color: Colors.red,
+                          tooltip: "Удалить",
+                          onTap: widget.onDelete,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
-            // Кнопки управления верхний правый угол
-            Positioned(
-              top: 2,
-              right: 2,
-              child: Row(
-                children: [
-                  _ActionButton(
-                    icon: Icons.share_rounded,
-                    color: Colors.blue,
-                    tooltip: "Поделиться файлом",
-                    onTap: () => _shareFile(fileUrl),
-                  ),
-                  const SizedBox(width: 2),
-                  _ActionButton(
-                    icon: Icons.delete_outline_rounded,
-                    color: Colors.red,
-                    tooltip: "Удалить файл",
-                    onTap: onDelete,
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -729,16 +756,16 @@ class _ActionButton extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(6),
-        elevation: 1,
-        shadowColor: Colors.black12,
+        color: Colors.white.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(8),
+        elevation: 2,
+        shadowColor: Colors.black26,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
           child: Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: Icon(icon, size: 12, color: color),
+            padding: const EdgeInsets.all(5.0),
+            child: Icon(icon, size: 13, color: color),
           ),
         ),
       ),
@@ -795,120 +822,201 @@ class _FileCategorySection extends StatefulWidget {
 
 class _FileCategorySectionState extends State<_FileCategorySection> {
   bool _isExpanded = false;
+  bool _isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Автоматически раскрываем спойлер, если файлов 5 и менее
+    if (widget.files.length <= 5) {
+      _isExpanded = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Решаем, сколько файлов показывать
-    final visibleFiles = (_isExpanded || widget.files.length <= 3)
-        ? widget.files
-        : widget.files.take(3).toList();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: widget.color.withOpacity(0.12),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: widget.color.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          // 1. Accent vertical line (Full height)
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 5,
+            child: Container(
+              color: widget.color.withOpacity(0.8),
+            ),
+          ),
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Tooltip(
-                message: _isExpanded ? "Свернуть" : "Развернуть",
+          // 2. Main content Column
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header section (Stable & Full Hover)
+              MouseRegion(
+                onEnter: (_) => setState(() => _isHovered = true),
+                onExit: (_) => setState(() => _isHovered = false),
                 child: Material(
-                  color: widget.color.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(8),
-                  child: InkWell(
-                    onTap: () => setState(() => _isExpanded = !_isExpanded),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      child: Row(
-                        children: [
-                          Icon(widget.icon, color: widget.color, size: 18),
-                          const SizedBox(width: 12),
-                          Text(
-                            widget.title.toUpperCase(),
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 11,
-                              color: widget.color,
-                              letterSpacing: 0.8,
+                  color: _isHovered
+                      ? widget.color.withOpacity(0.12) // Темнее при наведении
+                      : widget.color.withOpacity(0.05),
+                  child: Row(
+                    children: [
+                      // Left interaction area: Expand/Collapse
+                      Expanded(
+                        child: InkWell(
+                          onTap: () =>
+                              setState(() => _isExpanded = !_isExpanded),
+                          hoverColor: Colors.transparent, // Disable local hover
+                          splashColor:
+                              Colors.transparent, // Disable local splash
+                          highlightColor:
+                              Colors.transparent, // Disable local highlight
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(19, 16, 14, 16),
+                            child: Row(
+                              children: [
+                                Icon(widget.icon,
+                                    color: widget.color, size: 20),
+                                const SizedBox(width: 12),
+                                Text(
+                                  widget.title.toUpperCase(),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 12,
+                                    color: widget.color.withOpacity(0.85),
+                                    letterSpacing: 1.1,
+                                  ),
+                                ),
+                                const Spacer(),
+                                // File count badge
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: widget.color
+                                        .withOpacity(_isExpanded ? 0.15 : 0.08),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    "${widget.files.length} ФАЙЛОВ",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      color: widget.color,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const Spacer(),
-                          if (widget.files.length > 3) ...[
-                            Text(
-                              _isExpanded
-                                  ? "СВЕРНУТЬ"
-                                  : "ЕЩЕ ${widget.files.length - 3}",
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: widget.color.withOpacity(0.7),
+                        ),
+                      ),
+
+                      // Right interaction area: Action buttons
+                      Padding(
+                        padding: const EdgeInsets.only(right: 14),
+                        child: Row(
+                          children: [
+                            // Add files button (Safe separate InkWell)
+                            Tooltip(
+                              message: "Загрузить файлы",
+                              child: InkWell(
+                                onTap: widget.onUpload,
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: widget.color.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(Icons.add_rounded,
+                                      size: 22, color: widget.color),
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
+                            // Specific Expand Indicator button
+                            InkWell(
+                              onTap: () =>
+                                  setState(() => _isExpanded = !_isExpanded),
+                              borderRadius: BorderRadius.circular(20),
+                              child: Icon(
+                                _isExpanded
+                                    ? Icons.expand_less
+                                    : Icons.expand_more,
+                                size: 26,
+                                color: widget.color.withOpacity(0.4),
+                              ),
+                            ),
                           ],
-                          Icon(
-                            _isExpanded ? Icons.expand_less : Icons.expand_more,
-                            size: 18,
-                            color: widget.color.withOpacity(0.7),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Tooltip(
-              message: "Загрузить файлы",
-              child: Material(
-                color: widget.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                child: InkWell(
-                  onTap: widget.onUpload,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    alignment: Alignment.center,
-                    child: Icon(Icons.add, size: 22, color: widget.color),
-                  ),
+
+              // Files Grid (Spoiler support)
+              if (_isExpanded)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: widget.files.isEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 30),
+                          child: Center(
+                            child: Text(
+                              'Нет загруженных файлов',
+                              style: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        )
+                      : GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 6,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 0.8,
+                          ),
+                          itemCount: widget.files.length,
+                          itemBuilder: (context, index) {
+                            return _FileCard(
+                              file: widget.files[index],
+                              onDelete: () =>
+                                  widget.onDelete(widget.files[index].id),
+                            );
+                          },
+                        ),
                 ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (widget.files.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Text(
-                'Нет загруженных файлов',
-                style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
-              ),
-            ),
-          )
-        else
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 6,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 0.8,
-            ),
-            itemCount: visibleFiles.length,
-            itemBuilder: (context, index) {
-              return _FileCard(
-                file: visibleFiles[index],
-                onDelete: () => widget.onDelete(visibleFiles[index].id),
-              );
-            },
+            ],
           ),
-      ],
+        ],
+      ),
     );
   }
 }
