@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import '../../../data/models/stage_model.dart';
 
@@ -34,12 +35,23 @@ class _StageCardState extends State<StageCard> {
     return map[title] ?? title;
   }
 
+  String _formatDate(DateTime date) {
+    return DateFormat('dd.MM.yyyy').format(date);
+  }
+
   @override
   Widget build(BuildContext context) {
-    const statusColor = Colors.indigo; // Unified color
+    final statusColor = Colors.indigo; // Unified color
+    final createdAt = widget.stage.createdAt;
+    final updatedAt = widget.stage.updatedAt;
+
+    // Check if updated date is different from created date (threshold 10 seconds to avoid drift)
+    final isEdited = createdAt != null &&
+        updatedAt != null &&
+        updatedAt.difference(createdAt).abs().inSeconds > 10;
 
     return Container(
-      height: 100,
+      constraints: const BoxConstraints(minHeight: 100),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -76,21 +88,60 @@ class _StageCardState extends State<StageCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Header
+                        // Header with Title and Delete Button
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _getStageTitleDisplay(widget.stage.title),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.3,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _getStageTitleDisplay(widget.stage.title),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: -0.3,
+                                    ),
+                                  ),
+                                  if (createdAt != null) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Создан: ${_formatDate(createdAt)}',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey.shade400,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                    if (isEdited)
+                                      Text(
+                                        'Изм: ${_formatDate(updatedAt)}',
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey.shade400,
+                                            fontWeight: FontWeight.w500),
+                                      ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            // Delete Button (Cross)
+                            SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: IconButton(
+                                icon: Icon(Icons.close,
+                                    size: 18, color: Colors.grey.shade400),
+                                padding: EdgeInsets.zero,
+                                onPressed: widget.onDelete,
+                                tooltip: "Удалить этап",
                               ),
                             ),
                           ],
                         ),
-                        const Spacer(),
+
+                        const SizedBox(height: 16),
+
                         // Stats Rows
                         Row(
                           children: [
@@ -110,35 +161,6 @@ class _StageCardState extends State<StageCard> {
                               color: Colors.blue,
                             ),
                           ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // Actions Menu (Top Right)
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert, color: Colors.grey.shade400),
-                      onSelected: (value) {
-                        if (value == 'delete') {
-                          widget.onDelete();
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete_outline,
-                                  color: Colors.red, size: 20),
-                              SizedBox(width: 8),
-                              Text('Удалить этап',
-                                  style: TextStyle(color: Colors.red)),
-                            ],
-                          ),
                         ),
                       ],
                     ),

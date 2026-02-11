@@ -358,7 +358,10 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
   Map<String, String> get _availableStages {
     final available = Map<String, String>.from(_allStages);
     for (final key in widget.existingStageKeys) {
-      if (key != 'extra' && key != 'other') {
+      if (key != 'extra' &&
+          key != 'other' &&
+          key != 'precalc' &&
+          key != 'stage_3') {
         available.remove(key);
       }
     }

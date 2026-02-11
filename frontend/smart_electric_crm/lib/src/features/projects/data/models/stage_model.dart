@@ -25,6 +25,12 @@ class StageModel {
   @JsonKey(name: 'ended_at')
   final DateTime? endedAt;
 
+  @JsonKey(name: 'created_at')
+  final DateTime? createdAt;
+
+  @JsonKey(name: 'updated_at')
+  final DateTime? updatedAt;
+
   @JsonKey(name: 'work_notes', defaultValue: '')
   final String workNotes;
 
@@ -54,6 +60,8 @@ class StageModel {
     required this.isPaid,
     this.startedAt,
     this.endedAt,
+    this.createdAt,
+    this.updatedAt,
     this.estimateItems = const [],
     this.workNotes = '',
     this.materialNotes = '',
@@ -78,6 +86,8 @@ class StageModel {
     bool? isPaid,
     DateTime? startedAt,
     DateTime? endedAt,
+    DateTime? createdAt,
+    DateTime? updatedAt,
     List<EstimateItemModel>? estimateItems,
     String? workNotes,
     String? materialNotes,
@@ -93,6 +103,8 @@ class StageModel {
       isPaid: isPaid ?? this.isPaid,
       startedAt: startedAt ?? this.startedAt,
       endedAt: endedAt ?? this.endedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       estimateItems: estimateItems ?? this.estimateItems,
       workNotes: workNotes ?? this.workNotes,
       materialNotes: materialNotes ?? this.materialNotes,

@@ -410,6 +410,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         'employer_quantity': item.employerQuantity,
       });
       if (!mounted) return;
+      ref.invalidate(projectListProvider);
       _refresh();
     } catch (e) {
       if (!mounted) return;
@@ -449,6 +450,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       try {
         final repo = ref.read(projectRepositoryProvider);
         await repo.deleteEstimateItem(itemId);
+        ref.invalidate(projectListProvider);
         _refresh();
       } catch (e) {
         if (!mounted) return;
@@ -470,6 +472,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
       final repo = ref.read(projectRepositoryProvider);
       await repo.updateEstimateItem(updatedItem.id, data);
+      ref.invalidate(projectListProvider);
       _refresh();
     } catch (e) {
       if (!mounted) return;
@@ -507,6 +510,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       }
 
       await repo.updateStage(widget.stage.id, data);
+      ref.invalidate(projectListProvider);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -551,6 +555,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
             content:
                 Text("Импорт завершен: Создано $created, Обновлено $updated")),
       );
+      ref.invalidate(projectListProvider);
       _refresh();
     } catch (e) {
       if (!mounted) return;
@@ -591,6 +596,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
             content:
                 Text("Расчет завершен: Создано $created, Обновлено $updated")),
       );
+      ref.invalidate(projectListProvider);
       _refresh();
     } catch (e) {
       if (!mounted) return;
@@ -605,6 +611,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     try {
       final repo = ref.read(projectRepositoryProvider);
       await repo.updateStage(widget.stage.id, {'markup_percent': value});
+      ref.invalidate(projectListProvider);
     } catch (e) {
       debugPrint("Error saving markup: $e");
     }
@@ -770,6 +777,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Шаблон работ применен!")));
+      ref.invalidate(projectListProvider);
       _refresh();
     } catch (e) {
       if (!mounted) return;
@@ -805,6 +813,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Шаблон материалов применен!")));
+      ref.invalidate(projectListProvider);
       _refresh();
     } catch (e) {
       if (!mounted) return;

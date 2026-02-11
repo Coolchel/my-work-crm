@@ -365,6 +365,16 @@ class EstimateItem(models.Model):
             if not self.pk and not self.currency:
                 self.currency = self.catalog_item.default_currency
         super().save(*args, **kwargs)
+        # Touch parent stage to update its updated_at using timezone.now()
+        from django.utils import timezone
+        Stage.objects.filter(pk=self.stage_id).update(updated_at=timezone.now())
+
+    def delete(self, *args, **kwargs):
+        stage_id = self.stage_id
+        super().delete(*args, **kwargs)
+        # Touch parent stage after deletion
+        from django.utils import timezone
+        Stage.objects.filter(pk=stage_id).update(updated_at=timezone.now())
 
 
 class ProjectFile(models.Model):
