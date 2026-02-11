@@ -122,4 +122,7 @@ class EstimateItemModel {
       categoryName: categoryName ?? this.categoryName,
     );
   }
+
+  // Helpers
+  double get totalPrice => totalQuantity * (pricePerUnit ?? 0.0);
 }

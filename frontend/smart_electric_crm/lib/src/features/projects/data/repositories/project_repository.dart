@@ -101,6 +101,18 @@ class ProjectRepository {
     }
   }
 
+  /// Удаляет этап по ID
+  Future<void> deleteStage(int stageId) async {
+    try {
+      await _dio.delete('/stages/$stageId/');
+    } catch (e) {
+      if (e is DioException && e.response != null) {
+        debugPrint("❌ Delete Stage Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
   /// Удаляет проект по ID.
   Future<void> deleteProject(String id) async {
     try {

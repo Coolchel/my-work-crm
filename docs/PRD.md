@@ -46,5 +46,6 @@
 - Data Integrity: Always use input normalization (e.g., RegEx for technical units) on the backend.
 
 ## Statistics & Analytics:
-- **Dashboard:** Visual representation of financial health (Work Dynamics, Pipeline).
+- **Dashboard:** Visual representation of financial health (Work Dynamics, Finances for Period).
+- **Finances:** Total income (USD/BYN) calculated based on creation date of stages.
 - **Insights:** Breakdown by Sources and Object Types to track marketing performance.

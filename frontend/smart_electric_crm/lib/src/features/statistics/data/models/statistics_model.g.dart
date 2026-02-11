@@ -9,7 +9,8 @@ part of 'statistics_model.dart';
 _$StatisticsModelImpl _$$StatisticsModelImplFromJson(
         Map<String, dynamic> json) =>
     _$StatisticsModelImpl(
-      pipeline: PipelineData.fromJson(json['pipeline'] as Map<String, dynamic>),
+      finances:
+          CurrencyAmount.fromJson(json['finances'] as Map<String, dynamic>),
       sources: (json['sources'] as List<dynamic>)
           .map((e) => SourceData.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -24,22 +25,10 @@ _$StatisticsModelImpl _$$StatisticsModelImplFromJson(
 Map<String, dynamic> _$$StatisticsModelImplToJson(
         _$StatisticsModelImpl instance) =>
     <String, dynamic>{
-      'pipeline': instance.pipeline,
+      'finances': instance.finances,
       'sources': instance.sources,
       'object_types': instance.objectTypes,
       'work_dynamics': instance.workDynamics,
-    };
-
-_$PipelineDataImpl _$$PipelineDataImplFromJson(Map<String, dynamic> json) =>
-    _$PipelineDataImpl(
-      paid: CurrencyAmount.fromJson(json['paid'] as Map<String, dynamic>),
-      pending: CurrencyAmount.fromJson(json['pending'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$$PipelineDataImplToJson(_$PipelineDataImpl instance) =>
-    <String, dynamic>{
-      'paid': instance.paid,
-      'pending': instance.pending,
     };
 
 _$CurrencyAmountImpl _$$CurrencyAmountImplFromJson(Map<String, dynamic> json) =>

@@ -7,7 +7,7 @@ part 'statistics_model.g.dart';
 @freezed
 class StatisticsModel with _$StatisticsModel {
   const factory StatisticsModel({
-    required PipelineData pipeline,
+    required CurrencyAmount finances,
     required List<SourceData> sources,
     @JsonKey(name: 'object_types') required List<ObjectTypeData> objectTypes,
     @JsonKey(name: 'work_dynamics')
@@ -16,17 +16,6 @@ class StatisticsModel with _$StatisticsModel {
 
   factory StatisticsModel.fromJson(Map<String, dynamic> json) =>
       _$StatisticsModelFromJson(json);
-}
-
-@freezed
-class PipelineData with _$PipelineData {
-  const factory PipelineData({
-    required CurrencyAmount paid,
-    required CurrencyAmount pending,
-  }) = _PipelineData;
-
-  factory PipelineData.fromJson(Map<String, dynamic> json) =>
-      _$PipelineDataFromJson(json);
 }
 
 @freezed

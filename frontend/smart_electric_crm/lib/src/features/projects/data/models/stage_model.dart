@@ -102,4 +102,17 @@ class StageModel {
       showPrices: showPrices ?? this.showPrices,
     );
   }
+
+  // Helpers for UI
+  double get totalAmountUsd {
+    return estimateItems
+        .where((i) => i.itemType == 'work')
+        .fold(0.0, (sum, item) => sum + item.totalPrice);
+  }
+
+  double get totalAmountMaterialsUsd {
+    return estimateItems
+        .where((i) => i.itemType != 'work')
+        .fold(0.0, (sum, item) => sum + item.totalPrice);
+  }
 }

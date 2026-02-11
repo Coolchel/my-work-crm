@@ -418,45 +418,30 @@ class StatisticsViewSet(viewsets.ViewSet):
         # Базовый QuerySet для этапов (исключая предпросчет)
         stages_qs = Stage.objects.exclude(title='precalc')
         
-        # Фильтруем этапы:
+        # Фильтруем этапы по дате создания (генерация работ)
         if start_date:
-            stages_qs = stages_qs.filter(updated_at__gte=start_date)
+            stages_qs = stages_qs.filter(created_at__gte=start_date)
 
-        # 1. Pipeline (Воронка)
-        # Оплачено - этапы с is_paid=True
-        # Ожидает оплаты - этапы с is_paid=False и status='completed'
-        # В работе - УБРАНО из статистики по требованию
-
-        paid_usd = 0.0
-        paid_byn = 0.0
-        pending_usd = 0.0
-        pending_byn = 0.0
+        # 1. Total Finances (No more "Pipeline" or "Pending")
+        total_usd = 0.0
+        total_byn = 0.0
 
         # Получаем этапы, попавшие в выборку
         for stage in stages_qs:
             # Считаем суммы для этапа
-            usd = 0.0
-            byn = 0.0
             for item in stage.estimate_items.all():
                 if item.currency == 'USD':
-                    usd += item.client_amount
+                    total_usd += item.client_amount
                 else:
-                    byn += item.client_amount
-            
-            if stage.is_paid:
-                paid_usd += usd
-                paid_byn += byn
-            elif stage.status == 'completed':
-                if not stage.is_paid: # Доп проверка
-                    pending_usd += usd
-                    pending_byn += byn
+                    total_byn += item.client_amount
 
         # 2. Источники (Sources) & 3. Типы объектов (Object Types)
         
         projects_qs = Project.objects.all()
         if start_date:
-            # Считаем проект активным, если он был обновлен в этот период
-            projects_qs = projects_qs.filter(updated_at__gte=start_date)
+            # Считаем проект активным, если он был создан в этот период (или его этапы)
+            # Для простоты привяжемся к created_at проекта для источников
+            projects_qs = projects_qs.filter(created_at__gte=start_date)
 
         sources_data = {}
         types_data = {}
@@ -477,7 +462,8 @@ class StatisticsViewSet(viewsets.ViewSet):
                 types_data[label] = {'count': 0, 'usd': 0.0, 'byn': 0.0}
             types_data[label]['count'] += 1
 
-            # Считаем общую сумму проекта (только по этапам, попавшим в период)
+            # Считаем общую сумму проекта (только по этапам этого проекта, которые попали в период)
+            # ВАЖНО: Мы должны брать этапы, которые УЖЕ отфильтрованы по дате выше
             project_stages = stages_qs.filter(project=project)
             
             for stage in project_stages:
@@ -490,15 +476,7 @@ class StatisticsViewSet(viewsets.ViewSet):
                         types_data[label]['byn'] += item.client_amount
 
         # 4. Динамика работ (Work Dynamics)
-        # Агрегация по created_at (когда работа была зафиксирована)
-        
         dynamics_data = {} # "YYYY-MM-DD" -> {usd, byn}
-        
-        # Используем stages_qs, который уже отфильтрован по дате (start_date) при необходимости
-        # Но для динамики нам, возможно, нужны более старые данные если period='all',
-        # хотя stages_qs уже учитывает start_date.
-        
-        # Для 'all' и 'year' группируем по месяцам ("YYYY-MM"), для 'month' по дням ("YYYY-MM-DD")
         is_monthly_grouping = period in ['year', 'all']
 
         for stage in stages_qs:
@@ -522,7 +500,6 @@ class StatisticsViewSet(viewsets.ViewSet):
         # Преобразуем в список и сортируем
         dynamics_list = []
         for k, v in dynamics_data.items():
-            # print(f"DEBUG DATE KEY: '{k}'") # Debug
             dynamics_list.append({
                 'date': k,
                 'usd': round(v['usd'], 2),
@@ -532,9 +509,9 @@ class StatisticsViewSet(viewsets.ViewSet):
         dynamics_list.sort(key=lambda x: x['date'])
 
         return Response({
-            'pipeline': {
-                'paid': {'usd': round(paid_usd, 2), 'byn': round(paid_byn, 2)},
-                'pending': {'usd': round(pending_usd, 2), 'byn': round(pending_byn, 2)},
+            'finances': {
+                'usd': round(total_usd, 2),
+                'byn': round(total_byn, 2),
             },
             'sources': [
                 {'name': k, 'count': v['count'], 'usd': round(v['usd'], 2), 'byn': round(v['byn'], 2)}

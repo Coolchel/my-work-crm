@@ -16,6 +16,9 @@ import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_di
 import 'dart:io';
 import '../../data/models/project_file_model.dart';
 import '../../../../shared/services/temp_file_service.dart';
+import '../widgets/stages/stage_card.dart';
+
+import '../../data/models/stage_model.dart';
 
 class ProjectDetailScreen extends ConsumerWidget {
   final String projectId;
@@ -152,6 +155,144 @@ class _StagesTab extends ConsumerWidget {
 
   const _StagesTab({required this.project});
 
+  Future<void> _updateStatus(BuildContext context, WidgetRef ref,
+      String stageId, String newStatus) async {
+    // Simpler signature
+    await ref
+        .read(projectListProvider.notifier)
+        .updateStageStatus(stageId, newStatus);
+  }
+
+  Future<void> _deleteStage(
+      BuildContext context, WidgetRef ref, StageModel stage) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Удаление этапа'),
+        content: Text(
+            'Вы уверены, что хотите удалить этап "${stage.title}"? Все сметы внутри будут удалены.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await ref.read(projectRepositoryProvider).deleteStage(stage.id);
+        // Force refresh
+        ref.invalidate(projectListProvider);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Ошибка удаления: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddStageDialog(context, ref),
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Project Info Card
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey.shade200),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _InfoRow(
+                        label: 'Тип:',
+                        value: _getObjectTypeDisplay(project.objectType)),
+                    _InfoRow(
+                        label: 'Статус:',
+                        value: _getProjectStatusDisplay(project.status)),
+                    if (project.clientInfo.isNotEmpty)
+                      _InfoRow(label: 'Клиент:', value: project.clientInfo),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            Row(
+              children: [
+                Text(
+                  'Этапы работ',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            if (project.stages.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Text(
+                    'Этапы еще не созданы',
+                    style: TextStyle(color: Colors.grey.shade400),
+                  ),
+                ),
+              ),
+
+            // List of Stages
+            ...project.stages.map((stage) {
+              return StageCard(
+                stage: stage,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EstimateScreen(
+                        stage: stage,
+                        projectId: project.id.toString(),
+                      ),
+                    ),
+                  );
+                },
+                onStatusChanged: (newStatus) =>
+                    _updateStatus(context, ref, stage.id.toString(), newStatus),
+                onDelete: () => _deleteStage(context, ref, stage),
+              );
+            }),
+
+            const SizedBox(height: 80), // Space for FAB
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helpers (Duplicated for now, should be moved to Utils or mixin)
   String _getObjectTypeDisplay(String type) {
     const map = {
       'new_building': 'Новостройка',
@@ -175,170 +316,12 @@ class _StagesTab extends ConsumerWidget {
     return map[status] ?? status;
   }
 
-  String _getStageTitleDisplay(String title) {
-    const map = {
-      'precalc': 'Предпросчет',
-      'stage_1': 'Этап 1 (Черновой)',
-      'stage_1_2': 'Этап 1+2 (Черновой)',
-      'stage_2': 'Этап 2 (Черновой)',
-      'stage_3': 'Этап 3 (Чистовой)',
-      'extra': 'Доп. работы',
-      'other': 'Другое',
-    };
-    return map[title] ?? title;
-  }
-
-  String _getStageStatusDisplay(String status) {
-    const map = {
-      'plan': 'План',
-      'in_progress': 'В процессе',
-      'completed': 'Завершен',
-    };
-    return map[status] ?? status;
-  }
-
-  Color _getStageStatusColor(String status) {
-    switch (status) {
-      case 'plan':
-        return Colors.grey;
-      case 'in_progress':
-        return Colors.blue;
-      case 'completed':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Future<void> _updateStatus(BuildContext context, WidgetRef ref,
-      String stageId, String currentStatus, Offset globalPosition) async {
-    final newStatus = await showMenu<String>(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        globalPosition.dx,
-        globalPosition.dy,
-        globalPosition.dx,
-        globalPosition.dy,
-      ),
-      items: const [
-        PopupMenuItem(value: 'plan', child: Text('План')),
-        PopupMenuItem(value: 'in_progress', child: Text('В процессе')),
-        PopupMenuItem(value: 'completed', child: Text('Завершен')),
-      ],
-    );
-
-    if (newStatus != null && newStatus != currentStatus) {
-      await ref
-          .read(projectListProvider.notifier)
-          .updateStageStatus(stageId, newStatus);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _InfoRow(
-                      label: 'Тип:',
-                      value: _getObjectTypeDisplay(project.objectType)),
-                  _InfoRow(
-                      label: 'Статус:',
-                      value: _getProjectStatusDisplay(project.status)),
-                  if (project.clientInfo.isNotEmpty)
-                    _InfoRow(label: 'Клиент:', value: project.clientInfo),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Этапы работ',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          if (project.stages.isEmpty) const Text('Этапы еще не созданы'),
-          ...project.stages.map((stage) {
-            final statusColor = _getStageStatusColor(stage.status);
-            return Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EstimateScreen(
-                        stage: stage,
-                        projectId: project.id.toString(),
-                      ),
-                    ),
-                  );
-                },
-                title: Text(_getStageTitleDisplay(stage.title)),
-                subtitle: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: InkWell(
-                      onTapDown: (details) => _updateStatus(
-                          context,
-                          ref,
-                          stage.id.toString(),
-                          stage.status,
-                          details.globalPosition),
-                      onTap:
-                          () {}, // Для эффекта нажатия, но без действия (действие в onTapDown)
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10.0, vertical: 6.0),
-                        decoration: BoxDecoration(
-                          color: statusColor,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _getStageStatusDisplay(stage.status),
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                trailing: stage.isPaid
-                    ? const Icon(Icons.monetization_on, color: Colors.green)
-                    : const Icon(Icons.money_off, color: Colors.grey),
-              ),
-            );
-          }),
-          const SizedBox(height: 16),
-          Center(
-            child: FilledButton.icon(
-              onPressed: () => _showAddStageSheet(context, ref),
-              icon: const Icon(Icons.add),
-              label: const Text('Добавить этап'),
-            ),
-          ),
-          const SizedBox(height: 50),
-        ],
-      ),
-    );
-  }
-
-  void _showAddStageSheet(BuildContext context, WidgetRef ref) {
+  void _showAddStageDialog(BuildContext context, WidgetRef ref) {
     final existingKeys = project.stages.map((s) => s.title).toList();
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      builder: (context) => _AddStageSheet(
+      builder: (context) => _AddStageDialog(
         projectId: project.id.toString(),
         existingStageKeys: existingKeys,
       ),
@@ -346,20 +329,20 @@ class _StagesTab extends ConsumerWidget {
   }
 }
 
-class _AddStageSheet extends ConsumerStatefulWidget {
+class _AddStageDialog extends ConsumerStatefulWidget {
   final String projectId;
   final List<String> existingStageKeys;
 
-  const _AddStageSheet({
+  const _AddStageDialog({
     required this.projectId,
     required this.existingStageKeys,
   });
 
   @override
-  ConsumerState<_AddStageSheet> createState() => _AddStageSheetState();
+  ConsumerState<_AddStageDialog> createState() => _AddStageDialogState();
 }
 
-class _AddStageSheetState extends ConsumerState<_AddStageSheet> {
+class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
   bool _isLoading = false;
 
   final Map<String, String> _allStages = {
@@ -408,33 +391,133 @@ class _AddStageSheetState extends ConsumerState<_AddStageSheet> {
   @override
   Widget build(BuildContext context) {
     final stages = _availableStages;
+    final themeColor = Colors.indigo;
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Выберите этап',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 16),
-          if (_isLoading)
-            const Center(child: CircularProgressIndicator())
-          else if (stages.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text('Все основные этапы уже добавлены'),
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
             )
-          else
-            ...stages.entries.map((entry) => ListTile(
-                  title: Text(entry.value),
-                  onTap: () => _addStage(entry.key),
-                  leading: const Icon(Icons.add_circle_outline),
-                )),
-          const SizedBox(height: 16),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: themeColor.withOpacity(0.08),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                ),
+                border: Border(
+                  bottom: BorderSide(color: themeColor.withOpacity(0.1)),
+                ),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Text(
+                    "Выберите этап",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: themeColor.withOpacity(0.8),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: InkWell(
+                      onTap: () => Navigator.of(context).pop(),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.5),
+                        ),
+                        child: Icon(Icons.close,
+                            size: 18, color: themeColor.withOpacity(0.8)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Content
+            if (_isLoading)
+              const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(child: CircularProgressIndicator()))
+            else if (stages.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(32),
+                child: Center(child: Text("Все основные этапы уже созданы")),
+              )
+            else
+              Container(
+                constraints: const BoxConstraints(maxHeight: 400),
+                child: ListView(
+                  padding: const EdgeInsets.all(8),
+                  shrinkWrap: true,
+                  children: stages.entries.map((entry) {
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _addStage(entry.key),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: themeColor.withOpacity(0.05),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.add,
+                                    size: 20, color: themeColor),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  entry.value,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              Icon(Icons.chevron_right,
+                                  size: 20, color: Colors.grey.shade400),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }

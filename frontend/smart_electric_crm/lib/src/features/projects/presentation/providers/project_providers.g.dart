@@ -173,7 +173,7 @@ class _ProjectByIdProviderElement
   String get id => (origin as ProjectByIdProvider).id;
 }
 
-String _$projectListHash() => r'6f0e81bc478b2fd3ce6044d226cf87b934831a64';
+String _$projectListHash() => r'82ae81e798722dadbea354090d3f43992cd1f7e4';
 
 /// Провайдер списка проектов.
 /// Использует AsyncNotifier для управления состоянием загрузки и данных.

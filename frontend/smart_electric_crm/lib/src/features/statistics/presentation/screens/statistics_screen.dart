@@ -104,9 +104,9 @@ class StatisticsScreen extends ConsumerWidget {
 
                 const SizedBox(height: 24),
 
-                _buildHeader('Финансовая воронка'),
+                _buildHeader('Финансы за ${_getPeriodTitle(currentPeriod)}'),
                 const SizedBox(height: 12),
-                _buildHorizontalPipeline(stats.pipeline),
+                _buildFinancialSummary(stats.finances),
                 const SizedBox(height: 24),
 
                 IntrinsicHeight(
@@ -211,7 +211,7 @@ class StatisticsScreen extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(left: 16.0),
                   child: Text(
-                    "* За выполненные работы",
+                    "* За выполненные работы (фиксация по дате создания, не зависит от оплаты)",
                     style: TextStyle(
                       color: Colors.grey[500],
                       fontSize: 12,
@@ -226,6 +226,19 @@ class StatisticsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _getPeriodTitle(String period) {
+    switch (period) {
+      case 'month':
+        return 'месяц';
+      case 'year':
+        return 'год';
+      case 'all':
+        return 'все время';
+      default:
+        return '';
+    }
   }
 
   Widget _buildHeader(String title) {
@@ -251,45 +264,26 @@ class StatisticsScreen extends ConsumerWidget {
     );
   }
 
-  // 1. Horizontal Pipeline Card
-  Widget _buildHorizontalPipeline(PipelineData pipeline) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color:
-                const Color(0xFF2E7D32).withOpacity(0.08), // Green tint shadow
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-            color: const Color(0xFF2E7D32).withOpacity(0.1),
-            width: 1), // Green tint border
-      ),
+  // 1. Financial Summary Cards
+  Widget _buildFinancialSummary(CurrencyAmount finances) {
+    return IntrinsicHeight(
       child: Row(
         children: [
           Expanded(
-            child: _buildPipelineItem(
-              'Оплачено',
-              pipeline.paid,
-              const Color(0xFF10B981), // Green
-              Icons.check_circle_rounded,
+            child: _buildFinanceCard(
+              'Всего USD',
+              finances.usd,
+              '\$',
+              Colors.green,
             ),
           ),
-          Container(
-            width: 2, // Thicker
-            height: 60,
-            color: Colors.grey.withOpacity(0.3), // Darker
-          ),
+          const SizedBox(width: 16),
           Expanded(
-            child: _buildPipelineItem(
-              'Ожидает оплаты',
-              pipeline.pending,
-              const Color(0xFFF59E0B), // Amber
-              Icons.pending_actions_rounded,
+            child: _buildFinanceCard(
+              'Всего BYN',
+              finances.byn,
+              'р',
+              Colors.indigo,
             ),
           ),
         ],
@@ -297,52 +291,59 @@ class StatisticsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPipelineItem(
-      String title, CurrencyAmount amount, Color color, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
+  Widget _buildFinanceCard(
+      String title, double amount, String symbol, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: color.withOpacity(0.15), width: 1),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   color: Colors.grey[600],
                   fontWeight: FontWeight.w500,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                '${_formatAmount(amount.usd)} \$',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.attach_money,
+                  color: color,
+                  size: 20,
                 ),
               ),
-              if (amount.byn > 0) ...[
-                const SizedBox(width: 8),
-                Text(
-                  '| ${_formatAmount(amount.byn)} р',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[400],
-                  ),
-                ),
-              ],
             ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '${_formatAmount(amount)} $symbol',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+              letterSpacing: -0.5,
+            ),
           ),
         ],
       ),

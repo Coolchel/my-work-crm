@@ -20,7 +20,7 @@ StatisticsModel _$StatisticsModelFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$StatisticsModel {
-  PipelineData get pipeline => throw _privateConstructorUsedError;
+  CurrencyAmount get finances => throw _privateConstructorUsedError;
   List<SourceData> get sources => throw _privateConstructorUsedError;
   @JsonKey(name: 'object_types')
   List<ObjectTypeData> get objectTypes => throw _privateConstructorUsedError;
@@ -40,12 +40,12 @@ abstract class $StatisticsModelCopyWith<$Res> {
       _$StatisticsModelCopyWithImpl<$Res, StatisticsModel>;
   @useResult
   $Res call(
-      {PipelineData pipeline,
+      {CurrencyAmount finances,
       List<SourceData> sources,
       @JsonKey(name: 'object_types') List<ObjectTypeData> objectTypes,
       @JsonKey(name: 'work_dynamics') List<WorkDynamicsData> workDynamics});
 
-  $PipelineDataCopyWith<$Res> get pipeline;
+  $CurrencyAmountCopyWith<$Res> get finances;
 }
 
 /// @nodoc
@@ -61,16 +61,16 @@ class _$StatisticsModelCopyWithImpl<$Res, $Val extends StatisticsModel>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? pipeline = null,
+    Object? finances = null,
     Object? sources = null,
     Object? objectTypes = null,
     Object? workDynamics = null,
   }) {
     return _then(_value.copyWith(
-      pipeline: null == pipeline
-          ? _value.pipeline
-          : pipeline // ignore: cast_nullable_to_non_nullable
-              as PipelineData,
+      finances: null == finances
+          ? _value.finances
+          : finances // ignore: cast_nullable_to_non_nullable
+              as CurrencyAmount,
       sources: null == sources
           ? _value.sources
           : sources // ignore: cast_nullable_to_non_nullable
@@ -88,9 +88,9 @@ class _$StatisticsModelCopyWithImpl<$Res, $Val extends StatisticsModel>
 
   @override
   @pragma('vm:prefer-inline')
-  $PipelineDataCopyWith<$Res> get pipeline {
-    return $PipelineDataCopyWith<$Res>(_value.pipeline, (value) {
-      return _then(_value.copyWith(pipeline: value) as $Val);
+  $CurrencyAmountCopyWith<$Res> get finances {
+    return $CurrencyAmountCopyWith<$Res>(_value.finances, (value) {
+      return _then(_value.copyWith(finances: value) as $Val);
     });
   }
 }
@@ -104,13 +104,13 @@ abstract class _$$StatisticsModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {PipelineData pipeline,
+      {CurrencyAmount finances,
       List<SourceData> sources,
       @JsonKey(name: 'object_types') List<ObjectTypeData> objectTypes,
       @JsonKey(name: 'work_dynamics') List<WorkDynamicsData> workDynamics});
 
   @override
-  $PipelineDataCopyWith<$Res> get pipeline;
+  $CurrencyAmountCopyWith<$Res> get finances;
 }
 
 /// @nodoc
@@ -124,16 +124,16 @@ class __$$StatisticsModelImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? pipeline = null,
+    Object? finances = null,
     Object? sources = null,
     Object? objectTypes = null,
     Object? workDynamics = null,
   }) {
     return _then(_$StatisticsModelImpl(
-      pipeline: null == pipeline
-          ? _value.pipeline
-          : pipeline // ignore: cast_nullable_to_non_nullable
-              as PipelineData,
+      finances: null == finances
+          ? _value.finances
+          : finances // ignore: cast_nullable_to_non_nullable
+              as CurrencyAmount,
       sources: null == sources
           ? _value._sources
           : sources // ignore: cast_nullable_to_non_nullable
@@ -154,7 +154,7 @@ class __$$StatisticsModelImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$StatisticsModelImpl implements _StatisticsModel {
   const _$StatisticsModelImpl(
-      {required this.pipeline,
+      {required this.finances,
       required final List<SourceData> sources,
       @JsonKey(name: 'object_types')
       required final List<ObjectTypeData> objectTypes,
@@ -168,7 +168,7 @@ class _$StatisticsModelImpl implements _StatisticsModel {
       _$$StatisticsModelImplFromJson(json);
 
   @override
-  final PipelineData pipeline;
+  final CurrencyAmount finances;
   final List<SourceData> _sources;
   @override
   List<SourceData> get sources {
@@ -197,7 +197,7 @@ class _$StatisticsModelImpl implements _StatisticsModel {
 
   @override
   String toString() {
-    return 'StatisticsModel(pipeline: $pipeline, sources: $sources, objectTypes: $objectTypes, workDynamics: $workDynamics)';
+    return 'StatisticsModel(finances: $finances, sources: $sources, objectTypes: $objectTypes, workDynamics: $workDynamics)';
   }
 
   @override
@@ -205,8 +205,8 @@ class _$StatisticsModelImpl implements _StatisticsModel {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$StatisticsModelImpl &&
-            (identical(other.pipeline, pipeline) ||
-                other.pipeline == pipeline) &&
+            (identical(other.finances, finances) ||
+                other.finances == finances) &&
             const DeepCollectionEquality().equals(other._sources, _sources) &&
             const DeepCollectionEquality()
                 .equals(other._objectTypes, _objectTypes) &&
@@ -218,7 +218,7 @@ class _$StatisticsModelImpl implements _StatisticsModel {
   @override
   int get hashCode => Object.hash(
       runtimeType,
-      pipeline,
+      finances,
       const DeepCollectionEquality().hash(_sources),
       const DeepCollectionEquality().hash(_objectTypes),
       const DeepCollectionEquality().hash(_workDynamics));
@@ -240,7 +240,7 @@ class _$StatisticsModelImpl implements _StatisticsModel {
 
 abstract class _StatisticsModel implements StatisticsModel {
   const factory _StatisticsModel(
-          {required final PipelineData pipeline,
+          {required final CurrencyAmount finances,
           required final List<SourceData> sources,
           @JsonKey(name: 'object_types')
           required final List<ObjectTypeData> objectTypes,
@@ -252,7 +252,7 @@ abstract class _StatisticsModel implements StatisticsModel {
       _$StatisticsModelImpl.fromJson;
 
   @override
-  PipelineData get pipeline;
+  CurrencyAmount get finances;
   @override
   List<SourceData> get sources;
   @override
@@ -264,184 +264,6 @@ abstract class _StatisticsModel implements StatisticsModel {
   @override
   @JsonKey(ignore: true)
   _$$StatisticsModelImplCopyWith<_$StatisticsModelImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-PipelineData _$PipelineDataFromJson(Map<String, dynamic> json) {
-  return _PipelineData.fromJson(json);
-}
-
-/// @nodoc
-mixin _$PipelineData {
-  CurrencyAmount get paid => throw _privateConstructorUsedError;
-  CurrencyAmount get pending => throw _privateConstructorUsedError;
-
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
-  $PipelineDataCopyWith<PipelineData> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $PipelineDataCopyWith<$Res> {
-  factory $PipelineDataCopyWith(
-          PipelineData value, $Res Function(PipelineData) then) =
-      _$PipelineDataCopyWithImpl<$Res, PipelineData>;
-  @useResult
-  $Res call({CurrencyAmount paid, CurrencyAmount pending});
-
-  $CurrencyAmountCopyWith<$Res> get paid;
-  $CurrencyAmountCopyWith<$Res> get pending;
-}
-
-/// @nodoc
-class _$PipelineDataCopyWithImpl<$Res, $Val extends PipelineData>
-    implements $PipelineDataCopyWith<$Res> {
-  _$PipelineDataCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? paid = null,
-    Object? pending = null,
-  }) {
-    return _then(_value.copyWith(
-      paid: null == paid
-          ? _value.paid
-          : paid // ignore: cast_nullable_to_non_nullable
-              as CurrencyAmount,
-      pending: null == pending
-          ? _value.pending
-          : pending // ignore: cast_nullable_to_non_nullable
-              as CurrencyAmount,
-    ) as $Val);
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $CurrencyAmountCopyWith<$Res> get paid {
-    return $CurrencyAmountCopyWith<$Res>(_value.paid, (value) {
-      return _then(_value.copyWith(paid: value) as $Val);
-    });
-  }
-
-  @override
-  @pragma('vm:prefer-inline')
-  $CurrencyAmountCopyWith<$Res> get pending {
-    return $CurrencyAmountCopyWith<$Res>(_value.pending, (value) {
-      return _then(_value.copyWith(pending: value) as $Val);
-    });
-  }
-}
-
-/// @nodoc
-abstract class _$$PipelineDataImplCopyWith<$Res>
-    implements $PipelineDataCopyWith<$Res> {
-  factory _$$PipelineDataImplCopyWith(
-          _$PipelineDataImpl value, $Res Function(_$PipelineDataImpl) then) =
-      __$$PipelineDataImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({CurrencyAmount paid, CurrencyAmount pending});
-
-  @override
-  $CurrencyAmountCopyWith<$Res> get paid;
-  @override
-  $CurrencyAmountCopyWith<$Res> get pending;
-}
-
-/// @nodoc
-class __$$PipelineDataImplCopyWithImpl<$Res>
-    extends _$PipelineDataCopyWithImpl<$Res, _$PipelineDataImpl>
-    implements _$$PipelineDataImplCopyWith<$Res> {
-  __$$PipelineDataImplCopyWithImpl(
-      _$PipelineDataImpl _value, $Res Function(_$PipelineDataImpl) _then)
-      : super(_value, _then);
-
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? paid = null,
-    Object? pending = null,
-  }) {
-    return _then(_$PipelineDataImpl(
-      paid: null == paid
-          ? _value.paid
-          : paid // ignore: cast_nullable_to_non_nullable
-              as CurrencyAmount,
-      pending: null == pending
-          ? _value.pending
-          : pending // ignore: cast_nullable_to_non_nullable
-              as CurrencyAmount,
-    ));
-  }
-}
-
-/// @nodoc
-@JsonSerializable()
-class _$PipelineDataImpl implements _PipelineData {
-  const _$PipelineDataImpl({required this.paid, required this.pending});
-
-  factory _$PipelineDataImpl.fromJson(Map<String, dynamic> json) =>
-      _$$PipelineDataImplFromJson(json);
-
-  @override
-  final CurrencyAmount paid;
-  @override
-  final CurrencyAmount pending;
-
-  @override
-  String toString() {
-    return 'PipelineData(paid: $paid, pending: $pending)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PipelineDataImpl &&
-            (identical(other.paid, paid) || other.paid == paid) &&
-            (identical(other.pending, pending) || other.pending == pending));
-  }
-
-  @JsonKey(ignore: true)
-  @override
-  int get hashCode => Object.hash(runtimeType, paid, pending);
-
-  @JsonKey(ignore: true)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$PipelineDataImplCopyWith<_$PipelineDataImpl> get copyWith =>
-      __$$PipelineDataImplCopyWithImpl<_$PipelineDataImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$PipelineDataImplToJson(
-      this,
-    );
-  }
-}
-
-abstract class _PipelineData implements PipelineData {
-  const factory _PipelineData(
-      {required final CurrencyAmount paid,
-      required final CurrencyAmount pending}) = _$PipelineDataImpl;
-
-  factory _PipelineData.fromJson(Map<String, dynamic> json) =
-      _$PipelineDataImpl.fromJson;
-
-  @override
-  CurrencyAmount get paid;
-  @override
-  CurrencyAmount get pending;
-  @override
-  @JsonKey(ignore: true)
-  _$$PipelineDataImplCopyWith<_$PipelineDataImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
