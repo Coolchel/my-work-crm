@@ -16,13 +16,7 @@ class StageCard extends StatefulWidget {
     required this.onDelete,
   });
 
-  @override
-  State<StageCard> createState() => _StageCardState();
-}
-
-class _StageCardState extends State<StageCard> {
-  // Helpers for display
-  String _getStageTitleDisplay(String title) {
+  static String getStageTitleDisplay(String title) {
     const map = {
       'precalc': 'Предпросчет',
       'stage_1': 'Этап 1 (Черновой)',
@@ -35,13 +29,37 @@ class _StageCardState extends State<StageCard> {
     return map[title] ?? title;
   }
 
+  @override
+  State<StageCard> createState() => _StageCardState();
+}
+
+class _StageCardState extends State<StageCard> {
+  // Helpers for display
   String _formatDate(DateTime date) {
     return DateFormat('dd.MM.yyyy').format(date);
   }
 
+  Color _getStageColor(String title) {
+    switch (title) {
+      case 'precalc':
+        return Colors.blueGrey;
+      case 'stage_1':
+      case 'stage_1_2':
+      case 'stage_2':
+        return Colors.blue;
+      case 'stage_3':
+        return Colors.green;
+      case 'extra':
+        return Colors.purple;
+      case 'other':
+      default:
+        return Colors.amber;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final statusColor = Colors.indigo; // Unified color
+    final stageColor = _getStageColor(widget.stage.title);
     final createdAt = widget.stage.createdAt;
     final updatedAt = widget.stage.updatedAt;
 
@@ -77,7 +95,7 @@ class _StageCardState extends State<StageCard> {
                 // Accent Stripe
                 Container(
                   width: 6,
-                  color: statusColor,
+                  color: stageColor,
                 ),
                 // Content
                 Expanded(
@@ -97,31 +115,14 @@ class _StageCardState extends State<StageCard> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _getStageTitleDisplay(widget.stage.title),
+                                    StageCard.getStageTitleDisplay(
+                                        widget.stage.title),
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: -0.3,
                                     ),
                                   ),
-                                  if (createdAt != null) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Создан: ${_formatDate(createdAt)}',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.grey.shade400,
-                                          fontWeight: FontWeight.w500),
-                                    ),
-                                    if (isEdited)
-                                      Text(
-                                        'Изм: ${_formatDate(updatedAt)}',
-                                        style: TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.grey.shade400,
-                                            fontWeight: FontWeight.w500),
-                                      ),
-                                  ],
                                 ],
                               ),
                             ),
@@ -160,6 +161,28 @@ class _StageCardState extends State<StageCard> {
                                   '${widget.stage.totalAmountMaterialsUsd.toStringAsFixed(0)} \$',
                               color: Colors.blue,
                             ),
+                            const Spacer(),
+                            if (createdAt != null)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Создан: ${_formatDate(createdAt)}',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey.shade400,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                  if (isEdited)
+                                    Text(
+                                      'Изменен: ${_formatDate(updatedAt)}',
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.grey.shade400,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                ],
+                              ),
                           ],
                         ),
                       ],

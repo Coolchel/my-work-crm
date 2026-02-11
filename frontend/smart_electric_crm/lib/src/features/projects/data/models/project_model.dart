@@ -42,6 +42,10 @@ class ProjectModel {
   @JsonKey(defaultValue: [])
   final List<ProjectFileModel> files;
 
+  /// Источник объекта
+  @JsonKey(defaultValue: '')
+  final String source;
+
   ProjectModel({
     required this.id,
     required this.address,
@@ -49,6 +53,7 @@ class ProjectModel {
     required this.status,
     this.intercomCode = '',
     this.clientInfo = '',
+    this.source = '',
     required this.createdAt,
     required this.stages,
     this.shields = const [],
@@ -70,6 +75,7 @@ class ProjectModel {
     String? status,
     String? intercomCode,
     String? clientInfo,
+    String? source,
     DateTime? createdAt,
     List<StageModel>? stages,
     List<ShieldModel>? shields,
@@ -82,6 +88,7 @@ class ProjectModel {
       status: status ?? this.status,
       intercomCode: intercomCode ?? this.intercomCode,
       clientInfo: clientInfo ?? this.clientInfo,
+      source: source ?? this.source,
       createdAt: createdAt ?? this.createdAt,
       stages: stages ?? this.stages,
       shields: shields ?? this.shields,

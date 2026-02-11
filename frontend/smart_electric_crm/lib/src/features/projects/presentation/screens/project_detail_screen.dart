@@ -167,21 +167,12 @@ class _StagesTab extends ConsumerWidget {
       BuildContext context, WidgetRef ref, StageModel stage) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Удаление этапа'),
-        content: Text(
-            'Вы уверены, что хотите удалить этап "${stage.title}"? Все сметы внутри будут удалены.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Удалить'),
-          ),
-        ],
+      builder: (context) => ConfirmationDialog(
+        title: 'Удаление этапа',
+        content:
+            'Вы уверены, что хотите удалить этап "${StageCard.getStageTitleDisplay(stage.title)}"? Все сметы внутри будут удалены.',
+        confirmText: 'Удалить',
+        isDestructive: true,
       ),
     );
 
@@ -214,28 +205,122 @@ class _StagesTab extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Project Info Card
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.shade200),
+            // Premium Project Info Header
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 15,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey.shade100),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _InfoRow(
-                        label: 'Тип:',
-                        value: _getObjectTypeDisplay(project.objectType)),
-                    _InfoRow(
-                        label: 'Статус:',
-                        value: _getProjectStatusDisplay(project.status)),
-                    if (project.clientInfo.isNotEmpty)
-                      _InfoRow(label: 'Клиент:', value: project.clientInfo),
-                  ],
-                ),
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                children: [
+                  // Accent stripe
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 6,
+                    child: Container(color: Colors.indigo),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 20, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Address Row (Priority)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.indigo.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.location_on_outlined,
+                                  color: Colors.indigo, size: 20),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'АДРЕС ОБЪЕКТА',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey.shade500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    project.address,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                      letterSpacing: -0.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Divider(height: 1, thickness: 1),
+                        ),
+                        // Row for secondary Info (Divided into 3 centered blocks)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _HeaderInfoItem(
+                                icon: Icons.key_outlined,
+                                label: 'ДОМОФОН',
+                                value: project.intercomCode.isNotEmpty
+                                    ? project.intercomCode
+                                    : 'Не указан',
+                                color: Colors.amber.shade700,
+                              ),
+                            ),
+                            _buildDivider(),
+                            Expanded(
+                              child: _HeaderInfoItem(
+                                icon: Icons.person_outline,
+                                label: 'ЗАКАЗЧИК',
+                                value: project.clientInfo.isNotEmpty
+                                    ? project.clientInfo
+                                    : 'Не указан',
+                                color: Colors.blue.shade600,
+                              ),
+                            ),
+                            _buildDivider(),
+                            Expanded(
+                              child: _HeaderInfoItem(
+                                icon: Icons.info_outline,
+                                label: 'ИСТОЧНИК',
+                                value: project.source.isNotEmpty
+                                    ? project.source
+                                    : 'Не указан',
+                                color: Colors.teal.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 32),
@@ -292,29 +377,16 @@ class _StagesTab extends ConsumerWidget {
     );
   }
 
-  // Helpers (Duplicated for now, should be moved to Utils or mixin)
-  String _getObjectTypeDisplay(String type) {
-    const map = {
-      'new_building': 'Новостройка',
-      'secondary': 'Вторичка',
-      'cottage': 'Коттедж',
-      'office': 'Офис',
-      'other': 'Другое',
-    };
-    return map[type] ?? type;
+  Widget _buildDivider() {
+    return Container(
+      height: 32,
+      width: 1,
+      color: Colors.grey.shade100,
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+    );
   }
 
-  String _getProjectStatusDisplay(String status) {
-    const map = {
-      'new': 'Новый',
-      'calculating': 'Предпросчет',
-      'stage1_done': 'Этап 1 готов',
-      'stage2_done': 'Этап 2 готов',
-      'stage3_done': 'Этап 3 готов',
-      'completed': 'Завершен',
-    };
-    return map[status] ?? status;
-  }
+  // Helpers (Duplicated for now, should be moved to Utils or mixin)
 
   void _showAddStageDialog(BuildContext context, WidgetRef ref) {
     final existingKeys = project.stages.map((s) => s.title).toList();
@@ -361,6 +433,7 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
       if (key != 'extra' &&
           key != 'other' &&
           key != 'precalc' &&
+          key != 'stage_1_2' &&
           key != 'stage_3') {
         available.remove(key);
       }
@@ -475,47 +548,86 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
             else
               Container(
                 constraints: const BoxConstraints(maxHeight: 400),
-                child: ListView(
-                  padding: const EdgeInsets.all(8),
+                child: ListView.separated(
+                  padding: const EdgeInsets.all(16),
                   shrinkWrap: true,
-                  children: stages.entries.map((entry) {
-                    return Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _addStage(entry.key),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: themeColor.withOpacity(0.05),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(Icons.add,
-                                    size: 20, color: themeColor),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  entry.value,
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
+                  itemCount: stages.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final entry = stages.entries.elementAt(index);
+                    final stageKey = entry.key;
+                    Color itemColor;
+                    switch (stageKey) {
+                      case 'precalc':
+                        itemColor = Colors.blueGrey;
+                        break;
+                      case 'stage_1':
+                      case 'stage_1_2':
+                      case 'stage_2':
+                        itemColor = Colors.blue;
+                        break;
+                      case 'stage_3':
+                        itemColor = Colors.green;
+                        break;
+                      case 'extra':
+                        itemColor = Colors.purple;
+                        break;
+                      default:
+                        itemColor = Colors.amber;
+                    }
+
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => _addStage(entry.key),
+                          borderRadius: BorderRadius.circular(12),
+                          hoverColor: itemColor.withOpacity(0.05),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    entry.value,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Icon(Icons.chevron_right,
-                                  size: 20, color: Colors.grey.shade400),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                                const SizedBox(width: 14),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: itemColor.withOpacity(0.08),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.add,
+                                      size: 18, color: itemColor),
+                                ),
+                              ],
+                            ), // Row
+                          ), // Padding
+                        ), // InkWell
+                      ), // Material
+                    ); // Container
+                  }, // itemBuilder
                 ),
               ),
             const SizedBox(height: 8),
@@ -1093,26 +1205,51 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
+class _HeaderInfoItem extends StatelessWidget {
+  final IconData icon;
   final String label;
   final String value;
+  final Color color;
 
-  const _InfoRow({required this.label, required this.value});
+  const _HeaderInfoItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '$label ',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: color.withOpacity(0.7)),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade800,
           ),
-          Expanded(child: Text(value)),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
