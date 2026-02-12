@@ -65,7 +65,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
     'secondary': Icons.home,
     'cottage': Icons.villa,
     'office': Icons.business,
-    'other': Icons.domain,
+    'other': Icons.category,
   };
 
   static const _sourceItems = ['Владимир', 'Другое'];

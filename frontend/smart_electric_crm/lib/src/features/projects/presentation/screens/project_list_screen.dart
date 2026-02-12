@@ -21,7 +21,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
   SortOrder _sortOrder = SortOrder.newest;
   String? _filterSource;
   String? _filterType;
-  bool _filterByWorkSum = false;
+  String? _workSumSort; // 'desc' or 'asc' or null
 
   // Search
   final _searchController = TextEditingController();
@@ -76,8 +76,12 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
     }
 
     // Sort
-    if (_filterByWorkSum) {
-      result.sort((a, b) => _calcWorkSumUsd(b).compareTo(_calcWorkSumUsd(a)));
+    if (_workSumSort != null) {
+      if (_workSumSort == 'desc') {
+        result.sort((a, b) => _calcWorkSumUsd(b).compareTo(_calcWorkSumUsd(a)));
+      } else {
+        result.sort((a, b) => _calcWorkSumUsd(a).compareTo(_calcWorkSumUsd(b)));
+      }
     } else {
       switch (_sortOrder) {
         case SortOrder.newest:
@@ -95,7 +99,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
   bool get _hasActiveFilters =>
       _filterSource != null ||
       _filterType != null ||
-      _filterByWorkSum ||
+      _workSumSort != null ||
       _sortOrder != SortOrder.newest;
 
   void _resetFilters() {
@@ -103,7 +107,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
       _sortOrder = SortOrder.newest;
       _filterSource = null;
       _filterType = null;
-      _filterByWorkSum = false;
+      _workSumSort = null;
     });
   }
 
@@ -126,15 +130,70 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
           ),
         ],
       ),
-      floatingActionButton: Column(
+      floatingActionButton: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Expandable search field
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            alignment: Alignment.centerRight,
+            child: _showSearch
+                ? Container(
+                    width: 220,
+                    height: 48,
+                    margin: const EdgeInsets.only(right: 12),
+                    child: TextField(
+                      controller: _searchController,
+                      autofocus: true,
+                      onChanged: (val) => setState(() => _searchQuery = val),
+                      decoration: InputDecoration(
+                        hintText: 'Поиск по адресу...',
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 13,
+                        ),
+                        prefixIcon: Icon(Icons.search,
+                            color: Colors.grey.shade400, size: 18),
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.close,
+                              size: 16, color: Colors.grey.shade400),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              _searchQuery = '';
+                              _showSearch = false;
+                            });
+                          },
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(28),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(28),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(28),
+                          borderSide:
+                              BorderSide(color: Colors.indigo.withOpacity(0.4)),
+                        ),
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
           // Search FAB
-          FloatingActionButton.small(
+          FloatingActionButton(
             heroTag: 'search',
             backgroundColor:
-                _showSearch ? Colors.indigo.shade100 : Colors.white,
-            foregroundColor: Colors.indigo,
+                _showSearch ? Colors.indigo.shade100 : Colors.indigo,
+            foregroundColor: _showSearch ? Colors.indigo : Colors.white,
             elevation: 2,
             onPressed: () {
               setState(() {
@@ -145,9 +204,9 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
                 }
               });
             },
-            child: const Icon(Icons.search, size: 20),
+            child: const Icon(Icons.search),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(width: 12),
           // Add FAB
           FloatingActionButton(
             heroTag: 'add',
@@ -187,60 +246,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
             }
             return Column(
               children: [
-                // ─── Search Bar (expandable) ───
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
-                  alignment: Alignment.topCenter,
-                  child: _showSearch
-                      ? Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                          child: TextField(
-                            controller: _searchController,
-                            autofocus: true,
-                            onChanged: (val) =>
-                                setState(() => _searchQuery = val),
-                            decoration: InputDecoration(
-                              hintText: 'Поиск по адресу...',
-                              hintStyle: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontSize: 14,
-                              ),
-                              prefixIcon: Icon(Icons.search,
-                                  color: Colors.grey.shade400, size: 20),
-                              suffixIcon: IconButton(
-                                icon: Icon(Icons.close,
-                                    size: 18, color: Colors.grey.shade400),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() {
-                                    _searchQuery = '';
-                                    _showSearch = false;
-                                  });
-                                },
-                              ),
-                              filled: true,
-                              fillColor: Colors.grey.shade100,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 10),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                    color: Colors.indigo.withOpacity(0.3)),
-                              ),
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
                 // ─── List ───
                 Expanded(
                   child: filtered.isEmpty
@@ -382,19 +387,22 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
                             items: {
                               'newest': 'Сначала новые',
                               'oldest': 'Сначала старые',
-                              'work_sum': 'По сумме работ \$',
+                              'work_sum_desc': 'Наиболее \$',
+                              'work_sum_asc': 'Наименее \$',
                             },
-                            selected: _filterByWorkSum
-                                ? 'work_sum'
+                            selected: _workSumSort != null
+                                ? 'work_sum_$_workSumSort'
                                 : (_sortOrder == SortOrder.newest
                                     ? 'newest'
                                     : 'oldest'),
                             onSelected: (val) {
                               setDialogState(() => setState(() {
-                                    if (val == 'work_sum') {
-                                      _filterByWorkSum = true;
+                                    if (val == 'work_sum_desc') {
+                                      _workSumSort = 'desc';
+                                    } else if (val == 'work_sum_asc') {
+                                      _workSumSort = 'asc';
                                     } else {
-                                      _filterByWorkSum = false;
+                                      _workSumSort = null;
                                       _sortOrder = val == 'newest'
                                           ? SortOrder.newest
                                           : SortOrder.oldest;
@@ -514,6 +522,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           visualDensity: VisualDensity.compact,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           onSelected: (_) => onSelected(entry.key),
         );
       }).toList(),
@@ -562,7 +571,7 @@ class _ProjectCardState extends State<_ProjectCard> {
       case 'office':
         return Icons.business;
       default:
-        return Icons.domain;
+        return Icons.category;
     }
   }
 
@@ -572,8 +581,8 @@ class _ProjectCardState extends State<_ProjectCard> {
     final createdAt = project.createdAt;
     final updatedAt = project.updatedAt;
 
-    final isEdited = updatedAt != null &&
-        updatedAt.difference(createdAt).abs().inSeconds > 10;
+    final isEdited =
+        updatedAt != null && updatedAt.difference(createdAt).abs().inHours >= 2;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -629,35 +638,45 @@ class _ProjectCardState extends State<_ProjectCard> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Address (top, bold)
-                                    Text(
-                                      project.address,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                        letterSpacing: -0.3,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    // Intercom code (below address)
-                                    if (project.intercomCode.isNotEmpty)
-                                      Text(
-                                        'домофон: ${project.intercomCode}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.grey.shade500,
-                                          letterSpacing: 0.3,
-                                        ),
+                                child: project.intercomCode.isNotEmpty
+                                    ? Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // Address (top, bold)
+                                          Text(
+                                            project.address,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black87,
+                                              letterSpacing: -0.3,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          // Intercom code (below)
+                                          Text(
+                                            'домофон: ${project.intercomCode}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.grey.shade500,
+                                              letterSpacing: 0.3,
+                                            ),
+                                          ),
+                                        ],
                                       )
-                                    else
-                                      const SizedBox(height: 14),
-                                  ],
-                                ),
+                                    : Center(
+                                        child: Text(
+                                          project.address,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87,
+                                            letterSpacing: -0.3,
+                                          ),
+                                        ),
+                                      ),
                               ),
                               // Action Buttons
                               Row(
