@@ -26,8 +26,8 @@ class EngineeringTab extends ConsumerWidget {
           heroTag: 'add_shield_fab',
           onPressed: () =>
               _showAddShieldDialog(context, ref, project.id.toString()),
-          backgroundColor: Colors.brown.shade200,
-          foregroundColor: Colors.black87,
+          backgroundColor: Colors.indigo,
+          foregroundColor: Colors.white,
           elevation: 2,
           tooltip: null, // Disable built-in tooltip
           child: const Icon(Icons.add),

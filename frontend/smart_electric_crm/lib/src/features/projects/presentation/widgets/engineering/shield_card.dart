@@ -119,7 +119,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             children: [
               // Accent stripe on the left
               Container(
-                width: 4,
+                width: 5,
                 decoration: BoxDecoration(
                   color: themeColor,
                   borderRadius: const BorderRadius.only(
@@ -173,22 +173,23 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      shield.name,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF1F2937),
-                                      ),
-                                    ),
-                                    Text(
                                       _getTypeName(shield.shieldType)
                                           .toUpperCase(),
                                       style: TextStyle(
-                                        color: Colors.grey
-                                            .shade500, // Neutral type label
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w800,
+                                        color: Colors.grey.shade500,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
                                         letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 1),
+                                    Text(
+                                      shield.name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                        letterSpacing: -0.3,
                                       ),
                                     ),
                                   ],

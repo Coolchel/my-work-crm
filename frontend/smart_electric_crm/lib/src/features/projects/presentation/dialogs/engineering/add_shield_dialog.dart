@@ -18,7 +18,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const themeColor = Colors.brown;
+    const themeColor = Colors.indigo;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -131,7 +131,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Colors.brown.shade700,
+                              color: Colors.indigo.shade700,
                             ),
                           ),
                         ),
@@ -145,12 +145,13 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
-                                child: const Row(
+                                child: Row(
                                   children: [
                                     Icon(Icons.bolt,
-                                        color: Color(0xFFF57C00), size: 20),
-                                    SizedBox(width: 12),
-                                    Text('Силовой',
+                                        color: Colors.indigo.shade400,
+                                        size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('Силовой',
                                         style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
@@ -164,12 +165,13 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
-                                child: const Row(
+                                child: Row(
                                   children: [
                                     Icon(Icons.router,
-                                        color: Color(0xFF00796B), size: 20),
-                                    SizedBox(width: 12),
-                                    Text('Слаботочка',
+                                        color: Colors.indigo.shade400,
+                                        size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('Слаботочка',
                                         style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
@@ -183,12 +185,14 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
-                                child: const Row(
+                                child: Row(
                                   children: [
                                     Icon(Icons.lightbulb,
-                                        color: Color(0xFF7B1FA2), size: 20),
-                                    SizedBox(width: 12),
-                                    Text('LED', style: TextStyle(fontSize: 13)),
+                                        color: Colors.indigo.shade400,
+                                        size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('LED',
+                                        style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
                               ),
@@ -210,7 +214,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Colors.brown.shade700,
+                              color: Colors.indigo.shade700,
                             ),
                           ),
                         ),
@@ -224,12 +228,13 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
-                                child: const Row(
+                                child: Row(
                                   children: [
                                     Icon(Icons.door_front_door,
-                                        color: Color(0xFF5D4037), size: 20),
-                                    SizedBox(width: 12),
-                                    Text('Внутренний',
+                                        color: Colors.indigo.shade400,
+                                        size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('Внутренний',
                                         style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
@@ -243,12 +248,13 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
-                                child: const Row(
+                                child: Row(
                                   children: [
                                     Icon(Icons.apartment,
-                                        color: Color(0xFF5D4037), size: 20),
-                                    SizedBox(width: 12),
-                                    Text('Наружный',
+                                        color: Colors.indigo.shade400,
+                                        size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('Наружный',
                                         style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
@@ -347,8 +353,8 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
 
   Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,
       ValueChanged<String> onSelected) {
-    const bg = Colors.brown;
-    const fieldColor = Color(0xFFEFEBE9); // brown.shade50 with more opacity
+    const bg = Colors.indigo;
+    final fieldColor = Colors.indigo.shade50;
 
     return LayoutBuilder(
       builder: (context, constraints) {

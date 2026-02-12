@@ -27,7 +27,7 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const themeColor = Colors.brown;
+    const themeColor = Colors.indigo;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -137,7 +137,7 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Colors.brown.shade700,
+                              color: Colors.indigo.shade700,
                             ),
                           ),
                         ),
@@ -150,12 +150,13 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
-                                child: const Row(
+                                child: Row(
                                   children: [
                                     Icon(Icons.door_front_door,
-                                        color: Colors.brown, size: 20),
-                                    SizedBox(width: 12),
-                                    Text('Внутренний',
+                                        color: Colors.indigo.shade400,
+                                        size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('Внутренний',
                                         style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
@@ -168,12 +169,13 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                               child: Container(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 16),
-                                child: const Row(
+                                child: Row(
                                   children: [
                                     Icon(Icons.apartment,
-                                        color: Colors.brown, size: 20),
-                                    SizedBox(width: 12),
-                                    Text('Наружный',
+                                        color: Colors.indigo.shade400,
+                                        size: 20),
+                                    const SizedBox(width: 12),
+                                    const Text('Наружный',
                                         style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
@@ -262,8 +264,8 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
 
   Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,
       ValueChanged<String> onSelected) {
-    const bg = Colors.brown;
-    const fieldColor = Color(0xFFEFEBE9); // brown.shade50 with more opacity
+    const bg = Colors.indigo;
+    final fieldColor = Colors.indigo.shade50;
 
     return LayoutBuilder(
       builder: (context, constraints) {

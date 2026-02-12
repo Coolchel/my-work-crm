@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/project_providers.dart';
 import '../../data/models/project_model.dart';
-import 'add_project_screen.dart';
 import 'engineering_tab.dart';
 import 'estimate_screen.dart';
 import 'file_viewer_screen.dart';
@@ -74,18 +73,6 @@ class _ProjectDetailContent extends ConsumerWidget {
               Tab(text: "Файлы"),
             ],
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: 'Редактировать',
-              onPressed: () => _editProject(context),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              tooltip: 'Удалить',
-              onPressed: () => _deleteProject(context, ref),
-            ),
-          ],
         ),
         body: TabBarView(
           children: [
@@ -96,57 +83,6 @@ class _ProjectDetailContent extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  void _editProject(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddProjectScreen(project: project),
-      ),
-    );
-  }
-
-  Future<void> _deleteProject(BuildContext context, WidgetRef ref) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Удаление проекта'),
-        content: const Text('Вы уверены, что хотите удалить этот проект?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Удалить'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      try {
-        await ref
-            .read(projectListProvider.notifier)
-            .deleteProject(project.id.toString());
-
-        if (context.mounted) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Проект удален')),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Не удалось удалить: $e')),
-          );
-        }
-      }
-    }
   }
 }
 
@@ -205,6 +141,17 @@ class _StagesTab extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header "OBJECT"
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 8),
+              child: Text(
+                'Объект',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
+                    ),
+              ),
+            ),
             // Premium Project Info Header
             Container(
               decoration: BoxDecoration(
@@ -227,7 +174,7 @@ class _StagesTab extends ConsumerWidget {
                     left: 0,
                     top: 0,
                     bottom: 0,
-                    width: 6,
+                    width: 5,
                     child: Container(color: Colors.indigo),
                   ),
                   Padding(
@@ -281,41 +228,50 @@ class _StagesTab extends ConsumerWidget {
                           child: Divider(height: 1, thickness: 1),
                         ),
                         // Row for secondary Info (Divided into 3 centered blocks)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _HeaderInfoItem(
-                                icon: Icons.key_outlined,
-                                label: 'ДОМОФОН',
-                                value: project.intercomCode.isNotEmpty
-                                    ? project.intercomCode
-                                    : 'Не указан',
-                                color: Colors.amber.shade700,
+                        // Row for secondary Info (Minimalist Strip Variant)
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade100),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _HeaderInfoItem(
+                                  icon: Icons.key_outlined,
+                                  label: 'ДОМОФОН',
+                                  value: project.intercomCode.isNotEmpty
+                                      ? project.intercomCode
+                                      : '—',
+                                  color: Colors.amber.shade700,
+                                ),
                               ),
-                            ),
-                            _buildDivider(),
-                            Expanded(
-                              child: _HeaderInfoItem(
-                                icon: Icons.person_outline,
-                                label: 'ЗАКАЗЧИК',
-                                value: project.clientInfo.isNotEmpty
-                                    ? project.clientInfo
-                                    : 'Не указан',
-                                color: Colors.blue.shade600,
+                              _buildHorizontalDivider(),
+                              Expanded(
+                                child: _HeaderInfoItem(
+                                  icon: Icons.person_outline,
+                                  label: 'ЗАКАЗЧИК',
+                                  value: project.clientInfo.isNotEmpty
+                                      ? project.clientInfo
+                                      : '—',
+                                  color: Colors.blue.shade600,
+                                ),
                               ),
-                            ),
-                            _buildDivider(),
-                            Expanded(
-                              child: _HeaderInfoItem(
-                                icon: Icons.info_outline,
-                                label: 'ИСТОЧНИК',
-                                value: project.source.isNotEmpty
-                                    ? project.source
-                                    : 'Не указан',
-                                color: Colors.teal.shade600,
+                              _buildHorizontalDivider(),
+                              Expanded(
+                                child: _HeaderInfoItem(
+                                  icon: Icons.info_outline,
+                                  label: 'ИСТОЧНИК',
+                                  value: project.source.isNotEmpty
+                                      ? project.source
+                                      : '—',
+                                  color: Colors.teal.shade700,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -377,15 +333,6 @@ class _StagesTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildDivider() {
-    return Container(
-      height: 32,
-      width: 1,
-      color: Colors.grey.shade100,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-    );
-  }
-
   // Helpers (Duplicated for now, should be moved to Utils or mixin)
 
   void _showAddStageDialog(BuildContext context, WidgetRef ref) {
@@ -397,6 +344,14 @@ class _StagesTab extends ConsumerWidget {
         projectId: project.id.toString(),
         existingStageKeys: existingKeys,
       ),
+    );
+  }
+
+  Widget _buildHorizontalDivider() {
+    return Container(
+      height: 24,
+      width: 1,
+      color: Colors.grey.shade200,
     );
   }
 }
@@ -654,7 +609,7 @@ class _FilesTab extends ConsumerWidget {
               _FileCategorySection(
                 title: "Проекты и схемы",
                 icon: Icons.architecture_rounded,
-                color: Colors.brown,
+                color: Colors.indigo,
                 category: "PROJECT",
                 files: project.files
                     .where((f) => f.category == "PROJECT")
@@ -666,7 +621,7 @@ class _FilesTab extends ConsumerWidget {
               _FileCategorySection(
                 title: "Реализация (Этапы 1-2)",
                 icon: Icons.construction_rounded,
-                color: Colors.brown,
+                color: Colors.indigo,
                 category: "WORK",
                 files:
                     project.files.where((f) => f.category == "WORK").toList(),
@@ -677,7 +632,7 @@ class _FilesTab extends ConsumerWidget {
               _FileCategorySection(
                 title: "Финишные фото",
                 icon: Icons.auto_awesome_rounded,
-                color: Colors.brown,
+                color: Colors.indigo,
                 category: "FINISH",
                 files:
                     project.files.where((f) => f.category == "FINISH").toList(),
@@ -719,7 +674,7 @@ class _FilesTab extends ConsumerWidget {
             confirmText: 'Закрыть',
             cancelText: '', // Скрываем кнопку отмены
             isDestructive: false,
-            themeColor: Colors.brown,
+            themeColor: Colors.indigo,
           ),
         );
       }
@@ -763,7 +718,7 @@ class _FilesTab extends ConsumerWidget {
               confirmText: 'Закрыть',
               cancelText: '',
               isDestructive: false,
-              themeColor: Colors.brown,
+              themeColor: Colors.indigo,
             ),
           );
         }
@@ -817,7 +772,7 @@ class _FilesTab extends ConsumerWidget {
             confirmText: 'Закрыть',
             cancelText: '',
             isDestructive: false,
-            themeColor: Colors.brown,
+            themeColor: Colors.indigo,
           ),
         );
       }
@@ -912,7 +867,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
               ],
               border: Border.all(
                 color: _isHovered
-                    ? Colors.brown.withOpacity(0.2)
+                    ? Colors.indigo.withOpacity(0.1)
                     : Colors.grey.shade100,
               ),
             ),
@@ -974,7 +929,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           color: _isHovered
-                              ? Colors.brown.shade700
+                              ? Colors.indigo.shade700
                               : Colors.grey.shade800,
                         ),
                         textAlign: TextAlign.center,
@@ -1056,7 +1011,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
         labelText: 'Новое имя',
         initialValue: nameWithoutExtension,
         confirmText: 'Сохранить',
-        themeColor: Colors.brown,
+        themeColor: Colors.indigo,
       ),
     );
 
@@ -1222,31 +1177,37 @@ class _HeaderInfoItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: color.withOpacity(0.7)),
+            Icon(icon, size: 14, color: color),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
                 color: Colors.grey.shade500,
+                letterSpacing: 0.3,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade800,
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            value,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade800,
+            ),
           ),
         ),
       ],
@@ -1319,7 +1280,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
             bottom: 0,
             width: 5,
             child: Container(
-              color: widget.color.withOpacity(0.8),
+              color: widget.color,
             ),
           ),
 
@@ -1334,7 +1295,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                 child: Material(
                   color: _isHovered
                       ? widget.color.withOpacity(0.12) // Темнее при наведении
-                      : widget.color.withOpacity(0.05),
+                      : widget.color.withOpacity(0.08),
                   child: Row(
                     children: [
                       // Left interaction area: Expand/Collapse

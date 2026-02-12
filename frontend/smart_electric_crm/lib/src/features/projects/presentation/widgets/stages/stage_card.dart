@@ -94,7 +94,7 @@ class _StageCardState extends State<StageCard> {
               children: [
                 // Accent Stripe
                 Container(
-                  width: 6,
+                  width: 5,
                   color: stageColor,
                 ),
                 // Content

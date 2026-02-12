@@ -114,7 +114,56 @@ class _ProjectCard extends StatelessWidget {
             ],
           ),
         ),
-        trailing: Text(dateStr),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(dateStr),
+            const SizedBox(width: 8),
+            Consumer(
+              builder: (context, ref, child) {
+                return PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, size: 20),
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              AddProjectScreen(project: project),
+                        ),
+                      );
+                    } else if (value == 'delete') {
+                      _deleteProject(context, ref);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined, size: 20),
+                          SizedBox(width: 8),
+                          Text('Редактировать'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline,
+                              size: 20, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Удалить', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
         onTap: () {
           Navigator.push(
             context,
@@ -126,6 +175,47 @@ class _ProjectCard extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Future<void> _deleteProject(BuildContext context, WidgetRef ref) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Удаление проекта'),
+        content: const Text('Вы уверены, что хотите удалить этот проект?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await ref
+            .read(projectListProvider.notifier)
+            .deleteProject(project.id.toString());
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Проект удален')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Не удалось удалить: $e')),
+          );
+        }
+      }
+    }
   }
 
   // Маппинг для типов объектов
