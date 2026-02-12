@@ -35,6 +35,11 @@ class FileViewerScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Назад',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(title, style: const TextStyle(color: Colors.white)),
         actions: [
           IconButton(

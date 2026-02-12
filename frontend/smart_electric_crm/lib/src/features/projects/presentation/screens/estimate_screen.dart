@@ -18,6 +18,7 @@ import '../../../../shared/presentation/dialogs/text_input_dialog.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 
 import '../widgets/estimate/estimate_bottom_actions.dart';
+import '../widgets/stages/stage_card.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -98,15 +99,12 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
       children: [
         Scaffold(
           appBar: AppBar(
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(widget.stage.title),
-                Text("Смета",
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-              ],
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              tooltip: 'Назад',
+              onPressed: () => Navigator.of(context).pop(),
             ),
+            title: Text(StageCard.getStageTitleDisplay(widget.stage.title)),
             actions: [
               // PDF Actions Button (Deep Purple - Analytics/Graph)
               _buildActionButton(

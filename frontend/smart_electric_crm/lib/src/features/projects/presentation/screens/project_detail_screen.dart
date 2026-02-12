@@ -37,17 +37,38 @@ class ProjectDetailScreen extends ConsumerWidget {
           return _ProjectDetailContent(project: project);
         } catch (_) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Детали объекта')),
+            appBar: AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: 'Назад',
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              title: const Text('Детали объекта'),
+            ),
             body: const Center(child: Text('Объект не найден')),
           );
         }
       },
       loading: () => Scaffold(
-        appBar: AppBar(title: const Text('Детали объекта')),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            tooltip: 'Назад',
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text('Детали объекта'),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       ),
       error: (error, stack) => Scaffold(
-        appBar: AppBar(title: const Text('Детали объекта')),
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            tooltip: 'Назад',
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text('Детали объекта'),
+        ),
         body: Center(child: Text('Ошибка: $error')),
       ),
     );
@@ -65,6 +86,11 @@ class _ProjectDetailContent extends ConsumerWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            tooltip: 'Назад',
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           title: Text(project.address),
           bottom: const TabBar(
             tabs: [

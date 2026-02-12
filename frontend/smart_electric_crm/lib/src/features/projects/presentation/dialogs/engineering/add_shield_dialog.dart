@@ -171,7 +171,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                                         color: Colors.indigo.shade400,
                                         size: 20),
                                     const SizedBox(width: 12),
-                                    const Text('Слаботочка',
+                                    const Text('Слаботочный',
                                         style: TextStyle(fontSize: 13)),
                                   ],
                                 ),
@@ -334,7 +334,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
       case 'led':
         return 'LED';
       case 'multimedia':
-        return 'Слаботочка';
+        return 'Слаботочный';
       default:
         return '';
     }

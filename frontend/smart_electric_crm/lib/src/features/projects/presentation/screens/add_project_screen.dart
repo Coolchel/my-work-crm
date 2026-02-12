@@ -138,6 +138,11 @@ class _AddProjectScreenState extends ConsumerState<AddProjectScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Назад',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(isEditing ? 'Редактировать объект' : 'Новый объект'),
       ),
       body: _isLoading

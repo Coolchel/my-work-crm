@@ -162,8 +162,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                 ),
                                 child: Icon(
                                   _getIconForType(shield.shieldType),
-                                  color: themeColor.withOpacity(
-                                      0.7), // Accent icon with opacity
+                                  color: themeColor.withOpacity(0.8),
                                   size: 18,
                                 ),
                               ),
@@ -173,24 +172,51 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      _getTypeName(shield.shieldType)
-                                          .toUpperCase(),
-                                      style: TextStyle(
-                                        color: Colors.grey.shade500,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 1),
-                                    Text(
                                       shield.name,
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                        letterSpacing: -0.3,
+                                        color: Colors.black,
+                                        letterSpacing: -0.4,
                                       ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          _getTypeName(shield.shieldType)
+                                              .toUpperCase(),
+                                          style: TextStyle(
+                                            color: themeColor.withOpacity(0.7),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6),
+                                          child: Text(
+                                            '•',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade400,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          (shield.mounting == 'internal'
+                                                  ? 'ВСТРАИВАЕМЫЙ'
+                                                  : 'НАВЕСНОЙ')
+                                              .toUpperCase(),
+                                          style: TextStyle(
+                                            color: Colors.grey.shade500,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                            letterSpacing: 0.3,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -200,8 +226,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                     .animate(_expandAnimation),
                                 child: Icon(
                                   Icons.expand_more_rounded,
-                                  color: Colors.grey.shade400,
-                                  size: 20,
+                                  color: themeColor.withOpacity(0.4),
+                                  size: 22,
                                 ),
                               ),
                             ],
@@ -583,13 +609,13 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   IconData _getIconForType(String type) {
     switch (type) {
       case 'power':
-        return Icons.flash_on;
+        return Icons.bolt_rounded;
       case 'led':
-        return Icons.lightbulb;
+        return Icons.lightbulb_rounded;
       case 'multimedia':
-        return Icons.router;
+        return Icons.router_rounded;
       default:
-        return Icons.wb_iridescent;
+        return Icons.wb_iridescent_rounded;
     }
   }
 
@@ -613,7 +639,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
       case 'led':
         return 'LED';
       case 'multimedia':
-        return 'Слаботочка';
+        return 'Слаботочный';
       default:
         return type;
     }
