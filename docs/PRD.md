@@ -48,4 +48,5 @@
 ## Statistics & Analytics:
 - **Dashboard:** Visual representation of financial health (Work Dynamics, Finances for Period).
 - **Finances:** Total income (USD/BYN) calculated based on creation date of stages.
-- **Insights:** Breakdown by Sources and Object Types to track marketing performance.
+- **Insights:** Breakdown by Sources and Object Types to track marketing performance. Source is mandatory for every project to ensure accurate analytics.
+- **Visual Identity:** The "Stages" view serves as the project's command center, featuring a premium high-density header with critical project metadata (Address, Intercom, Client, Source).
