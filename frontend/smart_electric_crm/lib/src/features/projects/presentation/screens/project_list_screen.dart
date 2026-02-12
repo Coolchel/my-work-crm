@@ -138,73 +138,96 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
             alignment: Alignment.centerRight,
-            child: _showSearch
-                ? Container(
-                    width: 220,
-                    height: 48,
-                    margin: const EdgeInsets.only(right: 12),
-                    child: TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      onChanged: (val) => setState(() => _searchQuery = val),
-                      decoration: InputDecoration(
-                        hintText: 'Поиск по адресу...',
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 13,
-                        ),
-                        prefixIcon: Icon(Icons.search,
-                            color: Colors.grey.shade400, size: 18),
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.close,
-                              size: 16, color: Colors.grey.shade400),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchQuery = '';
-                              _showSearch = false;
-                            });
-                          },
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(28),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(28),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(28),
-                          borderSide:
-                              BorderSide(color: Colors.indigo.withOpacity(0.4)),
+            child: TapRegion(
+              onTapOutside: (_) {
+                if (_showSearch) {
+                  setState(() {
+                    _showSearch = false;
+                  });
+                }
+              },
+              child: _showSearch
+                  ? Container(
+                      width: MediaQuery.of(context).size.width - 150,
+                      height: 48,
+                      margin: const EdgeInsets.only(right: 12),
+                      child: TextField(
+                        controller: _searchController,
+                        autofocus: true,
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                        decoration: InputDecoration(
+                          hintText: 'Поиск по адресу...',
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 13,
+                          ),
+                          prefixIcon: Icon(Icons.search,
+                              color: Colors.grey.shade400, size: 18),
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.close,
+                                size: 16, color: Colors.grey.shade400),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _searchQuery = '';
+                                _showSearch = false;
+                              });
+                            },
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(28),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(28),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(28),
+                            borderSide: BorderSide(
+                                color: Colors.indigo.withOpacity(0.4)),
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                : const SizedBox.shrink(),
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ),
           // Search FAB
-          FloatingActionButton(
-            heroTag: 'search',
-            backgroundColor:
-                _showSearch ? Colors.indigo.shade100 : Colors.indigo,
-            foregroundColor: _showSearch ? Colors.indigo : Colors.white,
-            elevation: 2,
-            onPressed: () {
-              setState(() {
-                _showSearch = !_showSearch;
-                if (!_showSearch) {
-                  _searchController.clear();
-                  _searchQuery = '';
-                }
-              });
-            },
-            child: const Icon(Icons.search),
+          TapRegion(
+            // Part of the same region as the text field so clicking this button doesn't trigger "outside"
+            groupId: null,
+            child: FloatingActionButton(
+              heroTag: 'search',
+              backgroundColor:
+                  _showSearch ? Colors.indigo.shade100 : Colors.indigo,
+              foregroundColor: _showSearch ? Colors.indigo : Colors.white,
+              elevation: 2,
+              onPressed: () {
+                setState(() {
+                  _showSearch = !_showSearch;
+                  if (!_showSearch) {
+                    // Start typing from scratch logic?
+                    // User requested: "результаты поиска сохраняются"
+                    // So we do NOT clear the text here when closing manually either?
+                    // Previous code cleared it:
+                    //   _searchController.clear();
+                    //   _searchQuery = '';
+                    // The user said: "при открытом поле поиска если ползователь тыкнул куда либо вне поля - поле поиска сворачивается обратно, результаты поиска сохраняются"
+                    // User didn't explicitly say "if I click the search button it should save".
+                    // But usually toggle means toggle.
+                    // If I close by clicking the button, should I clear?
+                    // "результаты поиска сохраняются" implies we shouldn't clear unless explicitly asked (like the X button).
+                    // So I will REMOVE the clear logic here too.
+                  }
+                });
+              },
+              child: const Icon(Icons.search),
+            ),
           ),
           const SizedBox(width: 12),
           // Add FAB
@@ -387,8 +410,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
                             items: {
                               'newest': 'Сначала новые',
                               'oldest': 'Сначала старые',
-                              'work_sum_desc': 'Наиболее \$',
-                              'work_sum_asc': 'Наименее \$',
+                              'work_sum_desc': 'Наиболее прибыльные',
+                              'work_sum_asc': 'Наименее прибыльные',
                             },
                             selected: _workSumSort != null
                                 ? 'work_sum_$_workSumSort'
@@ -638,45 +661,33 @@ class _ProjectCardState extends State<_ProjectCard> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
-                                child: project.intercomCode.isNotEmpty
-                                    ? Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // Address (top, bold)
-                                          Text(
-                                            project.address,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black87,
-                                              letterSpacing: -0.3,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          // Intercom code (below)
-                                          Text(
-                                            'домофон: ${project.intercomCode}',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.grey.shade500,
-                                              letterSpacing: 0.3,
-                                            ),
-                                          ),
-                                        ],
-                                      )
-                                    : Center(
-                                        child: Text(
-                                          project.address,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black87,
-                                            letterSpacing: -0.3,
-                                          ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Address (top, bold)
+                                    Text(
+                                      project.address,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                        letterSpacing: -0.3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    // Intercom code (below)
+                                    if (project.intercomCode.isNotEmpty)
+                                      Text(
+                                        'домофон: ${project.intercomCode}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.grey.shade500,
+                                          letterSpacing: 0.3,
                                         ),
                                       ),
+                                  ],
+                                ),
                               ),
                               // Action Buttons
                               Row(
