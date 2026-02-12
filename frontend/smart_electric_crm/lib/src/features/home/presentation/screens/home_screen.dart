@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
           NavigationDestination(
             icon: Icon(Icons.description_outlined),
             selectedIcon: Icon(Icons.description),
-            label: 'Проекты',
+            label: 'Объекты',
           ),
           NavigationDestination(
             icon: Icon(Icons.folder_open_outlined),

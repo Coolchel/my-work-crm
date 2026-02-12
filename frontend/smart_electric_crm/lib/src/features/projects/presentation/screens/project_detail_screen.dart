@@ -171,7 +171,7 @@ class _StagesTab extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(left: 4, bottom: 8),
               child: Text(
-                'Объект',
+                'Об объекте',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.grey.shade800,
@@ -208,96 +208,25 @@ class _StagesTab extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Address Row (Priority)
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.indigo.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(Icons.location_on_outlined,
-                                  color: Colors.indigo, size: 20),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'АДРЕС ОБЪЕКТА',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey.shade500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    project.address,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
-                                      letterSpacing: -0.3,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                        // Заказчик
+                        _DetailInfoRow(
+                          icon: Icons.person_outline,
+                          label: 'ЗАКАЗЧИК',
+                          value: project.clientInfo.isNotEmpty
+                              ? project.clientInfo
+                              : '—',
+                          color: Colors.blue.shade600,
+                          selectable: true,
                         ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          child: Divider(height: 1, thickness: 1),
-                        ),
-                        // Row for secondary Info (Divided into 3 centered blocks)
-                        // Row for secondary Info (Minimalist Strip Variant)
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade100),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _HeaderInfoItem(
-                                  icon: Icons.key_outlined,
-                                  label: 'ДОМОФОН',
-                                  value: project.intercomCode.isNotEmpty
-                                      ? project.intercomCode
-                                      : '—',
-                                  color: Colors.amber.shade700,
-                                ),
-                              ),
-                              _buildHorizontalDivider(),
-                              Expanded(
-                                child: _HeaderInfoItem(
-                                  icon: Icons.person_outline,
-                                  label: 'ЗАКАЗЧИК',
-                                  value: project.clientInfo.isNotEmpty
-                                      ? project.clientInfo
-                                      : '—',
-                                  color: Colors.blue.shade600,
-                                ),
-                              ),
-                              _buildHorizontalDivider(),
-                              Expanded(
-                                child: _HeaderInfoItem(
-                                  icon: Icons.info_outline,
-                                  label: 'ИСТОЧНИК',
-                                  value: project.source.isNotEmpty
-                                      ? project.source
-                                      : '—',
-                                  color: Colors.teal.shade700,
-                                ),
-                              ),
-                            ],
-                          ),
+                        const SizedBox(height: 16),
+                        // Источник
+                        _DetailInfoRow(
+                          icon: Icons.info_outline,
+                          label: 'ИСТОЧНИК',
+                          value:
+                              project.source.isNotEmpty ? project.source : '—',
+                          color: Colors.teal.shade700,
+                          selectable: false,
                         ),
                       ],
                     ),
@@ -370,14 +299,6 @@ class _StagesTab extends ConsumerWidget {
         projectId: project.id.toString(),
         existingStageKeys: existingKeys,
       ),
-    );
-  }
-
-  Widget _buildHorizontalDivider() {
-    return Container(
-      height: 24,
-      width: 1,
-      color: Colors.grey.shade200,
     );
   }
 }
@@ -1186,54 +1107,67 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-class _HeaderInfoItem extends StatelessWidget {
+class _DetailInfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
   final Color color;
+  final bool selectable;
 
-  const _HeaderInfoItem({
+  const _DetailInfoRow({
     required this.icon,
     required this.label,
     required this.value,
     required this.color,
+    this.selectable = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: Colors.grey.shade500,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ],
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: color, size: 18),
         ),
-        const SizedBox(height: 4),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Text(
-            value,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
-            ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.grey.shade500,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const SizedBox(height: 2),
+              selectable
+                  ? SelectableText(
+                      value,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
+                    )
+                  : Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+            ],
           ),
         ),
       ],

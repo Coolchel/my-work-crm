@@ -31,6 +31,10 @@ class ProjectModel {
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
 
+  /// Дата последнего обновления
+  @JsonKey(name: 'updated_at')
+  final DateTime? updatedAt;
+
   /// Список этапов проекта
   final List<StageModel> stages;
 
@@ -55,6 +59,7 @@ class ProjectModel {
     this.clientInfo = '',
     this.source = '',
     required this.createdAt,
+    this.updatedAt,
     required this.stages,
     this.shields = const [],
     this.files = const [],
@@ -77,6 +82,7 @@ class ProjectModel {
     String? clientInfo,
     String? source,
     DateTime? createdAt,
+    DateTime? updatedAt,
     List<StageModel>? stages,
     List<ShieldModel>? shields,
     List<ProjectFileModel>? files,
@@ -90,6 +96,7 @@ class ProjectModel {
       clientInfo: clientInfo ?? this.clientInfo,
       source: source ?? this.source,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       stages: stages ?? this.stages,
       shields: shields ?? this.shields,
       files: files ?? this.files,

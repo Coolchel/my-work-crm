@@ -1,0 +1,18 @@
+﻿Analyzing smart_electric_crm...                                 
+
+   info - Use 'const' for final variables initialized to a constant value - lib\src\features\projects\presentation\screens\add_project_screen.dart:145:5 - prefer_const_declarations
+   info - Use 'const' for final variables initialized to a constant value - lib\src\features\projects\presentation\screens\project_detail_screen.dart:451:5 - prefer_const_declarations
+   info - Unnecessary braces in a string interpolation - lib\src\features\projects\presentation\screens\project_detail_screen.dart:1074:46 - unnecessary_brace_in_string_interps
+   info - Use 'const' with the constructor to improve performance - lib\src\features\statistics\presentation\screens\statistics_screen.dart:341:20 - prefer_const_constructors
+
+flutter : 4 issues found. (ran in 3.5s)
+строка:1 знак:1
++ flutter analyze > analyze_out.txt 
+2>&1; Get-Content analyze_out.txt | ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecif 
+   ied: (4 issues found. (ran in 3.5s)  
+  :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCom 
+   mandError
+ 

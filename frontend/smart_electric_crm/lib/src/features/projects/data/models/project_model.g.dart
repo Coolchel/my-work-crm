@@ -13,7 +13,11 @@ ProjectModel _$ProjectModelFromJson(Map<String, dynamic> json) => ProjectModel(
       status: json['status'] as String,
       intercomCode: json['intercom_code'] as String? ?? '',
       clientInfo: json['client_info'] as String? ?? '',
+      source: json['source'] as String? ?? '',
       createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: json['updated_at'] == null
+          ? null
+          : DateTime.parse(json['updated_at'] as String),
       stages: (json['stages'] as List<dynamic>)
           .map((e) => StageModel.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -36,7 +40,9 @@ Map<String, dynamic> _$ProjectModelToJson(ProjectModel instance) =>
       'intercom_code': instance.intercomCode,
       'client_info': instance.clientInfo,
       'created_at': instance.createdAt.toIso8601String(),
+      'updated_at': instance.updatedAt?.toIso8601String(),
       'stages': instance.stages,
       'shields': instance.shields,
       'files': instance.files,
+      'source': instance.source,
     };

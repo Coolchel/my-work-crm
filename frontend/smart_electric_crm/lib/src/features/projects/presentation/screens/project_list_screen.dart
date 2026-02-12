@@ -5,45 +5,282 @@ import '../providers/project_providers.dart';
 import '../../data/models/project_model.dart';
 import 'project_detail_screen.dart';
 import 'add_project_screen.dart';
+import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 
-class ProjectListScreen extends ConsumerWidget {
+// ─── Filter enums ─────────────────────────────────────────────
+enum SortOrder { newest, oldest }
+
+class ProjectListScreen extends ConsumerStatefulWidget {
   const ProjectListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProjectListScreen> createState() => _ProjectListScreenState();
+}
+
+class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
+  SortOrder _sortOrder = SortOrder.newest;
+  String? _filterSource;
+  String? _filterType;
+  bool _filterByWorkSum = false;
+
+  // Search
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _showSearch = false;
+
+  static const _objectTypes = {
+    'new_building': 'Новостройка',
+    'secondary': 'Вторичка',
+    'cottage': 'Коттедж',
+    'office': 'Офис',
+    'other': 'Другое',
+  };
+
+  static const _sources = ['Владимир', 'Другое'];
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  /// Calc total work amount (client_amount) in USD across all stages
+  double _calcWorkSumUsd(ProjectModel p) {
+    double total = 0;
+    for (final stage in p.stages) {
+      for (final item in stage.estimateItems) {
+        if (item.itemType == 'work' && item.currency == 'USD') {
+          total += item.clientAmount ?? 0;
+        }
+      }
+    }
+    return total;
+  }
+
+  List<ProjectModel> _applyFilters(List<ProjectModel> projects) {
+    var result = List<ProjectModel>.from(projects);
+
+    // Search filter
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      result =
+          result.where((p) => p.address.toLowerCase().contains(q)).toList();
+    }
+    // Source filter
+    if (_filterSource != null) {
+      result = result.where((p) => p.source == _filterSource).toList();
+    }
+    // Type filter
+    if (_filterType != null) {
+      result = result.where((p) => p.objectType == _filterType).toList();
+    }
+
+    // Sort
+    if (_filterByWorkSum) {
+      result.sort((a, b) => _calcWorkSumUsd(b).compareTo(_calcWorkSumUsd(a)));
+    } else {
+      switch (_sortOrder) {
+        case SortOrder.newest:
+          result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          break;
+        case SortOrder.oldest:
+          result.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          break;
+      }
+    }
+
+    return result;
+  }
+
+  bool get _hasActiveFilters =>
+      _filterSource != null ||
+      _filterType != null ||
+      _filterByWorkSum ||
+      _sortOrder != SortOrder.newest;
+
+  void _resetFilters() {
+    setState(() {
+      _sortOrder = SortOrder.newest;
+      _filterSource = null;
+      _filterType = null;
+      _filterByWorkSum = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final projectListAsync = ref.watch(projectListProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Мои Объекты'),
+        title: const Text('Объекты'),
+        actions: [
+          IconButton(
+            icon: Badge(
+              isLabelVisible: _hasActiveFilters,
+              smallSize: 8,
+              child: const Icon(Icons.filter_list),
+            ),
+            tooltip: 'Фильтры',
+            onPressed: () => _showFilterDialog(context),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: null,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AddProjectScreen()),
-          );
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Search FAB
+          FloatingActionButton.small(
+            heroTag: 'search',
+            backgroundColor:
+                _showSearch ? Colors.indigo.shade100 : Colors.white,
+            foregroundColor: Colors.indigo,
+            elevation: 2,
+            onPressed: () {
+              setState(() {
+                _showSearch = !_showSearch;
+                if (!_showSearch) {
+                  _searchController.clear();
+                  _searchQuery = '';
+                }
+              });
+            },
+            child: const Icon(Icons.search, size: 20),
+          ),
+          const SizedBox(height: 12),
+          // Add FAB
+          FloatingActionButton(
+            heroTag: 'add',
+            backgroundColor: Colors.indigo,
+            foregroundColor: Colors.white,
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const AddProjectDialog(),
+              );
+            },
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          // Инвалидируем провайдер для перезагрузки списка
           return ref.refresh(projectListProvider.future);
         },
         child: projectListAsync.when(
           data: (projects) {
+            final filtered = _applyFilters(projects);
             if (projects.isEmpty) {
-              return const Center(child: Text('Нет проектов'));
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.apartment_outlined,
+                        size: 64, color: Colors.grey.shade300),
+                    const SizedBox(height: 16),
+                    Text('Нет объектов',
+                        style: TextStyle(
+                            color: Colors.grey.shade400, fontSize: 16)),
+                  ],
+                ),
+              );
             }
-            return ListView.builder(
-              itemCount: projects.length,
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                final project = projects[index];
-                return _ProjectCard(project: project);
-              },
+            return Column(
+              children: [
+                // ─── Search Bar (expandable) ───
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  child: _showSearch
+                      ? Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                          child: TextField(
+                            controller: _searchController,
+                            autofocus: true,
+                            onChanged: (val) =>
+                                setState(() => _searchQuery = val),
+                            decoration: InputDecoration(
+                              hintText: 'Поиск по адресу...',
+                              hintStyle: TextStyle(
+                                color: Colors.grey.shade400,
+                                fontSize: 14,
+                              ),
+                              prefixIcon: Icon(Icons.search,
+                                  color: Colors.grey.shade400, size: 20),
+                              suffixIcon: IconButton(
+                                icon: Icon(Icons.close,
+                                    size: 18, color: Colors.grey.shade400),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {
+                                    _searchQuery = '';
+                                    _showSearch = false;
+                                  });
+                                },
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey.shade100,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 10),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                    color: Colors.indigo.withOpacity(0.3)),
+                              ),
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                // ─── List ───
+                Expanded(
+                  child: filtered.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.filter_list_off,
+                                  size: 48, color: Colors.grey.shade300),
+                              const SizedBox(height: 12),
+                              Text(
+                                _searchQuery.isNotEmpty
+                                    ? 'Ничего не найдено'
+                                    : 'Нет объектов по заданным фильтрам',
+                                style: TextStyle(
+                                    color: Colors.grey.shade400, fontSize: 14),
+                              ),
+                              if (_hasActiveFilters) ...[
+                                const SizedBox(height: 12),
+                                TextButton(
+                                  onPressed: _resetFilters,
+                                  child: const Text('Сбросить фильтры'),
+                                ),
+                              ],
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                          itemCount: filtered.length,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemBuilder: (context, index) {
+                            return _ProjectCard(
+                              project: filtered[index],
+                              workSumUsd: _calcWorkSumUsd(filtered[index]),
+                            );
+                          },
+                        ),
+                ),
+              ],
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -64,115 +301,514 @@ class ProjectListScreen extends ConsumerWidget {
       ),
     );
   }
-}
 
-class _ProjectCard extends StatelessWidget {
-  final ProjectModel project;
-
-  const _ProjectCard({required this.project});
-
-  @override
-  Widget build(BuildContext context) {
-    // Форматирование даты
-    final dateStr = DateFormat('dd.MM.yy').format(project.createdAt);
-
-    // Определяем цвет иконки статуса (простая логика для примера)
-    Color statusColor = Colors.grey;
-    if (project.status == 'new') statusColor = Colors.blue;
-    if (project.status == 'completed') statusColor = Colors.green;
-    if (project.status == 'calculating') statusColor = Colors.orange;
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListTile(
-        title: Text(
-          project.address,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Row(
-            children: [
-              // Тип объекта
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+  void _showFilterDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            const themeColor = Colors.indigo;
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24)),
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 400),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(4),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: themeColor.withOpacity(0.15),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  _getObjectTypeDisplay(project.objectType),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Статус с иконкой
-              Icon(Icons.circle, size: 8, color: statusColor),
-              const SizedBox(width: 4),
-              Text(_getProjectStatusDisplay(project.status),
-                  style: Theme.of(context).textTheme.bodySmall),
-            ],
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(dateStr),
-            const SizedBox(width: 8),
-            Consumer(
-              builder: (context, ref, child) {
-                return PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, size: 20),
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              AddProjectScreen(project: project),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: themeColor.withOpacity(0.12),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(24),
+                          topRight: Radius.circular(24),
                         ),
-                      );
-                    } else if (value == 'delete') {
-                      _deleteProject(context, ref);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: [
-                          Icon(Icons.edit_outlined, size: 20),
-                          SizedBox(width: 8),
-                          Text('Редактировать'),
+                          Text(
+                            'Фильтры',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: themeColor.withOpacity(0.8),
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Tooltip(
+                              message: 'Закрыть',
+                              child: IconButton(
+                                onPressed: () => Navigator.pop(context),
+                                icon:
+                                    const Icon(Icons.close, color: themeColor),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                iconSize: 20,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
-                      value: 'delete',
+                    // Content
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildFilterLabel('Сортировка'),
+                          const SizedBox(height: 8),
+                          _buildFilterChipGroup<String>(
+                            items: {
+                              'newest': 'Сначала новые',
+                              'oldest': 'Сначала старые',
+                              'work_sum': 'По сумме работ \$',
+                            },
+                            selected: _filterByWorkSum
+                                ? 'work_sum'
+                                : (_sortOrder == SortOrder.newest
+                                    ? 'newest'
+                                    : 'oldest'),
+                            onSelected: (val) {
+                              setDialogState(() => setState(() {
+                                    if (val == 'work_sum') {
+                                      _filterByWorkSum = true;
+                                    } else {
+                                      _filterByWorkSum = false;
+                                      _sortOrder = val == 'newest'
+                                          ? SortOrder.newest
+                                          : SortOrder.oldest;
+                                    }
+                                  }));
+                            },
+                            themeColor: themeColor,
+                          ),
+                          const SizedBox(height: 20),
+                          _buildFilterLabel('Источник'),
+                          const SizedBox(height: 8),
+                          _buildFilterChipGroup<String?>(
+                            items: {
+                              null: 'Все',
+                              for (final s in _sources) s: s,
+                            },
+                            selected: _filterSource,
+                            onSelected: (val) {
+                              setDialogState(
+                                  () => setState(() => _filterSource = val));
+                            },
+                            themeColor: themeColor,
+                          ),
+                          const SizedBox(height: 20),
+                          _buildFilterLabel('Тип объекта'),
+                          const SizedBox(height: 8),
+                          _buildFilterChipGroup<String?>(
+                            items: {
+                              null: 'Все',
+                              ..._objectTypes,
+                            },
+                            selected: _filterType,
+                            onSelected: (val) {
+                              setDialogState(
+                                  () => setState(() => _filterType = val));
+                            },
+                            themeColor: themeColor,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Footer
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
                       child: Row(
                         children: [
-                          Icon(Icons.delete_outline,
-                              size: 20, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Удалить', style: TextStyle(color: Colors.red)),
+                          if (_hasActiveFilters)
+                            TextButton(
+                              onPressed: () =>
+                                  setDialogState(() => _resetFilters()),
+                              style: TextButton.styleFrom(
+                                  foregroundColor: Colors.grey),
+                              child: const Text('Сбросить'),
+                            ),
+                          const Spacer(),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: themeColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                            ),
+                            child: const Text('Готово'),
+                          ),
                         ],
                       ),
                     ),
                   ],
-                );
-              },
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: Colors.indigo.shade700,
+      ),
+    );
+  }
+
+  Widget _buildFilterChipGroup<T>({
+    required Map<T, String> items,
+    required T selected,
+    required ValueChanged<T> onSelected,
+    required Color themeColor,
+  }) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      children: items.entries.map((entry) {
+        final isActive = entry.key == selected;
+        return ChoiceChip(
+          label: Text(
+            entry.value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+              color: isActive ? Colors.white : Colors.grey.shade700,
+            ),
+          ),
+          selected: isActive,
+          selectedColor: themeColor,
+          backgroundColor: Colors.grey.shade100,
+          side: BorderSide.none,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          visualDensity: VisualDensity.compact,
+          onSelected: (_) => onSelected(entry.key),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ─── Project Card ──────────────────────────────────────────────
+
+class _ProjectCard extends StatefulWidget {
+  final ProjectModel project;
+  final double workSumUsd;
+
+  const _ProjectCard({required this.project, required this.workSumUsd});
+
+  @override
+  State<_ProjectCard> createState() => _ProjectCardState();
+}
+
+class _ProjectCardState extends State<_ProjectCard> {
+  bool _isHovered = false;
+
+  String _formatDate(DateTime date) {
+    return DateFormat('dd.MM.yyyy').format(date);
+  }
+
+  String _getObjectTypeDisplay(String type) {
+    const map = {
+      'new_building': 'Новостройка',
+      'secondary': 'Вторичка',
+      'cottage': 'Коттедж',
+      'office': 'Офис',
+      'other': 'Другое',
+    };
+    return map[type] ?? type;
+  }
+
+  IconData _getObjectTypeIcon(String type) {
+    switch (type) {
+      case 'new_building':
+        return Icons.apartment;
+      case 'secondary':
+        return Icons.home;
+      case 'cottage':
+        return Icons.villa;
+      case 'office':
+        return Icons.business;
+      default:
+        return Icons.domain;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final project = widget.project;
+    final createdAt = project.createdAt;
+    final updatedAt = project.updatedAt;
+
+    final isEdited = updatedAt != null &&
+        updatedAt.difference(createdAt).abs().inSeconds > 10;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: _isHovered ? Colors.grey.shade50 : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: _isHovered
+                  ? Colors.black.withOpacity(0.06)
+                  : Colors.black.withOpacity(0.03),
+              blurRadius: _isHovered ? 15 : 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  ProjectDetailScreen(projectId: project.id.toString()),
+        clipBehavior: Clip.antiAlias,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ProjectDetailScreen(projectId: project.id.toString()),
+                ),
+              );
+            },
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Accent Stripe
+                  Container(width: 5, color: Colors.indigo),
+                  // Content
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Header: Intercom label + Action Buttons
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Address (top, bold)
+                                    Text(
+                                      project.address,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                        letterSpacing: -0.3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    // Intercom code (below address)
+                                    if (project.intercomCode.isNotEmpty)
+                                      Text(
+                                        'домофон: ${project.intercomCode}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.grey.shade500,
+                                          letterSpacing: 0.3,
+                                        ),
+                                      )
+                                    else
+                                      const SizedBox(height: 14),
+                                  ],
+                                ),
+                              ),
+                              // Action Buttons
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _ActionButton(
+                                    icon: Icons.edit_outlined,
+                                    tooltip: 'Редактировать объект',
+                                    color: Colors.grey.shade400,
+                                    hoverColor: Colors.indigo,
+                                    onTap: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) =>
+                                            AddProjectDialog(project: project),
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Consumer(
+                                    builder: (context, ref, child) {
+                                      return _ActionButton(
+                                        icon: Icons.close,
+                                        tooltip: 'Удалить объект',
+                                        color: Colors.grey.shade400,
+                                        hoverColor: Colors.grey.shade600,
+                                        onTap: () =>
+                                            _deleteProject(context, ref),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Info: Type + Stages (with icons)
+                          Row(
+                            children: [
+                              // Type icon + label
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.indigo.withOpacity(0.08),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  _getObjectTypeIcon(project.objectType),
+                                  size: 18,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Тип',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade500,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    _getObjectTypeDisplay(project.objectType),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey.shade800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 24),
+                              // Stages icon + count
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.indigo.withOpacity(0.08),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.layers_outlined,
+                                  size: 18,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Этапов',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade500,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${project.stages.length}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey.shade800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Spacer(),
+                              // Dates (always 2 rows for alignment)
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  // Row 1: "Создан"
+                                  Text(
+                                    'Создан: ${_formatDate(createdAt)}',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey.shade400,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  // Row 2: "Изменен" or empty placeholder
+                                  if (isEdited)
+                                    Text(
+                                      'Изменен: ${_formatDate(updatedAt)}',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey.shade400,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    )
+                                  else
+                                    const SizedBox(height: 14),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
@@ -180,20 +816,12 @@ class _ProjectCard extends StatelessWidget {
   Future<void> _deleteProject(BuildContext context, WidgetRef ref) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Удаление проекта'),
-        content: const Text('Вы уверены, что хотите удалить этот проект?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Удалить'),
-          ),
-        ],
+      builder: (context) => ConfirmationDialog(
+        title: 'Удаление проекта',
+        content:
+            'Объект "${widget.project.address}" будет удалён. Все этапы, сметы, щиты и файлы будут удалены безвозвратно.',
+        confirmText: 'Удалить',
+        isDestructive: true,
       ),
     );
 
@@ -201,7 +829,7 @@ class _ProjectCard extends StatelessWidget {
       try {
         await ref
             .read(projectListProvider.notifier)
-            .deleteProject(project.id.toString());
+            .deleteProject(widget.project.id.toString());
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -217,29 +845,51 @@ class _ProjectCard extends StatelessWidget {
       }
     }
   }
+}
 
-  // Маппинг для типов объектов
-  String _getObjectTypeDisplay(String type) {
-    const map = {
-      'new_building': 'Новостройка',
-      'secondary': 'Вторичка',
-      'cottage': 'Коттедж',
-      'office': 'Офис',
-      'other': 'Другое',
-    };
-    return map[type] ?? type;
-  }
+// ─── Action Button with hover color ────────────────────────────
 
-  // Маппинг для статусов проекта
-  String _getProjectStatusDisplay(String status) {
-    const map = {
-      'new': 'Новый',
-      'calculating': 'Предпросчет',
-      'stage1_done': 'Этап 1 готов',
-      'stage2_done': 'Этап 2 готов',
-      'stage3_done': 'Этап 3 готов',
-      'completed': 'Завершен',
-    };
-    return map[status] ?? status;
+class _ActionButton extends StatefulWidget {
+  final IconData icon;
+  final String tooltip;
+  final Color color;
+  final Color hoverColor;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.color,
+    required this.hoverColor,
+    required this.onTap,
+  });
+
+  @override
+  State<_ActionButton> createState() => _ActionButtonState();
+}
+
+class _ActionButtonState extends State<_ActionButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: SizedBox(
+        width: 28,
+        height: 28,
+        child: IconButton(
+          icon: Icon(
+            widget.icon,
+            size: 18,
+            color: _isHovered ? widget.hoverColor : widget.color,
+          ),
+          padding: EdgeInsets.zero,
+          onPressed: widget.onTap,
+          tooltip: widget.tooltip,
+        ),
+      ),
+    );
   }
 }
