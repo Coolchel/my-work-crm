@@ -130,121 +130,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
           ),
         ],
       ),
-      floatingActionButton: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Expandable search field
-          AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            alignment: Alignment.centerRight,
-            child: TapRegion(
-              onTapOutside: (_) {
-                if (_showSearch) {
-                  setState(() {
-                    _showSearch = false;
-                  });
-                }
-              },
-              child: _showSearch
-                  ? Container(
-                      width: MediaQuery.of(context).size.width - 150,
-                      height: 48,
-                      margin: const EdgeInsets.only(right: 12),
-                      child: TextField(
-                        controller: _searchController,
-                        autofocus: true,
-                        onChanged: (val) => setState(() => _searchQuery = val),
-                        decoration: InputDecoration(
-                          hintText: 'Поиск по адресу...',
-                          hintStyle: TextStyle(
-                            color: Colors.grey.shade400,
-                            fontSize: 13,
-                          ),
-                          prefixIcon: Icon(Icons.search,
-                              color: Colors.grey.shade400, size: 18),
-                          suffixIcon: IconButton(
-                            icon: Icon(Icons.close,
-                                size: 16, color: Colors.grey.shade400),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {
-                                _searchQuery = '';
-                                _showSearch = false;
-                              });
-                            },
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(28),
-                            borderSide: BorderSide(color: Colors.grey.shade200),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(28),
-                            borderSide: BorderSide(color: Colors.grey.shade200),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(28),
-                            borderSide: BorderSide(
-                                color: Colors.indigo.withOpacity(0.4)),
-                          ),
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ),
-          // Search FAB
-          TapRegion(
-            // Part of the same region as the text field so clicking this button doesn't trigger "outside"
-            groupId: null,
-            child: FloatingActionButton(
-              heroTag: 'search',
-              backgroundColor:
-                  _showSearch ? Colors.indigo.shade100 : Colors.indigo,
-              foregroundColor: _showSearch ? Colors.indigo : Colors.white,
-              elevation: 2,
-              onPressed: () {
-                setState(() {
-                  _showSearch = !_showSearch;
-                  if (!_showSearch) {
-                    // Start typing from scratch logic?
-                    // User requested: "результаты поиска сохраняются"
-                    // So we do NOT clear the text here when closing manually either?
-                    // Previous code cleared it:
-                    //   _searchController.clear();
-                    //   _searchQuery = '';
-                    // The user said: "при открытом поле поиска если ползователь тыкнул куда либо вне поля - поле поиска сворачивается обратно, результаты поиска сохраняются"
-                    // User didn't explicitly say "if I click the search button it should save".
-                    // But usually toggle means toggle.
-                    // If I close by clicking the button, should I clear?
-                    // "результаты поиска сохраняются" implies we shouldn't clear unless explicitly asked (like the X button).
-                    // So I will REMOVE the clear logic here too.
-                  }
-                });
-              },
-              child: const Icon(Icons.search),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Add FAB
-          FloatingActionButton(
-            heroTag: 'add',
-            backgroundColor: Colors.indigo,
-            foregroundColor: Colors.white,
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => const AddProjectDialog(),
-              );
-            },
-            child: const Icon(Icons.add),
-          ),
-        ],
-      ),
       body: RefreshIndicator(
         onRefresh: () async {
           return ref.refresh(projectListProvider.future);
@@ -267,49 +152,42 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
                 ),
               );
             }
-            return Column(
-              children: [
-                // ─── List ───
-                Expanded(
-                  child: filtered.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.filter_list_off,
-                                  size: 48, color: Colors.grey.shade300),
-                              const SizedBox(height: 12),
-                              Text(
-                                _searchQuery.isNotEmpty
-                                    ? 'Ничего не найдено'
-                                    : 'Нет объектов по заданным фильтрам',
-                                style: TextStyle(
-                                    color: Colors.grey.shade400, fontSize: 14),
-                              ),
-                              if (_hasActiveFilters) ...[
-                                const SizedBox(height: 12),
-                                TextButton(
-                                  onPressed: _resetFilters,
-                                  child: const Text('Сбросить фильтры'),
-                                ),
-                              ],
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                          itemCount: filtered.length,
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            return _ProjectCard(
-                              project: filtered[index],
-                              workSumUsd: _calcWorkSumUsd(filtered[index]),
-                            );
-                          },
+            return filtered.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.filter_list_off,
+                            size: 48, color: Colors.grey.shade300),
+                        const SizedBox(height: 12),
+                        Text(
+                          _searchQuery.isNotEmpty
+                              ? 'Ничего не найдено'
+                              : 'Нет объектов по заданным фильтрам',
+                          style: TextStyle(
+                              color: Colors.grey.shade400, fontSize: 14),
                         ),
-                ),
-              ],
-            );
+                        if (_hasActiveFilters) ...[
+                          const SizedBox(height: 12),
+                          TextButton(
+                            onPressed: _resetFilters,
+                            child: const Text('Сбросить фильтры'),
+                          ),
+                        ],
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                    itemCount: filtered.length,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      return _ProjectCard(
+                        project: filtered[index],
+                        workSumUsd: _calcWorkSumUsd(filtered[index]),
+                      );
+                    },
+                  );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => Center(
@@ -326,6 +204,121 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
             ),
           ),
         ),
+      ),
+      floatingActionButton: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Expandable search field
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            alignment: Alignment.centerRight,
+            child: TapRegion(
+              onTapOutside: (_) {
+                if (_showSearch) {
+                  setState(() => _showSearch = false);
+                }
+              },
+              child: _showSearch
+                  ? Container(
+                      width: MediaQuery.of(context).size.width - 164,
+                      height: 48,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        color:
+                            const Color(0xFFE8EBFD), // Более насыщенный синий
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.grey.shade200),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 15,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        autofocus: true,
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                        decoration: InputDecoration(
+                          hintText: 'Поиск...',
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade400,
+                            fontSize: 14,
+                          ),
+                          prefixIcon: Icon(Icons.search,
+                              color: Colors.grey.shade400, size: 20),
+                          suffixIcon: Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: Center(
+                              widthFactor: 1,
+                              heightFactor: 1,
+                              child: _ActionButton(
+                                icon: Icons.close,
+                                tooltip: 'Закрыть поиск',
+                                color: Colors.grey.shade400,
+                                hoverColor: Colors.grey.shade600,
+                                onTap: () {
+                                  _searchController.clear();
+                                  setState(() {
+                                    _searchQuery = '';
+                                    _showSearch = false;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          hoverColor: Colors.transparent,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ),
+          // Search FAB
+          FloatingActionButton(
+            heroTag: 'search',
+            elevation: 2,
+            backgroundColor:
+                _showSearch ? Colors.indigo.shade100 : Colors.indigo,
+            foregroundColor: _showSearch ? Colors.indigo : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            onPressed: () {
+              setState(() {
+                _showSearch = !_showSearch;
+              });
+            },
+            child: const Icon(Icons.search),
+          ),
+          const SizedBox(width: 12),
+          // Add FAB
+          FloatingActionButton(
+            heroTag: 'add',
+            elevation: 2,
+            backgroundColor: Colors.indigo,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const AddProjectDialog(),
+              );
+            },
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }
@@ -916,6 +909,9 @@ class _ActionButtonState extends State<_ActionButton> {
             color: _isHovered ? widget.hoverColor : widget.color,
           ),
           padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(),
+          visualDensity: VisualDensity.compact,
+          splashRadius: 14,
           onPressed: widget.onTap,
           tooltip: widget.tooltip,
         ),

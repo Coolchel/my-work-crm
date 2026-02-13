@@ -39,7 +39,9 @@
 - **Aesthetics:** Premium/Rich look (Gradients, Glassmorphism, specific Color Palettes) is a critical requirement.
     - **Custom UI Components:** Do not rely on default Material widgets (e.g., standard Dropdowns) if they produce visual artifacts (lines, padding bugs). Use custom implementations (e.g., `showMenu` + `InkWell`) to ensure pixel-perfect rendering.
     - **Detailed UI/UX Standards:** See [DESIGN.md](./DESIGN.md) for specifics on dialogs, buttons, icons, and interactive elements.
-- **Compact UI**: Prioritize information density and minimal whitespace to maximize visible data on screen, especially for tables and lists.
+- **Compact UI & Layout Patterns**: 
+    - Prioritize information density and minimal whitespace.
+    - **Bottom Action Bar & Special Area**: Screens with lists and floating actions (e.g., Project List) must use a grouped FAB pattern (Search, Add) and provide a **120px bottom padding** for the content. This "special area" prevents interactive elements from obscuring data items.
 - **Safety & Confirmations**: All destructive or bulk actions (deleting all items, applying templates, importing large data sets, re-calculating estimates, deleting project files) MUST trigger a `ConfirmationDialog` to prevent accidental data loss.
 - **File Integrity**: Original filenames are preserved (`original_name`). Categories with ≤ 5 files auto-expand. Deleting a file record triggers physical deletion.
 - **Upload Limits:** Strict validation: Max **12 files** per project, Max **20 MB** per file. Allowed extensions: images, docs, pdf, zip, video.
