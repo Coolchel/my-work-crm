@@ -2,17 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:ui';
 import 'src/features/home/presentation/screens/home_screen.dart';
+import 'src/features/auth/presentation/login_screen.dart';
+import 'src/features/auth/presentation/providers/auth_provider.dart';
 import 'src/shared/services/temp_file_service.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Check auth status on app start
+    // We delay slightly to ensure provider is ready or just call it.
+    // Actually calling it directly is fine.
+    Future.microtask(() => ref.read(authProvider.notifier).checkAuth());
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final authStatus = ref.watch(authProvider);
+
     return MaterialApp(
       title: 'Smart Electric CRM',
       debugShowCheckedModeBanner: false,
@@ -49,7 +67,15 @@ class MyApp extends StatelessWidget {
           shadowColor: Colors.black12,
         ),
       ),
-      home: const AppLifecycleManager(child: HomeScreen()),
+      home: AppLifecycleManager(
+        child: switch (authStatus) {
+          AuthStatus.authenticated => const HomeScreen(),
+          AuthStatus.unauthenticated || AuthStatus.error => const LoginScreen(),
+          AuthStatus.loading || AuthStatus.initial => const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            ),
+        },
+      ),
     );
   }
 }
@@ -71,6 +97,9 @@ class _AppLifecycleManagerState extends State<AppLifecycleManager> {
     _listener = AppLifecycleListener(
       onExitRequested: _onExitRequested,
       onDetach: _onDetach,
+      // onResume: () {
+      //   // Optional: Check auth on resume?
+      // },
     );
   }
 
