@@ -28,7 +28,7 @@ class AuthRepository {
       final data = response.data;
       await _saveTokens(data['access'], data['refresh']);
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
@@ -47,7 +47,7 @@ class AuthRepository {
       final response = await _dio.get('/auth/me/');
       return response.data;
     } catch (e) {
-      throw e;
+      rethrow;
     }
   }
 
