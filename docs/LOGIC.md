@@ -322,4 +322,6 @@
 ### 9.3. Поиск
 *   **Механизм:** Регистронезависимый поиск по полю `address` проекта.
 *   **Логика:** `address.toLowerCase().contains(query.toLowerCase())`.
-*   **UI:** Expandable search field, появляется слева от FAB кнопки поиска при нажатии.
+*   **UI:** 
+    *   **Desktop:** Постоянное поле ввода в AppBar.
+    *   **Mobile:** Иконка в AppBar раскрывается в поле ввода при нажатии.

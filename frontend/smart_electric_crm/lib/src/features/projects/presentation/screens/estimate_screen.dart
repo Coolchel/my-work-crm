@@ -17,7 +17,6 @@ import '../../../engineering/data/models/template_models.dart';
 import '../../../../shared/presentation/dialogs/text_input_dialog.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 
-import '../widgets/estimate/estimate_bottom_actions.dart';
 import '../widgets/stages/stage_card.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
@@ -36,7 +35,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   Timer? _markupDebounce;
 
   int _currentIndex = 0;
-  bool _isFabExpanded = false;
   bool _showPrices = true;
   double _markupPercent = 0;
 
@@ -93,162 +91,214 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   Widget build(BuildContext context) {
     // Backdrop filter when FAB is expanded
     // Backdrop filter when FAB is expanded
-    return Stack(
-      children: [
-        Scaffold(
-          appBar: AppBar(
-            // automaticallyImplyLeading: false,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new),
-              tooltip: 'Назад',
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            title: Text(StageCard.getStageTitleDisplay(widget.stage.title)),
-            actions: [
-              // PDF Actions Button (Deep Purple - Analytics/Graph)
-              _buildActionButton(
-                context,
-                icon: Icons.auto_graph_rounded,
-                color: Colors.deepPurple,
-                onTap: () => _showPdfActionsDialog(context),
-                tooltip: "PDF смета",
-              ),
-              const SizedBox(width: 8),
-              // Text Actions Button (Orange - Structure/Segments)
-              _buildActionButton(
-                context,
-                icon: Icons.segment_rounded,
-                color: Colors.orange,
-                onTap: () => _showTextActionsDialog(context),
-                tooltip: "Текстовые сметы",
-              ),
-              const SizedBox(width: 8),
-            ],
-          ),
-          body: IndexedStack(
-            index: _currentIndex,
-            children: [
-              // Works Tab
-              EstimateTab(
-                items: _works,
-                title: 'Работы', // Determines view mode inside widget
-                showPrices: true,
-                onUpdate: _updateItemFromTab,
-                onDelete: _deleteItemFromTab,
-                note: _stage.workNotes,
-                remarks: _stage.workRemarks,
-                onSaveNote: (v) => _saveNotes('work', v),
-                onSaveRemarks: (v) => _saveNotes('work_remarks', v),
-                automationActionLabel: "Рассчитать по материалам",
-                onAutomationAction: _calculateWorksFromMaterials,
-                isAutomationLoading: _isCalculatingWorks,
-                onTemplatesAction: _showWorkTemplatesDialog,
-                isTemplatesLoading: _isApplyingTemplate,
-                onSaveAsTemplate: () => _showSaveTemplateDialog('work'),
-                hideTopActions: true,
-              ),
-              // Materials Tab
-              EstimateTab(
-                items: _materials,
-                title: 'Материалы',
-                showPrices: _showPrices,
-                onUpdate: _updateItemFromTab,
-                onDelete: _deleteItemFromTab,
-                onShowPricesChanged: (v) => setState(() => _showPrices = v),
-                markupPercent: _markupPercent,
-                onMarkupChanged: (val) {
-                  setState(() => _markupPercent = val);
-                  _saveMarkupDebounced(val);
-                },
-                note: _stage.materialNotes,
-                remarks: _stage.materialRemarks,
-                onSaveNote: (v) => _saveNotes('material', v),
-                onSaveRemarks: (v) => _saveNotes('material_remarks', v),
-                automationActionLabel: "Импорт из инженерки",
-                onAutomationAction: _importFromShields,
-                isAutomationLoading: _isImportingShields,
-                onTemplatesAction: _showMaterialTemplatesDialog,
-                isTemplatesLoading: _isApplyingTemplate,
-                onSaveAsTemplate: () => _showSaveTemplateDialog('material'),
-                hideTopActions: true,
-              ),
-            ],
-          ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: _currentIndex,
-            onDestinationSelected: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.handyman_outlined),
-                selectedIcon: Icon(Icons.handyman),
-                label: 'Работы',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.inventory_2_outlined),
-                selectedIcon: Icon(Icons.inventory_2),
-                label: 'Материалы',
-              ),
-            ],
-          ),
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          tooltip: 'Назад',
+          onPressed: () => Navigator.of(context).pop(),
         ),
-
-        // Dark overlay when FAB is expanded (Below FAB)
-        if (_isFabExpanded)
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () => setState(() => _isFabExpanded = false),
-              child: Container(
-                color: Colors.black54,
-              ),
-            ),
+        title: Text(StageCard.getStageTitleDisplay(widget.stage.title)),
+        actions: [
+          // PDF Actions Button (Deep Purple - Analytics/Graph)
+          _buildActionButton(
+            context,
+            icon: Icons.auto_graph_rounded,
+            color: Colors.deepPurple,
+            onTap: () => _showPdfActionsDialog(context),
+            tooltip: "PDF смета",
           ),
-
-        // FAB and Speed Dial (Above Overlay)
-        Positioned(
-          right: 16,
-          // Raised to avoid overlap with BottomNavigationBar (approx 80px)
-          bottom: 100,
-          child: Builder(
-            builder: (context) {
-              if (_currentIndex == 1) {
-                // Materials Tab - New Bottom Actions
-                return EstimateBottomActions(
-                  onSearchTap: _showSearchDialog,
-                  onDeleteAll: _deleteAllItems,
-                  onSaveToTemplate: () => _showSaveTemplateDialog('material'),
-                  onApplyTemplate: _showMaterialTemplatesDialog,
-                  onImport: _importFromShields,
-                  showPrices: _showPrices,
-                  buttonColor:
-                      Colors.blue.shade200, // Blue buttons for Materials
-                  onTogglePrices: () =>
-                      setState(() => _showPrices = !_showPrices),
-                );
-              } else {
-                // Works Tab - New Bottom Actions (Replaces Speed Dial)
-                return EstimateBottomActions(
-                  onSearchTap: _showSearchDialog,
-                  onDeleteAll: _deleteAllItems,
-                  onSaveToTemplate: () => _showSaveTemplateDialog('work'),
-                  onApplyTemplate: _showWorkTemplatesDialog,
-                  onImport: _calculateWorksFromMaterials,
-                  automationText: "Рассчет по материалам",
-                  automationIcon: Icons.auto_awesome,
-                  automationColor: Colors.blue.shade200,
-                  showPrices: true,
-                  hidePriceToggle: true, // Hide price toggle for Works
-                  buttonColor: Colors.green.shade200, // Green buttons for Works
-                  onTogglePrices: () {},
-                );
+          const SizedBox(width: 8),
+          // Text Actions Button (Orange - Structure/Segments)
+          _buildActionButton(
+            context,
+            icon: Icons.segment_rounded,
+            color: Colors.orange,
+            onTap: () => _showTextActionsDialog(context),
+            tooltip: "Текстовые сметы",
+          ),
+          const SizedBox(width: 8),
+          // Overflow Menu
+          PopupMenuButton<String>(
+            tooltip: 'Действия',
+            icon: const Icon(Icons.more_vert),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 4,
+            surfaceTintColor: Colors.white,
+            onSelected: (value) {
+              switch (value) {
+                case 'toggle_prices':
+                  setState(() => _showPrices = !_showPrices);
+                  break;
+                case 'import':
+                  if (_currentIndex == 0) {
+                    _calculateWorksFromMaterials();
+                  } else {
+                    _importFromShields();
+                  }
+                  break;
+                case 'apply_template':
+                  if (_currentIndex == 0) {
+                    _showWorkTemplatesDialog();
+                  } else {
+                    _showMaterialTemplatesDialog();
+                  }
+                  break;
+                case 'save_template':
+                  _showSaveTemplateDialog(
+                      _currentIndex == 0 ? 'work' : 'material');
+                  break;
+                case 'clear_all':
+                  _deleteAllItems();
+                  break;
               }
             },
+            itemBuilder: (BuildContext context) {
+              final isWork = _currentIndex == 0;
+              return [
+                if (!isWork) ...[
+                  CheckedPopupMenuItem(
+                    value: 'toggle_prices',
+                    checked: _showPrices,
+                    child: const Text('Показывать цены'),
+                  ),
+                  const PopupMenuDivider(),
+                ],
+                PopupMenuItem(
+                  value: 'import',
+                  child: Row(
+                    children: [
+                      Icon(
+                        isWork ? Icons.auto_awesome : Icons.download_rounded,
+                        color: Colors.grey.shade600,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                          isWork ? "Рассчитать работы" : "Импорт из инженерки"),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'apply_template',
+                  child: Row(
+                    children: [
+                      Icon(Icons.copy_all_rounded,
+                          color: Colors.grey.shade600, size: 20),
+                      const SizedBox(width: 12),
+                      const Text('Применить шаблон...'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'save_template',
+                  child: Row(
+                    children: [
+                      Icon(Icons.save_as,
+                          color: Colors.grey.shade600, size: 20),
+                      const SizedBox(width: 12),
+                      const Text('Сохранить как шаблон...'),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'clear_all',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_forever,
+                          color: Colors.red.shade300, size: 20),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Очистить смету...', // Destructive
+                        style: TextStyle(color: Colors.red.shade400),
+                      ),
+                    ],
+                  ),
+                ),
+              ];
+            },
           ),
-        ),
-      ],
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          // Works Tab
+          EstimateTab(
+            items: _works,
+            title: 'Работы', // Determines view mode inside widget
+            showPrices: true,
+            onUpdate: _updateItemFromTab,
+            onDelete: _deleteItemFromTab,
+            note: _stage.workNotes,
+            remarks: _stage.workRemarks,
+            onSaveNote: (v) => _saveNotes('work', v),
+            onSaveRemarks: (v) => _saveNotes('work_remarks', v),
+            automationActionLabel: "Рассчитать по материалам",
+            onAutomationAction: _calculateWorksFromMaterials,
+            isAutomationLoading: _isCalculatingWorks,
+            onTemplatesAction: _showWorkTemplatesDialog,
+            isTemplatesLoading: _isApplyingTemplate,
+            onSaveAsTemplate: () => _showSaveTemplateDialog('work'),
+            hideTopActions: true,
+          ),
+          // Materials Tab
+          EstimateTab(
+            items: _materials,
+            title: 'Материалы',
+            showPrices: _showPrices,
+            onUpdate: _updateItemFromTab,
+            onDelete: _deleteItemFromTab,
+            onShowPricesChanged: (v) => setState(() => _showPrices = v),
+            markupPercent: _markupPercent,
+            onMarkupChanged: (val) {
+              setState(() => _markupPercent = val);
+              _saveMarkupDebounced(val);
+            },
+            note: _stage.materialNotes,
+            remarks: _stage.materialRemarks,
+            onSaveNote: (v) => _saveNotes('material', v),
+            onSaveRemarks: (v) => _saveNotes('material_remarks', v),
+            automationActionLabel: "Импорт из инженерки",
+            onAutomationAction: _importFromShields,
+            isAutomationLoading: _isImportingShields,
+            onTemplatesAction: _showMaterialTemplatesDialog,
+            isTemplatesLoading: _isApplyingTemplate,
+            onSaveAsTemplate: () => _showSaveTemplateDialog('material'),
+            hideTopActions: true,
+          ),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.handyman_outlined),
+            selectedIcon: Icon(Icons.handyman),
+            label: 'Работы',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.inventory_2_outlined),
+            selectedIcon: Icon(Icons.inventory_2),
+            label: 'Материалы',
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'add_estimate_item',
+        onPressed: _showSearchDialog,
+        tooltip: 'Добавить позицию',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 
@@ -283,7 +333,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   // --- Actions ---
 
   void _deleteAllItems() async {
-    setState(() => _isFabExpanded = false);
     final isWork = _currentIndex == 0;
     final themeColor = isWork ? Colors.green : Colors.blue;
     final sectionName = isWork ? "работы" : "материалы";
@@ -318,8 +367,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   }
 
   void _showManualAddDialog() async {
-    setState(() => _isFabExpanded = false);
-
     // Create new item with defaults
     final newItem = EstimateItemModel(
       id: 0,
@@ -346,8 +393,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   }
 
   void _showSearchDialog() {
-    setState(() => _isFabExpanded = false);
-
     final index = _currentIndex;
     final itemType = index == 0 ? 'work' : 'material';
     final showPrices = itemType == 'work' ? true : _showPrices;

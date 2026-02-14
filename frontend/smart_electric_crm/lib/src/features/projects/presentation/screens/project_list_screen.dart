@@ -111,215 +111,186 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
     });
   }
 
+  Widget _buildSearchBar(BuildContext context, bool isWide) {
+    return TextField(
+      controller: _searchController,
+      autofocus: !isWide, // Autofocus only on mobile when expanded
+      textAlignVertical: TextAlignVertical.center,
+      style: const TextStyle(fontSize: 16),
+      decoration: InputDecoration(
+        isDense: true,
+        hintText: 'Поиск объектов...',
+        hintStyle: TextStyle(
+          color: Colors.grey.shade500,
+          fontSize: 15,
+        ),
+        prefixIcon: Icon(Icons.search, color: Colors.grey.shade600, size: 22),
+        suffixIcon: _searchController.text.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.close, size: 20),
+                color: Colors.grey.shade500,
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() => _searchQuery = '');
+                  if (!isWide) {
+                    setState(() => _showSearch = false);
+                  }
+                },
+              )
+            : null,
+        filled: true,
+        fillColor: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withOpacity(0.5),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(24),
+          borderSide:
+              BorderSide(color: Theme.of(context).primaryColor, width: 1.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      ),
+      onChanged: (val) => setState(() => _searchQuery = val),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final projectListAsync = ref.watch(projectListProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Объекты'),
-        actions: [
-          IconButton(
-            icon: Badge(
-              isLabelVisible: _hasActiveFilters,
-              smallSize: 8,
-              child: const Icon(Icons.filter_list),
-            ),
-            tooltip: 'Фильтры',
-            onPressed: () => _showFilterDialog(context),
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          return ref.refresh(projectListProvider.future);
-        },
-        child: projectListAsync.when(
-          data: (projects) {
-            final filtered = _applyFilters(projects);
-            if (projects.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.apartment_outlined,
-                        size: 64, color: Colors.grey.shade300),
-                    const SizedBox(height: 16),
-                    Text('Нет объектов',
-                        style: TextStyle(
-                            color: Colors.grey.shade400, fontSize: 16)),
-                  ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 700;
+        // Always show search field on wide screens or if explicitly active on mobile
+        final showSearchField = isWide || _showSearch;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: showSearchField
+                ? ConstrainedBox(
+                    constraints: BoxConstraints(
+                        maxWidth: isWide ? 400 : double.infinity),
+                    child: _buildSearchBar(context, isWide),
+                  )
+                : const Text('Объекты'),
+            centerTitle: isWide, // Center the search bar on wide screens
+            actions: [
+              if (!isWide && !_showSearch)
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  tooltip: 'Поиск',
+                  onPressed: () => setState(() => _showSearch = true),
                 ),
-              );
-            }
-            return filtered.isEmpty
-                ? Center(
+              IconButton(
+                icon: Badge(
+                  isLabelVisible: _hasActiveFilters,
+                  smallSize: 8,
+                  child: const Icon(Icons.filter_list),
+                ),
+                tooltip: 'Фильтры',
+                onPressed: () => _showFilterDialog(context),
+              ),
+            ],
+          ),
+          body: RefreshIndicator(
+            onRefresh: () async {
+              return ref.refresh(projectListProvider.future);
+            },
+            child: projectListAsync.when(
+              data: (projects) {
+                final filtered = _applyFilters(projects);
+                if (projects.isEmpty) {
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.filter_list_off,
-                            size: 48, color: Colors.grey.shade300),
-                        const SizedBox(height: 12),
-                        Text(
-                          _searchQuery.isNotEmpty
-                              ? 'Ничего не найдено'
-                              : 'Нет объектов по заданным фильтрам',
-                          style: TextStyle(
-                              color: Colors.grey.shade400, fontSize: 14),
-                        ),
-                        if (_hasActiveFilters) ...[
-                          const SizedBox(height: 12),
-                          TextButton(
-                            onPressed: _resetFilters,
-                            child: const Text('Сбросить фильтры'),
-                          ),
-                        ],
+                        Icon(Icons.apartment_outlined,
+                            size: 64, color: Colors.grey.shade300),
+                        const SizedBox(height: 16),
+                        Text('Нет объектов',
+                            style: TextStyle(
+                                color: Colors.grey.shade400, fontSize: 16)),
                       ],
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
-                    itemCount: filtered.length,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      return _ProjectCard(
-                        project: filtered[index],
-                        workSumUsd: _calcWorkSumUsd(filtered[index]),
-                      );
-                    },
                   );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Ошибка загрузки: $error', textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => ref.invalidate(projectListProvider),
-                  child: const Text('Повторить'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      floatingActionButton: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Expandable search field
-          AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            alignment: Alignment.centerRight,
-            child: TapRegion(
-              onTapOutside: (_) {
-                if (_showSearch) {
-                  setState(() => _showSearch = false);
                 }
-              },
-              child: _showSearch
-                  ? Container(
-                      width: MediaQuery.of(context).size.width - 164,
-                      height: 48,
-                      margin: const EdgeInsets.only(right: 12),
-                      decoration: BoxDecoration(
-                        color:
-                            const Color(0xFFE8EBFD), // Более насыщенный синий
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.grey.shade200),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 15,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        autofocus: true,
-                        onChanged: (val) => setState(() => _searchQuery = val),
-                        decoration: InputDecoration(
-                          hintText: 'Поиск...',
-                          hintStyle: TextStyle(
-                            color: Colors.grey.shade400,
-                            fontSize: 14,
-                          ),
-                          prefixIcon: Icon(Icons.search,
-                              color: Colors.grey.shade400, size: 20),
-                          suffixIcon: Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: Center(
-                              widthFactor: 1,
-                              heightFactor: 1,
-                              child: _ActionButton(
-                                icon: Icons.close,
-                                tooltip: 'Закрыть поиск',
-                                color: Colors.grey.shade400,
-                                hoverColor: Colors.grey.shade600,
-                                onTap: () {
-                                  _searchController.clear();
-                                  setState(() {
-                                    _searchQuery = '';
-                                    _showSearch = false;
-                                  });
-                                },
-                              ),
+                return filtered.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.filter_list_off,
+                                size: 48, color: Colors.grey.shade300),
+                            const SizedBox(height: 12),
+                            Text(
+                              _searchQuery.isNotEmpty
+                                  ? 'Ничего не найдено'
+                                  : 'Нет объектов по заданным фильтрам',
+                              style: TextStyle(
+                                  color: Colors.grey.shade400, fontSize: 14),
                             ),
-                          ),
-                          filled: true,
-                          fillColor: Colors.transparent,
-                          hoverColor: Colors.transparent,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
+                            if (_hasActiveFilters) ...[
+                              const SizedBox(height: 12),
+                              TextButton(
+                                onPressed: _resetFilters,
+                                child: const Text('Сбросить фильтры'),
+                              ),
+                            ],
+                          ],
                         ),
-                      ),
-                    )
-                  : const SizedBox.shrink(),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                        itemCount: filtered.length,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          return _ProjectCard(
+                            project: filtered[index],
+                            workSumUsd: _calcWorkSumUsd(filtered[index]),
+                          );
+                        },
+                      );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Ошибка загрузки: $error',
+                        textAlign: TextAlign.center),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => ref.invalidate(projectListProvider),
+                      child: const Text('Повторить'),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-          // Search FAB
-          FloatingActionButton(
-            heroTag: 'search',
-            elevation: 2,
-            backgroundColor:
-                _showSearch ? Colors.indigo.shade100 : Colors.indigo,
-            foregroundColor: _showSearch ? Colors.indigo : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            onPressed: () {
-              setState(() {
-                _showSearch = !_showSearch;
-              });
-            },
-            child: const Icon(Icons.search),
-          ),
-          const SizedBox(width: 12),
-          // Add FAB
-          FloatingActionButton(
-            heroTag: 'add',
-            elevation: 2,
-            backgroundColor: Colors.indigo,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+          floatingActionButton: FloatingActionButton(
+            heroTag: 'add_project',
+            elevation: 4,
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (context) => const AddProjectDialog(),
               );
             },
+            tooltip: 'Добавить объект',
             child: const Icon(Icons.add),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -708,7 +679,7 @@ class _ProjectCardState extends State<_ProjectCard> {
                                         color: Colors.grey.shade400,
                                         hoverColor: Colors.grey.shade600,
                                         onTap: () =>
-                                            _deleteProject(context, ref),
+                                            deleteProject(context, ref),
                                       );
                                     },
                                   ),
@@ -836,7 +807,7 @@ class _ProjectCardState extends State<_ProjectCard> {
     );
   }
 
-  Future<void> _deleteProject(BuildContext context, WidgetRef ref) async {
+  Future<void> deleteProject(BuildContext context, WidgetRef ref) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => ConfirmationDialog(
@@ -892,13 +863,13 @@ class _ActionButton extends StatefulWidget {
 }
 
 class _ActionButtonState extends State<_ActionButton> {
-  bool _isHovered = false;
+  bool isHovered = false;
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) => setState(() => isHovered = false),
       child: SizedBox(
         width: 28,
         height: 28,
@@ -906,7 +877,7 @@ class _ActionButtonState extends State<_ActionButton> {
           icon: Icon(
             widget.icon,
             size: 18,
-            color: _isHovered ? widget.hoverColor : widget.color,
+            color: isHovered ? widget.hoverColor : widget.color,
           ),
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),

@@ -395,7 +395,7 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
   @override
   Widget build(BuildContext context) {
     final stages = _availableStages;
-    final themeColor = Colors.indigo;
+    const themeColor = Colors.indigo;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1018,7 +1018,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
       // 1. Сначала скачиваем во временную папку
       final response = await http.get(Uri.parse(url));
       final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/${displayName}');
+      final tempFile = File('${tempDir.path}/$displayName');
       await tempFile.writeAsBytes(response.bodyBytes);
 
       // Регистрируем временный файл для очистки

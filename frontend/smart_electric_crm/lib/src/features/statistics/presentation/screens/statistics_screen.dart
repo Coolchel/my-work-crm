@@ -338,7 +338,7 @@ class StatisticsScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             '${_formatAmount(amount)} $symbol',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Colors.black87,

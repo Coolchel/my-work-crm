@@ -41,7 +41,7 @@
     - **Detailed UI/UX Standards:** See [DESIGN.md](./DESIGN.md) for specifics on dialogs, buttons, icons, and interactive elements.
 - **Compact UI & Layout Patterns**: 
     - Prioritize information density and minimal whitespace.
-    - **Bottom Action Bar & Special Area**: Screens with lists and floating actions (e.g., Project List) must use a grouped FAB pattern (Search, Add) and provide a **120px bottom padding** for the content. This "special area" prevents interactive elements from obscuring data items.
+    - **Bottom Action Bar & Special Area**: Screens with lists should use a single **Floating Action Button (FAB)** for the primary action (Add). Secondary actions (Search, Filter) must be moved to the **AppBar**. The list should have adequate bottom padding (e.g., **80-100px**) to prevent the FAB from obscuring the last items.
 - **Safety & Confirmations**: All destructive or bulk actions (deleting all items, applying templates, importing large data sets, re-calculating estimates, deleting project files) MUST trigger a `ConfirmationDialog` to prevent accidental data loss.
 - **File Integrity**: Original filenames are preserved (`original_name`). Categories with ≤ 5 files auto-expand. Deleting a file record triggers physical deletion.
 - **Upload Limits:** Strict validation: Max **12 files** per project, Max **20 MB** per file. Allowed extensions: images, docs, pdf, zip, video.
