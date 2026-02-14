@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../auth/application/auth_controller.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../application/app_settings_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -69,7 +69,9 @@ class SettingsScreen extends ConsumerWidget {
         const SizedBox(height: 16),
         FilledButton.tonalIcon(
           icon: const Icon(Icons.logout),
-          onPressed: () => ref.read(authProvider.notifier).logout(),
+          onPressed: () async {
+            await ref.read(authProvider.notifier).logout();
+          },
           label: const Text('Выйти'),
         ),
       ],
