@@ -1,28 +1,35 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:ui';
+
+import 'src/features/auth/application/auth_controller.dart';
+import 'src/features/auth/presentation/screens/login_screen.dart';
 import 'src/features/home/presentation/screens/home_screen.dart';
+import 'src/features/settings/application/app_settings_controller.dart';
 import 'src/shared/services/temp_file_service.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(appSettingsProvider);
+
     return MaterialApp(
       title: 'Smart Electric CRM',
       debugShowCheckedModeBanner: false,
+      themeMode: settings.themeMode,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.indigo,
-          surfaceTint: Colors.transparent, // Remove tint from surfaces
+          surfaceTint: Colors.transparent,
         ),
-        // Customize NavigationBar to be less purple/tinted
         navigationBarTheme: NavigationBarThemeData(
           indicatorColor: Colors.indigo.withOpacity(0.12),
           iconTheme: WidgetStateProperty.resolveWith((states) {
@@ -34,12 +41,13 @@ class MyApp extends StatelessWidget {
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
               return const TextStyle(
-                  color: Colors.indigo, fontWeight: FontWeight.w600);
+                color: Colors.indigo,
+                fontWeight: FontWeight.w600,
+              );
             }
             return TextStyle(color: Colors.grey.shade600);
           }),
         ),
-        // Customize FAB to be Indigo
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
           backgroundColor: Colors.indigo,
           foregroundColor: Colors.white,
@@ -49,8 +57,38 @@ class MyApp extends StatelessWidget {
           shadowColor: Colors.black12,
         ),
       ),
-      home: const AppLifecycleManager(child: HomeScreen()),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.indigo,
+          brightness: Brightness.dark,
+        ),
+      ),
+      home: const AppBootstrap(),
     );
+  }
+}
+
+class AppBootstrap extends ConsumerWidget {
+  const AppBootstrap({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final settingsState = ref.watch(appSettingsProvider);
+
+    if (authState.isLoading || !settingsState.isLoaded) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (!authState.isAuthenticated) {
+      return const LoginScreen();
+    }
+
+    return const AppLifecycleManager(child: HomeScreen());
   }
 }
 
