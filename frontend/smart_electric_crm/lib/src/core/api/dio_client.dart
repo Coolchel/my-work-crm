@@ -1,9 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/auth/data/auth_repository.dart';
-import '../constants/api_urls.dart';
 import 'base_dio.dart'; // Import baseDio
 
 part 'dio_client.g.dart';

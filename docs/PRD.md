@@ -32,6 +32,11 @@
 - **Numerical Formatting:** All amounts, quantities, and percentages must be formatted to a maximum of 2 decimal places, with trailing zeros removed (e.g., `10.00` becomes `10`, `10.50` becomes `10.5`). <!-- id: prd_formatting -->
 - **Grouped Estimates:** Items in estimates must be grouped by their **Catalog Category** (e.g., "Cables", "Installation") for better readability.
 - **Manual Data Entry:** Important text fields like **Internal Notes** and **Public Remarks** use manual save via a styled `OutlinedButton.icon` to prevent data loss. Internal Notes are for the team, Public Remarks appear in PDF/Reports. For Materials, a default "Не учтен вводной кабель" is provided, with an intelligent save button that remains hidden until the text is actually modified.
+- **Authentication & Security:**
+    - **JWT System:** Secure access using Access/Refresh token pairs.
+    - **Persistence:** Encrypted/Secure storage of tokens on the device (SharedPreferences).
+    - **Session Management:** Automatic token refresh upon expiration (Interceptors). User remains logged in across restarts until explicit Logout.
+    - **Access Control:** "Login First" policy. No access to app features without valid credentials.
 
 ## Rules for AI:
 - Follow PEP8.
