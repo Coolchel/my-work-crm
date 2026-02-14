@@ -22,7 +22,7 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.shield.name);
-    _mounting = widget.shield.mounting; // 'internal' or 'external'
+    _mounting = widget.shield.mounting; // 'internal' or 'external '
   }
 
   @override
