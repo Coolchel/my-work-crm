@@ -1,35 +1,46 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'src/features/auth/application/auth_controller.dart';
-import 'src/features/auth/presentation/screens/login_screen.dart';
+import 'dart:ui';
 import 'src/features/home/presentation/screens/home_screen.dart';
-import 'src/features/settings/application/app_settings_controller.dart';
+import 'src/features/auth/presentation/login_screen.dart';
+import 'src/features/auth/presentation/providers/auth_provider.dart';
 import 'src/shared/services/temp_file_service.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(appSettingsProvider);
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Check auth status on app start
+    // We delay slightly to ensure provider is ready or just call it.
+    // Actually calling it directly is fine.
+    Future.microtask(() => ref.read(authProvider.notifier).checkAuth());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authStatus = ref.watch(authProvider);
 
     return MaterialApp(
       title: 'Smart Electric CRM',
       debugShowCheckedModeBanner: false,
-      themeMode: settings.themeMode,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.indigo,
-          surfaceTint: Colors.transparent,
+          surfaceTint: Colors.transparent, // Remove tint from surfaces
         ),
+        // Customize NavigationBar to be less purple/tinted
         navigationBarTheme: NavigationBarThemeData(
           indicatorColor: Colors.indigo.withOpacity(0.12),
           iconTheme: WidgetStateProperty.resolveWith((states) {
@@ -41,13 +52,12 @@ class MyApp extends ConsumerWidget {
           labelTextStyle: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
               return const TextStyle(
-                color: Colors.indigo,
-                fontWeight: FontWeight.w600,
-              );
+                  color: Colors.indigo, fontWeight: FontWeight.w600);
             }
             return TextStyle(color: Colors.grey.shade600);
           }),
         ),
+        // Customize FAB to be Indigo
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
           backgroundColor: Colors.indigo,
           foregroundColor: Colors.white,
@@ -57,38 +67,16 @@ class MyApp extends ConsumerWidget {
           shadowColor: Colors.black12,
         ),
       ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-          brightness: Brightness.dark,
-        ),
+      home: AppLifecycleManager(
+        child: switch (authStatus) {
+          AuthStatus.authenticated => const HomeScreen(),
+          AuthStatus.unauthenticated || AuthStatus.error => const LoginScreen(),
+          AuthStatus.loading || AuthStatus.initial => const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            ),
+        },
       ),
-      home: const AppBootstrap(),
     );
-  }
-}
-
-class AppBootstrap extends ConsumerWidget {
-  const AppBootstrap({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-    final settingsState = ref.watch(appSettingsProvider);
-
-    if (authState.isLoading || !settingsState.isLoaded) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (!authState.isAuthenticated) {
-      return const LoginScreen();
-    }
-
-    return const AppLifecycleManager(child: HomeScreen());
   }
 }
 
@@ -109,6 +97,9 @@ class _AppLifecycleManagerState extends State<AppLifecycleManager> {
     _listener = AppLifecycleListener(
       onExitRequested: _onExitRequested,
       onDetach: _onDetach,
+      // onResume: () {
+      //   // Optional: Check auth on resume?
+      // },
     );
   }
 
