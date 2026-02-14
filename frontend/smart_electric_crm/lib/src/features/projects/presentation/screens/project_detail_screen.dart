@@ -75,38 +75,64 @@ class ProjectDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ProjectDetailContent extends ConsumerWidget {
+class _ProjectDetailContent extends ConsumerStatefulWidget {
   final ProjectModel project;
 
   const _ProjectDetailContent({required this.project});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            tooltip: 'Назад',
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          title: Text(project.address),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: "Этапы"),
-              Tab(text: "Щиты"),
-              Tab(text: "Файлы"),
-            ],
-          ),
+  ConsumerState<_ProjectDetailContent> createState() =>
+      _ProjectDetailContentState();
+}
+
+class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final screens = [
+      _StagesTab(project: widget.project),
+      EngineeringTab(project: widget.project),
+      _FilesTab(project: widget.project),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          tooltip: 'Назад',
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        body: TabBarView(
-          children: [
-            _StagesTab(project: project),
-            EngineeringTab(project: project),
-            _FilesTab(project: project),
-          ],
-        ),
+        title: Text(widget.project.address),
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: screens,
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.layers_outlined),
+            selectedIcon: Icon(Icons.layers),
+            label: 'Этапы',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_input_component_outlined),
+            selectedIcon: Icon(Icons.settings_input_component),
+            label: 'Щиты',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.folder_open_outlined),
+            selectedIcon: Icon(Icons.folder_open),
+            label: 'Файлы',
+          ),
+        ],
       ),
     );
   }

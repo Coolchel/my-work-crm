@@ -31,12 +31,11 @@ class EstimateScreen extends ConsumerStatefulWidget {
   ConsumerState<EstimateScreen> createState() => _EstimateScreenState();
 }
 
-class _EstimateScreenState extends ConsumerState<EstimateScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   final ScrollController _scrollController = ScrollController();
   Timer? _markupDebounce;
 
+  int _currentIndex = 0;
   bool _isFabExpanded = false;
   bool _showPrices = true;
   double _markupPercent = 0;
@@ -57,7 +56,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _stage = widget.stage;
     _markupPercent = _stage.markupPercent;
 
@@ -86,7 +84,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
   @override
   void dispose() {
-    _tabController.dispose();
     _scrollController.dispose();
     _markupDebounce?.cancel();
     super.dispose();
@@ -95,12 +92,14 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   @override
   Widget build(BuildContext context) {
     // Backdrop filter when FAB is expanded
+    // Backdrop filter when FAB is expanded
     return Stack(
       children: [
         Scaffold(
           appBar: AppBar(
+            // automaticallyImplyLeading: false,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: const Icon(Icons.arrow_back_ios_new),
               tooltip: 'Назад',
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -125,16 +124,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               ),
               const SizedBox(width: 8),
             ],
-            bottom: TabBar(
-              controller: _tabController,
-              tabs: const [
-                Tab(text: "Работы"),
-                Tab(text: "Материалы"),
-              ],
-            ),
           ),
-          body: TabBarView(
-            controller: _tabController,
+          body: IndexedStack(
+            index: _currentIndex,
             children: [
               // Works Tab
               EstimateTab(
@@ -182,7 +174,26 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
               ),
             ],
           ),
-          // FAB removed from here to place it above Overlay in Stack
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.handyman_outlined),
+                selectedIcon: Icon(Icons.handyman),
+                label: 'Работы',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.inventory_2_outlined),
+                selectedIcon: Icon(Icons.inventory_2),
+                label: 'Материалы',
+              ),
+            ],
+          ),
         ),
 
         // Dark overlay when FAB is expanded (Below FAB)
@@ -199,11 +210,11 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
         // FAB and Speed Dial (Above Overlay)
         Positioned(
           right: 16,
-          bottom: 16,
-          child: AnimatedBuilder(
-            animation: _tabController,
-            builder: (context, _) {
-              if (_tabController.index == 1) {
+          // Raised to avoid overlap with BottomNavigationBar (approx 80px)
+          bottom: 100,
+          child: Builder(
+            builder: (context) {
+              if (_currentIndex == 1) {
                 // Materials Tab - New Bottom Actions
                 return EstimateBottomActions(
                   onSearchTap: _showSearchDialog,
@@ -273,7 +284,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
 
   void _deleteAllItems() async {
     setState(() => _isFabExpanded = false);
-    final isWork = _tabController.index == 0;
+    final isWork = _currentIndex == 0;
     final themeColor = isWork ? Colors.green : Colors.blue;
     final sectionName = isWork ? "работы" : "материалы";
 
@@ -313,7 +324,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
     final newItem = EstimateItemModel(
       id: 0,
       stage: widget.stage.id,
-      itemType: _tabController.index == 0 ? 'work' : 'material',
+      itemType: _currentIndex == 0 ? 'work' : 'material',
       name: '',
       unit: '',
       totalQuantity: 0,
@@ -337,7 +348,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   void _showSearchDialog() {
     setState(() => _isFabExpanded = false);
 
-    final index = _tabController.index;
+    final index = _currentIndex;
     final itemType = index == 0 ? 'work' : 'material';
     final showPrices = itemType == 'work' ? true : _showPrices;
     final hidePrices = !showPrices;
@@ -432,7 +443,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen>
   }
 
   void _deleteItem(int index, int itemId) async {
-    final themeColor = _tabController.index == 0 ? Colors.green : Colors.blue;
+    final themeColor = _currentIndex == 0 ? Colors.green : Colors.blue;
     final confirm = await showDialog<bool>(
         context: context,
         barrierColor: Colors.transparent,
