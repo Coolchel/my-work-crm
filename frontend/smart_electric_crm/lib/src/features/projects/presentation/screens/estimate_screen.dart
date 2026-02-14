@@ -100,22 +100,17 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         ),
         title: Text(StageCard.getStageTitleDisplay(widget.stage.title)),
         actions: [
-          // PDF Actions Button (Deep Purple - Analytics/Graph)
-          _buildActionButton(
-            context,
-            icon: Icons.auto_graph_rounded,
-            color: Colors.deepPurple,
-            onTap: () => _showPdfActionsDialog(context),
+          // PDF Actions Button
+          IconButton(
+            icon: const Icon(Icons.auto_graph_rounded),
             tooltip: "PDF смета",
+            onPressed: () => _showPdfActionsDialog(context),
           ),
-          const SizedBox(width: 8),
-          // Text Actions Button (Orange - Structure/Segments)
-          _buildActionButton(
-            context,
-            icon: Icons.segment_rounded,
-            color: Colors.orange,
-            onTap: () => _showTextActionsDialog(context),
+          // Text Actions Button
+          IconButton(
+            icon: const Icon(Icons.segment_rounded),
             tooltip: "Текстовые сметы",
+            onPressed: () => _showTextActionsDialog(context),
           ),
           const SizedBox(width: 8),
           // Overflow Menu
@@ -881,19 +876,5 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     } finally {
       if (mounted) setState(() => _isApplyingTemplate = false);
     }
-  }
-
-  Widget _buildActionButton(BuildContext context,
-      {required IconData icon,
-      required MaterialColor color,
-      required VoidCallback onTap,
-      required String tooltip}) {
-    return IconButton(
-      onPressed: onTap,
-      icon: Icon(icon),
-      iconSize: 28,
-      color: color,
-      tooltip: tooltip,
-    );
   }
 }
