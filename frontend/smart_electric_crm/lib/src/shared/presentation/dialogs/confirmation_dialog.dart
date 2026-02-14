@@ -171,3 +171,25 @@ class ConfirmationDialog extends StatelessWidget {
     );
   }
 }
+
+Future<bool?> showConfirmationDialog({
+  required BuildContext context,
+  required String title,
+  required String content,
+  String confirmText = 'Подтвердить',
+  String cancelText = 'Отмена',
+  bool isDangerous = false,
+  Color themeColor = Colors.blue,
+}) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) => ConfirmationDialog(
+      title: title,
+      content: content,
+      confirmText: confirmText,
+      cancelText: cancelText,
+      isDestructive: isDangerous,
+      themeColor: themeColor,
+    ),
+  );
+}

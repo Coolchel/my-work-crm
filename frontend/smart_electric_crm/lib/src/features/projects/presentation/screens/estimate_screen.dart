@@ -293,11 +293,16 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'add_estimate_item',
-        onPressed: _showSearchDialog,
-        tooltip: 'Добавить позицию',
-        child: const Icon(Icons.add),
+      floatingActionButton: Tooltip(
+        message: 'Добавить позицию',
+        preferBelow: false,
+        verticalOffset: 32,
+        child: FloatingActionButton(
+          heroTag: 'add_estimate_item',
+          onPressed: _showSearchDialog,
+          // tooltip: 'Добавить позицию', // Removed
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

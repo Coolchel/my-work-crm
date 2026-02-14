@@ -182,11 +182,16 @@ class _StagesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddStageDialog(context, ref),
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
+      floatingActionButton: Tooltip(
+        message: 'Добавить этап',
+        preferBelow: false,
+        verticalOffset: 32,
+        child: FloatingActionButton(
+          onPressed: () => _showAddStageDialog(context, ref),
+          backgroundColor: Colors.indigo,
+          foregroundColor: Colors.white,
+          child: const Icon(Icons.add),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -1343,6 +1348,8 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                             // Add files button (Safe separate InkWell)
                             Tooltip(
                               message: "Загрузить файлы",
+                              preferBelow: false,
+                              verticalOffset: 32,
                               child: InkWell(
                                 onTap: widget.onUpload,
                                 borderRadius: BorderRadius.circular(8),

@@ -21,7 +21,8 @@ class EngineeringTab extends ConsumerWidget {
     return Scaffold(
       floatingActionButton: Tooltip(
         message: 'Добавить щит',
-        verticalOffset: 40,
+        preferBelow: false,
+        verticalOffset: 32,
         child: FloatingActionButton(
           heroTag: 'add_shield_fab',
           onPressed: () =>
