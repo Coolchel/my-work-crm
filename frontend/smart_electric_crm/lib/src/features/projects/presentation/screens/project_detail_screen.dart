@@ -147,7 +147,7 @@ class _StagesTab extends ConsumerWidget {
       String stageId, String newStatus) async {
     // Simpler signature
     await ref
-        .read(projectListProvider.notifier)
+        .read(projectOperationsProvider.notifier)
         .updateStageStatus(stageId, newStatus);
   }
 
@@ -378,7 +378,7 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
     setState(() => _isLoading = true);
     try {
       await ref
-          .read(projectListProvider.notifier)
+          .read(projectOperationsProvider.notifier)
           .addStage(widget.projectId, stageKey);
       if (mounted) {
         Navigator.pop(context);
@@ -594,6 +594,7 @@ class _FilesTab extends ConsumerWidget {
                     .toList(),
                 onDelete: (fileId) => _deleteFile(context, ref, fileId),
                 onUpload: () => _pickAndUploadFiles(context, ref, "PROJECT"),
+                projectId: project.id.toString(),
               ),
               const SizedBox(height: 24),
               _FileCategorySection(
@@ -605,6 +606,7 @@ class _FilesTab extends ConsumerWidget {
                     project.files.where((f) => f.category == "WORK").toList(),
                 onDelete: (fileId) => _deleteFile(context, ref, fileId),
                 onUpload: () => _pickAndUploadFiles(context, ref, "WORK"),
+                projectId: project.id.toString(),
               ),
               const SizedBox(height: 24),
               _FileCategorySection(
@@ -616,6 +618,7 @@ class _FilesTab extends ConsumerWidget {
                     project.files.where((f) => f.category == "FINISH").toList(),
                 onDelete: (fileId) => _deleteFile(context, ref, fileId),
                 onUpload: () => _pickAndUploadFiles(context, ref, "FINISH"),
+                projectId: project.id.toString(),
               ),
               const SizedBox(height: 24),
             ],
@@ -703,7 +706,7 @@ class _FilesTab extends ConsumerWidget {
         return;
       }
 
-      final notifier = ref.read(projectListProvider.notifier);
+      final notifier = ref.read(projectOperationsProvider.notifier);
       int successCount = 0;
       List<String> sizeErrors = [];
 
@@ -781,7 +784,10 @@ class _FilesTab extends ConsumerWidget {
     );
 
     if (confirm == true) {
-      await ref.read(projectListProvider.notifier).deleteFile(fileId);
+      await ref.read(projectOperationsProvider.notifier).deleteFile(
+            fileId,
+            project.id.toString(),
+          );
       if (context.mounted) {
         scaffoldMessenger.showSnackBar(
           const SnackBar(content: Text('Файл удален')),
@@ -794,8 +800,13 @@ class _FilesTab extends ConsumerWidget {
 class _FileCard extends ConsumerStatefulWidget {
   final ProjectFileModel file;
   final VoidCallback onDelete;
+  final String projectId;
 
-  const _FileCard({required this.file, required this.onDelete});
+  const _FileCard({
+    required this.file,
+    required this.onDelete,
+    required this.projectId,
+  });
 
   @override
   ConsumerState<_FileCard> createState() => _FileCardState();
@@ -999,8 +1010,8 @@ class _FileCardState extends ConsumerState<_FileCard> {
         if (context.mounted) {
           try {
             await ref
-                .read(projectListProvider.notifier)
-                .renameFile(widget.file.id, newName);
+                .read(projectOperationsProvider.notifier)
+                .renameFile(widget.file.id, newName, widget.projectId);
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Файл переименован')),
@@ -1214,6 +1225,7 @@ class _FileCategorySection extends StatefulWidget {
   final List<ProjectFileModel> files;
   final Function(int) onDelete;
   final VoidCallback onUpload;
+  final String projectId;
 
   const _FileCategorySection({
     required this.title,
@@ -1223,6 +1235,7 @@ class _FileCategorySection extends StatefulWidget {
     required this.files,
     required this.onDelete,
     required this.onUpload,
+    required this.projectId,
   });
 
   @override
@@ -1420,6 +1433,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                               file: widget.files[index],
                               onDelete: () =>
                                   widget.onDelete(widget.files[index].id),
+                              projectId: widget.projectId,
                             );
                           },
                         ),

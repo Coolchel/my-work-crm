@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/data/auth_repository.dart';
 import '../../application/app_settings_controller.dart';
+import '../../../catalog/presentation/category_list_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -11,70 +13,536 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(appSettingsProvider);
     final settingsNotifier = ref.read(appSettingsProvider.notifier);
+    final userAsync = ref.watch(userProfileProvider);
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const Text(
-          'Настройки',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Настройки'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildSectionHeader('Внешний вид'),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.indigo.withOpacity(0.1)),
+            ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Тема приложения',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Тема приложения',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SegmentedButton<ThemeMode>(
+                          segments: const [
+                            ButtonSegment(
+                              value: ThemeMode.light,
+                              label: Text('Светлая'),
+                              icon: Icon(Icons.light_mode_outlined),
+                            ),
+                            ButtonSegment(
+                              value: ThemeMode.dark,
+                              label: Text('Тёмная'),
+                              icon: Icon(Icons.dark_mode_outlined),
+                            ),
+                            ButtonSegment(
+                              value: ThemeMode.system,
+                              label: Text('Авто'),
+                              icon: Icon(Icons.settings_brightness_outlined),
+                            ),
+                          ],
+                          selected: {settings.themeMode},
+                          onSelectionChanged: (selection) {
+                            settingsNotifier.setThemeMode(selection.first);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                SegmentedButton<ThemeMode>(
-                  segments: const [
-                    ButtonSegment(
-                      value: ThemeMode.light,
-                      label: Text('Светлая'),
+                const Divider(height: 1),
+                SwitchListTile(
+                  secondary: const Icon(Icons.waving_hand_outlined),
+                  title: const Text('Начальный экран'),
+                  subtitle: const Text('Приветствие и быстрый поиск'),
+                  value: settings.showWelcome,
+                  onChanged: (value) => settingsNotifier.setShowWelcome(value),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildSectionHeader('Инструменты'),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.indigo.withOpacity(0.1)),
+            ),
+            child: ListTile(
+              leading: const Icon(Icons.folder_open, color: Colors.indigo),
+              title: const Text('Справочник'),
+              subtitle: const Text('Категории, расценки и шаблоны'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _showReferenceWarning(context),
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildSectionHeader('Аккаунт'),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.indigo.withOpacity(0.1)),
+            ),
+            child: Column(
+              children: [
+                userAsync.when(
+                  data: (user) => Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: Colors.indigo.withOpacity(0.1),
+                          child: const Icon(Icons.manage_accounts_outlined,
+                              color: Colors.indigo, size: 30),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user['username'] ?? 'Пользователь',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (user['email'] != null &&
+                                  user['email'].toString().isNotEmpty)
+                                Text(
+                                  user['email'],
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    ButtonSegment(
-                      value: ThemeMode.dark,
-                      label: Text('Тёмная'),
-                    ),
-                    ButtonSegment(
-                      value: ThemeMode.system,
-                      label: Text('Системная'),
-                    ),
-                  ],
-                  selected: {settings.themeMode},
-                  onSelectionChanged: (selection) {
-                    settingsNotifier.setThemeMode(selection.first);
+                  ),
+                  loading: () => const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (e, _) => ListTile(
+                    title: const Text('Ошибка профиля'),
+                    subtitle: Text(e.toString()),
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.lock_reset, color: Colors.indigo),
+                  title: const Text('Управление паролем'),
+                  subtitle: const Text('Сменить текущий пароль'),
+                  onTap: () => _showChangePasswordDialog(context, ref),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text('Выйти из системы',
+                      style: TextStyle(color: Colors.red)),
+                  subtitle: const Text('Завершить текущий сеанс'),
+                  onTap: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => Dialog(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24)),
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 340),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.1),
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(24)),
+                                ),
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.logout, color: Colors.red),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'Выход',
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.red),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.all(24),
+                                child: Text(
+                                  'Вы действительно хотите выйти из системы?',
+                                  style: TextStyle(fontSize: 15),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text('Отмена'),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text('Выйти'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                    if (confirmed == true) {
+                      await ref.read(authProvider.notifier).logout();
+                    }
                   },
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: Colors.indigo.withOpacity(0.6),
+          letterSpacing: 1.5,
         ),
-        const SizedBox(height: 12),
-        SwitchListTile(
-          value: settings.showCatalog,
-          title: const Text('Показывать пункт меню «Справочник»'),
-          onChanged: (value) => settingsNotifier.setShowCatalog(value),
+      ),
+    );
+  }
+
+  void _showReferenceWarning(BuildContext context) {
+    const themeColor = Colors.red;
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: themeColor.withOpacity(0.1),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: themeColor),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Опасная зона',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: themeColor),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Вы входите в раздел редактирования справочника. Любые изменения здесь повлияют на расчеты во всех проектах. Будьте осторожны!',
+                  style: TextStyle(fontSize: 15, height: 1.4),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Отмена'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: themeColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const CategoryListScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text('Я понимаю'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        SwitchListTile(
-          value: settings.showWelcome,
-          title: const Text('Показывать «Начальный экран»'),
-          onChanged: (value) => settingsNotifier.setShowWelcome(value),
-        ),
-        const SizedBox(height: 16),
-        FilledButton.tonalIcon(
-          icon: const Icon(Icons.logout),
-          onPressed: () async {
-            await ref.read(authProvider.notifier).logout();
-          },
-          label: const Text('Выйти'),
-        ),
-      ],
+      ),
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context, WidgetRef ref) {
+    final oldPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    const themeColor = Colors.indigo;
+
+    bool isLoading = false;
+    String? errorMessage;
+    String? confirmError;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Dialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: themeColor.withOpacity(0.1),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(24)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Смена пароля',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: themeColor),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close,
+                              color: themeColor, size: 20),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        _buildDialogField(
+                          oldPasswordController,
+                          'Текущий пароль',
+                          isEnabled: !isLoading,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDialogField(
+                          newPasswordController,
+                          'Новый пароль',
+                          isEnabled: !isLoading,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDialogField(
+                          confirmPasswordController,
+                          'Подтверждение',
+                          isEnabled: !isLoading,
+                          errorText: confirmError,
+                        ),
+                        if (errorMessage != null) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline,
+                                    color: Colors.red, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    errorMessage!,
+                                    style: const TextStyle(
+                                        color: Colors.red, fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed:
+                              isLoading ? null : () => Navigator.pop(context),
+                          child: const Text('Отмена'),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: themeColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            minimumSize: const Size(120, 44),
+                          ),
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (newPasswordController.text !=
+                                      confirmPasswordController.text) {
+                                    setDialogState(() {
+                                      confirmError = 'Пароли не совпадают';
+                                    });
+                                    return;
+                                  }
+                                  setDialogState(() {
+                                    isLoading = true;
+                                    errorMessage = null;
+                                    confirmError = null;
+                                  });
+                                  try {
+                                    final repo = await ref
+                                        .read(authRepositoryProvider.future);
+                                    await repo.changePassword(
+                                      oldPasswordController.text,
+                                      newPasswordController.text,
+                                    );
+                                    if (context.mounted) {
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content:
+                                                Text('Пароль успешно изменен')),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    setDialogState(() {
+                                      isLoading = false;
+                                      errorMessage = e
+                                              .toString()
+                                              .contains('400')
+                                          ? 'Неверный старый пароль или недопустимый новый'
+                                          : 'Ошибка: ${e.toString()}';
+                                    });
+                                  }
+                                },
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Text('Сохранить'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDialogField(
+    TextEditingController controller,
+    String label, {
+    bool isEnabled = true,
+    String? errorText,
+  }) {
+    return TextField(
+      controller: controller,
+      enabled: isEnabled,
+      decoration: InputDecoration(
+        labelText: label,
+        errorText: errorText,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        errorStyle: const TextStyle(height: 0.8),
+      ),
+      obscureText: true,
     );
   }
 }

@@ -6,7 +6,6 @@ import '../../data/models/project_model.dart';
 import 'project_detail_screen.dart';
 import 'add_project_screen.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 
 // ─── Filter enums ─────────────────────────────────────────────
 enum SortOrder { newest, oldest }
@@ -172,14 +171,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             ),
             tooltip: 'Фильтры',
             onPressed: () => _showFilterDialog(context),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Выйти',
-            onPressed: () {
-              ref.read(authProvider.notifier).logout();
-            },
           ),
           const SizedBox(width: 8),
         ],
@@ -915,7 +906,7 @@ class _ProjectCardState extends State<_ProjectCard> {
     if (confirm == true) {
       try {
         await ref
-            .read(projectListProvider.notifier)
+            .read(projectOperationsProvider.notifier)
             .deleteProject(widget.project.id.toString());
       } catch (e) {
         if (context.mounted) {

@@ -108,7 +108,7 @@ class _StageCardState extends State<StageCard> {
                       children: [
                         // Header with Title and Delete Button
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Expanded(
                               child: Column(
@@ -126,6 +126,36 @@ class _StageCardState extends State<StageCard> {
                                 ],
                               ),
                             ),
+                            if (widget.stage.isPaid) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                      color: Colors.green.withOpacity(0.2)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.check_circle_rounded,
+                                        size: 10, color: Colors.green.shade700),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      'ОПЛАЧЕНО',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green.shade700,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
                             // Delete Button (Cross)
                             SizedBox(
                               width: 28,

@@ -6,7 +6,11 @@ import 'src/features/auth/presentation/login_screen.dart';
 import 'src/features/auth/presentation/providers/auth_provider.dart';
 import 'src/shared/services/temp_file_service.dart';
 
-void main() {
+import 'package:intl/date_symbol_data_local.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('ru', null);
   runApp(const ProviderScope(child: MyApp()));
 }
 
