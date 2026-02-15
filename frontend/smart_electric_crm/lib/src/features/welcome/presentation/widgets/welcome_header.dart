@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:math';
+import '../../../../core/constants/app_quotes.dart';
 
 class WelcomeHeader extends StatelessWidget {
   const WelcomeHeader({super.key});
@@ -53,6 +55,15 @@ class WelcomeHeader extends StatelessWidget {
               style: TextStyle(
                 color: Colors.white.withOpacity(0.9),
                 fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "\"${appQuotes[Random().nextInt(appQuotes.length)]}\"",
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.8),
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
               ),
             ),
             const SizedBox(height: 40), // Added spacing for overlap
