@@ -125,3 +125,7 @@ Future<ProjectModel> projectById(ProjectByIdRef ref, String id) async {
 
 /// Провайдер для управления отображением цен (для режима "Без цен")
 final showPricesProvider = StateProvider<bool>((ref) => true);
+
+/// Провайдер для фильтрации проектов на главном экране (Welcome Screen)
+/// Возможные значения: 'pre_calc', 'active_objects', 'paid', или null (без фильтра)
+final dashboardFilterProvider = StateProvider<String?>((ref) => null);
