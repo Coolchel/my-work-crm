@@ -51,6 +51,20 @@ class AuthRepository {
     }
   }
 
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    try {
+      await _dio.post(
+        '/auth/change-password/',
+        data: {
+          'old_password': oldPassword,
+          'new_password': newPassword,
+        },
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   String? getAccessToken() {
     return _prefs.getString(_accessTokenKey);
   }

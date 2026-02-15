@@ -65,3 +65,8 @@ class Auth extends _$Auth {
     state = AuthStatus.unauthenticated;
   }
 }
+
+final userProfileProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final repo = await ref.read(authRepositoryProvider.future);
+  return repo.getUser();
+});

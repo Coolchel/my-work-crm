@@ -20,7 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.routers import DefaultRouter
-from core.auth_views import auth_me
+from core.auth_views import auth_me, change_password
 from core.views import (
     ProjectViewSet, CatalogCategoryViewSet, CatalogItemViewSet, StageViewSet, 
     ShieldGroupViewSet, LedZoneViewSet, ShieldViewSet, EstimateItemViewSet,
@@ -51,6 +51,7 @@ urlpatterns = [
     path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/me/', auth_me, name='auth_me'),
+    path('api/auth/change-password/', change_password, name='change_password'),
     path('api/', include(router.urls)),
 ]
 
