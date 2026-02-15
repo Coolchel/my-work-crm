@@ -44,7 +44,13 @@ class AuthRepository {
 
   Future<Map<String, dynamic>> getUser() async {
     try {
-      final response = await _dio.get('/auth/me/');
+      final token = getAccessToken();
+      final response = await _dio.get(
+        '/auth/me/',
+        options: Options(
+          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+        ),
+      );
       return response.data;
     } catch (e) {
       rethrow;
@@ -53,12 +59,16 @@ class AuthRepository {
 
   Future<void> changePassword(String oldPassword, String newPassword) async {
     try {
+      final token = getAccessToken();
       await _dio.post(
         '/auth/change-password/',
         data: {
           'old_password': oldPassword,
           'new_password': newPassword,
         },
+        options: Options(
+          headers: token != null ? {'Authorization': 'Bearer $token'} : null,
+        ),
       );
     } catch (e) {
       rethrow;

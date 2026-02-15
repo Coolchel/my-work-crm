@@ -24,6 +24,11 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           _buildSectionHeader('Внешний вид'),
           Card(
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.indigo.withOpacity(0.1)),
+            ),
             child: Column(
               children: [
                 Padding(
@@ -79,6 +84,11 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
           _buildSectionHeader('Инструменты'),
           Card(
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.indigo.withOpacity(0.1)),
+            ),
             child: ListTile(
               leading: const Icon(Icons.folder_open, color: Colors.indigo),
               title: const Text('Справочник'),
@@ -90,6 +100,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
           _buildSectionHeader('Аккаунт'),
           Card(
+            clipBehavior: Clip.antiAlias,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(color: Colors.indigo.withOpacity(0.1)),
@@ -100,16 +111,18 @@ class SettingsScreen extends ConsumerWidget {
                   data: (user) => Container(
                     padding: const EdgeInsets.all(16),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         CircleAvatar(
                           radius: 28,
                           backgroundColor: Colors.indigo.withOpacity(0.1),
-                          child: const Icon(Icons.person,
-                              color: Colors.indigo, size: 32),
+                          child: const Icon(Icons.manage_accounts_outlined,
+                              color: Colors.indigo, size: 30),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
@@ -119,13 +132,15 @@ class SettingsScreen extends ConsumerWidget {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Text(
-                                user['email'] ?? 'Email не указан',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade600,
+                              if (user['email'] != null &&
+                                  user['email'].toString().isNotEmpty)
+                                Text(
+                                  user['email'],
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         ),
@@ -153,22 +168,76 @@ class SettingsScreen extends ConsumerWidget {
                   leading: const Icon(Icons.logout, color: Colors.red),
                   title: const Text('Выйти из системы',
                       style: TextStyle(color: Colors.red)),
+                  subtitle: const Text('Завершить текущий сеанс'),
                   onTap: () async {
                     final confirmed = await showDialog<bool>(
                       context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Выход'),
-                        content: const Text('Вы действительно хотите выйти?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Отмена'),
+                      builder: (context) => Dialog(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24)),
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 340),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.1),
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(24)),
+                                ),
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.logout, color: Colors.red),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'Выход',
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.red),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.all(24),
+                                child: Text(
+                                  'Вы действительно хотите выйти из системы?',
+                                  style: TextStyle(fontSize: 15),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text('Отмена'),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
+                                      ),
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text('Выйти'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Выйти'),
-                          ),
-                        ],
+                        ),
                       ),
                     );
                     if (confirmed == true) {
@@ -200,7 +269,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _showReferenceWarning(BuildContext context) {
-    const themeColor = Colors.orange;
+    const themeColor = Colors.red;
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -283,122 +352,195 @@ class SettingsScreen extends ConsumerWidget {
     final confirmPasswordController = TextEditingController();
     const themeColor = Colors.indigo;
 
+    bool isLoading = false;
+    String? errorMessage;
+    String? confirmError;
+
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: themeColor.withOpacity(0.1),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Смена пароля',
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: themeColor),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return Dialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: themeColor.withOpacity(0.1),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(24)),
                     ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon:
-                          const Icon(Icons.close, color: themeColor, size: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Смена пароля',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: themeColor),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close,
+                              color: themeColor, size: 20),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        _buildDialogField(
+                          oldPasswordController,
+                          'Текущий пароль',
+                          isEnabled: !isLoading,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDialogField(
+                          newPasswordController,
+                          'Новый пароль',
+                          isEnabled: !isLoading,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildDialogField(
+                          confirmPasswordController,
+                          'Подтверждение',
+                          isEnabled: !isLoading,
+                          errorText: confirmError,
+                        ),
+                        if (errorMessage != null) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline,
+                                    color: Colors.red, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    errorMessage!,
+                                    style: const TextStyle(
+                                        color: Colors.red, fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed:
+                              isLoading ? null : () => Navigator.pop(context),
+                          child: const Text('Отмена'),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: themeColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            minimumSize: const Size(120, 44),
+                          ),
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (newPasswordController.text !=
+                                      confirmPasswordController.text) {
+                                    setDialogState(() {
+                                      confirmError = 'Пароли не совпадают';
+                                    });
+                                    return;
+                                  }
+                                  setDialogState(() {
+                                    isLoading = true;
+                                    errorMessage = null;
+                                    confirmError = null;
+                                  });
+                                  try {
+                                    final repo = await ref
+                                        .read(authRepositoryProvider.future);
+                                    await repo.changePassword(
+                                      oldPasswordController.text,
+                                      newPasswordController.text,
+                                    );
+                                    if (context.mounted) {
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content:
+                                                Text('Пароль успешно изменен')),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    setDialogState(() {
+                                      isLoading = false;
+                                      errorMessage = e
+                                              .toString()
+                                              .contains('400')
+                                          ? 'Неверный старый пароль или недопустимый новый'
+                                          : 'Ошибка: ${e.toString()}';
+                                    });
+                                  }
+                                },
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Text('Сохранить'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    _buildDialogField(oldPasswordController, 'Текущий пароль'),
-                    const SizedBox(height: 16),
-                    _buildDialogField(newPasswordController, 'Новый пароль'),
-                    const SizedBox(height: 16),
-                    _buildDialogField(
-                        confirmPasswordController, 'Подтверждение'),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Отмена'),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: themeColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: () async {
-                        if (newPasswordController.text !=
-                            confirmPasswordController.text) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Пароли не совпадают')),
-                          );
-                          return;
-                        }
-                        try {
-                          final repo =
-                              await ref.read(authRepositoryProvider.future);
-                          await repo.changePassword(
-                            oldPasswordController.text,
-                            newPasswordController.text,
-                          );
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Пароль успешно изменен')),
-                            );
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text('Ошибка: ${e.toString()}')),
-                            );
-                          }
-                        }
-                      },
-                      child: const Text('Сохранить'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildDialogField(TextEditingController controller, String label) {
+  Widget _buildDialogField(
+    TextEditingController controller,
+    String label, {
+    bool isEnabled = true,
+    String? errorText,
+  }) {
     return TextField(
       controller: controller,
+      enabled: isEnabled,
       decoration: InputDecoration(
         labelText: label,
+        errorText: errorText,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        errorStyle: const TextStyle(height: 0.8),
       ),
       obscureText: true,
     );

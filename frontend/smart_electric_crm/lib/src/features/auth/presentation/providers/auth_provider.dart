@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../data/auth_repository.dart';
 
@@ -67,6 +68,23 @@ class Auth extends _$Auth {
 }
 
 final userProfileProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final authStatus = ref.watch(authProvider);
+  if (authStatus != AuthStatus.authenticated) {
+    throw Exception('Не авторизован');
+  }
+
   final repo = await ref.read(authRepositoryProvider.future);
-  return repo.getUser();
+  try {
+    return await repo.getUser();
+  } catch (e) {
+    // If it's a 401, maybe try checkAuth again to trigger a refresh
+    if (e is DioException && e.response?.statusCode == 401) {
+      await ref.read(authProvider.notifier).checkAuth();
+      // After checkAuth, if still authenticated, repo.getUser() should work on retry
+      // but FutureProviders don't easily retry like this without recursion.
+      // For now, rethrow a cleaner error.
+      throw Exception('Ошибка авторизации. Попробуйте перезайти.');
+    }
+    rethrow;
+  }
 });

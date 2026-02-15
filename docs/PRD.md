@@ -28,6 +28,7 @@
     - **Fallback Logic:** System ensures no data loss; if a catalog item is missing, a placeholder warning is created.
     - **Works Calculation:** Works are generated from Materials based on predefined links (e.g., Cable -> Cable Installation). **Note:** Calculations replace existing work items related to the recalculated materials.
 - **Financials:** Dual view (Client view vs. Internal view for calculations with **Partner (Контрагент)**). "Контрагент" is the standard term across the app.
+- **Motivation:** Dynamic "Quote of the Day" system (Welcome screen) to enhance user experience and engagement.
 - **Smart Calculator:** Logic for work volume entry: Users input any 2 of 3 values (Total, Me, Partner), and the 3rd is auto-calculated (Total = Me + Partner).
 - **Numerical Formatting:** All amounts, quantities, and percentages must be formatted to a maximum of 2 decimal places, with trailing zeros removed (e.g., `10.00` becomes `10`, `10.50` becomes `10.5`). <!-- id: prd_formatting -->
 - **Grouped Estimates:** Items in estimates must be grouped by their **Catalog Category** (e.g., "Cables", "Installation") for better readability.
@@ -36,6 +37,7 @@
     - **JWT System:** Secure access using Access/Refresh token pairs.
     - **Persistence:** Encrypted/Secure storage of tokens on the device (SharedPreferences).
     - **Session Management:** Automatic token refresh upon expiration (Interceptors). User remains logged in across restarts until explicit Logout.
+    - **Logout Centralization:** The logout function is exclusively located within the **Settings/Account** section to ensure system safety and prevent accidental session termination from the main navigation bars.
     - **Access Control:** "Login First" policy. No access to app features without valid credentials.
 
 ## Rules for AI:
@@ -46,8 +48,9 @@
     - **Detailed UI/UX Standards:** See [DESIGN.md](./DESIGN.md) for specifics on dialogs, buttons, icons, and interactive elements.
 - **Compact UI & Layout Patterns**: 
     - Prioritize information density and minimal whitespace.
+    - **Welcome Screen**: Acts as a central entry point, integrating **Smart Search** for quick access to Objects, Materials, and Works.
     - **Bottom Action Bar & Special Area**: Screens with lists should use a single **Floating Action Button (FAB)** for the primary action (Add). Secondary actions (Search, Filter) must be moved to the **AppBar**. The list should have adequate bottom padding (e.g., **80-100px**) to prevent the FAB from obscuring the last items.
-- **Safety & Confirmations**: All destructive or bulk actions (deleting all items, applying templates, importing large data sets, re-calculating estimates, deleting project files) MUST trigger a `ConfirmationDialog` to prevent accidental data loss.
+- **Safety & Confirmations**: All destructive or bulk actions (deleting all items, applying templates, importing large data sets, re-calculating estimates, deleting project files, logging out) MUST trigger a `ConfirmationDialog` to prevent accidental data loss.
 - **File Integrity**: Original filenames are preserved (`original_name`). Categories with ≤ 5 files auto-expand. Deleting a file record triggers physical deletion.
 - **Upload Limits:** Strict validation: Max **12 files** per project, Max **20 MB** per file. Allowed extensions: images, docs, pdf, zip, video.
 - Data Integrity: Always use input normalization (e.g., RegEx for technical units) on the backend.
