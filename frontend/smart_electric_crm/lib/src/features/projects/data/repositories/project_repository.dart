@@ -14,9 +14,13 @@ class ProjectRepository {
   ProjectRepository({required Dio dio}) : _dio = dio;
 
   /// Получает список всех проектов.
-  Future<List<ProjectModel>> fetchProjects() async {
+  Future<List<ProjectModel>> fetchProjects({String? search}) async {
     try {
-      final response = await _dio.get('/projects/');
+      final response = await _dio.get(
+        '/projects/',
+        queryParameters:
+            search != null && search.isNotEmpty ? {'search': search} : null,
+      );
       final List<dynamic> data = response.data;
       return data.map((json) => ProjectModel.fromJson(json)).toList();
     } catch (e) {

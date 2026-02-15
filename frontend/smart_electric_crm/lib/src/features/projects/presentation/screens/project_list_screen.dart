@@ -915,7 +915,7 @@ class _ProjectCardState extends State<_ProjectCard> {
     if (confirm == true) {
       try {
         await ref
-            .read(projectListProvider.notifier)
+            .read(projectOperationsProvider.notifier)
             .deleteProject(widget.project.id.toString());
       } catch (e) {
         if (context.mounted) {

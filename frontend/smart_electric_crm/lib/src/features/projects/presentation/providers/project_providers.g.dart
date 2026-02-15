@@ -173,23 +173,26 @@ class _ProjectByIdProviderElement
   String get id => (origin as ProjectByIdProvider).id;
 }
 
-String _$projectListHash() => r'82ae81e798722dadbea354090d3f43992cd1f7e4';
+String _$projectOperationsHash() => r'7e5416e353bb3de54fada339c55ddf64c52a0bb4';
 
-/// Провайдер списка проектов.
+/// Провайдер для управления операциями с проектами (добавление, обновление, удаление).
+/// Использует AsyncNotifier для управления состоянием загрузки и данных.
+/// Провайдер для управления операциями с проектами (добавление, обновление, удаление).
 /// Использует AsyncNotifier для управления состоянием загрузки и данных.
 ///
-/// Copied from [ProjectList].
-@ProviderFor(ProjectList)
-final projectListProvider =
-    AutoDisposeAsyncNotifierProvider<ProjectList, List<ProjectModel>>.internal(
-  ProjectList.new,
-  name: r'projectListProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$projectListHash,
+/// Copied from [ProjectOperations].
+@ProviderFor(ProjectOperations)
+final projectOperationsProvider =
+    AutoDisposeAsyncNotifierProvider<ProjectOperations, void>.internal(
+  ProjectOperations.new,
+  name: r'projectOperationsProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$projectOperationsHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$ProjectList = AutoDisposeAsyncNotifier<List<ProjectModel>>;
+typedef _$ProjectOperations = AutoDisposeAsyncNotifier<void>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

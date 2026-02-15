@@ -117,7 +117,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
           'init_stages': initStages,
         };
 
-        await ref.read(projectListProvider.notifier).addProject(data);
+        await ref.read(projectOperationsProvider.notifier).addProject(data);
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -133,7 +133,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
           'source': _source,
         };
 
-        await ref.read(projectListProvider.notifier).updateProject(
+        await ref.read(projectOperationsProvider.notifier).updateProject(
               widget.project!.id.toString(),
               data,
             );

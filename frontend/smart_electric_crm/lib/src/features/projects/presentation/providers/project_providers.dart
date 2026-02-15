@@ -14,70 +14,90 @@ ProjectRepository projectRepository(ProjectRepositoryRef ref) {
   return ProjectRepository(dio: dio);
 }
 
-/// Провайдер списка проектов.
+/// Провайдер для строки поиска
+final projectSearchQueryProvider = StateProvider<String?>((ref) => null);
+
+// Провайдер для списка проектов (основной, без поиска)
+final projectListProvider = FutureProvider<List<ProjectModel>>((ref) async {
+  final repository = ref.watch(projectRepositoryProvider);
+  // This provider now ONLY fetches the full list, ignoring the search query for the main screen
+  return repository.fetchProjects();
+});
+
+// Провайдер для результатов поиска
+final projectSearchResultsProvider =
+    FutureProvider<List<ProjectModel>>((ref) async {
+  final repository = ref.watch(projectRepositoryProvider);
+  final searchQuery = ref.watch(projectSearchQueryProvider);
+
+  // If no search query, return empty list (or handle as needed by UI)
+  if (searchQuery == null || searchQuery.isEmpty) {
+    return [];
+  }
+
+  return repository.fetchProjects(search: searchQuery);
+});
+
+/// Провайдер для управления операциями с проектами (добавление, обновление, удаление).
+/// Использует AsyncNotifier для управления состоянием загрузки и данных.
+/// Провайдер для управления операциями с проектами (добавление, обновление, удаление).
 /// Использует AsyncNotifier для управления состоянием загрузки и данных.
 @riverpod
-class ProjectList extends _$ProjectList {
+class ProjectOperations extends _$ProjectOperations {
   @override
-  FutureOr<List<ProjectModel>> build() async {
-    final repository = ref.watch(projectRepositoryProvider);
-    return repository.fetchProjects();
+  FutureOr<void> build() {
+    // No initial state needed for operations, just a way to access methods.
+    return null;
   }
 
   /// Добавляет проект и обновляет список.
   Future<void> addProject(Map<String, dynamic> data) async {
     final repository = ref.read(projectRepositoryProvider);
-    // Устанавливаем состояние загрузки, если нужно, или просто ждем
-    // state = const AsyncValue.loading(); // Можно раскомментировать для индикации
-
-    // Сначала выполняем запрос
-    await repository.createProject(data);
-
-    // Инвалидируем провайдер, чтобы он перезагрузил данные с сервера
-    ref.invalidateSelf();
-
-    // Ожидаем завершения будущей загрузки, чтобы UI обновился (опционально)
-    await future;
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await repository.createProject(data);
+      ref.invalidate(projectListProvider);
+    });
   }
 
   /// Добавляет этап к проекту и обновляет список.
   Future<void> addStage(String projectId, String title) async {
     final repository = ref.read(projectRepositoryProvider);
-
-    // Выполняем запрос
-    await repository.addStage(projectId, title);
-
-    // Инвалидируем провайдер, чтобы обновить данные (включая новые этапы)
-    ref.invalidateSelf();
-
-    await future;
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await repository.addStage(projectId, title);
+      ref.invalidate(projectListProvider);
+    });
   }
 
   /// Обновляет статус этапа и обновляет список.
   Future<void> updateStageStatus(String stageId, String status) async {
     final repository = ref.read(projectRepositoryProvider);
-
+    // Optimistic update could be done here, but for now just invalidate
     await repository.updateStageStatus(stageId, status);
-
-    // Инвалидируем провайдер
-    ref.invalidateSelf();
-    await future;
+    ref.invalidate(projectListProvider);
   }
 
   /// Удаляет проект и обновляет список.
   Future<void> deleteProject(String id) async {
     final repository = ref.read(projectRepositoryProvider);
-    await repository.deleteProject(id);
-    ref.invalidateSelf();
-    await future;
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await repository.deleteProject(id);
+      ref.invalidate(projectListProvider);
+    });
   }
 
   /// Обновляет проект и обновляет список.
   Future<void> updateProject(String id, Map<String, dynamic> data) async {
     final repository = ref.read(projectRepositoryProvider);
-    await repository.updateProject(id, data);
-    ref.invalidateSelf();
-    await future;
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await repository.updateProject(id, data);
+      ref.invalidate(projectListProvider);
+      // Also invalidate detail provider if needed
+      ref.invalidate(projectByIdProvider(id));
+    });
   }
 
   /// Загружает файл проекта.
@@ -96,24 +116,21 @@ class ProjectList extends _$ProjectList {
       fileName: fileName,
       description: description,
     );
-    ref.invalidateSelf();
-    await future;
+    ref.invalidate(projectByIdProvider(projectId.toString()));
   }
 
   /// Удаляет файл проекта.
-  Future<void> deleteFile(int fileId) async {
+  Future<void> deleteFile(int fileId, String projectId) async {
     final repository = ref.read(projectRepositoryProvider);
     await repository.deleteProjectFile(fileId);
-    ref.invalidateSelf();
-    await future;
+    ref.invalidate(projectByIdProvider(projectId));
   }
 
   /// Переименовывает файл проекта.
-  Future<void> renameFile(int fileId, String newName) async {
+  Future<void> renameFile(int fileId, String newName, String projectId) async {
     final repository = ref.read(projectRepositoryProvider);
     await repository.updateProjectFile(fileId, {'original_name': newName});
-    ref.invalidateSelf();
-    await future;
+    ref.invalidate(projectByIdProvider(projectId));
   }
 }
 

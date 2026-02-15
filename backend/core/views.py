@@ -97,6 +97,8 @@ class LedZoneViewSet(viewsets.ModelViewSet):
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all().order_by('-created_at').prefetch_related('files')
     serializer_class = ProjectSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['address', 'intercom_code', 'client_info', 'source']
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
