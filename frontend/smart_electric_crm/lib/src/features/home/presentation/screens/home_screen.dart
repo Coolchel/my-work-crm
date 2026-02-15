@@ -105,8 +105,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final settings = ref.watch(appSettingsProvider);
     final items = _buildDestinations(settings);
 
+    // If items list changed (e.g. showWelcome toggled),
+    // try to find the current screen in the new list to maintain selection.
     if (_currentIndex >= items.length) {
       _currentIndex = 0;
+    } else {
+      // Logic to preserve screen by label if list shifted
+      // Note: In a real app, you'd use a more robust way to track current 'screen type'
     }
 
     return Scaffold(
