@@ -88,6 +88,14 @@ def _is_directory_table_error(error):
         or 'does not exist' in error_text
     )
 
+def _directory_tables_not_ready_response():
+    return Response(
+        {
+            'error': 'Directory tables are not ready. Please run migrations.',
+        },
+        status=status.HTTP_503_SERVICE_UNAVAILABLE,
+    )
+
 def _bootstrap_directory_from_choices():
     mapping = [
         ('project_status', Project.STATUS_CHOICES),
@@ -180,6 +188,17 @@ class DirectorySectionViewSet(viewsets.ModelViewSet):
     queryset = DirectorySection.objects.prefetch_related('entries').all()
     serializer_class = DirectorySectionSerializer
 
+    def _handle_directory_db_error(self, error):
+        if _is_directory_table_error(error):
+            return _directory_tables_not_ready_response()
+        raise error
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            return super().retrieve(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
     def list(self, request, *args, **kwargs):
         try:
             return super().list(request, *args, **kwargs)
@@ -188,6 +207,30 @@ class DirectorySectionViewSet(viewsets.ModelViewSet):
                 return Response([])
             raise
 
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            return super().update(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            return super().partial_update(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
     @action(detail=False, methods=['post'])
     def bootstrap(self, request):
         try:
@@ -195,13 +238,9 @@ class DirectorySectionViewSet(viewsets.ModelViewSet):
             return Response(result)
         except (OperationalError, ProgrammingError) as error:
             if _is_directory_table_error(error):
-                return Response(
-                    {
-                        'error': 'Directory tables are not ready. Please run migrations.',
-                        'details': str(error),
-                    },
-                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
-                )
+                response = _directory_tables_not_ready_response()
+                response.data['details'] = str(error)
+                return response
             raise
 
 
@@ -211,6 +250,17 @@ class DirectoryEntryViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['section', 'is_active']
 
+    def _handle_directory_db_error(self, error):
+        if _is_directory_table_error(error):
+            return _directory_tables_not_ready_response()
+        raise error
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            return super().retrieve(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
     def list(self, request, *args, **kwargs):
         try:
             return super().list(request, *args, **kwargs)
@@ -218,6 +268,30 @@ class DirectoryEntryViewSet(viewsets.ModelViewSet):
             if _is_directory_table_error(error):
                 return Response([])
             raise
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            return super().update(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            return super().partial_update(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
 
 
 class ShieldViewSet(viewsets.ModelViewSet):

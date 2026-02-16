@@ -29,7 +29,9 @@ class DirectoryRepository {
           'Сервер не готов к синхронизации. Примените миграции backend и повторите.',
         );
       }
-      throw DirectorySyncException('Ошибка синхронизации: ${error.message ?? error}');
+      throw DirectorySyncException(
+        'Ошибка синхронизации: ${error.message ?? error}',
+      );
     }
   }
 
@@ -46,6 +48,35 @@ class DirectoryRepository {
       }
       rethrow;
     }
+  }
+
+  Future<void> createSection({
+    required String code,
+    required String name,
+    required String description,
+  }) async {
+    await _client.post('/directory-sections/', data: {
+      'code': code,
+      'name': name,
+      'description': description,
+    });
+  }
+
+  Future<void> updateSection({
+    required int id,
+    required String code,
+    required String name,
+    required String description,
+  }) async {
+    await _client.put('/directory-sections/$id/', data: {
+      'code': code,
+      'name': name,
+      'description': description,
+    });
+  }
+
+  Future<void> deleteSection(int id) async {
+    await _client.delete('/directory-sections/$id/');
   }
 
   Future<List<DirectoryEntry>> getEntries(int sectionId) async {
@@ -72,6 +103,7 @@ class DirectoryRepository {
     required String name,
     required int sortOrder,
     required bool isActive,
+    Map<String, dynamic> metadata = const <String, dynamic>{},
   }) async {
     await _client.post('/directory-entries/', data: {
       'section': section,
@@ -79,7 +111,7 @@ class DirectoryRepository {
       'name': name,
       'sort_order': sortOrder,
       'is_active': isActive,
-      'metadata': <String, dynamic>{},
+      'metadata': metadata,
     });
   }
 
@@ -90,6 +122,7 @@ class DirectoryRepository {
     required String name,
     required int sortOrder,
     required bool isActive,
+    Map<String, dynamic> metadata = const <String, dynamic>{},
   }) async {
     await _client.put('/directory-entries/$id/', data: {
       'section': section,
@@ -97,7 +130,7 @@ class DirectoryRepository {
       'name': name,
       'sort_order': sortOrder,
       'is_active': isActive,
-      'metadata': <String, dynamic>{},
+      'metadata': metadata,
     });
   }
 
@@ -113,11 +146,15 @@ class DirectoryRepository {
         .toList();
   }
 
-  Future<void> createCategory({required String name, required String slug}) async {
+  Future<void> createCategory({
+    required String name,
+    required String slug,
+    required double laborCoefficient,
+  }) async {
     await _client.post('/categories/', data: {
       'name': name,
       'slug': slug,
-      'labor_coefficient': 1.0,
+      'labor_coefficient': laborCoefficient,
     });
   }
 
@@ -149,12 +186,27 @@ class DirectoryRepository {
         .toList();
   }
 
+  Future<List<CatalogItem>> getWorkItems() async {
+    final response = await _client.get(
+      '/catalog-items/',
+      queryParameters: {'item_type': 'work'},
+    );
+    final data = response.data as List<dynamic>;
+    return data
+        .map((raw) => CatalogItem.fromJson(raw as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<void> createItem({
     required int categoryId,
     required String name,
     required double price,
     required String unit,
     required String itemType,
+    required String currency,
+    String? mappingKey,
+    String? aggregationKey,
+    int? relatedWorkItem,
   }) async {
     await _client.post('/catalog-items/', data: {
       'category': categoryId,
@@ -162,7 +214,10 @@ class DirectoryRepository {
       'default_price': price,
       'unit': unit,
       'item_type': itemType,
-      'default_currency': 'USD',
+      'default_currency': currency,
+      'mapping_key': _normalizeOptional(mappingKey),
+      'aggregation_key': _normalizeOptional(aggregationKey),
+      'related_work_item': relatedWorkItem,
     });
   }
 
@@ -174,6 +229,9 @@ class DirectoryRepository {
     required String unit,
     required String itemType,
     required String currency,
+    String? mappingKey,
+    String? aggregationKey,
+    int? relatedWorkItem,
   }) async {
     await _client.put('/catalog-items/$id/', data: {
       'category': categoryId,
@@ -182,11 +240,19 @@ class DirectoryRepository {
       'unit': unit,
       'item_type': itemType,
       'default_currency': currency,
+      'mapping_key': _normalizeOptional(mappingKey),
+      'aggregation_key': _normalizeOptional(aggregationKey),
+      'related_work_item': relatedWorkItem,
     });
   }
 
   Future<void> deleteItem(int id) async {
     await _client.delete('/catalog-items/$id/');
+  }
+
+  String? _normalizeOptional(String? value) {
+    final trimmed = value?.trim() ?? '';
+    return trimmed.isEmpty ? null : trimmed;
   }
 }
 
@@ -213,4 +279,9 @@ final catalogCategoriesProvider = FutureProvider<List<CatalogCategory>>((ref) as
 final catalogItemsByCategoryProvider = FutureProvider.family<List<CatalogItem>, int>((ref, categoryId) async {
   final repository = ref.watch(directoryRepositoryProvider);
   return repository.getCategoryItems(categoryId);
+});
+
+final catalogWorkItemsProvider = FutureProvider<List<CatalogItem>>((ref) async {
+  final repository = ref.watch(directoryRepositoryProvider);
+  return repository.getWorkItems();
 });

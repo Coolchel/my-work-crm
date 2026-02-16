@@ -18,6 +18,14 @@ class CatalogItem {
   final String itemType;
 
   final int? category;
+  @JsonKey(name: 'mapping_key')
+  final String? mappingKey;
+  @JsonKey(name: 'aggregation_key')
+  final String? aggregationKey;
+  @JsonKey(name: 'related_work_item')
+  final int? relatedWorkItem;
+  @JsonKey(name: 'search_name', defaultValue: '')
+  final String searchName;
 
   CatalogItem({
     required this.id,
@@ -27,6 +35,10 @@ class CatalogItem {
     this.defaultCurrency = 'USD',
     this.itemType = 'material',
     this.category,
+    this.mappingKey,
+    this.aggregationKey,
+    this.relatedWorkItem,
+    this.searchName = '',
   });
 
   static double _priceFromJson(dynamic json) {

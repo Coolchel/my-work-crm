@@ -61,16 +61,22 @@
 ## 7. Catalog & Directory (Admin)
 *   **Catalog:**
     *   Editable categories.
-    *   Editable catalog items (materials/works).
+    *   Editable catalog items (materials/works) with advanced automation fields.
     *   Keys:
         *   `mapping_key`: Connects Shield Device -> Material.
         *   `aggregation_key`: Groups multiple materials -> One Work (e.g., All cables -> "Cable Laying").
+        *   `related_work_item`: Direct material -> work relation (1-to-1 override).
+    *   Category field `labor_coefficient` must be editable from UI.
 *   **System Directory Sections:**
     *   Editable dictionaries for values historically stored in model `choices`.
     *   Includes statuses/types/currencies/shield and file classification enums.
     *   Bootstrap endpoint to sync defaults into DB: `POST /api/directory-sections/bootstrap/`.
-*   **CRUD:** Full add/edit/delete from app UI for directory entries and catalog entities.
+*   **CRUD:** Full add/edit/delete from app UI for directory sections, directory entries, categories, and catalog items.
+*   **Entry Metadata:** `DirectoryEntry.metadata` is editable from UI as JSON object.
 *   **System Sync UX:**
     *   Auto-run sync when opening the directory screen.
     *   Show dedicated loading state (please wait) during sync.
     *   Keep manual sync button as explicit retry tool.
+*   **DB Not Ready Handling (Directory API):**
+    *   If directory tables are missing, backend returns `503` for directory CRUD and bootstrap/retrieve operations.
+    *   Directory list endpoints may return empty arrays as a safe fallback during startup/migration mismatch.

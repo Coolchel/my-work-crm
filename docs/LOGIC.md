@@ -76,6 +76,8 @@ Triggered when Materials are updated.
 ### 5.3. CRUD Access
 *   `DirectorySection` and `DirectoryEntry` provide full CRUD via REST endpoints.
 *   Catalog admin part (categories + catalog items) also remains full CRUD from app UI.
+*   Catalog item CRUD must preserve technical fields: `mapping_key`, `aggregation_key`, `related_work_item`.
+*   Directory entry CRUD must preserve JSON `metadata`.
 
 
 ### 5.4. UI Synchronization Flow
@@ -83,3 +85,10 @@ Triggered when Materials are updated.
 *   During synchronization, system tab shows a loading state with explicit wait message to prevent editing stale data.
 *   Manual "Synchronize" action remains available as a recovery/retry path for admins.
 *   If backend returns `503` (tables not ready/migrations missing), UI shows a human-readable error message instead of raw transport error text.
+
+### 5.5. Directory Error Contract (Tables Not Ready)
+*   Backend detection: missing `core_directorysection` / `core_directoryentry` tables.
+*   Response strategy:
+    *   `list`: return empty array for directory sections/entries.
+    *   `bootstrap`, `retrieve`, `create`, `update`, `partial_update`, `destroy`: return HTTP `503` with readable `error`.
+*   Goal: safe startup behavior before migrations and predictable client UX.
