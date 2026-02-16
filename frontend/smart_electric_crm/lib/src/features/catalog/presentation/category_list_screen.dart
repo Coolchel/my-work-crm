@@ -106,11 +106,25 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.check_rounded),
-          tooltip: 'Готово',
+          icon: const Icon(Icons.arrow_back_ios_new),
+          tooltip: 'Назад',
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text('Справочник'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: _AppBarActionButton(
+              icon: Icons.sync,
+              tooltip: _isSyncingSystemSections ? 'Синхронизация...' : 'Синхронизировать',
+              color: Colors.black,
+              isLoading: _isSyncingSystemSections,
+              onTap: _isSyncingSystemSections
+                  ? null
+                  : () => _synchronizeSystemSections(showSuccessMessage: true),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: _buildFab(),
       body: IndexedStack(
@@ -119,9 +133,11 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
           _SystemSectionsTab(
             isSyncing: _isSyncingSystemSections,
             onError: (message) => _showSnack(message, isError: true),
+            onSelectTab: (index) => setState(() => _currentIndex = index),
           ),
           _CatalogTab(
             onError: (message) => _showSnack(message, isError: true),
+            onSelectTab: (index) => setState(() => _currentIndex = index),
           ),
         ],
       ),
@@ -132,7 +148,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
           NavigationDestination(
             icon: Icon(Icons.schema_outlined),
             selectedIcon: Icon(Icons.schema),
-            label: 'Системные',
+            label: 'Система',
           ),
           NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
@@ -146,38 +162,87 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
 
   Widget _buildFab() {
     if (_currentIndex == 0) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: 'add-system-section',
-            onPressed: _openCreateSectionDialog,
-            child: const Icon(Icons.add),
-          ),
-          const SizedBox(height: 12),
-          FloatingActionButton.extended(
-            heroTag: 'bootstrap-system-sections',
-            onPressed: _isSyncingSystemSections
-                ? null
-                : () => _synchronizeSystemSections(showSuccessMessage: true),
-            icon: _isSyncingSystemSections
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.sync),
-            label: Text(_isSyncingSystemSections ? 'Подождите...' : 'Синхронизировать'),
-          ),
-        ],
+      return Tooltip(
+        message: 'Добавить раздел',
+        preferBelow: false,
+        verticalOffset: 32,
+        child: FloatingActionButton(
+          heroTag: 'add-system-section',
+          onPressed: _openCreateSectionDialog,
+          child: const Icon(Icons.add),
+        ),
       );
     }
 
-    return FloatingActionButton(
-      heroTag: 'add-catalog-category',
-      onPressed: _openCreateCategoryDialog,
-      child: const Icon(Icons.add),
+    return Tooltip(
+      message: 'Добавить категорию',
+      preferBelow: false,
+      verticalOffset: 32,
+      child: FloatingActionButton(
+        heroTag: 'add-catalog-category',
+        onPressed: _openCreateCategoryDialog,
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class _AppBarActionButton extends StatefulWidget {
+  final IconData icon;
+  final String tooltip;
+  final Color color;
+  final bool isLoading;
+  final VoidCallback? onTap;
+
+  const _AppBarActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.color,
+    required this.isLoading,
+    required this.onTap,
+  });
+
+  @override
+  State<_AppBarActionButton> createState() => _AppBarActionButtonState();
+}
+
+class _AppBarActionButtonState extends State<_AppBarActionButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+      child: Tooltip(
+        message: widget.tooltip,
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _isHovered ? Colors.grey.shade500.withOpacity(0.1) : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+            child: widget.isLoading
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: widget.color,
+                    ),
+                  )
+                : Icon(
+                    widget.icon,
+                    size: 24,
+                    color: widget.color,
+                  ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -185,10 +250,12 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
 class _SystemSectionsTab extends ConsumerWidget {
   final bool isSyncing;
   final ValueChanged<String> onError;
+  final ValueChanged<int> onSelectTab;
 
   const _SystemSectionsTab({
     required this.isSyncing,
     required this.onError,
+    required this.onSelectTab,
   });
 
   @override
@@ -245,6 +312,7 @@ class _SystemSectionsTab extends ConsumerWidget {
                     builder: (_) => _SectionEntriesScreen(
                       section: section,
                       onError: onError,
+                      onSelectTab: onSelectTab,
                     ),
                   ),
                 );
@@ -275,10 +343,10 @@ class _SystemSectionsTab extends ConsumerWidget {
                   },
                 ),
                 _InlineActionButton(
-                  icon: Icons.delete_outline,
+                  icon: Icons.close,
                   tooltip: 'Удалить раздел',
                   color: Colors.grey.shade500,
-                  hoverColor: Colors.red,
+                  hoverColor: Colors.grey.shade600,
                   onTap: () async {
                     final confirmed = await showConfirmationDialog(
                       context: context,
@@ -299,7 +367,6 @@ class _SystemSectionsTab extends ConsumerWidget {
                     }
                   },
                 ),
-                const Icon(Icons.chevron_right),
               ],
             );
           },
@@ -319,10 +386,12 @@ class _SystemSectionsTab extends ConsumerWidget {
 class _SectionEntriesScreen extends ConsumerWidget {
   final DirectorySection section;
   final ValueChanged<String> onError;
+  final ValueChanged<int> onSelectTab;
 
   const _SectionEntriesScreen({
     required this.section,
     required this.onError,
+    required this.onSelectTab,
   });
 
   @override
@@ -330,28 +399,40 @@ class _SectionEntriesScreen extends ConsumerWidget {
     final entriesAsync = ref.watch(directoryEntriesProvider(section.id));
 
     return Scaffold(
-      appBar: AppBar(title: Text(section.name)),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await showDialog<void>(
-            context: context,
-            builder: (_) => _DirectoryEntryDialog(
-              title: 'Новая запись',
-              onSubmit: (code, name, order, isActive, metadata) async {
-                await ref.read(directoryRepositoryProvider).createEntry(
-                      section: section.id,
-                      code: code,
-                      name: name,
-                      sortOrder: order,
-                      isActive: isActive,
-                      metadata: metadata,
-                    );
-                ref.invalidate(directoryEntriesProvider(section.id));
-              },
-            ),
-          );
-        },
-        child: const Icon(Icons.add),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          tooltip: 'Назад',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(section.name),
+      ),
+      floatingActionButton: Tooltip(
+        message: 'Добавить запись',
+        preferBelow: false,
+        verticalOffset: 32,
+        child: FloatingActionButton(
+          onPressed: () async {
+            await showDialog<void>(
+              context: context,
+              builder: (_) => _DirectoryEntryDialog(
+                title: 'Новая запись',
+                onSubmit: (code, name, order, isActive, metadata) async {
+                  await ref.read(directoryRepositoryProvider).createEntry(
+                        section: section.id,
+                        code: code,
+                        name: name,
+                        sortOrder: order,
+                        isActive: isActive,
+                        metadata: metadata,
+                      );
+                  ref.invalidate(directoryEntriesProvider(section.id));
+                },
+              ),
+            );
+          },
+          child: const Icon(Icons.add),
+        ),
       ),
       body: entriesAsync.when(
         data: (entries) {
@@ -374,6 +455,27 @@ class _SectionEntriesScreen extends ConsumerWidget {
                 title: entry.name,
                 subtitle: '${entry.code} | order: ${entry.sortOrder}',
                 extraText: metadataPreview,
+                onTap: () async {
+                  await showDialog<void>(
+                    context: context,
+                    builder: (_) => _DirectoryEntryDialog(
+                      title: 'Редактирование записи',
+                      initial: entry,
+                      onSubmit: (code, name, order, isActive, metadata) async {
+                        await ref.read(directoryRepositoryProvider).updateEntry(
+                              id: entry.id,
+                              section: section.id,
+                              code: code,
+                              name: name,
+                              sortOrder: order,
+                              isActive: isActive,
+                              metadata: metadata,
+                            );
+                        ref.invalidate(directoryEntriesProvider(section.id));
+                      },
+                    ),
+                  );
+                },
                 actions: [
                   _InlineActionButton(
                     icon: Icons.edit_outlined,
@@ -403,10 +505,10 @@ class _SectionEntriesScreen extends ConsumerWidget {
                     },
                   ),
                   _InlineActionButton(
-                    icon: Icons.delete_outline,
+                    icon: Icons.close,
                     tooltip: 'Удалить запись',
                     color: Colors.grey.shade500,
-                    hoverColor: Colors.red,
+                    hoverColor: Colors.grey.shade600,
                     onTap: () async {
                       final confirmed = await showConfirmationDialog(
                         context: context,
@@ -434,14 +536,38 @@ class _SectionEntriesScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('Ошибка: $error')),
       ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 0,
+        onDestinationSelected: (index) {
+          if (index == 0) return;
+          onSelectTab(index);
+          Navigator.of(context).pop();
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.schema_outlined),
+            selectedIcon: Icon(Icons.schema),
+            label: 'Система',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.inventory_2_outlined),
+            selectedIcon: Icon(Icons.inventory_2),
+            label: 'Каталог',
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _CatalogTab extends ConsumerWidget {
   final ValueChanged<String> onError;
+  final ValueChanged<int> onSelectTab;
 
-  const _CatalogTab({required this.onError});
+  const _CatalogTab({
+    required this.onError,
+    required this.onSelectTab,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -472,6 +598,7 @@ class _CatalogTab extends ConsumerWidget {
                     builder: (_) => _CategoryItemsScreen(
                       category: category,
                       onError: onError,
+                      onSelectTab: onSelectTab,
                     ),
                   ),
                 );
@@ -502,10 +629,10 @@ class _CatalogTab extends ConsumerWidget {
                   },
                 ),
                 _InlineActionButton(
-                  icon: Icons.delete_outline,
+                  icon: Icons.close,
                   tooltip: 'Удалить категорию',
                   color: Colors.grey.shade500,
-                  hoverColor: Colors.red,
+                  hoverColor: Colors.grey.shade600,
                   onTap: () async {
                     final confirmed = await showConfirmationDialog(
                       context: context,
@@ -526,7 +653,6 @@ class _CatalogTab extends ConsumerWidget {
                     }
                   },
                 ),
-                const Icon(Icons.chevron_right),
               ],
             );
           },
@@ -541,10 +667,12 @@ class _CatalogTab extends ConsumerWidget {
 class _CategoryItemsScreen extends ConsumerWidget {
   final CatalogCategory category;
   final ValueChanged<String> onError;
+  final ValueChanged<int> onSelectTab;
 
   const _CategoryItemsScreen({
     required this.category,
     required this.onError,
+    required this.onSelectTab,
   });
 
   @override
@@ -553,33 +681,45 @@ class _CategoryItemsScreen extends ConsumerWidget {
     final workItemsAsync = ref.watch(catalogWorkItemsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(category.name)),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final workItems = workItemsAsync.value ?? const <CatalogItem>[];
-          await showDialog<void>(
-            context: context,
-            builder: (_) => _CatalogItemDialog(
-              title: 'Новая позиция',
-              workItems: workItems,
-              onSubmit: (form) async {
-                await ref.read(directoryRepositoryProvider).createItem(
-                      categoryId: category.id,
-                      name: form.name,
-                      price: form.price,
-                      unit: form.unit,
-                      itemType: form.itemType,
-                      currency: form.currency,
-                      mappingKey: form.mappingKey,
-                      aggregationKey: form.aggregationKey,
-                      relatedWorkItem: form.relatedWorkItem,
-                    );
-                ref.invalidate(catalogItemsByCategoryProvider(category.id));
-              },
-            ),
-          );
-        },
-        child: const Icon(Icons.add),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          tooltip: 'Назад',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(category.name),
+      ),
+      floatingActionButton: Tooltip(
+        message: 'Добавить позицию',
+        preferBelow: false,
+        verticalOffset: 32,
+        child: FloatingActionButton(
+          onPressed: () async {
+            final workItems = workItemsAsync.value ?? const <CatalogItem>[];
+            await showDialog<void>(
+              context: context,
+              builder: (_) => _CatalogItemDialog(
+                title: 'Новая позиция',
+                workItems: workItems,
+                onSubmit: (form) async {
+                  await ref.read(directoryRepositoryProvider).createItem(
+                        categoryId: category.id,
+                        name: form.name,
+                        price: form.price,
+                        unit: form.unit,
+                        itemType: form.itemType,
+                        currency: form.currency,
+                        mappingKey: form.mappingKey,
+                        aggregationKey: form.aggregationKey,
+                        relatedWorkItem: form.relatedWorkItem,
+                      );
+                  ref.invalidate(catalogItemsByCategoryProvider(category.id));
+                },
+              ),
+            );
+          },
+          child: const Icon(Icons.add),
+        ),
       ),
       body: itemsAsync.when(
         data: (items) {
@@ -598,6 +738,32 @@ class _CategoryItemsScreen extends ConsumerWidget {
                 subtitle:
                     '${item.itemType} | ${item.defaultPrice.toStringAsFixed(2)} ${item.defaultCurrency} / ${item.unit}',
                 extraText: _itemDetails(item),
+                onTap: () async {
+                  final workItems = workItemsAsync.value ?? const <CatalogItem>[];
+                  await showDialog<void>(
+                    context: context,
+                    builder: (_) => _CatalogItemDialog(
+                      title: 'Редактирование позиции',
+                      initial: item,
+                      workItems: workItems,
+                      onSubmit: (form) async {
+                        await ref.read(directoryRepositoryProvider).updateItem(
+                              id: item.id,
+                              categoryId: category.id,
+                              name: form.name,
+                              price: form.price,
+                              unit: form.unit,
+                              itemType: form.itemType,
+                              currency: form.currency,
+                              mappingKey: form.mappingKey,
+                              aggregationKey: form.aggregationKey,
+                              relatedWorkItem: form.relatedWorkItem,
+                            );
+                        ref.invalidate(catalogItemsByCategoryProvider(category.id));
+                      },
+                    ),
+                  );
+                },
                 actions: [
                   _InlineActionButton(
                     icon: Icons.edit_outlined,
@@ -632,10 +798,10 @@ class _CategoryItemsScreen extends ConsumerWidget {
                     },
                   ),
                   _InlineActionButton(
-                    icon: Icons.delete_outline,
+                    icon: Icons.close,
                     tooltip: 'Удалить позицию',
                     color: Colors.grey.shade500,
-                    hoverColor: Colors.red,
+                    hoverColor: Colors.grey.shade600,
                     onTap: () async {
                       final confirmed = await showConfirmationDialog(
                         context: context,
@@ -661,6 +827,26 @@ class _CategoryItemsScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(child: Text('Ошибка: $error')),
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 1,
+        onDestinationSelected: (index) {
+          if (index == 1) return;
+          onSelectTab(index);
+          Navigator.of(context).pop();
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.schema_outlined),
+            selectedIcon: Icon(Icons.schema),
+            label: 'Система',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.inventory_2_outlined),
+            selectedIcon: Icon(Icons.inventory_2),
+            label: 'Каталог',
+          ),
+        ],
       ),
     );
   }
@@ -789,12 +975,7 @@ class _DirectoryCardState extends State<_DirectoryCard> {
       cursor: widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedScale(
-        scale: _isHovered ? 1.05 : 1,
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        child: card,
-      ),
+      child: card,
     );
   }
 }
@@ -939,9 +1120,25 @@ class _DialogShell extends StatelessWidget {
 InputDecoration _dialogInputDecoration(String label) {
   return InputDecoration(
     labelText: label,
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    filled: true,
+    fillColor: Colors.grey.shade50,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: Colors.grey.shade300),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: Colors.grey.shade300),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(color: Colors.indigo, width: 1.5),
+    ),
+    floatingLabelStyle: const TextStyle(
+      color: Colors.indigo,
+      fontWeight: FontWeight.w600,
+    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     isDense: true,
   );
 }
@@ -1106,12 +1303,20 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
             decoration: _dialogInputDecoration('Порядок'),
           ),
           const SizedBox(height: 10),
-          SwitchListTile(
-            value: _isActive,
-            onChanged: (value) => setState(() => _isActive = value),
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Активно'),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: SwitchListTile(
+              value: _isActive,
+              onChanged: (value) => setState(() => _isActive = value),
+              dense: true,
+              activeColor: Colors.indigo,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+              title: const Text('Активно'),
+            ),
           ),
           const SizedBox(height: 10),
           TextField(
@@ -1397,3 +1602,5 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
     );
   }
 }
+
+

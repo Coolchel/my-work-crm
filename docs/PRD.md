@@ -28,6 +28,8 @@ Create a premium, professional tool for electricians to manage projects, estimat
     *   **Directory (Reference Book):** Editable system dictionaries and catalog data to manage statuses/types/currencies and other app constants from UI.
     *   **Manual DB Editing Scope:** Directory UI must expose full practical CRUD for sections/entries/categories/items including technical automation fields (`mapping_key`, `aggregation_key`, `related_work_item`) and entry `metadata`.
     *   **Directory UX:** System dictionaries auto-synchronize on screen open with explicit loading feedback for admins.
+    *   **Directory Navigation UX:** Bottom directory navigation (`System Sections` / `Catalog`) must remain visible on nested directory levels.
+    *   **Directory Action UX:** Delete actions use neutral close icons with non-danger hover tint; edit on nested level is available by row tap in addition to inline actions.
 
 ## 5. Language Rules
 *   **User Facing:** Russian (UI, DB Verbose Names, Messages).

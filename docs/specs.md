@@ -76,7 +76,14 @@
 *   **System Sync UX:**
     *   Auto-run sync when opening the directory screen.
     *   Show dedicated loading state (please wait) during sync.
-    *   Keep manual sync button as explicit retry tool.
+    *   Keep manual sync action in the directory AppBar as explicit retry tool on both tabs (`Система` and `Каталог`).
+    *   Sync icon style must stay neutral (no blue-hover recolor) and match standard top-bar icon sizing.
+*   **Directory Navigation UX:**
+    *   Bottom directory `NavigationBar` (`System Sections` / `Catalog`) must stay visible on second-level screens (entries/items).
+    *   Root tab label for system dictionaries is `Система`.
+    *   Nested cards should not show chevron affordance; open/edit behavior is triggered by card tap.
+    *   On second-level screens, tapping a row opens edit flow directly.
+    *   Second-level screens keep FAB `+` tooltip and use explicit back-left AppBar icon for consistency.
 *   **DB Not Ready Handling (Directory API):**
     *   If directory tables are missing, backend returns `503` for directory CRUD and bootstrap/retrieve operations.
     *   Directory list endpoints may return empty arrays as a safe fallback during startup/migration mismatch.

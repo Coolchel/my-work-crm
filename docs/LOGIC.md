@@ -92,3 +92,8 @@ Triggered when Materials are updated.
     *   `list`: return empty array for directory sections/entries.
     *   `bootstrap`, `retrieve`, `create`, `update`, `partial_update`, `destroy`: return HTTP `503` with readable `error`.
 *   Goal: safe startup behavior before migrations and predictable client UX.
+
+### 5.6. Directory Interaction Rules
+*   Second-level directory entities (section entries, category items) support row-tap edit flow.
+*   Bottom directory navigation remains accessible on second-level screens; switching tab returns to the corresponding root tab context.
+*   Delete icons use neutral hover styling (no danger-color hover escalation on icon hover itself); destructive intent remains in confirmation dialog.
