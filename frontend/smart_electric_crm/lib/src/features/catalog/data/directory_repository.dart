@@ -16,22 +16,36 @@ class DirectoryRepository {
   }
 
   Future<List<DirectorySection>> getSections() async {
-    final response = await _client.get('/directory-sections/');
-    final data = response.data as List<dynamic>;
-    return data
-        .map((raw) => DirectorySection.fromJson(raw as Map<String, dynamic>))
-        .toList();
+    try {
+      final response = await _client.get('/directory-sections/');
+      final data = response.data as List<dynamic>;
+      return data
+          .map((raw) => DirectorySection.fromJson(raw as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 500 || error.response?.statusCode == 503) {
+        return const <DirectorySection>[];
+      }
+      rethrow;
+    }
   }
 
   Future<List<DirectoryEntry>> getEntries(int sectionId) async {
-    final response = await _client.get(
-      '/directory-entries/',
-      queryParameters: {'section': sectionId},
-    );
-    final data = response.data as List<dynamic>;
-    return data
-        .map((raw) => DirectoryEntry.fromJson(raw as Map<String, dynamic>))
-        .toList();
+    try {
+      final response = await _client.get(
+        '/directory-entries/',
+        queryParameters: {'section': sectionId},
+      );
+      final data = response.data as List<dynamic>;
+      return data
+          .map((raw) => DirectoryEntry.fromJson(raw as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 500 || error.response?.statusCode == 503) {
+        return const <DirectoryEntry>[];
+      }
+      rethrow;
+    }
   }
 
   Future<void> createEntry({

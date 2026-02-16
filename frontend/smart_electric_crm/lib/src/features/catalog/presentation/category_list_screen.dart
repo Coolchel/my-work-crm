@@ -58,12 +58,20 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen>
       return FloatingActionButton.extended(
         heroTag: 'bootstrap',
         onPressed: () async {
-          await ref.read(directoryRepositoryProvider).bootstrapDirectory();
-          ref.invalidate(directorySectionsProvider);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Системные разделы синхронизированы')),
-            );
+          try {
+            await ref.read(directoryRepositoryProvider).bootstrapDirectory();
+            ref.invalidate(directorySectionsProvider);
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Системные разделы синхронизированы')),
+              );
+            }
+          } catch (error) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Не удалось синхронизировать: $error')),
+              );
+            }
           }
         },
         icon: const Icon(Icons.sync),

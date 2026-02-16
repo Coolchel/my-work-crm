@@ -2,6 +2,7 @@ from rest_framework import viewsets, status, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.utils import OperationalError, ProgrammingError
 from .models import (
     Project, Stage, ShieldGroup, LedZone, CatalogCategory, CatalogItem, DirectorySection, DirectoryEntry,
     Shield, EstimateItem, WorkTemplate, MaterialTemplate, PowerShieldTemplate, LedShieldTemplate,
@@ -75,6 +76,17 @@ DIRECTORY_SECTION_DEFINITIONS = [
     },
 ]
 
+
+
+
+def _is_directory_table_error(error):
+    error_text = str(error).lower()
+    return (
+        'core_directorysection' in error_text
+        or 'core_directoryentry' in error_text
+        or 'no such table' in error_text
+        or 'does not exist' in error_text
+    )
 
 def _bootstrap_directory_from_choices():
     mapping = [
@@ -168,10 +180,29 @@ class DirectorySectionViewSet(viewsets.ModelViewSet):
     queryset = DirectorySection.objects.prefetch_related('entries').all()
     serializer_class = DirectorySectionSerializer
 
+    def list(self, request, *args, **kwargs):
+        try:
+            return super().list(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            if _is_directory_table_error(error):
+                return Response([])
+            raise
+
     @action(detail=False, methods=['post'])
     def bootstrap(self, request):
-        result = _bootstrap_directory_from_choices()
-        return Response(result)
+        try:
+            result = _bootstrap_directory_from_choices()
+            return Response(result)
+        except (OperationalError, ProgrammingError) as error:
+            if _is_directory_table_error(error):
+                return Response(
+                    {
+                        'error': 'Directory tables are not ready. Please run migrations.',
+                        'details': str(error),
+                    },
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
+            raise
 
 
 class DirectoryEntryViewSet(viewsets.ModelViewSet):
@@ -179,6 +210,14 @@ class DirectoryEntryViewSet(viewsets.ModelViewSet):
     serializer_class = DirectoryEntrySerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['section', 'is_active']
+
+    def list(self, request, *args, **kwargs):
+        try:
+            return super().list(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            if _is_directory_table_error(error):
+                return Response([])
+            raise
 
 
 class ShieldViewSet(viewsets.ModelViewSet):
