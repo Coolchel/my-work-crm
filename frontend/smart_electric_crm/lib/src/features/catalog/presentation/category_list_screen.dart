@@ -13,48 +13,53 @@ class CategoryListScreen extends ConsumerStatefulWidget {
   ConsumerState<CategoryListScreen> createState() => _CategoryListScreenState();
 }
 
-class _CategoryListScreenState extends ConsumerState<CategoryListScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Справочник'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Системные разделы'),
-            Tab(text: 'Каталог'),
-          ],
+        leading: IconButton(
+          icon: const Icon(Icons.check_rounded),
+          tooltip: 'Готово',
+          onPressed: () => Navigator.of(context).pop(),
         ),
+        title: const Text('Справочник'),
       ),
       floatingActionButton: _buildFab(context),
-      body: TabBarView(
-        controller: _tabController,
+      body: IndexedStack(
+        index: _currentIndex,
         children: const [
           _DirectorySectionTab(),
           _CatalogTab(),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.schema_outlined),
+            selectedIcon: Icon(Icons.schema),
+            label: 'Системные',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.inventory_2_outlined),
+            selectedIcon: Icon(Icons.inventory_2),
+            label: 'Каталог',
+          ),
         ],
       ),
     );
   }
 
   Widget _buildFab(BuildContext context) {
-    if (_tabController.index == 0) {
+    if (_currentIndex == 0) {
       return FloatingActionButton.extended(
         heroTag: 'bootstrap',
         onPressed: () async {
@@ -63,13 +68,19 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen>
             ref.invalidate(directorySectionsProvider);
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Системные разделы синхронизированы')),
+                const SnackBar(content: Text('Системные разделы успешно синхронизированы')),
               );
             }
-          } catch (error) {
+          } on DirectorySyncException catch (error) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Не удалось синхронизировать: $error')),
+                SnackBar(content: Text(error.message)),
+              );
+            }
+          } catch (_) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Не удалось синхронизировать разделы. Повторите позже.')),
               );
             }
           }
@@ -87,9 +98,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen>
           builder: (_) => _CategoryDialog(
             title: 'Новая категория',
             onSubmit: (name, slug, labor) async {
-              await ref
-                  .read(directoryRepositoryProvider)
-                  .createCategory(name: name, slug: slug);
+              await ref.read(directoryRepositoryProvider).createCategory(name: name, slug: slug);
               ref.invalidate(catalogCategoriesProvider);
             },
           ),
@@ -107,38 +116,91 @@ class _DirectorySectionTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sectionsAsync = ref.watch(directorySectionsProvider);
 
-    return sectionsAsync.when(
-      data: (sections) {
-        if (sections.isEmpty) {
-          return const Center(child: Text('Разделы справочника пока не созданы'));
-        }
+    return Column(
+      children: [
+        _DirectoryInfoCard(),
+        Expanded(
+          child: sectionsAsync.when(
+            data: (sections) {
+              if (sections.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      'Разделы пока не созданы. Нажмите «Синхронизировать», чтобы создать системные словари.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
 
-        return ListView.separated(
-          padding: const EdgeInsets.all(12),
-          itemCount: sections.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
-          itemBuilder: (context, index) {
-            final section = sections[index];
-            return _CompactCard(
-              icon: Icons.view_list_outlined,
-              title: section.name,
-              subtitle: section.code,
-              trailing: IconButton(
-                icon: const Icon(Icons.chevron_right),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => _SectionEntriesScreen(section: section),
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                itemCount: sections.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final section = sections[index];
+                  return _CompactCard(
+                    icon: Icons.view_list_outlined,
+                    title: section.name,
+                    subtitle: section.code,
+                    trailing: IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => _SectionEntriesScreen(section: section),
+                          ),
+                        );
+                      },
                     ),
                   );
                 },
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text('Не удалось загрузить разделы: $error', textAlign: TextAlign.center),
               ),
-            );
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Ошибка: $e')),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DirectoryInfoCard extends StatefulWidget {
+  @override
+  State<_DirectoryInfoCard> createState() => _DirectoryInfoCardState();
+}
+
+class _DirectoryInfoCardState extends State<_DirectoryInfoCard> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        initiallyExpanded: _expanded,
+        onExpansionChanged: (value) => setState(() => _expanded = value),
+        leading: const Icon(Icons.info_outline, color: Colors.indigo),
+        title: const Text('Что такое системные разделы?'),
+        subtitle: const Text('Статусы, типы, валюты и другие системные значения'),
+        children: const [
+          Text(
+            'Это словари, которые используются по всему приложению: '
+            'например, статусы проекта, типы объекта, типы щитов, валюты и категории файлов. '
+            'Синхронизация нужна, чтобы автоматически создать/обновить эти списки в базе из текущих настроек backend.',
+          ),
+        ],
+      ),
     );
   }
 }
@@ -159,7 +221,6 @@ class _SectionEntriesScreen extends ConsumerWidget {
           await showDialog<void>(
             context: context,
             builder: (_) => _DirectoryEntryDialog(
-              sectionId: section.id,
               title: 'Новая позиция',
               onSubmit: (code, name, order, isActive) async {
                 await ref.read(directoryRepositoryProvider).createEntry(
@@ -200,7 +261,6 @@ class _SectionEntriesScreen extends ConsumerWidget {
                         await showDialog<void>(
                           context: context,
                           builder: (_) => _DirectoryEntryDialog(
-                            sectionId: section.id,
                             title: 'Редактирование',
                             initial: entry,
                             onSubmit: (code, name, order, isActive) async {
@@ -232,7 +292,7 @@ class _SectionEntriesScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Ошибка: $e')),
+        error: (error, _) => Center(child: Text('Ошибка: $error')),
       ),
     );
   }
@@ -250,6 +310,7 @@ class _CatalogTab extends ConsumerWidget {
         if (categories.isEmpty) {
           return const Center(child: Text('Категории справочника не созданы'));
         }
+
         return ListView.separated(
           padding: const EdgeInsets.all(12),
           itemCount: categories.length,
@@ -308,7 +369,7 @@ class _CatalogTab extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Ошибка: $e')),
+      error: (error, _) => Center(child: Text('Ошибка: $error')),
     );
   }
 }
@@ -330,7 +391,6 @@ class _CategoryItemsScreen extends ConsumerWidget {
             context: context,
             builder: (_) => _CatalogItemDialog(
               title: 'Новая позиция',
-              categoryId: category.id,
               onSubmit: (name, unit, type, currency, price) async {
                 await ref.read(directoryRepositoryProvider).createItem(
                       categoryId: category.id,
@@ -372,7 +432,6 @@ class _CategoryItemsScreen extends ConsumerWidget {
                           context: context,
                           builder: (_) => _CatalogItemDialog(
                             title: 'Редактирование позиции',
-                            categoryId: category.id,
                             initial: item,
                             onSubmit: (name, unit, type, currency, price) async {
                               await ref.read(directoryRepositoryProvider).updateItem(
@@ -404,7 +463,7 @@ class _CategoryItemsScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Ошибка: $e')),
+        error: (error, _) => Center(child: Text('Ошибка: $error')),
       ),
     );
   }
@@ -451,7 +510,7 @@ class _DialogShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Container(
+      child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 500),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -472,7 +531,7 @@ class _DialogShell extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Row(mainAxisAlignment: MainAxisAlignment.end, children: actions),
-            )
+            ),
           ],
         ),
       ),
@@ -539,17 +598,11 @@ class _CategoryDialogState extends State<_CategoryDialog> {
 }
 
 class _DirectoryEntryDialog extends StatefulWidget {
-  final int sectionId;
   final String title;
   final DirectoryEntry? initial;
   final Future<void> Function(String code, String name, int order, bool isActive) onSubmit;
 
-  const _DirectoryEntryDialog({
-    required this.sectionId,
-    required this.title,
-    required this.onSubmit,
-    this.initial,
-  });
+  const _DirectoryEntryDialog({required this.title, required this.onSubmit, this.initial});
 
   @override
   State<_DirectoryEntryDialog> createState() => _DirectoryEntryDialogState();
@@ -589,7 +642,11 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
           const SizedBox(height: 12),
           TextField(controller: _code, decoration: const InputDecoration(labelText: 'Код')),
           const SizedBox(height: 12),
-          TextField(controller: _order, decoration: const InputDecoration(labelText: 'Порядок'), keyboardType: TextInputType.number),
+          TextField(
+            controller: _order,
+            decoration: const InputDecoration(labelText: 'Порядок'),
+            keyboardType: TextInputType.number,
+          ),
           const SizedBox(height: 8),
           SwitchListTile(
             dense: true,
@@ -621,7 +678,6 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
 
 class _CatalogItemDialog extends StatefulWidget {
   final String title;
-  final int categoryId;
   final CatalogItem? initial;
   final Future<void> Function(
     String name,
@@ -631,12 +687,7 @@ class _CatalogItemDialog extends StatefulWidget {
     double price,
   ) onSubmit;
 
-  const _CatalogItemDialog({
-    required this.title,
-    required this.categoryId,
-    required this.onSubmit,
-    this.initial,
-  });
+  const _CatalogItemDialog({required this.title, required this.onSubmit, this.initial});
 
   @override
   State<_CatalogItemDialog> createState() => _CatalogItemDialogState();

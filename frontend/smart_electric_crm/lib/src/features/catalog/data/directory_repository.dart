@@ -6,13 +6,31 @@ import 'package:smart_electric_crm/src/features/catalog/domain/category_model.da
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/directory_models.dart';
 
+class DirectorySyncException implements Exception {
+  final String message;
+
+  const DirectorySyncException(this.message);
+
+  @override
+  String toString() => message;
+}
+
 class DirectoryRepository {
   final Dio _client;
 
   DirectoryRepository({required Dio client}) : _client = client;
 
   Future<void> bootstrapDirectory() async {
-    await _client.post('/directory-sections/bootstrap/');
+    try {
+      await _client.post('/directory-sections/bootstrap/');
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 503) {
+        throw const DirectorySyncException(
+          'Сервер не готов к синхронизации. Примените миграции backend и повторите.',
+        );
+      }
+      throw DirectorySyncException('Ошибка синхронизации: ${error.message ?? error}');
+    }
   }
 
   Future<List<DirectorySection>> getSections() async {
