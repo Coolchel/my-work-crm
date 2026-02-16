@@ -97,3 +97,9 @@
     *   Access is denied when password check fails; user receives explicit validation error.
 *   **Directory Form Controls:**
     *   In Directory dialogs, default dropdown widgets are replaced with custom popup-select controls (clean neutral style, no logos/icons in options).
+
+## 8. Section Header UX
+*   **Compact Visual Header:**
+    *   Sections `Statistics`, `Finance`, `Objects`, `Stages`, `Estimates`, `Shields`, `Files`, `Directory`, and `Settings` use a unified compact top header style.
+    *   Header must stay visually expressive (gradient + icon + title) while remaining mobile-friendly in height.
+    *   Detail sub-sections may show contextual subtitle (e.g., object address or selected directory entity).

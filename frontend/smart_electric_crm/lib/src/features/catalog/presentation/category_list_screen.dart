@@ -10,6 +10,7 @@ import 'package:smart_electric_crm/src/features/catalog/domain/category_model.da
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/directory_models.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 
 class CategoryListScreen extends ConsumerStatefulWidget {
   const CategoryListScreen({super.key});
@@ -106,13 +107,14 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: CompactSectionAppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('Справочник'),
+        title: 'Справочник',
+        icon: Icons.menu_book_rounded,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),
@@ -121,7 +123,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
               tooltip: _isSyncingSystemSections
                   ? 'Синхронизация...'
                   : 'Синхронизировать',
-              color: Colors.black,
+              color: Colors.white,
               isLoading: _isSyncingSystemSections,
               onTap: _isSyncingSystemSections
                   ? null
@@ -413,13 +415,15 @@ class _SectionEntriesScreen extends ConsumerWidget {
     final entriesAsync = ref.watch(directoryEntriesProvider(section.id));
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: CompactSectionAppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(section.name),
+        title: 'Справочник',
+        subtitle: section.name,
+        icon: Icons.schema_rounded,
       ),
       floatingActionButton: Tooltip(
         message: 'Добавить запись',
@@ -710,13 +714,15 @@ class _CategoryItemsScreen extends ConsumerWidget {
     final workItemsAsync = ref.watch(catalogWorkItemsProvider);
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: CompactSectionAppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(category.name),
+        title: 'Каталог',
+        subtitle: category.name,
+        icon: Icons.inventory_2_rounded,
       ),
       floatingActionButton: Tooltip(
         message: 'Добавить позицию',

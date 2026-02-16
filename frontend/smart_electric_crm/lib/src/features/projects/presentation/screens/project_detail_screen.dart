@@ -12,6 +12,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_dialog.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'dart:io';
 import '../../data/models/project_file_model.dart';
 import '../../../../shared/services/temp_file_service.dart';
@@ -37,37 +38,43 @@ class ProjectDetailScreen extends ConsumerWidget {
           return _ProjectDetailContent(project: project);
         } catch (_) {
           return Scaffold(
-            appBar: AppBar(
+            appBar: CompactSectionAppBar(
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
+                icon: const Icon(Icons.arrow_back_ios_new),
                 tooltip: 'Назад',
                 onPressed: () => Navigator.of(context).pop(),
               ),
-              title: const Text('Детали объекта'),
+              title: 'Объект',
+              subtitle: 'Детали',
+              icon: Icons.apartment_rounded,
             ),
             body: const Center(child: Text('Объект не найден')),
           );
         }
       },
       loading: () => Scaffold(
-        appBar: AppBar(
+        appBar: CompactSectionAppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back_ios_new),
             tooltip: 'Назад',
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: const Text('Детали объекта'),
+          title: 'Объект',
+          subtitle: 'Загрузка',
+          icon: Icons.apartment_rounded,
         ),
         body: const Center(child: CircularProgressIndicator()),
       ),
       error: (error, stack) => Scaffold(
-        appBar: AppBar(
+        appBar: CompactSectionAppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back_ios_new),
             tooltip: 'Назад',
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: const Text('Детали объекта'),
+          title: 'Объект',
+          subtitle: 'Ошибка загрузки',
+          icon: Icons.apartment_rounded,
         ),
         body: Center(child: Text('Ошибка: $error')),
       ),
@@ -87,6 +94,12 @@ class _ProjectDetailContent extends ConsumerStatefulWidget {
 
 class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
   int _currentIndex = 0;
+  static const List<String> _tabTitles = ['Этапы', 'Щиты', 'Файлы'];
+  static const List<IconData> _tabIcons = [
+    Icons.layers_rounded,
+    Icons.settings_input_component_rounded,
+    Icons.folder_open_rounded,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -97,13 +110,15 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
     ];
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: CompactSectionAppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(widget.project.address),
+        title: _tabTitles[_currentIndex],
+        subtitle: widget.project.address,
+        icon: _tabIcons[_currentIndex],
       ),
       body: IndexedStack(
         index: _currentIndex,

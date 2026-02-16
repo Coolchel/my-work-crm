@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../catalog/presentation/category_list_screen.dart';
+import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../application/app_settings_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -17,8 +18,9 @@ class SettingsScreen extends ConsumerWidget {
     final userAsync = ref.watch(userProfileProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Настройки'),
+      appBar: const CompactSectionAppBar(
+        title: 'Настройки',
+        icon: Icons.settings_rounded,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

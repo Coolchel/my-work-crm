@@ -8,6 +8,7 @@ import '../../data/repositories/finance_repository.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../../../projects/presentation/screens/estimate_screen.dart';
+import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 
 part 'finance_screen.g.dart';
 
@@ -189,11 +190,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text('Финансы'),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+      appBar: const CompactSectionAppBar(
+        title: 'Финансы',
+        icon: Icons.account_balance_wallet_rounded,
       ),
       body: projectsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

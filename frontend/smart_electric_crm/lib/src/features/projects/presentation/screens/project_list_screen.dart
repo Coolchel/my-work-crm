@@ -6,6 +6,7 @@ import '../../data/models/project_model.dart';
 import 'project_detail_screen.dart';
 import 'add_project_screen.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 
 // ─── Filter enums ─────────────────────────────────────────────
 enum SortOrder { newest, oldest }
@@ -154,9 +155,9 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     final projectListAsync = ref.watch(projectListProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Объекты'),
-        centerTitle: false,
+      appBar: CompactSectionAppBar(
+        title: 'Объекты',
+        icon: Icons.apartment_rounded,
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
