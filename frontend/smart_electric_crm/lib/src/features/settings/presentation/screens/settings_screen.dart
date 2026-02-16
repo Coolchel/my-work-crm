@@ -1,10 +1,12 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/data/auth_repository.dart';
-import '../../application/app_settings_controller.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../catalog/presentation/category_list_screen.dart';
+import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
+import '../../application/app_settings_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -16,8 +18,9 @@ class SettingsScreen extends ConsumerWidget {
     final userAsync = ref.watch(userProfileProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Настройки'),
+      appBar: const CompactSectionAppBar(
+        title: 'Настройки',
+        icon: Icons.settings_rounded,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -52,7 +55,7 @@ class SettingsScreen extends ConsumerWidget {
                             ),
                             ButtonSegment(
                               value: ThemeMode.dark,
-                              label: Text('Тёмная'),
+                              label: Text('Темная'),
                               icon: Icon(Icons.dark_mode_outlined),
                             ),
                             ButtonSegment(
@@ -94,7 +97,7 @@ class SettingsScreen extends ConsumerWidget {
               title: const Text('Справочник'),
               subtitle: const Text('Категории, расценки и шаблоны'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => _showReferenceWarning(context),
+              onTap: () => _showReferenceWarning(context, ref),
             ),
           ),
           const SizedBox(height: 24),
@@ -116,8 +119,11 @@ class SettingsScreen extends ConsumerWidget {
                         CircleAvatar(
                           radius: 28,
                           backgroundColor: Colors.indigo.withOpacity(0.1),
-                          child: const Icon(Icons.manage_accounts_outlined,
-                              color: Colors.indigo, size: 30),
+                          child: const Icon(
+                            Icons.manage_accounts_outlined,
+                            color: Colors.indigo,
+                            size: 30,
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -166,15 +172,18 @@ class SettingsScreen extends ConsumerWidget {
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.red),
-                  title: const Text('Выйти из системы',
-                      style: TextStyle(color: Colors.red)),
+                  title: const Text(
+                    'Выйти из системы',
+                    style: TextStyle(color: Colors.red),
+                  ),
                   subtitle: const Text('Завершить текущий сеанс'),
                   onTap: () async {
                     final confirmed = await showDialog<bool>(
                       context: context,
                       builder: (context) => Dialog(
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24)),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
                         child: Container(
                           constraints: const BoxConstraints(maxWidth: 340),
                           child: Column(
@@ -185,7 +194,8 @@ class SettingsScreen extends ConsumerWidget {
                                 decoration: BoxDecoration(
                                   color: Colors.red.withOpacity(0.1),
                                   borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(24)),
+                                    top: Radius.circular(24),
+                                  ),
                                 ),
                                 child: const Row(
                                   children: [
@@ -194,9 +204,10 @@ class SettingsScreen extends ConsumerWidget {
                                     Text(
                                       'Выход',
                                       style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.red),
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.red,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -225,8 +236,9 @@ class SettingsScreen extends ConsumerWidget {
                                         backgroundColor: Colors.red,
                                         foregroundColor: Colors.white,
                                         shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12)),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
                                       ),
                                       onPressed: () =>
                                           Navigator.pop(context, true),
@@ -268,78 +280,168 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showReferenceWarning(BuildContext context) {
+  void _showReferenceWarning(BuildContext context, WidgetRef ref) {
     const themeColor = Colors.red;
+    final passwordController = TextEditingController();
+    bool isLoading = false;
+    String? passwordError;
+
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: themeColor.withOpacity(0.1),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.warning_amber_rounded, color: themeColor),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Опасная зона',
-                        style: TextStyle(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: themeColor.withOpacity(0.1),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(24)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded, color: themeColor),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Опасная зона',
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: themeColor),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Вы входите в раздел редактирования справочника. Любые изменения здесь повлияют на расчеты во всех проектах. Будьте осторожны!',
-                  style: TextStyle(fontSize: 15, height: 1.4),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Отмена'),
-                    ),
-                    const SizedBox(width: 8),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: themeColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const CategoryListScreen(),
+                            color: themeColor,
                           ),
-                        );
-                      },
-                      child: const Text('Я понимаю'),
-                    ),
-                  ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(24, 24, 24, 12),
+                  child: Text(
+                    'Вы входите в раздел редактирования справочника. Любые изменения здесь повлияют на расчеты во всех проектах. Будьте осторожны!',
+                    style: TextStyle(fontSize: 15, height: 1.4),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                  child: TextField(
+                    controller: passwordController,
+                    enabled: !isLoading,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Пароль текущего аккаунта',
+                      errorText: passwordError,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed:
+                            isLoading ? null : () => Navigator.pop(context),
+                        child: const Text('Отмена'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: themeColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                final password = passwordController.text;
+                                if (password.trim().isEmpty) {
+                                  setDialogState(() {
+                                    passwordError =
+                                        'Введите пароль для подтверждения';
+                                  });
+                                  return;
+                                }
+
+                                setDialogState(() {
+                                  isLoading = true;
+                                  passwordError = null;
+                                });
+
+                                try {
+                                  final repo = await ref
+                                      .read(authRepositoryProvider.future);
+                                  final user = await repo.getUser();
+                                  final username = (user['username'] ?? '')
+                                      .toString()
+                                      .trim();
+
+                                  if (username.isEmpty) {
+                                    throw Exception(
+                                        'Не удалось получить пользователя');
+                                  }
+
+                                  final isValid =
+                                      await repo.verifyCurrentPassword(
+                                    username: username,
+                                    password: password,
+                                  );
+
+                                  if (!isValid) {
+                                    setDialogState(() {
+                                      isLoading = false;
+                                      passwordError = 'Неверный пароль';
+                                    });
+                                    return;
+                                  }
+
+                                  if (!context.mounted) return;
+                                  Navigator.pop(context);
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const CategoryListScreen(),
+                                    ),
+                                  );
+                                } catch (_) {
+                                  setDialogState(() {
+                                    isLoading = false;
+                                    passwordError =
+                                        'Ошибка проверки. Попробуйте еще раз.';
+                                  });
+                                }
+                              },
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Я понимаю'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -381,14 +483,18 @@ class SettingsScreen extends ConsumerWidget {
                         const Text(
                           'Смена пароля',
                           style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: themeColor),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: themeColor,
+                          ),
                         ),
                         IconButton(
                           onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close,
-                              color: themeColor, size: 20),
+                          icon: const Icon(
+                            Icons.close,
+                            color: themeColor,
+                            size: 20,
+                          ),
                         ),
                       ],
                     ),
@@ -419,21 +525,28 @@ class SettingsScreen extends ConsumerWidget {
                           const SizedBox(height: 16),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.red.shade50,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.error_outline,
-                                    color: Colors.red, size: 20),
+                                const Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     errorMessage!,
                                     style: const TextStyle(
-                                        color: Colors.red, fontSize: 13),
+                                      color: Colors.red,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -459,7 +572,8 @@ class SettingsScreen extends ConsumerWidget {
                             backgroundColor: themeColor,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             minimumSize: const Size(120, 44),
                           ),
                           onPressed: isLoading
@@ -472,11 +586,13 @@ class SettingsScreen extends ConsumerWidget {
                                     });
                                     return;
                                   }
+
                                   setDialogState(() {
                                     isLoading = true;
                                     errorMessage = null;
                                     confirmError = null;
                                   });
+
                                   try {
                                     final repo = await ref
                                         .read(authRepositoryProvider.future);
@@ -489,18 +605,22 @@ class SettingsScreen extends ConsumerWidget {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         const SnackBar(
-                                            content:
-                                                Text('Пароль успешно изменен')),
+                                          content:
+                                              Text('Пароль успешно изменен'),
+                                        ),
                                       );
                                     }
                                   } catch (e) {
                                     setDialogState(() {
                                       isLoading = false;
-                                      errorMessage = e
-                                              .toString()
-                                              .contains('400')
-                                          ? 'Неверный старый пароль или недопустимый новый'
-                                          : 'Ошибка: ${e.toString()}';
+                                      if (e is DioException &&
+                                          e.response?.statusCode == 400) {
+                                        errorMessage =
+                                            'Неверный старый пароль или недопустимый новый пароль';
+                                      } else {
+                                        errorMessage =
+                                            'Ошибка: ${e.toString()}';
+                                      }
                                     });
                                   }
                                 },
@@ -509,7 +629,9 @@ class SettingsScreen extends ConsumerWidget {
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white),
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
                                 )
                               : const Text('Сохранить'),
                         ),

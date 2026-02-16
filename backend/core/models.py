@@ -1,6 +1,52 @@
 from django.db import models
 import re
 
+
+class DirectorySection(models.Model):
+    """Настраиваемый раздел справочника (например, статусы проекта, типы щитов)."""
+
+    code = models.SlugField(unique=True, allow_unicode=False, verbose_name="Код раздела")
+    name = models.CharField(max_length=120, verbose_name="Название")
+    description = models.TextField(blank=True, verbose_name="Описание")
+
+    class Meta:
+        verbose_name = "Раздел справочника"
+        verbose_name_plural = "Разделы справочника"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class DirectoryEntry(models.Model):
+    """Запись внутри раздела справочника."""
+
+    section = models.ForeignKey(
+        DirectorySection,
+        on_delete=models.CASCADE,
+        related_name='entries',
+        verbose_name="Раздел",
+    )
+    code = models.CharField(max_length=80, verbose_name="Код")
+    name = models.CharField(max_length=255, verbose_name="Название")
+    sort_order = models.PositiveIntegerField(default=100, verbose_name="Порядок")
+    is_active = models.BooleanField(default=True, verbose_name="Активно")
+    metadata = models.JSONField(default=dict, blank=True, verbose_name="Метаданные")
+
+    class Meta:
+        verbose_name = "Позиция справочника"
+        verbose_name_plural = "Позиции справочника"
+        ordering = ['sort_order', 'name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['section', 'code'],
+                name='unique_directory_entry_code_in_section',
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.section.name}: {self.name}"
+
 class CatalogCategory(models.Model):
     """
     Категория справочника (например, 'Кабели', 'Розетки').

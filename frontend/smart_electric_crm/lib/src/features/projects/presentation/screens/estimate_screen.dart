@@ -16,6 +16,7 @@ import '../../../engineering/presentation/providers/template_providers.dart';
 import '../../../engineering/data/models/template_models.dart';
 import '../../../../shared/presentation/dialogs/text_input_dialog.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
+import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 
 import '../widgets/stages/stage_card.dart';
 
@@ -92,13 +93,15 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     // Backdrop filter when FAB is expanded
     // Backdrop filter when FAB is expanded
     return Scaffold(
-      appBar: AppBar(
+      appBar: CompactSectionAppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(StageCard.getStageTitleDisplay(widget.stage.title)),
+        title: 'Смета',
+        subtitle: StageCard.getStageTitleDisplay(widget.stage.title),
+        icon: Icons.request_quote_rounded,
         actions: [
           // PDF Actions Button
           IconButton(

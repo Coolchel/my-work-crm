@@ -63,6 +63,128 @@ class ItemListScreen extends ConsumerWidget {
   }
 }
 
+class _PopupSelectOption<T> {
+  final T value;
+  final String label;
+
+  const _PopupSelectOption({
+    required this.value,
+    required this.label,
+  });
+}
+
+class _PopupSelectField<T> extends StatelessWidget {
+  final String label;
+  final T value;
+  final List<_PopupSelectOption<T>> options;
+  final ValueChanged<T> onChanged;
+
+  const _PopupSelectField({
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = options.cast<_PopupSelectOption<T>?>().firstWhere(
+          (option) => option?.value == value,
+          orElse: () => null,
+        );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 2, bottom: 6),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+            ),
+            Container(
+              height: 46,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: () async {
+                    final box = context.findRenderObject() as RenderBox;
+                    final position = box.localToGlobal(Offset.zero);
+                    final size = box.size;
+
+                    final selectedValue = await showMenu<T>(
+                      context: context,
+                      position: RelativeRect.fromLTRB(
+                        position.dx,
+                        position.dy + size.height + 4,
+                        position.dx + size.width,
+                        position.dy + size.height + 280,
+                      ),
+                      elevation: 4,
+                      shadowColor: Colors.black.withOpacity(0.2),
+                      surfaceTintColor: Colors.transparent,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      constraints: BoxConstraints(
+                        minWidth: constraints.maxWidth,
+                        maxWidth: constraints.maxWidth,
+                      ),
+                      items: options
+                          .map(
+                            (option) => PopupMenuItem<T>(
+                              value: option.value,
+                              child: Text(option.label),
+                            ),
+                          )
+                          .toList(),
+                    );
+                    if (selectedValue != null) {
+                      onChanged(selectedValue);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  mouseCursor: SystemMouseCursors.click,
+                  hoverColor: Colors.indigo.withOpacity(0.05),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            selected?.label ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const Icon(Icons.arrow_drop_down),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _CreateItemDialog extends ConsumerStatefulWidget {
   final int categoryId;
 
@@ -76,7 +198,7 @@ class _CreateItemDialogState extends ConsumerState<_CreateItemDialog> {
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   final _unitController = TextEditingController(text: 'шт');
-  String _itemType = 'material'; // work or material
+  String _itemType = 'material';
 
   @override
   void dispose() {
@@ -94,16 +216,14 @@ class _CreateItemDialogState extends ConsumerState<_CreateItemDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DropdownButtonFormField<String>(
+            _PopupSelectField<String>(
+              label: 'Тип',
               value: _itemType,
-              decoration: const InputDecoration(labelText: 'Тип'),
-              items: const [
-                DropdownMenuItem(value: 'material', child: Text('Материал')),
-                DropdownMenuItem(value: 'work', child: Text('Работа')),
+              options: const [
+                _PopupSelectOption(value: 'material', label: 'Материал'),
+                _PopupSelectOption(value: 'work', label: 'Работа'),
               ],
-              onChanged: (val) {
-                if (val != null) setState(() => _itemType = val);
-              },
+              onChanged: (val) => setState(() => _itemType = val),
             ),
             TextField(
               controller: _nameController,
@@ -130,13 +250,11 @@ class _CreateItemDialogState extends ConsumerState<_CreateItemDialog> {
         ElevatedButton(
           onPressed: () async {
             final name = _nameController.text;
-            // Важная правка: заменяем запятую на точку перед парсингом
             final priceString = _priceController.text.replaceAll(',', '.');
             final price = double.tryParse(priceString);
             final unit = _unitController.text;
 
             if (name.isEmpty || price == null || unit.isEmpty) {
-              // Просто валидация
               return;
             }
 
@@ -144,21 +262,18 @@ class _CreateItemDialogState extends ConsumerState<_CreateItemDialog> {
               await ref.read(catalogRepositoryProvider).createItem(
                     categoryId: widget.categoryId,
                     name: name,
-                    price:
-                        price, // Already parsed correctly via TextInputType options and user input expectation, but let's double check
+                    price: price,
                     measurementUnit: unit,
                     itemType: _itemType,
                   );
 
-              // Invalidation is done here in UI
               ref.invalidate(fetchCategoryItemsProvider(widget.categoryId));
 
               if (context.mounted) Navigator.of(context).pop();
             } catch (e) {
               if (context.mounted) {
-                String errorMessage = 'Ошибка: $e';
+                var errorMessage = 'Ошибка: $e';
                 if (e is DioException && e.response?.data != null) {
-                  // Показываем ответ сервера (валидацию полей)
                   errorMessage = 'Ошибка сервера: ${e.response?.data}';
                 }
 

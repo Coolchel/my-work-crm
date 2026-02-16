@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     Project, Stage, EstimateItem, ProjectFile,
-    CatalogCategory, CatalogItem, ContractorNote, 
+    CatalogCategory, CatalogItem, DirectorySection, DirectoryEntry, ContractorNote, 
     ShieldGroup, LedZone, Shield,
     WorkTemplate, WorkTemplateItem,
     MaterialTemplate, MaterialTemplateItem,
@@ -9,6 +9,27 @@ from .models import (
     LedShieldTemplate, LedShieldTemplateItem,
     FinanceSettings
 )
+from .text_normalizer import normalize_possible_mojibake
+
+
+class TextNormalizationSerializerMixin:
+    normalized_text_fields: tuple[str, ...] = ()
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        for field_name in self.normalized_text_fields:
+            field_value = attrs.get(field_name)
+            if isinstance(field_value, str):
+                attrs[field_name] = normalize_possible_mojibake(field_value)
+        return attrs
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        for field_name in self.normalized_text_fields:
+            field_value = data.get(field_name)
+            if isinstance(field_value, str):
+                data[field_name] = normalize_possible_mojibake(field_value)
+        return data
 
 class ProjectFileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -146,16 +167,38 @@ class ProjectSerializer(serializers.ModelSerializer):
             'notes': {'required': False, 'allow_blank': True},
         }
 
-class CatalogCategorySerializer(serializers.ModelSerializer):
+class CatalogCategorySerializer(TextNormalizationSerializerMixin, serializers.ModelSerializer):
+    normalized_text_fields = ('name',)
+
     class Meta:
         model = CatalogCategory
         fields = '__all__'
 
-class CatalogItemSerializer(serializers.ModelSerializer):
+
+class CatalogItemSerializer(TextNormalizationSerializerMixin, serializers.ModelSerializer):
+    normalized_text_fields = ('name', 'unit')
+
     class Meta:
         model = CatalogItem
         fields = '__all__'
 
+
+class DirectoryEntrySerializer(TextNormalizationSerializerMixin, serializers.ModelSerializer):
+    normalized_text_fields = ('name',)
+
+    class Meta:
+        model = DirectoryEntry
+        fields = '__all__'
+
+
+class DirectorySectionSerializer(TextNormalizationSerializerMixin, serializers.ModelSerializer):
+    normalized_text_fields = ('name', 'description')
+
+    entries = DirectoryEntrySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = DirectorySection
+        fields = '__all__'
 
 
 class ContractorNoteSerializer(serializers.ModelSerializer):

@@ -75,6 +75,27 @@ class AuthRepository {
     }
   }
 
+  Future<bool> verifyCurrentPassword({
+    required String username,
+    required String password,
+  }) async {
+    try {
+      await _dio.post(
+        '/auth/token/',
+        data: {
+          'username': username,
+          'password': password,
+        },
+      );
+      return true;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        return false;
+      }
+      rethrow;
+    }
+  }
+
   String? getAccessToken() {
     return _prefs.getString(_accessTokenKey);
   }

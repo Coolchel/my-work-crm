@@ -59,3 +59,62 @@ Triggered when Materials are updated.
     *   `updated_at`: Updates only if changes > 2 hours after creation.
 *   **Stage Dates:**
     *   Updating an Estimate Item touches parent Stage `updated_at`.
+*   **Home Smart Search Normalization:**
+    *   Query and searchable text are normalized to lowercase before matching.
+    *   Search behavior is always case-insensitive.
+
+
+## 5. Directory (Reference Book) Logic
+### 5.1. Data Model
+*   `DirectorySection`: stores section-level metadata (`code`, `name`, `description`).
+*   `DirectoryEntry`: stores editable values for a section (`code`, `name`, `sort_order`, `is_active`, `metadata`).
+*   Uniqueness rule: `DirectoryEntry.code` must be unique inside one section.
+
+### 5.2. Bootstrap Synchronization
+*   Endpoint: `POST /api/directory-sections/bootstrap/`.
+*   Purpose: synchronize built-in model choices into editable DB dictionaries.
+*   Source choices include: project statuses, object types, stage titles/statuses, catalog item types, currencies, estimate item types, shield types, shield mounting, shield device types, project file categories.
+*   Behavior: upsert sections and entries (safe re-run, idempotent in practice for existing codes).
+
+### 5.3. CRUD Access
+*   `DirectorySection` and `DirectoryEntry` provide full CRUD via REST endpoints.
+*   Catalog admin part (categories + catalog items) also remains full CRUD from app UI.
+*   Catalog item CRUD must preserve technical fields: `mapping_key`, `aggregation_key`, `related_work_item`.
+*   Directory entry CRUD must preserve JSON `metadata`.
+
+
+### 5.4. UI Synchronization Flow
+*   On entering the directory screen, app triggers automatic `bootstrap` synchronization for system sections.
+*   During synchronization, system tab shows a loading state with explicit wait message to prevent editing stale data.
+*   Manual "Synchronize" action remains available as a recovery/retry path for admins.
+*   If backend returns `503` (tables not ready/migrations missing), UI shows a human-readable error message instead of raw transport error text.
+
+### 5.5. Directory Error Contract (Tables Not Ready)
+*   Backend detection: missing `core_directorysection` / `core_directoryentry` tables.
+*   Response strategy:
+    *   `list`: return empty array for directory sections/entries.
+    *   `bootstrap`, `retrieve`, `create`, `update`, `partial_update`, `destroy`: return HTTP `503` with readable `error`.
+*   Goal: safe startup behavior before migrations and predictable client UX.
+
+### 5.6. Directory Interaction Rules
+*   Second-level directory entities (section entries, category items) support row-tap edit flow.
+*   Bottom directory navigation remains accessible on second-level screens; switching tab returns to the corresponding root tab context.
+*   Delete icons use neutral hover styling (no danger-color hover escalation on icon hover itself); destructive intent remains in confirmation dialog.
+
+### 5.7. Directory Access Gate (Settings)
+*   Entry point: Settings -> Directory.
+*   Flow:
+    1. Show warning dialog about high-impact dictionary/catalog changes.
+    2. Require current-account password.
+    3. Validate password using auth repository flow.
+    4. Navigate to Directory only on successful validation.
+*   Invalid password keeps dialog open and shows field-level error.
+
+### 5.8. Text Encoding Resilience (Directory/Catalog)
+*   Backend normalizes potentially broken mojibake strings on serializer input/output for:
+    *   `DirectorySection.name`, `DirectorySection.description`
+    *   `DirectoryEntry.name`
+    *   `CatalogCategory.name`
+    *   `CatalogItem.name`, `CatalogItem.unit`
+*   Repair command is available for one-shot cleanup of persisted data:
+    *   `python manage.py repair_text_encoding`

@@ -24,6 +24,7 @@
 *   **Behavior:** Scale x1.05 on hover.
 *   **Rendering:** MUST use `Clip.antiAlias` to prevent square hover effects on rounded cards.
 *   **Cursor:** `SystemMouseCursors.click` (Hand) for all clickable zones.
+*   **Consistency Rule:** Home recent objects and Finance interactive rows follow the same hover feedback family as object cards (matching visual intensity and timing).
 
 ### 2.3. Typography & Data
 *   **Numbers:**
@@ -50,6 +51,7 @@
 *   **Project Card:**
     *   **Active:** Green border (width 2.0) when expanded.
     *   **Paid Badge:** Green Pill with "PAID" text.
+*   **All Positions Hover:** Every clickable finance position has hover highlight (not only parent project card).
 
 ## 4. Icons & Assets
 *   **Style:** Material Symbols Rounded.
@@ -57,3 +59,22 @@
     *   PDF: Red Icon.
     *   DOC: Blue Icon.
     *   Image: Thumbnail preview (`BoxFit.cover`).
+
+
+### 3.4. Directory Screen (Reference Book)
+*   **Navigation:** Bottom `NavigationBar` with two destinations: `System Sections` and `Catalog` (same pattern as main app sections).
+*   **Nested Navigation:** Keep the same bottom `NavigationBar` visible on second-level directory screens.
+*   **Naming:** System tab title in UI is `Система`.
+*   **Density:** Use compact list rows (`dense`, reduced vertical visual density).
+*   **Card Shape:** Rounded cards (~14px) with left accent stripe (entity color coding) to match object/stage cards.
+*   **Dialogs:** Reuse premium dialog shell (24px corners, tinted header, concise actions).
+*   **Dialog Controls:** Keep header/actions, but use refreshed form control styling (filled inputs, clearer focus border, styled switch container, consistent dropdown visual weight).
+*   **Select Controls:** Replace default dropdown controls in directory forms with custom popup-select fields (neutral palette, no logos/images in options).
+*   **Actions:** Fast inline CRUD icons (edit/delete/open) with minimal vertical space usage and hover tint.
+*   **Hover:** No card scaling in directory; use light surface tint + soft shadow increase, `Clip.antiAlias`, and pointer cursor for interactive cards.
+*   **Entry Behavior:** Auto-sync system sections on screen open; show blocking loading indicator with "please wait" message while synchronization is in progress.
+*   **AppBar Action:** Use a back arrow as leading action. Place manual sync in right AppBar action icon on both directory tabs (neutral style, standard top-bar icon size, no blue-hover recolor).
+*   **Nested Editing:** On second-level lists, tapping a row opens edit flow directly (inline edit icon remains available).
+*   **Delete Icon:** Use close icon with neutral grey hover tint; destructive semantics are communicated by confirmation dialog.
+*   **Affordance Cleanup:** Remove trailing chevron icon from cards that open nested lists.
+*   **Nested FAB:** Second-level FAB `+` uses tooltip with the same placement pattern as stage/object analogs.

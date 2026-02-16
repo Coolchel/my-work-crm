@@ -2,19 +2,155 @@ from rest_framework import viewsets, status, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db.utils import OperationalError, ProgrammingError
 from .models import (
-    Project, Stage, ShieldGroup, LedZone, CatalogCategory, CatalogItem, 
+    Project, Stage, ShieldGroup, LedZone, CatalogCategory, CatalogItem, DirectorySection, DirectoryEntry,
     Shield, EstimateItem, WorkTemplate, MaterialTemplate, PowerShieldTemplate, LedShieldTemplate,
     FinanceSettings, ProjectFile
 )
 from .serializers import (
-    ProjectSerializer, StageSerializer, CatalogCategorySerializer, CatalogItemSerializer, 
+    ProjectSerializer, StageSerializer, CatalogCategorySerializer, CatalogItemSerializer, DirectorySectionSerializer, DirectoryEntrySerializer,
     ShieldGroupSerializer, LedZoneSerializer, ShieldSerializer, EstimateItemSerializer,
     WorkTemplateSerializer, MaterialTemplateSerializer, 
     PowerShieldTemplateSerializer, LedShieldTemplateSerializer,
     FinanceSettingsSerializer, ProjectFileSerializer
 )
 from .services import TemplateService
+
+
+DIRECTORY_SECTION_DEFINITIONS = [
+    {
+        'code': 'project_status',
+        'name': 'Статусы проекта',
+        'description': 'Варианты состояния проекта.'
+    },
+    {
+        'code': 'object_type',
+        'name': 'Типы объектов',
+        'description': 'Варианты типа объекта проекта.'
+    },
+    {
+        'code': 'stage_title',
+        'name': 'Название этапа',
+        'description': 'Варианты названий этапов.'
+    },
+    {
+        'code': 'stage_status',
+        'name': 'Статус этапа',
+        'description': 'Состояния этапа выполнения.'
+    },
+    {
+        'code': 'catalog_item_type',
+        'name': 'Тип позиции каталога',
+        'description': 'Работа или материал.'
+    },
+    {
+        'code': 'currency',
+        'name': 'Валюты',
+        'description': 'Поддерживаемые валюты.'
+    },
+    {
+        'code': 'estimate_item_type',
+        'name': 'Тип позиции сметы',
+        'description': 'Типы позиций сметы.'
+    },
+    {
+        'code': 'shield_type',
+        'name': 'Типы щитов',
+        'description': 'Типы инженерных щитов.'
+    },
+    {
+        'code': 'shield_mounting',
+        'name': 'Типы монтажа щитов',
+        'description': 'Способ монтажа щита.'
+    },
+    {
+        'code': 'shield_device_type',
+        'name': 'Типы устройств щита',
+        'description': 'Устройства внутри силового щита.'
+    },
+    {
+        'code': 'project_file_category',
+        'name': 'Категории файлов проекта',
+        'description': 'Категории файлов в проекте.'
+    },
+]
+
+
+
+
+def _is_directory_table_error(error):
+    error_text = str(error).lower()
+    return (
+        'core_directorysection' in error_text
+        or 'core_directoryentry' in error_text
+        or 'no such table' in error_text
+        or 'does not exist' in error_text
+    )
+
+def _directory_tables_not_ready_response():
+    return Response(
+        {
+            'error': 'Directory tables are not ready. Please run migrations.',
+        },
+        status=status.HTTP_503_SERVICE_UNAVAILABLE,
+    )
+
+def _bootstrap_directory_from_choices():
+    mapping = [
+        ('project_status', Project.STATUS_CHOICES),
+        ('object_type', Project.OBJECT_TYPE_CHOICES),
+        ('stage_title', Stage.TITLE_CHOICES),
+        ('stage_status', Stage.STATUS_CHOICES),
+        ('catalog_item_type', CatalogItem.TYPE_CHOICES),
+        ('currency', CatalogItem.CURRENCY_CHOICES),
+        ('estimate_item_type', EstimateItem.TYPE_CHOICES),
+        ('shield_type', Shield.SHIELD_TYPE_CHOICES),
+        ('shield_mounting', Shield.MOUNTING_CHOICES),
+        ('shield_device_type', ShieldGroup.DEVICE_CHOICES),
+        ('project_file_category', ProjectFile.CATEGORY_CHOICES),
+    ]
+
+    created_sections = 0
+    created_entries = 0
+
+    for section_def in DIRECTORY_SECTION_DEFINITIONS:
+        section, is_created = DirectorySection.objects.get_or_create(
+            code=section_def['code'],
+            defaults={
+                'name': section_def['name'],
+                'description': section_def['description'],
+            },
+        )
+        if is_created:
+            created_sections += 1
+
+        section.name = section_def['name']
+        section.description = section_def['description']
+        section.save(update_fields=['name', 'description'])
+
+    for section_code, choices in mapping:
+        section = DirectorySection.objects.get(code=section_code)
+        for index, (code, name) in enumerate(choices):
+            _, is_created = DirectoryEntry.objects.update_or_create(
+                section=section,
+                code=code,
+                defaults={
+                    'name': name,
+                    'sort_order': index,
+                    'is_active': True,
+                },
+            )
+            if is_created:
+                created_entries += 1
+
+    return {
+        'created_sections': created_sections,
+        'created_entries': created_entries,
+        'total_sections': DirectorySection.objects.count(),
+        'total_entries': DirectoryEntry.objects.count(),
+    }
+
 
 class ProjectFileViewSet(viewsets.ModelViewSet):
     queryset = ProjectFile.objects.all()
@@ -46,6 +182,116 @@ class CatalogItemViewSet(viewsets.ModelViewSet):
         if search_query:
             qs = qs.filter(search_name__contains=search_query.lower())
         return qs
+
+
+class DirectorySectionViewSet(viewsets.ModelViewSet):
+    queryset = DirectorySection.objects.prefetch_related('entries').all()
+    serializer_class = DirectorySectionSerializer
+
+    def _handle_directory_db_error(self, error):
+        if _is_directory_table_error(error):
+            return _directory_tables_not_ready_response()
+        raise error
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            return super().retrieve(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def list(self, request, *args, **kwargs):
+        try:
+            return super().list(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            if _is_directory_table_error(error):
+                return Response([])
+            raise
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            return super().update(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            return super().partial_update(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    @action(detail=False, methods=['post'])
+    def bootstrap(self, request):
+        try:
+            result = _bootstrap_directory_from_choices()
+            return Response(result)
+        except (OperationalError, ProgrammingError) as error:
+            if _is_directory_table_error(error):
+                response = _directory_tables_not_ready_response()
+                response.data['details'] = str(error)
+                return response
+            raise
+
+
+class DirectoryEntryViewSet(viewsets.ModelViewSet):
+    queryset = DirectoryEntry.objects.select_related('section').all()
+    serializer_class = DirectoryEntrySerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['section', 'is_active']
+
+    def _handle_directory_db_error(self, error):
+        if _is_directory_table_error(error):
+            return _directory_tables_not_ready_response()
+        raise error
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            return super().retrieve(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def list(self, request, *args, **kwargs):
+        try:
+            return super().list(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            if _is_directory_table_error(error):
+                return Response([])
+            raise
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            return super().update(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            return super().partial_update(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except (OperationalError, ProgrammingError) as error:
+            return self._handle_directory_db_error(error)
 
 
 class ShieldViewSet(viewsets.ModelViewSet):

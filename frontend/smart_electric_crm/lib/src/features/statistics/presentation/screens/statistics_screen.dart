@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../data/models/statistics_model.dart';
 import '../../data/repositories/statistics_repository.dart';
 import '../widgets/work_dynamics_chart.dart';
+import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 
 class StatisticsScreen extends ConsumerWidget {
   const StatisticsScreen({super.key});
@@ -29,11 +30,9 @@ class StatisticsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        title: const Text('Статистика'),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+      appBar: const CompactSectionAppBar(
+        title: 'Статистика',
+        icon: Icons.bar_chart_rounded,
       ),
       body: statsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

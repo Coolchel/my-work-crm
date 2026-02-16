@@ -7,6 +7,7 @@ Create a premium, professional tool for electricians to manage projects, estimat
 *   **Premium Aesthetics:** Use Glassmorphism, specific Color Palettes (Indigo, Teal, Orange), and custom UI components to avoid "default Flutter look".
 *   **Automation:** Minimizing manual entry. Engineering data (Shields) automatically generates Estimates (Materials & Works).
 *   **Data Integrity:** "Safe" saving mechanisms, strict validation, and conflict resolution (e.g., smart merge logic for calculations).
+*   **Controlled Admin Access:** Entry to high-impact admin areas (Directory) must require explicit warning + credential confirmation for the current account.
 *   **Education:** The code and structure should serve as a mentorship platform, using clear English code and Russian comments/explanations.
 
 ## 3. Tech Stack
@@ -25,6 +26,13 @@ Create a premium, professional tool for electricians to manage projects, estimat
     *   **Shields (Power):** Hierarchical structure (Shield -> Groups -> Devices).
     *   **Multimedia/LED:** Low-voltage systems and LED zones.
     *   **Catalog:** The source of truth for all Items (Goods/Services) with technical keys for automation.
+    *   **Directory (Reference Book):** Editable system dictionaries and catalog data to manage statuses/types/currencies and other app constants from UI.
+    *   **Manual DB Editing Scope:** Directory UI must expose full practical CRUD for sections/entries/categories/items including technical automation fields (`mapping_key`, `aggregation_key`, `related_work_item`) and entry `metadata`.
+    *   **Directory UX:** System dictionaries auto-synchronize on screen open with explicit loading feedback for admins.
+    *   **Directory Navigation UX:** Bottom directory navigation (`System Sections` / `Catalog`) must remain visible on nested directory levels.
+    *   **Directory Action UX:** Delete actions use neutral close icons with non-danger hover tint; edit on nested level is available by row tap in addition to inline actions.
+    *   **Directory Entry Security:** Opening Directory from Settings is protected by danger-warning dialog and current-account password check.
+    *   **Directory Data Robustness:** Text values from directory/catalog flows should stay readable in Russian even if legacy mojibake data appears (normalization + repair tooling).
 
 ## 5. Language Rules
 *   **User Facing:** Russian (UI, DB Verbose Names, Messages).
