@@ -76,3 +76,10 @@ Triggered when Materials are updated.
 ### 5.3. CRUD Access
 *   `DirectorySection` and `DirectoryEntry` provide full CRUD via REST endpoints.
 *   Catalog admin part (categories + catalog items) also remains full CRUD from app UI.
+
+
+### 5.4. UI Synchronization Flow
+*   On entering the directory screen, app triggers automatic `bootstrap` synchronization for system sections.
+*   During synchronization, system tab shows a loading state with explicit wait message to prevent editing stale data.
+*   Manual "Synchronize" action remains available as a recovery/retry path for admins.
+*   If backend returns `503` (tables not ready/migrations missing), UI shows a human-readable error message instead of raw transport error text.

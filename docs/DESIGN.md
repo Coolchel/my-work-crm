@@ -60,8 +60,10 @@
 
 
 ### 3.4. Directory Screen (Reference Book)
-*   **Navigation:** Two tabs - `System Sections` and `Catalog`.
+*   **Navigation:** Bottom `NavigationBar` with two destinations: `System Sections` and `Catalog` (same pattern as main app sections).
 *   **Density:** Use compact list rows (`dense`, reduced vertical visual density).
 *   **Card Shape:** Rounded cards (~14px) for list rows to match app style.
 *   **Dialogs:** Reuse premium dialog shell (24px corners, tinted header, concise actions).
 *   **Actions:** Fast inline CRUD icons (edit/delete/open) with minimal vertical space usage.
+*   **Entry Behavior:** Auto-sync system sections on screen open; show blocking loading indicator with "please wait" message while synchronization is in progress.
+*   **AppBar Action:** Use a completion/check icon as exit action for the directory screen instead of a back arrow.

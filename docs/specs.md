@@ -70,3 +70,7 @@
     *   Includes statuses/types/currencies/shield and file classification enums.
     *   Bootstrap endpoint to sync defaults into DB: `POST /api/directory-sections/bootstrap/`.
 *   **CRUD:** Full add/edit/delete from app UI for directory entries and catalog entities.
+*   **System Sync UX:**
+    *   Auto-run sync when opening the directory screen.
+    *   Show dedicated loading state (please wait) during sync.
+    *   Keep manual sync button as explicit retry tool.
