@@ -22,7 +22,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.routers import DefaultRouter
 from core.auth_views import auth_me, change_password
 from core.views import (
-    ProjectViewSet, CatalogCategoryViewSet, CatalogItemViewSet, StageViewSet, 
+    ProjectViewSet, CatalogCategoryViewSet, CatalogItemViewSet, DirectorySectionViewSet, DirectoryEntryViewSet, StageViewSet, 
     ShieldGroupViewSet, LedZoneViewSet, ShieldViewSet, EstimateItemViewSet,
     WorkTemplateViewSet, MaterialTemplateViewSet, PowerShieldTemplateViewSet, LedShieldTemplateViewSet,
     FinanceSettingsViewSet, StatisticsViewSet, ProjectFileViewSet
@@ -34,6 +34,8 @@ router.register(r'stages', StageViewSet)
 router.register(r'shields', ShieldViewSet)
 router.register(r'categories', CatalogCategoryViewSet, basename='category')
 router.register(r'catalog-items', CatalogItemViewSet, basename='catalog-item')
+router.register(r'directory-sections', DirectorySectionViewSet, basename='directory-section')
+router.register(r'directory-entries', DirectoryEntryViewSet, basename='directory-entry')
 router.register(r'estimate-items', EstimateItemViewSet, basename='estimate-item')
 router.register(r'work-templates', WorkTemplateViewSet, basename='work-template')
 router.register(r'material-templates', MaterialTemplateViewSet, basename='material-template')

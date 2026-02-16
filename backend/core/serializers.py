@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     Project, Stage, EstimateItem, ProjectFile,
-    CatalogCategory, CatalogItem, ContractorNote, 
+    CatalogCategory, CatalogItem, DirectorySection, DirectoryEntry, ContractorNote, 
     ShieldGroup, LedZone, Shield,
     WorkTemplate, WorkTemplateItem,
     MaterialTemplate, MaterialTemplateItem,
@@ -151,11 +151,25 @@ class CatalogCategorySerializer(serializers.ModelSerializer):
         model = CatalogCategory
         fields = '__all__'
 
+
 class CatalogItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CatalogItem
         fields = '__all__'
 
+
+class DirectoryEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DirectoryEntry
+        fields = '__all__'
+
+
+class DirectorySectionSerializer(serializers.ModelSerializer):
+    entries = DirectoryEntrySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = DirectorySection
+        fields = '__all__'
 
 
 class ContractorNoteSerializer(serializers.ModelSerializer):

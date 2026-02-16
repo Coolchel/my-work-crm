@@ -3,18 +3,134 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import (
-    Project, Stage, ShieldGroup, LedZone, CatalogCategory, CatalogItem, 
+    Project, Stage, ShieldGroup, LedZone, CatalogCategory, CatalogItem, DirectorySection, DirectoryEntry,
     Shield, EstimateItem, WorkTemplate, MaterialTemplate, PowerShieldTemplate, LedShieldTemplate,
     FinanceSettings, ProjectFile
 )
 from .serializers import (
-    ProjectSerializer, StageSerializer, CatalogCategorySerializer, CatalogItemSerializer, 
+    ProjectSerializer, StageSerializer, CatalogCategorySerializer, CatalogItemSerializer, DirectorySectionSerializer, DirectoryEntrySerializer,
     ShieldGroupSerializer, LedZoneSerializer, ShieldSerializer, EstimateItemSerializer,
     WorkTemplateSerializer, MaterialTemplateSerializer, 
     PowerShieldTemplateSerializer, LedShieldTemplateSerializer,
     FinanceSettingsSerializer, ProjectFileSerializer
 )
 from .services import TemplateService
+
+
+DIRECTORY_SECTION_DEFINITIONS = [
+    {
+        'code': 'project_status',
+        'name': 'Статусы проекта',
+        'description': 'Варианты состояния проекта.'
+    },
+    {
+        'code': 'object_type',
+        'name': 'Типы объектов',
+        'description': 'Варианты типа объекта проекта.'
+    },
+    {
+        'code': 'stage_title',
+        'name': 'Название этапа',
+        'description': 'Варианты названий этапов.'
+    },
+    {
+        'code': 'stage_status',
+        'name': 'Статус этапа',
+        'description': 'Состояния этапа выполнения.'
+    },
+    {
+        'code': 'catalog_item_type',
+        'name': 'Тип позиции каталога',
+        'description': 'Работа или материал.'
+    },
+    {
+        'code': 'currency',
+        'name': 'Валюты',
+        'description': 'Поддерживаемые валюты.'
+    },
+    {
+        'code': 'estimate_item_type',
+        'name': 'Тип позиции сметы',
+        'description': 'Типы позиций сметы.'
+    },
+    {
+        'code': 'shield_type',
+        'name': 'Типы щитов',
+        'description': 'Типы инженерных щитов.'
+    },
+    {
+        'code': 'shield_mounting',
+        'name': 'Типы монтажа щитов',
+        'description': 'Способ монтажа щита.'
+    },
+    {
+        'code': 'shield_device_type',
+        'name': 'Типы устройств щита',
+        'description': 'Устройства внутри силового щита.'
+    },
+    {
+        'code': 'project_file_category',
+        'name': 'Категории файлов проекта',
+        'description': 'Категории файлов в проекте.'
+    },
+]
+
+
+def _bootstrap_directory_from_choices():
+    mapping = [
+        ('project_status', Project.STATUS_CHOICES),
+        ('object_type', Project.OBJECT_TYPE_CHOICES),
+        ('stage_title', Stage.TITLE_CHOICES),
+        ('stage_status', Stage.STATUS_CHOICES),
+        ('catalog_item_type', CatalogItem.TYPE_CHOICES),
+        ('currency', CatalogItem.CURRENCY_CHOICES),
+        ('estimate_item_type', EstimateItem.TYPE_CHOICES),
+        ('shield_type', Shield.SHIELD_TYPE_CHOICES),
+        ('shield_mounting', Shield.MOUNTING_CHOICES),
+        ('shield_device_type', ShieldGroup.DEVICE_CHOICES),
+        ('project_file_category', ProjectFile.CATEGORY_CHOICES),
+    ]
+
+    created_sections = 0
+    created_entries = 0
+
+    for section_def in DIRECTORY_SECTION_DEFINITIONS:
+        section, is_created = DirectorySection.objects.get_or_create(
+            code=section_def['code'],
+            defaults={
+                'name': section_def['name'],
+                'description': section_def['description'],
+            },
+        )
+        if is_created:
+            created_sections += 1
+
+        section.name = section_def['name']
+        section.description = section_def['description']
+        section.save(update_fields=['name', 'description'])
+
+    for section_code, choices in mapping:
+        section = DirectorySection.objects.get(code=section_code)
+        for index, (code, name) in enumerate(choices):
+            _, is_created = DirectoryEntry.objects.update_or_create(
+                section=section,
+                code=code,
+                defaults={
+                    'name': name,
+                    'sort_order': index,
+                    'is_active': True,
+                },
+            )
+            if is_created:
+                created_entries += 1
+
+    return {
+        'created_sections': created_sections,
+        'created_entries': created_entries,
+        'total_sections': DirectorySection.objects.count(),
+        'total_entries': DirectoryEntry.objects.count(),
+    }
+
 
 class ProjectFileViewSet(viewsets.ModelViewSet):
     queryset = ProjectFile.objects.all()
@@ -46,6 +162,23 @@ class CatalogItemViewSet(viewsets.ModelViewSet):
         if search_query:
             qs = qs.filter(search_name__contains=search_query.lower())
         return qs
+
+
+class DirectorySectionViewSet(viewsets.ModelViewSet):
+    queryset = DirectorySection.objects.prefetch_related('entries').all()
+    serializer_class = DirectorySectionSerializer
+
+    @action(detail=False, methods=['post'])
+    def bootstrap(self, request):
+        result = _bootstrap_directory_from_choices()
+        return Response(result)
+
+
+class DirectoryEntryViewSet(viewsets.ModelViewSet):
+    queryset = DirectoryEntry.objects.select_related('section').all()
+    serializer_class = DirectoryEntrySerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['section', 'is_active']
 
 
 class ShieldViewSet(viewsets.ModelViewSet):
