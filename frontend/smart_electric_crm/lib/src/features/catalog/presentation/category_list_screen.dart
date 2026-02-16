@@ -15,6 +15,51 @@ class CategoryListScreen extends ConsumerStatefulWidget {
 
 class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
   int _currentIndex = 0;
+  bool _isSyncingSystemSections = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _synchronizeSystemSections(showSuccessMessage: false);
+    });
+  }
+
+  Future<void> _synchronizeSystemSections({required bool showSuccessMessage}) async {
+    if (_isSyncingSystemSections) return;
+
+    setState(() {
+      _isSyncingSystemSections = true;
+    });
+
+    try {
+      await ref.read(directoryRepositoryProvider).bootstrapDirectory();
+      ref.invalidate(directorySectionsProvider);
+      if (mounted && showSuccessMessage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Системные разделы успешно синхронизированы')),
+        );
+      }
+    } on DirectorySyncException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Не удалось синхронизировать разделы. Повторите позже.')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSyncingSystemSections = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +75,9 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
       floatingActionButton: _buildFab(context),
       body: IndexedStack(
         index: _currentIndex,
-        children: const [
-          _DirectorySectionTab(),
-          _CatalogTab(),
+        children: [
+          _DirectorySectionTab(isSyncing: _isSyncingSystemSections),
+          const _CatalogTab(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -62,31 +107,17 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
     if (_currentIndex == 0) {
       return FloatingActionButton.extended(
         heroTag: 'bootstrap',
-        onPressed: () async {
-          try {
-            await ref.read(directoryRepositoryProvider).bootstrapDirectory();
-            ref.invalidate(directorySectionsProvider);
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Системные разделы успешно синхронизированы')),
-              );
-            }
-          } on DirectorySyncException catch (error) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(error.message)),
-              );
-            }
-          } catch (_) {
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Не удалось синхронизировать разделы. Повторите позже.')),
-              );
-            }
-          }
-        },
-        icon: const Icon(Icons.sync),
-        label: const Text('Синхронизировать'),
+        onPressed: _isSyncingSystemSections
+            ? null
+            : () => _synchronizeSystemSections(showSuccessMessage: true),
+        icon: _isSyncingSystemSections
+            ? const SizedBox(
+                height: 18,
+                width: 18,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+            : const Icon(Icons.sync),
+        label: Text(_isSyncingSystemSections ? 'Подождите...' : 'Синхронизировать'),
       );
     }
 
@@ -110,96 +141,77 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
 }
 
 class _DirectorySectionTab extends ConsumerWidget {
-  const _DirectorySectionTab();
+  final bool isSyncing;
+
+  const _DirectorySectionTab({required this.isSyncing});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sectionsAsync = ref.watch(directorySectionsProvider);
 
-    return Column(
-      children: [
-        _DirectoryInfoCard(),
-        Expanded(
-          child: sectionsAsync.when(
-            data: (sections) {
-              if (sections.isEmpty) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24),
-                    child: Text(
-                      'Разделы пока не созданы. Нажмите «Синхронизировать», чтобы создать системные словари.',
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                );
-              }
+    if (isSyncing) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text(
+                'Синхронизируем системные разделы. Пожалуйста, подождите...',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                itemCount: sections.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final section = sections[index];
-                  return _CompactCard(
-                    icon: Icons.view_list_outlined,
-                    title: section.name,
-                    subtitle: section.code,
-                    trailing: IconButton(
-                      icon: const Icon(Icons.chevron_right),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => _SectionEntriesScreen(section: section),
-                          ),
-                        );
-                      },
+    return sectionsAsync.when(
+      data: (sections) {
+        if (sections.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                'Разделы пока не созданы. Нажмите «Синхронизировать», чтобы создать системные словари.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          itemCount: sections.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            final section = sections[index];
+            return _CompactCard(
+              icon: Icons.view_list_outlined,
+              title: section.name,
+              subtitle: section.code,
+              trailing: IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => _SectionEntriesScreen(section: section),
                     ),
                   );
                 },
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text('Не удалось загрузить разделы: $error', textAlign: TextAlign.center),
               ),
-            ),
-          ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text('Не удалось загрузить разделы: $error', textAlign: TextAlign.center),
         ),
-      ],
-    );
-  }
-}
-
-class _DirectoryInfoCard extends StatefulWidget {
-  @override
-  State<_DirectoryInfoCard> createState() => _DirectoryInfoCardState();
-}
-
-class _DirectoryInfoCardState extends State<_DirectoryInfoCard> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(horizontal: 12),
-        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        initiallyExpanded: _expanded,
-        onExpansionChanged: (value) => setState(() => _expanded = value),
-        leading: const Icon(Icons.info_outline, color: Colors.indigo),
-        title: const Text('Что такое системные разделы?'),
-        subtitle: const Text('Статусы, типы, валюты и другие системные значения'),
-        children: const [
-          Text(
-            'Это словари, которые используются по всему приложению: '
-            'например, статусы проекта, типы объекта, типы щитов, валюты и категории файлов. '
-            'Синхронизация нужна, чтобы автоматически создать/обновить эти списки в базе из текущих настроек backend.',
-          ),
-        ],
       ),
     );
   }
@@ -469,7 +481,7 @@ class _CategoryItemsScreen extends ConsumerWidget {
   }
 }
 
-class _CompactCard extends StatelessWidget {
+class _CompactCard extends StatefulWidget {
   final IconData icon;
   final String title;
   final String subtitle;
@@ -483,17 +495,35 @@ class _CompactCard extends StatelessWidget {
   });
 
   @override
+  State<_CompactCard> createState() => _CompactCardState();
+}
+
+class _CompactCardState extends State<_CompactCard> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: ListTile(
-        dense: true,
-        visualDensity: const VisualDensity(vertical: -2),
-        leading: Icon(icon, color: Colors.indigo),
-        title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: trailing,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedScale(
+        scale: _isHovered ? 1.02 : 1,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        child: Card(
+          clipBehavior: Clip.antiAlias,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          child: ListTile(
+            dense: true,
+            visualDensity: const VisualDensity(vertical: -2),
+            leading: Icon(widget.icon, color: Colors.indigo),
+            title: Text(widget.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: Text(widget.subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+            trailing: widget.trailing,
+          ),
+        ),
       ),
     );
   }
