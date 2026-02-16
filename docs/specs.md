@@ -58,7 +58,15 @@
     *   Visual "Paid" confirmation.
     *   "Employer Share" display (if > 0).
 
-## 7. Catalog (Admin)
-*   **Keys:**
-    *   `mapping_key`: Connects Shield Device -> Material.
-    *   `aggregation_key`: Groups multiple materials -> One Work (e.g., All cables -> "Cable Laying").
+## 7. Catalog & Directory (Admin)
+*   **Catalog:**
+    *   Editable categories.
+    *   Editable catalog items (materials/works).
+    *   Keys:
+        *   `mapping_key`: Connects Shield Device -> Material.
+        *   `aggregation_key`: Groups multiple materials -> One Work (e.g., All cables -> "Cable Laying").
+*   **System Directory Sections:**
+    *   Editable dictionaries for values historically stored in model `choices`.
+    *   Includes statuses/types/currencies/shield and file classification enums.
+    *   Bootstrap endpoint to sync defaults into DB: `POST /api/directory-sections/bootstrap/`.
+*   **CRUD:** Full add/edit/delete from app UI for directory entries and catalog entities.

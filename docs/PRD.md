@@ -25,6 +25,7 @@ Create a premium, professional tool for electricians to manage projects, estimat
     *   **Shields (Power):** Hierarchical structure (Shield -> Groups -> Devices).
     *   **Multimedia/LED:** Low-voltage systems and LED zones.
     *   **Catalog:** The source of truth for all Items (Goods/Services) with technical keys for automation.
+    *   **Directory (Reference Book):** Editable system dictionaries and catalog data to manage statuses/types/currencies and other app constants from UI.
 
 ## 5. Language Rules
 *   **User Facing:** Russian (UI, DB Verbose Names, Messages).

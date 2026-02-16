@@ -57,3 +57,11 @@
     *   PDF: Red Icon.
     *   DOC: Blue Icon.
     *   Image: Thumbnail preview (`BoxFit.cover`).
+
+
+### 3.4. Directory Screen (Reference Book)
+*   **Navigation:** Two tabs - `System Sections` and `Catalog`.
+*   **Density:** Use compact list rows (`dense`, reduced vertical visual density).
+*   **Card Shape:** Rounded cards (~14px) for list rows to match app style.
+*   **Dialogs:** Reuse premium dialog shell (24px corners, tinted header, concise actions).
+*   **Actions:** Fast inline CRUD icons (edit/delete/open) with minimal vertical space usage.

@@ -59,3 +59,20 @@ Triggered when Materials are updated.
     *   `updated_at`: Updates only if changes > 2 hours after creation.
 *   **Stage Dates:**
     *   Updating an Estimate Item touches parent Stage `updated_at`.
+
+
+## 5. Directory (Reference Book) Logic
+### 5.1. Data Model
+*   `DirectorySection`: stores section-level metadata (`code`, `name`, `description`).
+*   `DirectoryEntry`: stores editable values for a section (`code`, `name`, `sort_order`, `is_active`, `metadata`).
+*   Uniqueness rule: `DirectoryEntry.code` must be unique inside one section.
+
+### 5.2. Bootstrap Synchronization
+*   Endpoint: `POST /api/directory-sections/bootstrap/`.
+*   Purpose: synchronize built-in model choices into editable DB dictionaries.
+*   Source choices include: project statuses, object types, stage titles/statuses, catalog item types, currencies, estimate item types, shield types, shield mounting, shield device types, project file categories.
+*   Behavior: upsert sections and entries (safe re-run, idempotent in practice for existing codes).
+
+### 5.3. CRUD Access
+*   `DirectorySection` and `DirectoryEntry` provide full CRUD via REST endpoints.
+*   Catalog admin part (categories + catalog items) also remains full CRUD from app UI.
