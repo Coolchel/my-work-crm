@@ -59,6 +59,9 @@ Triggered when Materials are updated.
     *   `updated_at`: Updates only if changes > 2 hours after creation.
 *   **Stage Dates:**
     *   Updating an Estimate Item touches parent Stage `updated_at`.
+*   **Home Smart Search Normalization:**
+    *   Query and searchable text are normalized to lowercase before matching.
+    *   Search behavior is always case-insensitive.
 
 
 ## 5. Directory (Reference Book) Logic
@@ -97,3 +100,21 @@ Triggered when Materials are updated.
 *   Second-level directory entities (section entries, category items) support row-tap edit flow.
 *   Bottom directory navigation remains accessible on second-level screens; switching tab returns to the corresponding root tab context.
 *   Delete icons use neutral hover styling (no danger-color hover escalation on icon hover itself); destructive intent remains in confirmation dialog.
+
+### 5.7. Directory Access Gate (Settings)
+*   Entry point: Settings -> Directory.
+*   Flow:
+    1. Show warning dialog about high-impact dictionary/catalog changes.
+    2. Require current-account password.
+    3. Validate password using auth repository flow.
+    4. Navigate to Directory only on successful validation.
+*   Invalid password keeps dialog open and shows field-level error.
+
+### 5.8. Text Encoding Resilience (Directory/Catalog)
+*   Backend normalizes potentially broken mojibake strings on serializer input/output for:
+    *   `DirectorySection.name`, `DirectorySection.description`
+    *   `DirectoryEntry.name`
+    *   `CatalogCategory.name`
+    *   `CatalogItem.name`, `CatalogItem.unit`
+*   Repair command is available for one-shot cleanup of persisted data:
+    *   `python manage.py repair_text_encoding`

@@ -30,8 +30,9 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
   void _onFocusChange() {
     if (_searchFocusNode.hasFocus && _searchController.text.isNotEmpty) {
       // Restore search state if we have text
+      final normalized = _searchController.text.trim();
       ref.read(projectSearchQueryProvider.notifier).state =
-          _searchController.text;
+          normalized.isEmpty ? null : normalized;
     }
   }
 
@@ -80,8 +81,9 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
           ),
         ),
         onChanged: (value) {
+          final normalized = value.trim();
           ref.read(projectSearchQueryProvider.notifier).state =
-              value.isEmpty ? null : value;
+              normalized.isEmpty ? null : normalized;
         },
       ),
     );

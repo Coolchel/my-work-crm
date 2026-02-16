@@ -30,14 +30,16 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
     });
   }
 
-  Future<void> _synchronizeSystemSections({required bool showSuccessMessage}) async {
+  Future<void> _synchronizeSystemSections(
+      {required bool showSuccessMessage}) async {
     if (_isSyncingSystemSections) return;
     setState(() => _isSyncingSystemSections = true);
     try {
       await ref.read(directoryRepositoryProvider).bootstrapDirectory();
       ref.invalidate(directorySectionsProvider);
       if (mounted && showSuccessMessage) {
-        _showSnack('Системные разделы успешно синхронизированы');
+        _showSnack(
+            'Системные разделы успешно синхронизированы');
       }
     } on DirectorySyncException catch (error) {
       if (mounted) _showSnack(error.message, isError: true);
@@ -116,7 +118,9 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
             padding: const EdgeInsets.only(right: 10),
             child: _AppBarActionButton(
               icon: Icons.sync,
-              tooltip: _isSyncingSystemSections ? 'Синхронизация...' : 'Синхронизировать',
+              tooltip: _isSyncingSystemSections
+                  ? 'Синхронизация...'
+                  : 'Синхронизировать',
               color: Colors.black,
               isLoading: _isSyncingSystemSections,
               onTap: _isSyncingSystemSections
@@ -214,7 +218,8 @@ class _AppBarActionButtonState extends State<_AppBarActionButton> {
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      cursor: widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+      cursor:
+          widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
       child: Tooltip(
         message: widget.tooltip,
         child: InkWell(
@@ -223,7 +228,9 @@ class _AppBarActionButtonState extends State<_AppBarActionButton> {
           child: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _isHovered ? Colors.grey.shade500.withOpacity(0.1) : Colors.transparent,
+              color: _isHovered
+                  ? Colors.grey.shade500.withOpacity(0.1)
+                  : Colors.transparent,
               shape: BoxShape.circle,
             ),
             child: widget.isLoading
@@ -305,7 +312,8 @@ class _SystemSectionsTab extends ConsumerWidget {
               icon: Icons.schema,
               title: section.name,
               subtitle: section.code,
-              extraText: section.description.isEmpty ? null : section.description,
+              extraText:
+                  section.description.isEmpty ? null : section.description,
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -330,7 +338,9 @@ class _SystemSectionsTab extends ConsumerWidget {
                         title: 'Редактирование раздела',
                         initial: section,
                         onSubmit: (code, name, description) async {
-                          await ref.read(directoryRepositoryProvider).updateSection(
+                          await ref
+                              .read(directoryRepositoryProvider)
+                              .updateSection(
                                 id: section.id,
                                 code: code,
                                 name: name,
@@ -360,7 +370,9 @@ class _SystemSectionsTab extends ConsumerWidget {
                     if (confirmed != true || !context.mounted) return;
 
                     try {
-                      await ref.read(directoryRepositoryProvider).deleteSection(section.id);
+                      await ref
+                          .read(directoryRepositoryProvider)
+                          .deleteSection(section.id);
                       ref.invalidate(directorySectionsProvider);
                     } catch (error) {
                       onError(error.toString());
@@ -376,7 +388,9 @@ class _SystemSectionsTab extends ConsumerWidget {
       error: (error, _) => Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text('Не удалось загрузить разделы: $error', textAlign: TextAlign.center),
+          child: Text(
+              'Не удалось загрузить разделы: $error',
+              textAlign: TextAlign.center),
         ),
       ),
     );
@@ -437,7 +451,9 @@ class _SectionEntriesScreen extends ConsumerWidget {
       body: entriesAsync.when(
         data: (entries) {
           if (entries.isEmpty) {
-            return const Center(child: Text('В этом разделе пока нет записей'));
+            return const Center(
+                child: Text(
+                    'В этом разделе пока нет записей'));
           }
 
           return ListView.builder(
@@ -488,8 +504,11 @@ class _SectionEntriesScreen extends ConsumerWidget {
                         builder: (_) => _DirectoryEntryDialog(
                           title: 'Редактирование записи',
                           initial: entry,
-                          onSubmit: (code, name, order, isActive, metadata) async {
-                            await ref.read(directoryRepositoryProvider).updateEntry(
+                          onSubmit:
+                              (code, name, order, isActive, metadata) async {
+                            await ref
+                                .read(directoryRepositoryProvider)
+                                .updateEntry(
                                   id: entry.id,
                                   section: section.id,
                                   code: code,
@@ -498,7 +517,8 @@ class _SectionEntriesScreen extends ConsumerWidget {
                                   isActive: isActive,
                                   metadata: metadata,
                                 );
-                            ref.invalidate(directoryEntriesProvider(section.id));
+                            ref.invalidate(
+                                directoryEntriesProvider(section.id));
                           },
                         ),
                       );
@@ -521,7 +541,9 @@ class _SectionEntriesScreen extends ConsumerWidget {
                       if (confirmed != true || !context.mounted) return;
 
                       try {
-                        await ref.read(directoryRepositoryProvider).deleteEntry(entry.id);
+                        await ref
+                            .read(directoryRepositoryProvider)
+                            .deleteEntry(entry.id);
                         ref.invalidate(directoryEntriesProvider(section.id));
                       } catch (error) {
                         onError(error.toString());
@@ -577,7 +599,8 @@ class _CatalogTab extends ConsumerWidget {
       data: (categories) {
         if (categories.isEmpty) {
           return const Center(
-            child: Text('Категории справочника не созданы'),
+            child: Text(
+                'Категории справочника не созданы'),
           );
         }
 
@@ -591,7 +614,8 @@ class _CatalogTab extends ConsumerWidget {
               icon: Icons.folder_outlined,
               title: category.name,
               subtitle: 'slug: ${category.slug}',
-              extraText: 'Коэффициент труда: ${category.laborCoefficient.toStringAsFixed(2)}',
+              extraText:
+                  'Коэффициент труда: ${category.laborCoefficient.toStringAsFixed(2)}',
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -613,10 +637,13 @@ class _CatalogTab extends ConsumerWidget {
                     await showDialog<void>(
                       context: context,
                       builder: (_) => _CategoryDialog(
-                        title: 'Редактирование категории',
+                        title:
+                            'Редактирование категории',
                         initial: category,
                         onSubmit: (name, slug, labor) async {
-                          await ref.read(directoryRepositoryProvider).updateCategory(
+                          await ref
+                              .read(directoryRepositoryProvider)
+                              .updateCategory(
                                 id: category.id,
                                 name: name,
                                 slug: slug,
@@ -646,7 +673,9 @@ class _CatalogTab extends ConsumerWidget {
                     if (confirmed != true || !context.mounted) return;
 
                     try {
-                      await ref.read(directoryRepositoryProvider).deleteCategory(category.id);
+                      await ref
+                          .read(directoryRepositoryProvider)
+                          .deleteCategory(category.id);
                       ref.invalidate(catalogCategoriesProvider);
                     } catch (error) {
                       onError(error.toString());
@@ -724,7 +753,9 @@ class _CategoryItemsScreen extends ConsumerWidget {
       body: itemsAsync.when(
         data: (items) {
           if (items.isEmpty) {
-            return const Center(child: Text('В этой категории пока нет позиций'));
+            return const Center(
+                child: Text(
+                    'В этой категории пока нет позиций'));
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
@@ -732,14 +763,18 @@ class _CategoryItemsScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final item = items[index];
               return _DirectoryCard(
-                stripeColor: item.itemType == 'work' ? Colors.teal : Colors.blue,
-                icon: item.itemType == 'work' ? Icons.engineering : Icons.inventory_2_outlined,
+                stripeColor:
+                    item.itemType == 'work' ? Colors.teal : Colors.blue,
+                icon: item.itemType == 'work'
+                    ? Icons.engineering
+                    : Icons.inventory_2_outlined,
                 title: item.name,
                 subtitle:
                     '${item.itemType} | ${item.defaultPrice.toStringAsFixed(2)} ${item.defaultCurrency} / ${item.unit}',
                 extraText: _itemDetails(item),
                 onTap: () async {
-                  final workItems = workItemsAsync.value ?? const <CatalogItem>[];
+                  final workItems =
+                      workItemsAsync.value ?? const <CatalogItem>[];
                   await showDialog<void>(
                     context: context,
                     builder: (_) => _CatalogItemDialog(
@@ -759,7 +794,8 @@ class _CategoryItemsScreen extends ConsumerWidget {
                               aggregationKey: form.aggregationKey,
                               relatedWorkItem: form.relatedWorkItem,
                             );
-                        ref.invalidate(catalogItemsByCategoryProvider(category.id));
+                        ref.invalidate(
+                            catalogItemsByCategoryProvider(category.id));
                       },
                     ),
                   );
@@ -771,7 +807,8 @@ class _CategoryItemsScreen extends ConsumerWidget {
                     color: Colors.grey.shade500,
                     hoverColor: Colors.indigo,
                     onTap: () async {
-                      final workItems = workItemsAsync.value ?? const <CatalogItem>[];
+                      final workItems =
+                          workItemsAsync.value ?? const <CatalogItem>[];
                       await showDialog<void>(
                         context: context,
                         builder: (_) => _CatalogItemDialog(
@@ -779,7 +816,9 @@ class _CategoryItemsScreen extends ConsumerWidget {
                           initial: item,
                           workItems: workItems,
                           onSubmit: (form) async {
-                            await ref.read(directoryRepositoryProvider).updateItem(
+                            await ref
+                                .read(directoryRepositoryProvider)
+                                .updateItem(
                                   id: item.id,
                                   categoryId: category.id,
                                   name: form.name,
@@ -791,7 +830,8 @@ class _CategoryItemsScreen extends ConsumerWidget {
                                   aggregationKey: form.aggregationKey,
                                   relatedWorkItem: form.relatedWorkItem,
                                 );
-                            ref.invalidate(catalogItemsByCategoryProvider(category.id));
+                            ref.invalidate(
+                                catalogItemsByCategoryProvider(category.id));
                           },
                         ),
                       );
@@ -813,8 +853,11 @@ class _CategoryItemsScreen extends ConsumerWidget {
                       );
                       if (confirmed != true || !context.mounted) return;
                       try {
-                        await ref.read(directoryRepositoryProvider).deleteItem(item.id);
-                        ref.invalidate(catalogItemsByCategoryProvider(category.id));
+                        await ref
+                            .read(directoryRepositoryProvider)
+                            .deleteItem(item.id);
+                        ref.invalidate(
+                            catalogItemsByCategoryProvider(category.id));
                       } catch (error) {
                         onError(error.toString());
                       }
@@ -853,8 +896,10 @@ class _CategoryItemsScreen extends ConsumerWidget {
 
   String _itemDetails(CatalogItem item) {
     final mapping = item.mappingKey == null ? '-' : item.mappingKey!;
-    final aggregation = item.aggregationKey == null ? '-' : item.aggregationKey!;
-    final related = item.relatedWorkItem == null ? '-' : item.relatedWorkItem.toString();
+    final aggregation =
+        item.aggregationKey == null ? '-' : item.aggregationKey!;
+    final related =
+        item.relatedWorkItem == null ? '-' : item.relatedWorkItem.toString();
     return 'mapping: $mapping | aggregation: $aggregation | related_work: $related';
   }
 }
@@ -914,7 +959,9 @@ class _DirectoryCardState extends State<_DirectoryCard> {
                           ),
                         ),
                       ),
-                      Row(mainAxisSize: MainAxisSize.min, children: widget.actions),
+                      Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: widget.actions),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -927,7 +974,8 @@ class _DirectoryCardState extends State<_DirectoryCard> {
                       color: Colors.grey.shade600,
                     ),
                   ),
-                  if (widget.extraText != null && widget.extraText!.isNotEmpty) ...[
+                  if (widget.extraText != null &&
+                      widget.extraText!.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
                       widget.extraText!,
@@ -972,7 +1020,8 @@ class _DirectoryCardState extends State<_DirectoryCard> {
     );
 
     return MouseRegion(
-      cursor: widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+      cursor:
+          widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: card,
@@ -1015,7 +1064,9 @@ class _InlineActionButtonState extends State<_InlineActionButton> {
           child: Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: _isHovered ? widget.hoverColor.withOpacity(0.12) : Colors.transparent,
+              color: _isHovered
+                  ? widget.hoverColor.withOpacity(0.12)
+                  : Colors.transparent,
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -1143,10 +1194,142 @@ InputDecoration _dialogInputDecoration(String label) {
   );
 }
 
+class _PopupSelectOption<T> {
+  final T value;
+  final String label;
+
+  const _PopupSelectOption({
+    required this.value,
+    required this.label,
+  });
+}
+
+class _DialogPopupSelectField<T> extends StatelessWidget {
+  final String label;
+  final T value;
+  final List<_PopupSelectOption<T>> options;
+  final ValueChanged<T> onChanged;
+
+  const _DialogPopupSelectField({
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = options.cast<_PopupSelectOption<T>?>().firstWhere(
+          (option) => option?.value == value,
+          orElse: () => null,
+        );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 2, bottom: 6),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+            ),
+            Container(
+              height: 46,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+                child: InkWell(
+                  onTap: () async {
+                    final box = context.findRenderObject() as RenderBox;
+                    final position = box.localToGlobal(Offset.zero);
+                    final size = box.size;
+
+                    final selectedValue = await showMenu<T>(
+                      context: context,
+                      position: RelativeRect.fromLTRB(
+                        position.dx,
+                        position.dy + size.height + 4,
+                        position.dx + size.width,
+                        position.dy + size.height + 320,
+                      ),
+                      elevation: 4,
+                      shadowColor: Colors.black.withOpacity(0.2),
+                      surfaceTintColor: Colors.transparent,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      constraints: BoxConstraints(
+                        minWidth: constraints.maxWidth,
+                        maxWidth: constraints.maxWidth,
+                      ),
+                      items: options
+                          .map(
+                            (option) => PopupMenuItem<T>(
+                              value: option.value,
+                              height: 40,
+                              child: Text(
+                                option.label,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    );
+                    if (selectedValue != null) {
+                      onChanged(selectedValue);
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  mouseCursor: SystemMouseCursors.click,
+                  hoverColor: Colors.indigo.withOpacity(0.05),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            selected?.label ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.arrow_drop_down, size: 22),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _DirectorySectionDialog extends StatefulWidget {
   final String title;
   final DirectorySection? initial;
-  final Future<void> Function(String code, String name, String description) onSubmit;
+  final Future<void> Function(String code, String name, String description)
+      onSubmit;
 
   const _DirectorySectionDialog({
     required this.title,
@@ -1155,7 +1338,8 @@ class _DirectorySectionDialog extends StatefulWidget {
   });
 
   @override
-  State<_DirectorySectionDialog> createState() => _DirectorySectionDialogState();
+  State<_DirectorySectionDialog> createState() =>
+      _DirectorySectionDialogState();
 }
 
 class _DirectorySectionDialogState extends State<_DirectorySectionDialog> {
@@ -1168,7 +1352,8 @@ class _DirectorySectionDialogState extends State<_DirectorySectionDialog> {
     super.initState();
     _code = TextEditingController(text: widget.initial?.code ?? '');
     _name = TextEditingController(text: widget.initial?.name ?? '');
-    _description = TextEditingController(text: widget.initial?.description ?? '');
+    _description =
+        TextEditingController(text: widget.initial?.description ?? '');
   }
 
   @override
@@ -1185,11 +1370,14 @@ class _DirectorySectionDialogState extends State<_DirectorySectionDialog> {
       title: widget.title,
       themeColor: Colors.indigo,
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена')),
         const SizedBox(width: 8),
         FilledButton(
           onPressed: () async {
-            await widget.onSubmit(_code.text.trim(), _name.text.trim(), _description.text.trim());
+            await widget.onSubmit(
+                _code.text.trim(), _name.text.trim(), _description.text.trim());
             if (context.mounted) Navigator.pop(context);
           },
           style: FilledButton.styleFrom(backgroundColor: Colors.indigo),
@@ -1199,9 +1387,12 @@ class _DirectorySectionDialogState extends State<_DirectorySectionDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(controller: _name, decoration: _dialogInputDecoration('Название')),
+          TextField(
+              controller: _name,
+              decoration: _dialogInputDecoration('Название')),
           const SizedBox(height: 10),
-          TextField(controller: _code, decoration: _dialogInputDecoration('Код')),
+          TextField(
+              controller: _code, decoration: _dialogInputDecoration('Код')),
           const SizedBox(height: 10),
           TextField(
             controller: _description,
@@ -1270,7 +1461,9 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
       title: widget.title,
       themeColor: Colors.indigo,
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена')),
         const SizedBox(width: 8),
         FilledButton(
           onPressed: () async {
@@ -1292,9 +1485,12 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(controller: _name, decoration: _dialogInputDecoration('Название')),
+          TextField(
+              controller: _name,
+              decoration: _dialogInputDecoration('Название')),
           const SizedBox(height: 10),
-          TextField(controller: _code, decoration: _dialogInputDecoration('Код')),
+          TextField(
+              controller: _code, decoration: _dialogInputDecoration('Код')),
           const SizedBox(height: 10),
           TextField(
             controller: _order,
@@ -1336,12 +1532,15 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
       final decoded = jsonDecode(text);
       if (decoded is Map<String, dynamic>) return decoded;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Metadata должно быть JSON-объектом')),
+        const SnackBar(
+            content:
+                Text('Metadata должно быть JSON-объектом')),
       );
       return null;
     } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Некорректный JSON в metadata')),
+        const SnackBar(
+            content: Text('Некорректный JSON в metadata')),
       );
       return null;
     }
@@ -1373,7 +1572,8 @@ class _CategoryDialogState extends State<_CategoryDialog> {
     super.initState();
     _name = TextEditingController(text: widget.initial?.name ?? '');
     _slug = TextEditingController(text: widget.initial?.slug ?? '');
-    _labor = TextEditingController(text: (widget.initial?.laborCoefficient ?? 1.0).toString());
+    _labor = TextEditingController(
+        text: (widget.initial?.laborCoefficient ?? 1.0).toString());
   }
 
   @override
@@ -1390,11 +1590,14 @@ class _CategoryDialogState extends State<_CategoryDialog> {
       title: widget.title,
       themeColor: Colors.indigo,
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена')),
         const SizedBox(width: 8),
         FilledButton(
           onPressed: () async {
-            final generatedSlug = _name.text.trim().toLowerCase().replaceAll(' ', '-');
+            final generatedSlug =
+                _name.text.trim().toLowerCase().replaceAll(' ', '-');
             await widget.onSubmit(
               _name.text.trim(),
               _slug.text.trim().isEmpty ? generatedSlug : _slug.text.trim(),
@@ -1409,14 +1612,18 @@ class _CategoryDialogState extends State<_CategoryDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(controller: _name, decoration: _dialogInputDecoration('Название')),
+          TextField(
+              controller: _name,
+              decoration: _dialogInputDecoration('Название')),
           const SizedBox(height: 10),
-          TextField(controller: _slug, decoration: _dialogInputDecoration('Slug')),
+          TextField(
+              controller: _slug, decoration: _dialogInputDecoration('Slug')),
           const SizedBox(height: 10),
           TextField(
             controller: _labor,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: _dialogInputDecoration('Коэффициент труда'),
+            decoration:
+                _dialogInputDecoration('Коэффициент труда'),
           ),
         ],
       ),
@@ -1479,9 +1686,11 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
     super.initState();
     _name = TextEditingController(text: widget.initial?.name ?? '');
     _unit = TextEditingController(text: widget.initial?.unit ?? 'шт');
-    _price = TextEditingController(text: '${widget.initial?.defaultPrice ?? 0}');
+    _price =
+        TextEditingController(text: '${widget.initial?.defaultPrice ?? 0}');
     _mappingKey = TextEditingController(text: widget.initial?.mappingKey ?? '');
-    _aggregationKey = TextEditingController(text: widget.initial?.aggregationKey ?? '');
+    _aggregationKey =
+        TextEditingController(text: widget.initial?.aggregationKey ?? '');
     _itemType = widget.initial?.itemType ?? 'material';
     _currency = widget.initial?.defaultCurrency ?? 'USD';
     _relatedWorkItem = widget.initial?.relatedWorkItem;
@@ -1499,12 +1708,15 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final hasRelated = widget.workItems.any((item) => item.id == _relatedWorkItem);
+    final hasRelated =
+        widget.workItems.any((item) => item.id == _relatedWorkItem);
     return _DialogShell(
       title: widget.title,
       themeColor: Colors.indigo,
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена')),
         const SizedBox(width: 8),
         FilledButton(
           onPressed: () async {
@@ -1514,10 +1726,15 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
                 unit: _unit.text.trim(),
                 itemType: _itemType,
                 currency: _currency,
-                price: double.tryParse(_price.text.trim().replaceAll(',', '.')) ?? 0,
-                mappingKey: _mappingKey.text.trim().isEmpty ? null : _mappingKey.text.trim(),
-                aggregationKey:
-                    _aggregationKey.text.trim().isEmpty ? null : _aggregationKey.text.trim(),
+                price:
+                    double.tryParse(_price.text.trim().replaceAll(',', '.')) ??
+                        0,
+                mappingKey: _mappingKey.text.trim().isEmpty
+                    ? null
+                    : _mappingKey.text.trim(),
+                aggregationKey: _aggregationKey.text.trim().isEmpty
+                    ? null
+                    : _aggregationKey.text.trim(),
                 relatedWorkItem: _relatedWorkItem,
               ),
             );
@@ -1530,24 +1747,28 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(controller: _name, decoration: _dialogInputDecoration('Название')),
+          TextField(
+              controller: _name,
+              decoration: _dialogInputDecoration('Название')),
           const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: _DialogPopupSelectField<String>(
+                  label: 'Тип',
                   value: _itemType,
-                  decoration: _dialogInputDecoration('Тип'),
-                  items: const [
-                    DropdownMenuItem(value: 'material', child: Text('Материал')),
-                    DropdownMenuItem(value: 'work', child: Text('Работа')),
+                  options: const [
+                    _PopupSelectOption(value: 'material', label: 'Материал'),
+                    _PopupSelectOption(value: 'work', label: 'Работа'),
                   ],
-                  onChanged: (value) => setState(() => _itemType = value ?? 'material'),
+                  onChanged: (value) => setState(() => _itemType = value),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: TextField(controller: _unit, decoration: _dialogInputDecoration('Ед. изм.')),
+                child: TextField(
+                    controller: _unit,
+                    decoration: _dialogInputDecoration('Ед. изм.')),
               ),
             ],
           ),
@@ -1557,41 +1778,44 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
               Expanded(
                 child: TextField(
                   controller: _price,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: _dialogInputDecoration('Цена'),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: DropdownButtonFormField<String>(
+                child: _DialogPopupSelectField<String>(
+                  label: 'Валюта',
                   value: _currency,
-                  decoration: _dialogInputDecoration('Валюта'),
-                  items: const [
-                    DropdownMenuItem(value: 'USD', child: Text('USD')),
-                    DropdownMenuItem(value: 'BYN', child: Text('BYN')),
+                  options: const [
+                    _PopupSelectOption(value: 'USD', label: 'USD'),
+                    _PopupSelectOption(value: 'BYN', label: 'BYN'),
                   ],
-                  onChanged: (value) => setState(() => _currency = value ?? 'USD'),
+                  onChanged: (value) => setState(() => _currency = value),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          TextField(controller: _mappingKey, decoration: _dialogInputDecoration('mapping_key')),
+          TextField(
+              controller: _mappingKey,
+              decoration: _dialogInputDecoration('mapping_key')),
           const SizedBox(height: 10),
           TextField(
             controller: _aggregationKey,
             decoration: _dialogInputDecoration('aggregation_key'),
           ),
           const SizedBox(height: 10),
-          DropdownButtonFormField<int?>(
+          _DialogPopupSelectField<int?>(
+            label: 'related_work_item',
             value: hasRelated ? _relatedWorkItem : null,
-            decoration: _dialogInputDecoration('related_work_item'),
-            items: [
-              const DropdownMenuItem<int?>(value: null, child: Text('Не задано')),
+            options: [
+              const _PopupSelectOption<int?>(value: null, label: 'Не задано'),
               ...widget.workItems.map(
-                (item) => DropdownMenuItem<int?>(
+                (item) => _PopupSelectOption<int?>(
                   value: item.id,
-                  child: Text('${item.id}: ${item.name}', overflow: TextOverflow.ellipsis),
+                  label: '${item.id}: ${item.name}',
                 ),
               ),
             ],
@@ -1602,5 +1826,3 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
     );
   }
 }
-
-

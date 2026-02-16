@@ -23,25 +23,30 @@ class Auth extends _$Auth {
     state = AuthStatus.loading;
     final repo = await ref.read(authRepositoryProvider.future);
 
-    // Check if we have an access token
     final accessToken = repo.getAccessToken();
-    if (accessToken != null) {
-      // Optimistically set authenticated
-      state = AuthStatus.authenticated;
+    if (accessToken == null) {
+      state = AuthStatus.unauthenticated;
+      return;
+    }
 
-      // Optionally verify with /me endpoint or refresh if needed
-      try {
-        await repo.getUser();
-        // still authenticated
-      } catch (e) {
-        // If /me fails, try refresh
-        final success = await repo.refreshToken();
-        if (!success) {
-          state = AuthStatus.unauthenticated;
-          await repo.logout();
-        }
+    try {
+      await repo.getUser();
+      state = AuthStatus.authenticated;
+      return;
+    } catch (_) {
+      final refreshed = await repo.refreshToken();
+      if (!refreshed) {
+        await repo.logout();
+        state = AuthStatus.unauthenticated;
+        return;
       }
-    } else {
+    }
+
+    try {
+      await repo.getUser();
+      state = AuthStatus.authenticated;
+    } catch (_) {
+      await repo.logout();
       state = AuthStatus.unauthenticated;
     }
   }

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../presentation/providers/auth_provider.dart';
@@ -31,15 +32,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       await ref.read(authProvider.notifier).login(
-            _usernameController.text,
+            _usernameController.text.trim(),
             _passwordController.text,
           );
-      // Navigation is handled by the auth state listener in main.dart or routing
+      // Navigation is handled by auth state in main.dart.
     } catch (e) {
+      var message = 'Неверный логин или пароль.';
+      if (e is DioException) {
+        final data = e.response?.data;
+        if (data is Map && data['detail'] is String) {
+          message = data['detail'] as String;
+        } else if (e.response?.statusCode != 401 && e.message != null) {
+          message = e.message!;
+        }
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Ошибка входа: ${e.toString()}'),
+            content: Text(message),
             backgroundColor: Colors.red,
           ),
         );
