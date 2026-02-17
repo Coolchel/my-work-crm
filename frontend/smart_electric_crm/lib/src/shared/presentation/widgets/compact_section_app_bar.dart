@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 
 class CompactSectionAppBar extends StatelessWidget
     implements PreferredSizeWidget {
@@ -9,6 +10,7 @@ class CompactSectionAppBar extends StatelessWidget
   final List<Widget>? actions;
   final bool centerTitle;
   final List<Color>? gradientColors;
+  final double bottomGap;
 
   const CompactSectionAppBar({
     super.key,
@@ -19,12 +21,14 @@ class CompactSectionAppBar extends StatelessWidget
     this.actions,
     this.centerTitle = false,
     this.gradientColors,
+    this.bottomGap = _defaultBottomGap,
   });
 
-  static const double _toolbarHeight = 66;
+  static const double _toolbarHeight = 68;
+  static const double _defaultBottomGap = 30;
 
   @override
-  Size get preferredSize => const Size.fromHeight(_toolbarHeight);
+  Size get preferredSize => Size.fromHeight(_toolbarHeight + bottomGap);
 
   @override
   Widget build(BuildContext context) {
@@ -51,8 +55,8 @@ class CompactSectionAppBar extends StatelessWidget
             colors: colors,
           ),
           borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(18),
-            bottomRight: Radius.circular(18),
+            bottomLeft: Radius.circular(AppDesignTokens.radiusM),
+            bottomRight: Radius.circular(AppDesignTokens.radiusM),
           ),
         ),
       ),
@@ -78,9 +82,10 @@ class CompactSectionAppBar extends StatelessWidget
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.1,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                    height: 1.1,
                   ),
                 ),
                 if (subtitle != null && subtitle!.trim().isNotEmpty)
@@ -89,15 +94,20 @@ class CompactSectionAppBar extends StatelessWidget
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white.withOpacity(0.9),
-                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.92),
+                      fontWeight: FontWeight.w400,
+                      height: 1.1,
                     ),
                   ),
               ],
             ),
           ),
         ],
+      ),
+      bottom: PreferredSize(
+        preferredSize: Size.fromHeight(bottomGap),
+        child: SizedBox(height: bottomGap),
       ),
     );
   }

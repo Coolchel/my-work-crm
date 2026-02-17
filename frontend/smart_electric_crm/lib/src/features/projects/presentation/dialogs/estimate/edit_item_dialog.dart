@@ -28,6 +28,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
   bool _showEmployer = false;
 
   bool _isUpdating = false; // Prevents infinite loops
+  String? _validationError;
 
   @override
   void initState() {
@@ -56,6 +57,8 @@ class _EditItemDialogState extends State<EditItemDialog> {
     _unitCtrl = TextEditingController(text: widget.item.unit);
 
     _currency = widget.item.currency;
+    _totalQtyCtrl.addListener(_clearValidationError);
+    _empQtyCtrl.addListener(_clearValidationError);
 
     // Show if already has value or user expands it
     if (widget.item.employerQuantity > 0 && widget.item.itemType == 'work') {
@@ -65,6 +68,15 @@ class _EditItemDialogState extends State<EditItemDialog> {
     if (widget.item.itemType == 'work') {
       _setupListeners();
     }
+  }
+
+  void _clearValidationError() {
+    if (_validationError == null) {
+      return;
+    }
+    setState(() {
+      _validationError = null;
+    });
   }
 
   void _setupListeners() {
@@ -459,6 +471,19 @@ class _EditItemDialogState extends State<EditItemDialog> {
                           ),
                         ),
                       ],
+                      if (_validationError != null) ...[
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            _validationError!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -514,10 +539,17 @@ class _EditItemDialogState extends State<EditItemDialog> {
 
     // VALIDATION
     if (empFn > totalFn) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              "Ошибка: Доля контрагента не может быть больше общего объема!")));
+      setState(() {
+        _validationError =
+            "Ошибка: Доля контрагента не может быть больше общего объема!";
+      });
       return;
+    }
+
+    if (_validationError != null) {
+      setState(() {
+        _validationError = null;
+      });
     }
 
     final priceFn = double.tryParse(_priceCtrl.text.replaceAll(',', '.')) ?? 0;

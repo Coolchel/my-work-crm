@@ -98,6 +98,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
   }
 
   Future<void> _submitForm() async {
+    if (_isLoading) return;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
@@ -120,9 +121,6 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
         await ref.read(projectOperationsProvider.notifier).addProject(data);
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Объект успешно создан')),
-          );
         }
       } else {
         final data = {
@@ -139,9 +137,6 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
             );
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Изменения сохранены')),
-          );
         }
       }
     } catch (e) {

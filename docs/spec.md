@@ -1,4 +1,4 @@
-# Functional Specifications (Specs)
+﻿# Functional Specifications (Specs)
 
 ## 1. Authentication & Security
 *   **Mechanism:** JWT (Access + Refresh).
@@ -10,17 +10,32 @@
 ## 2. Dashboard (Home)
 *   **Smart Search:** Global search across Projects, Materials, and Works.
     *   Matching is always case-insensitive (forced normalization regardless of keyboard layout/case).
+*   **Main Navigation Contract:**
+    *   Home tab label in bottom navigation is `Р“Р»Р°РІРЅР°СЏ`.
+    *   `Settings` is not present in the bottom navigation.
+    *   Settings entry is available via top-right settings icon in the Home header.
+    *   Bottom navigation labels are always visible under icons across primary app sections.
 *   **Quick Stats (Current Month):**
     *   *Pre-calculations:* Count of stages with "precalc" title.
     *   *Active Objects:* Unique projects with active stages.
     *   *Paid:* Count of paid stages.
 *   **Recent Projects:** Sorted by update time.
 *   **Recent Projects Hover:** Card hover behavior must match "Objects" section interaction style.
+    *   Hover highlight should stay card-level (surface/border/shadow) and avoid isolated text-only highlight effect.
 
 ## 3. Project Management
 *   **Structure:**
     *   **List View:** Filters (Source, Type, Status), Sorting (Date, Profitability).
     *   **Detail View:** header with Client/Source info. Tabs: Stages, Shields, Files.
+    *   **Create UX Reliability:** Successful create operations (`Project`, `Stage`) must not show false error banners after HTTP `201`.
+    *   **Object Card Accent Stripe:** color depends on stage composition:
+        *   No stages -> Indigo (default).
+        *   Has `precalc` only -> BlueGrey.
+        *   Has `stage_1` / `stage_2` / `stage_1_2` -> Blue.
+        *   Has `stage_3` -> Green.
+        *   Only `other` (or `precalc` + `other`) -> Amber.
+        *   Only `extra` (or `precalc` + `extra`) -> Purple.
+        *   If `stage_1`/`stage_2`/`stage_1_2` or `stage_3` is present together with `other`/`extra`, core stage colors (Blue/Green) take priority.
 *   **Files:**
     *   Limit: 12 files/project, 20MB/file.
     *   Types: Images, Documents, Video.
@@ -59,6 +74,9 @@
     *   List of projects with expandable stages.
     *   Visual "Paid" confirmation.
     *   "Employer Share" display (if > 0).
+*   **Expanded Card Tint:** Expanded/hovered project card background under header uses a soft low-intensity green tint (no saturated fill).
+*   **Stage Date Tone:** Stage date labels under project headers use neutral text tones (black/grey), not alert colors.
+*   **Pay Toggle UI:** "РћРїР»Р°С‡РµРЅРѕ/РќРµ РѕРїР»Р°С‡РµРЅРѕ" control in stage rows uses compact modern pill styling while preserving existing action behavior.
 *   **Hover Consistency:** All interactive finance list positions use the same hover feedback pattern for pointer devices.
 
 ## 7. Catalog & Directory (Admin)
@@ -79,11 +97,11 @@
 *   **System Sync UX:**
     *   Auto-run sync when opening the directory screen.
     *   Show dedicated loading state (please wait) during sync.
-    *   Keep manual sync action in the directory AppBar as explicit retry tool on both tabs (`Система` and `Каталог`).
+    *   Keep manual sync action in the directory AppBar as explicit retry tool on both tabs (`РЎРёСЃС‚РµРјР°` and `РљР°С‚Р°Р»РѕРі`).
     *   Sync icon style must stay neutral (no blue-hover recolor) and match standard top-bar icon sizing.
 *   **Directory Navigation UX:**
     *   Bottom directory `NavigationBar` (`System Sections` / `Catalog`) must stay visible on second-level screens (entries/items).
-    *   Root tab label for system dictionaries is `Система`.
+    *   Root tab label for system dictionaries is `РЎРёСЃС‚РµРјР°`.
     *   Nested cards should not show chevron affordance; open/edit behavior is triggered by card tap.
     *   On second-level screens, tapping a row opens edit flow directly.
     *   Second-level screens keep FAB `+` tooltip and use explicit back-left AppBar icon for consistency.
@@ -102,4 +120,21 @@
 *   **Compact Visual Header:**
     *   Sections `Statistics`, `Finance`, `Objects`, `Stages`, `Estimates`, `Shields`, `Files`, `Directory`, and `Settings` use a unified compact top header style.
     *   Header must stay visually expressive (gradient + icon + title) while remaining mobile-friendly in height.
+    *   Header title typography should avoid over-bold rendering: prefer readable medium/semi-bold weight with slightly increased visual size.
     *   Detail sub-sections may show contextual subtitle (e.g., object address or selected directory entity).
+    *   Header keeps a small unified bottom gap before content to improve vertical rhythm.
+*   **Main Tabs Motif Rule:**
+    *   `Home` remains the primary hero-gradient screen.
+    *   `Objects`, `Finance`, and `Statistics` reuse the same motif in a restrained compact-header gradient (no layout or height increase).
+*   **Statistics Accent Rule:**
+    *   Top period switch and decorative section stripes in `Statistics` use brand blue/indigo accent tokens.
+
+## 9. Visual Consistency Contracts
+*   **Shared Background Contract:** Primary app screens use one common soft-light app background; foreground cards/dialogs remain visually distinct on light surfaces.
+*   **Bottom Navigation Consistency:** Main app nav, project-detail nav, and estimate nav share one tokenized visual family (bar height, icon sizing, selected-state pill/indicator, text emphasis).
+
+## 10. Feedback UX (Snackbar & Validation)
+*   **Error-first Snackbar:** keep snackbar primarily for operation/network/file errors.
+*   **Validation Inline:** form validation messages are displayed inline near the relevant input instead of snackbar where possible.
+*   **Success Signal Reduction:** avoid routine success snackbar when the result is immediately visible on screen (e.g., item added/deleted/renamed in-place).
+*   **Batch Actions:** avoid redundant "start + finish" snackbars for one flow; prefer one final status message.

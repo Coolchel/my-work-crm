@@ -338,7 +338,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
                 context,
                 label: "Заказчик (Работы)",
                 icon: Icons.person_outline,
-                color: Colors.green.shade700,
+                color: Colors.green,
                 onTap: () async {
                   Navigator.pop(context);
                   await _processAction(context, ref,
@@ -350,7 +350,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
                 context,
                 label: "Контрагент (Работы)",
                 icon: Icons.handshake_outlined,
-                color: Colors.green.shade700,
+                color: Colors.green,
                 onTap: () async {
                   Navigator.pop(context);
                   await _processAction(context, ref,
@@ -394,13 +394,13 @@ class EstimateTextActionsDialog extends ConsumerWidget
             context,
             label: "Работы (Всего)",
             icon: Icons.work_outline,
-            color: Colors.green.shade700,
+            color: Colors.green,
             items: [
               buildPopupMenuItem(
                 value: 'total',
                 icon: Icons.person_rounded,
                 text: "Для Заказчика",
-                color: Colors.green.shade700,
+                color: Colors.green,
                 isSelected: true, // Default view assumption
               ),
               if (hasPartnerWorks) ...[
@@ -409,13 +409,13 @@ class EstimateTextActionsDialog extends ConsumerWidget
                   value: 'employer',
                   icon: Icons.handshake_rounded,
                   text: "Для Контрагента",
-                  color: Colors.green.shade700,
+                  color: Colors.green,
                 ),
                 buildPopupMenuItem(
                   value: 'our',
                   icon: Icons.engineering_rounded,
                   text: "Наши (Остаток)",
-                  color: Colors.green.shade700,
+                  color: Colors.green,
                 ),
               ]
             ],
@@ -611,7 +611,7 @@ class EstimatePdfActionsDialog extends ConsumerWidget
                 context,
                 label: "Заказчик (Работы)",
                 icon: Icons.person_outline,
-                color: Colors.green.shade700,
+                color: Colors.green,
                 onTap: () => _printPdfWithParams(context, ref,
                     isWork: true, type: 'total', share: false),
               ),
@@ -620,7 +620,7 @@ class EstimatePdfActionsDialog extends ConsumerWidget
                 context,
                 label: "Контрагент (Работы)",
                 icon: Icons.handshake_outlined,
-                color: Colors.green.shade700,
+                color: Colors.green,
                 onTap: () => _printPdfWithParams(context, ref,
                     isWork: true, type: 'employer', share: false),
               ),
@@ -658,13 +658,13 @@ class EstimatePdfActionsDialog extends ConsumerWidget
             context,
             label: "Работы (Всего)",
             icon: Icons.work_outline,
-            color: Colors.green.shade700,
+            color: Colors.green,
             items: [
               buildPopupMenuItem(
                 value: 'total',
                 icon: Icons.person_rounded,
                 text: "Для Заказчика",
-                color: Colors.green.shade700,
+                color: Colors.green,
                 isSelected: true,
               ),
               if (hasPartnerWorks) ...[
@@ -673,7 +673,7 @@ class EstimatePdfActionsDialog extends ConsumerWidget
                   value: 'employer',
                   icon: Icons.handshake_rounded,
                   text: "Для Контрагента",
-                  color: Colors.green.shade700,
+                  color: Colors.green,
                 ),
               ]
             ],

@@ -18,7 +18,12 @@ class SettingsScreen extends ConsumerWidget {
     final userAsync = ref.watch(userProfileProvider);
 
     return Scaffold(
-      appBar: const CompactSectionAppBar(
+      appBar: CompactSectionAppBar(
+        leading: IconButton(
+          tooltip: 'Назад',
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
         title: 'Настройки',
         icon: Icons.settings_rounded,
       ),

@@ -5,6 +5,7 @@ import '../../data/models/statistics_model.dart';
 import '../../data/repositories/statistics_repository.dart';
 import '../widgets/work_dynamics_chart.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 
 class StatisticsScreen extends ConsumerWidget {
   const StatisticsScreen({super.key});
@@ -27,12 +28,14 @@ class StatisticsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(statisticsDataProvider);
     final currentPeriod = ref.watch(statisticsFilterProvider);
+    const statisticsAccent = Color(0xFF4352B1);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
       appBar: const CompactSectionAppBar(
         title: 'Статистика',
         icon: Icons.bar_chart_rounded,
+        gradientColors: AppDesignTokens.subtleSectionGradient,
+        bottomGap: 10,
       ),
       body: statsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -74,25 +77,25 @@ class StatisticsScreen extends ConsumerWidget {
                       visualDensity: VisualDensity.compact,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       side: MaterialStateProperty.all(BorderSide(
-                          color: const Color(0xFF2E7D32).withOpacity(0.2))),
+                          color: statisticsAccent.withOpacity(0.26))),
                       backgroundColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return const Color(0xFF2E7D32).withOpacity(0.1);
+                          return statisticsAccent.withOpacity(0.12);
                         }
                         return Colors.transparent;
                       }),
                       foregroundColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return const Color(0xFF2E7D32);
+                          return statisticsAccent;
                         }
                         return Colors.black87;
                       }),
                       iconColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return const Color(0xFF2E7D32);
+                          return statisticsAccent;
                         }
                         return Colors.grey;
                       }),
@@ -103,7 +106,10 @@ class StatisticsScreen extends ConsumerWidget {
 
                 const SizedBox(height: 24),
 
-                _buildHeader('Финансы за ${_getPeriodTitle(currentPeriod)}'),
+                _buildHeader(
+                  'Финансы за ${_getPeriodTitle(currentPeriod)}',
+                  stripeColor: statisticsAccent,
+                ),
                 const SizedBox(height: 12),
                 _buildFinancialSummary(stats.finances),
                 const SizedBox(height: 24),
@@ -116,7 +122,10 @@ class StatisticsScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildHeader('Откуда объекты'),
+                            _buildHeader(
+                              'Откуда объекты',
+                              stripeColor: statisticsAccent,
+                            ),
                             const SizedBox(height: 12),
                             Expanded(
                                 child: _buildPieChartCard(
@@ -132,7 +141,10 @@ class StatisticsScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildHeader('Типы объектов'),
+                            _buildHeader(
+                              'Типы объектов',
+                              stripeColor: statisticsAccent,
+                            ),
                             const SizedBox(height: 12),
                             Expanded(
                                 child: _buildPieChartCard(
@@ -149,7 +161,10 @@ class StatisticsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
 
-                _buildHeader('Динамика работ'),
+                _buildHeader(
+                  'Динамика работ',
+                  stripeColor: statisticsAccent,
+                ),
                 const SizedBox(height: 12),
                 Column(
                   children: [
@@ -159,11 +174,11 @@ class StatisticsScreen extends ConsumerWidget {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: const Color(0xFF2E7D32).withOpacity(0.15),
+                          color: Colors.green.withOpacity(0.15),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF2E7D32).withOpacity(0.05),
+                            color: Colors.green.withOpacity(0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -240,14 +255,17 @@ class StatisticsScreen extends ConsumerWidget {
     }
   }
 
-  Widget _buildHeader(String title) {
+  Widget _buildHeader(
+    String title, {
+    required Color stripeColor,
+  }) {
     return Row(
       children: [
         Container(
           width: 4,
           height: 18,
           decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.5),
+              color: stripeColor.withOpacity(0.6),
               borderRadius: BorderRadius.circular(2)),
         ),
         const SizedBox(width: 8),
@@ -449,11 +467,11 @@ class StatisticsScreen extends ConsumerWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF2E7D32).withOpacity(0.15), // Greenish border
+          color: Colors.green.withOpacity(0.15), // Greenish border
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2E7D32).withOpacity(0.05),
+            color: Colors.green.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

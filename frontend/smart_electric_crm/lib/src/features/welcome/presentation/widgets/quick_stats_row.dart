@@ -108,7 +108,7 @@ class QuickStatsRow extends ConsumerWidget {
                   title: 'Оплачено',
                   value: paidCount.toString(),
                   icon: Icons.check_circle_outline,
-                  color: Colors.teal,
+                  color: Colors.green,
                   onTap: () => onStatSelected
                       ?.call(selectedStat == 'paid' ? null : 'paid'),
                   isSelected: selectedStat == 'paid',

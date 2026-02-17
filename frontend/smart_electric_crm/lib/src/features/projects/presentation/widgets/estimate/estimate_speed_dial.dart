@@ -27,18 +27,16 @@ class EstimateSpeedDial extends StatelessWidget {
       animation: tabController,
       builder: (context, child) {
         final isWorks = tabController.index == 0;
-        final mainFabColor =
-            isWorks ? Colors.green.shade200 : Colors.blue.shade200;
+        final mainFabColor = isWorks ? Colors.green : Colors.blue.shade200;
 
         // Contextual soft colors for SpeedDial buttons
-        final actionBtnColor =
-            isWorks ? Colors.green.shade50 : Colors.blue.shade50;
+        final actionBtnColor = isWorks ? Colors.green : Colors.blue.shade50;
         final actionBtnTextColor =
-            isWorks ? Colors.green.shade800 : Colors.blue.shade800;
+            isWorks ? Colors.green : Colors.blue.shade800;
 
         // Hover Colors
         final actionBtnHoverColor =
-            isWorks ? Colors.green.shade100 : Colors.blue.shade100;
+            isWorks ? Colors.green : Colors.blue.shade100;
 
         return Column(
           mainAxisSize: MainAxisSize.min,

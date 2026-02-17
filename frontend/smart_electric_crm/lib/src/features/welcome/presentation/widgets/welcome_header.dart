@@ -1,10 +1,17 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:math';
+
 import '../../../../core/constants/app_quotes.dart';
 
 class WelcomeHeader extends StatelessWidget {
-  const WelcomeHeader({super.key});
+  final VoidCallback onSettingsPressed;
+
+  const WelcomeHeader({
+    required this.onSettingsPressed,
+    super.key,
+  });
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -41,13 +48,26 @@ class WelcomeHeader extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              _getGreeting(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    _getGreeting(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Настройки',
+                  onPressed: onSettingsPressed,
+                  icon: const Icon(Icons.settings_outlined),
+                  color: Colors.white,
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
@@ -59,14 +79,14 @@ class WelcomeHeader extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              "\"${appQuotes[Random().nextInt(appQuotes.length)]}\"",
+              '"${appQuotes[Random().nextInt(appQuotes.length)]}"',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.8),
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
               ),
             ),
-            const SizedBox(height: 40), // Added spacing for overlap
+            const SizedBox(height: 40),
           ],
         ),
       ),

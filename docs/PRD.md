@@ -8,6 +8,7 @@ Create a premium, professional tool for electricians to manage projects, estimat
 *   **Automation:** Minimizing manual entry. Engineering data (Shields) automatically generates Estimates (Materials & Works).
 *   **Data Integrity:** "Safe" saving mechanisms, strict validation, and conflict resolution (e.g., smart merge logic for calculations).
 *   **Controlled Admin Access:** Entry to high-impact admin areas (Directory) must require explicit warning + credential confirmation for the current account.
+*   **Intentional Navigation:** Main bottom navigation stays focused on core work sections; Settings is accessed from the Home header action.
 *   **Education:** The code and structure should serve as a mentorship platform, using clear English code and Russian comments/explanations.
 
 ## 3. Tech Stack
@@ -19,6 +20,7 @@ Create a premium, professional tool for electricians to manage projects, estimat
 
 ## 4. Key Entities
 *   **Project:** The central unit of work. Contains Stages, Shields, and Files.
+    *   **Project Card Progress Accent:** Object list cards use stage-aware left accent stripe colors to communicate progress at a glance.
 *   **Stage:** A phase of work (e.g., "Rough-in", "Finishing"). Contains the Estimate.
 *   **Estimate (Smeta):** Divided into **Works** and **Materials**.
     *   **Smart Calculator:** Input 2 of 3 values (Total, Me, Partner) -> 3rd is auto-calculated.

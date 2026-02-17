@@ -43,7 +43,8 @@ class DirectoryRepository {
           .map((raw) => DirectorySection.fromJson(raw as Map<String, dynamic>))
           .toList();
     } on DioException catch (error) {
-      if (error.response?.statusCode == 500 || error.response?.statusCode == 503) {
+      if (error.response?.statusCode == 500 ||
+          error.response?.statusCode == 503) {
         return const <DirectorySection>[];
       }
       rethrow;
@@ -90,7 +91,8 @@ class DirectoryRepository {
           .map((raw) => DirectoryEntry.fromJson(raw as Map<String, dynamic>))
           .toList();
     } on DioException catch (error) {
-      if (error.response?.statusCode == 500 || error.response?.statusCode == 503) {
+      if (error.response?.statusCode == 500 ||
+          error.response?.statusCode == 503) {
         return const <DirectoryEntry>[];
       }
       rethrow;
@@ -261,22 +263,26 @@ final directoryRepositoryProvider = Provider<DirectoryRepository>((ref) {
   return DirectoryRepository(client: dio);
 });
 
-final directorySectionsProvider = FutureProvider<List<DirectorySection>>((ref) async {
+final directorySectionsProvider =
+    FutureProvider<List<DirectorySection>>((ref) async {
   final repository = ref.watch(directoryRepositoryProvider);
   return repository.getSections();
 });
 
-final directoryEntriesProvider = FutureProvider.family<List<DirectoryEntry>, int>((ref, sectionId) async {
+final directoryEntriesProvider =
+    FutureProvider.family<List<DirectoryEntry>, int>((ref, sectionId) async {
   final repository = ref.watch(directoryRepositoryProvider);
   return repository.getEntries(sectionId);
 });
 
-final catalogCategoriesProvider = FutureProvider<List<CatalogCategory>>((ref) async {
+final catalogCategoriesProvider =
+    FutureProvider<List<CatalogCategory>>((ref) async {
   final repository = ref.watch(directoryRepositoryProvider);
   return repository.getCategories();
 });
 
-final catalogItemsByCategoryProvider = FutureProvider.family<List<CatalogItem>, int>((ref, categoryId) async {
+final catalogItemsByCategoryProvider =
+    FutureProvider.family<List<CatalogItem>, int>((ref, categoryId) async {
   final repository = ref.watch(directoryRepositoryProvider);
   return repository.getCategoryItems(categoryId);
 });

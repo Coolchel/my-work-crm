@@ -26,6 +26,7 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
   late String _currency;
   bool _showEmployer = false;
   bool _isUpdating = false;
+  String? _validationError;
 
   @override
   void initState() {
@@ -38,10 +39,21 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
             .toStringAsFixed(2)
             .replaceAll(RegExp(r'\.?0+$'), ''));
     _currency = widget.item.defaultCurrency;
+    _totalCtrl.addListener(_clearValidationError);
+    _empCtrl.addListener(_clearValidationError);
 
     if (widget.itemType == 'work') {
       _setupListeners();
     }
+  }
+
+  void _clearValidationError() {
+    if (_validationError == null) {
+      return;
+    }
+    setState(() {
+      _validationError = null;
+    });
   }
 
   void _setupListeners() {
@@ -330,6 +342,19 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
                           ),
                         ),
                       ],
+                      if (_validationError != null) ...[
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            _validationError!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -361,10 +386,17 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
                             0;
 
                         if (e > t) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                              content: Text(
-                                  "Ошибка: Доля контрагента > Общего объема")));
+                          setState(() {
+                            _validationError =
+                                "Ошибка: Доля контрагента > Общего объема";
+                          });
                           return;
+                        }
+
+                        if (_validationError != null) {
+                          setState(() {
+                            _validationError = null;
+                          });
                         }
 
                         Navigator.pop(context, {

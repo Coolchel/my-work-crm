@@ -5,8 +5,10 @@ import '../providers/project_providers.dart';
 import '../../data/models/project_model.dart';
 import 'project_detail_screen.dart';
 import 'add_project_screen.dart';
+import '../utils/project_stage_color_resolver.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 
 // ─── Filter enums ─────────────────────────────────────────────
 enum SortOrder { newest, oldest }
@@ -158,6 +160,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
       appBar: CompactSectionAppBar(
         title: 'Объекты',
         icon: Icons.apartment_rounded,
+        gradientColors: AppDesignTokens.subtleSectionGradient,
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -237,7 +240,12 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                           ),
                         )
                       : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+                          padding: const EdgeInsets.fromLTRB(
+                            AppDesignTokens.spacingM,
+                            16,
+                            AppDesignTokens.spacingM,
+                            120,
+                          ),
                           itemCount: filtered.length,
                           physics: const AlwaysScrollableScrollPhysics(),
                           itemBuilder: (context, index) {
@@ -654,6 +662,9 @@ class _ProjectCardState extends State<_ProjectCard> {
     final project = widget.project;
     final createdAt = project.createdAt;
     final updatedAt = project.updatedAt;
+    final stripeColor = ProjectStageColorResolver.resolveStripeColor(
+      project.stages.map((stage) => stage.title),
+    );
 
     final isEdited =
         updatedAt != null && updatedAt.difference(createdAt).abs().inHours >= 2;
@@ -697,7 +708,7 @@ class _ProjectCardState extends State<_ProjectCard> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Accent Stripe
-                  Container(width: 5, color: Colors.indigo),
+                  Container(width: 5, color: stripeColor),
                   // Content
                   Expanded(
                     child: Padding(
