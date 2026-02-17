@@ -72,6 +72,9 @@
     *   List of projects with expandable stages.
     *   Visual "Paid" confirmation.
     *   "Employer Share" display (if > 0).
+*   **Expanded Card Tint:** Expanded/hovered project card background under header uses a soft low-intensity green tint (no saturated fill).
+*   **Stage Date Tone:** Stage date labels under project headers use neutral text tones (black/grey), not alert colors.
+*   **Pay Toggle UI:** "Оплачено/Не оплачено" control in stage rows uses compact modern pill styling while preserving existing action behavior.
 *   **Hover Consistency:** All interactive finance list positions use the same hover feedback pattern for pointer devices.
 
 ## 7. Catalog & Directory (Admin)

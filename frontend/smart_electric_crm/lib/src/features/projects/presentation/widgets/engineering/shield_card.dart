@@ -626,7 +626,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
       case 'led':
         return Colors.purple.shade600;
       case 'multimedia':
-        return Colors.teal.shade600;
+        return Colors.green;
       default:
         return Colors.grey.shade700;
     }

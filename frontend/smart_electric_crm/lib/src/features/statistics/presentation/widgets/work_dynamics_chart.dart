@@ -39,8 +39,7 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
 
     // Colors based on currency
     final mainColor = widget.isUsd ? Colors.green : Colors.indigo;
-    final accentColor =
-        widget.isUsd ? Colors.greenAccent.shade700 : Colors.indigoAccent;
+    final accentColor = widget.isUsd ? Colors.green : Colors.indigoAccent;
 
     final spots = <FlSpot>[];
     double maxY = 0;
@@ -202,7 +201,7 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
                                   '${value.toStringAsFixed(0)} ${widget.currencySymbol}',
                               style: TextStyle(
                                 color: widget.isUsd
-                                    ? Colors.greenAccent.shade100
+                                    ? Colors.green
                                     : Colors.indigoAccent.shade100,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,

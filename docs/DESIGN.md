@@ -3,10 +3,11 @@
 ## 1. Color Palette
 *   **Primary (Indigo):** Headers, Key Actions, Power Shields.
 *   **Success (Teal/Green):** "Paid" status, Positive balances, Work Items.
+*   **Unified Green Token:** All green accents across app sections (Estimates/Dialogs/Finance/Statistics/Object & Stage accents/Files) use one base color token equal to object accent stripe green (`Colors.green`). Opacity rules remain context-specific.
 *   **Info (Blue):** Material Items, Files.
 *   **Warning (Orange):** Alerts, Markup, Power Shield Accents.
 *   **Purple:** LED Shields.
-*   **Amber:** Multimedia Shields.
+*   **Green:** Multimedia Shields (aligned with unified app green token).
 
 ## 2. Component Guidelines
 
@@ -53,7 +54,7 @@
 
 ### 3.2. Shield Cards
 *   **Visual Logic:**
-    *   **Stripe:** 4px left border coding type (Blue=Power, Purple=LED, Amber=Media).
+    *   **Stripe:** 4px left border coding type (Blue=Power, Purple=LED, Green=Multimedia).
     *   **Header:** Expands to show content. Background tints slightly on expand.
     *   **Devices:** Colored icons (Red=Switch, Blue=Breaker, Amber=RCD).
 
@@ -61,6 +62,9 @@
 *   **Project Card:**
     *   **Active:** Green border (width 2.0) when expanded.
     *   **Paid Badge:** Green Pill with "PAID" text.
+    *   **Expanded Surface:** Keep expanded card/body fill soft and low-intensity in green (subtle tint only).
+*   **Stage Date Label:** Use neutral black/grey date colors under stage names (no warning/error hue coding).
+*   **Pay Toggle Button:** Stage payment button uses compact rounded pill style with soft green tint and subtle hover shadow.
 *   **All Positions Hover:** Every clickable finance position has hover highlight (not only parent project card).
 
 ### 3.4. Home Header & Main Navigation
@@ -85,7 +89,7 @@
 ## 4. Icons & Assets
 *   **Style:** Material Symbols Rounded.
 *   **Files:**
-    *   PDF: Red Icon.
+    *   PDF: Neutral document icon with non-red accent.
     *   DOC: Blue Icon.
     *   Image: Thumbnail preview (`BoxFit.cover`).
 

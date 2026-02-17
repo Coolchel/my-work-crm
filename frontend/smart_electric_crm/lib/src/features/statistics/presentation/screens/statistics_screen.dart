@@ -73,26 +73,26 @@ class StatisticsScreen extends ConsumerWidget {
                     style: ButtonStyle(
                       visualDensity: VisualDensity.compact,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      side: MaterialStateProperty.all(BorderSide(
-                          color: const Color(0xFF2E7D32).withOpacity(0.2))),
+                      side: MaterialStateProperty.all(
+                          BorderSide(color: Colors.green.withOpacity(0.2))),
                       backgroundColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return const Color(0xFF2E7D32).withOpacity(0.1);
+                          return Colors.green.withOpacity(0.1);
                         }
                         return Colors.transparent;
                       }),
                       foregroundColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return const Color(0xFF2E7D32);
+                          return Colors.green;
                         }
                         return Colors.black87;
                       }),
                       iconColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return const Color(0xFF2E7D32);
+                          return Colors.green;
                         }
                         return Colors.grey;
                       }),
@@ -159,11 +159,11 @@ class StatisticsScreen extends ConsumerWidget {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: const Color(0xFF2E7D32).withOpacity(0.15),
+                          color: Colors.green.withOpacity(0.15),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF2E7D32).withOpacity(0.05),
+                            color: Colors.green.withOpacity(0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -449,11 +449,11 @@ class StatisticsScreen extends ConsumerWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFF2E7D32).withOpacity(0.15), // Greenish border
+          color: Colors.green.withOpacity(0.15), // Greenish border
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2E7D32).withOpacity(0.05),
+            color: Colors.green.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
