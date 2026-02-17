@@ -25,6 +25,15 @@
 *   **Structure:**
     *   **List View:** Filters (Source, Type, Status), Sorting (Date, Profitability).
     *   **Detail View:** header with Client/Source info. Tabs: Stages, Shields, Files.
+    *   **Create UX Reliability:** Successful create operations (`Project`, `Stage`) must not show false error banners after HTTP `201`.
+    *   **Object Card Accent Stripe:** color depends on stage composition:
+        *   No stages -> Indigo (default).
+        *   Has `precalc` only -> BlueGrey.
+        *   Has `stage_1` / `stage_2` / `stage_1_2` -> Blue.
+        *   Has `stage_3` -> Green.
+        *   Only `other` (or `precalc` + `other`) -> Amber.
+        *   Only `extra` (or `precalc` + `extra`) -> Purple.
+        *   If `stage_1`/`stage_2`/`stage_1_2` or `stage_3` is present together with `other`/`extra`, core stage colors (Blue/Green) take priority.
 *   **Files:**
     *   Limit: 12 files/project, 20MB/file.
     *   Types: Images, Documents, Video.

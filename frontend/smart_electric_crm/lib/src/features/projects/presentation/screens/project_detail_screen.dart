@@ -390,6 +390,7 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
   }
 
   Future<void> _addStage(String stageKey) async {
+    if (_isLoading) return;
     setState(() => _isLoading = true);
     try {
       await ref

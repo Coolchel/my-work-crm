@@ -98,6 +98,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
   }
 
   Future<void> _submitForm() async {
+    if (_isLoading) return;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 

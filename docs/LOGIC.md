@@ -65,6 +65,18 @@ Triggered when Materials are updated.
 *   **Home Settings Entry Flow:**
     *   Settings screen is opened from Home header action button (`top-right`).
     *   Bottom main navigation does not include a dedicated Settings destination.
+*   **Project List Stripe Color Priority (By Stage Composition):**
+    *   Priority order: `stage_3` -> `stage_1/stage_2/stage_1_2` -> `extra/other` -> `precalc` -> default.
+    *   Mapping:
+        *   `stage_3` present -> Green.
+        *   `stage_1` / `stage_2` / `stage_1_2` present (without `stage_3`) -> Blue.
+        *   `extra` present (without core stages) -> Purple.
+        *   `other` present (without core stages and without `extra`) -> Amber.
+        *   `precalc` only -> BlueGrey.
+        *   no stages -> Indigo.
+*   **Create Operation Stability (Project/Stage):**
+    *   Frontend must treat `201 Created` as success without emitting secondary false errors from local async state transitions.
+    *   UI dialogs should block repeated submit while request is in-flight.
 
 
 ## 5. Directory (Reference Book) Logic

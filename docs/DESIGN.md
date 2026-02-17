@@ -40,6 +40,14 @@
 *   **Look:** White Card, 20px Radius, 6px Indigo Stripe left.
 *   **Content:** Vertical Stack: [Client Info] + [Source].
 *   **Interaction:** Selectable text for copy-paste.
+*   **Object List Card Stripe:** Left accent stripe reflects aggregate stage progress:
+    *   default/no stages -> Indigo;
+    *   `precalc` only -> BlueGrey;
+    *   `stage_1` / `stage_2` / `stage_1_2` -> Blue;
+    *   `stage_3` -> Green;
+    *   `other` (or `precalc`+`other`) -> Amber;
+    *   `extra` (or `precalc`+`extra`) -> Purple;
+    *   core production stages (`stage_1/2/1+2/3`) visually override `other/extra`.
 
 ### 3.2. Shield Cards
 *   **Visual Logic:**

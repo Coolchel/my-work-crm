@@ -79,21 +79,15 @@ class ProjectOperations extends _$ProjectOperations {
   /// Добавляет проект и обновляет список.
   Future<void> addProject(Map<String, dynamic> data) async {
     final repository = ref.read(projectRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await repository.createProject(data);
-      ref.invalidate(projectListProvider);
-    });
+    await repository.createProject(data);
+    ref.invalidate(projectListProvider);
   }
 
   /// Добавляет этап к проекту и обновляет список.
   Future<void> addStage(String projectId, String title) async {
     final repository = ref.read(projectRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await repository.addStage(projectId, title);
-      ref.invalidate(projectListProvider);
-    });
+    await repository.addStage(projectId, title);
+    ref.invalidate(projectListProvider);
   }
 
   /// Обновляет статус этапа и обновляет список.
@@ -107,23 +101,16 @@ class ProjectOperations extends _$ProjectOperations {
   /// Удаляет проект и обновляет список.
   Future<void> deleteProject(String id) async {
     final repository = ref.read(projectRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await repository.deleteProject(id);
-      ref.invalidate(projectListProvider);
-    });
+    await repository.deleteProject(id);
+    ref.invalidate(projectListProvider);
   }
 
   /// Обновляет проект и обновляет список.
   Future<void> updateProject(String id, Map<String, dynamic> data) async {
     final repository = ref.read(projectRepositoryProvider);
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      await repository.updateProject(id, data);
-      ref.invalidate(projectListProvider);
-      // Also invalidate detail provider if needed
-      ref.invalidate(projectByIdProvider(id));
-    });
+    await repository.updateProject(id, data);
+    ref.invalidate(projectListProvider);
+    ref.invalidate(projectByIdProvider(id));
   }
 
   /// Загружает файл проекта.
