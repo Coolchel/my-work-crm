@@ -10,6 +10,10 @@
 ## 2. Dashboard (Home)
 *   **Smart Search:** Global search across Projects, Materials, and Works.
     *   Matching is always case-insensitive (forced normalization regardless of keyboard layout/case).
+*   **Main Navigation Contract:**
+    *   Home tab label in bottom navigation is `Главная`.
+    *   `Settings` is not present in the bottom navigation.
+    *   Settings entry is available via top-right settings icon in the Home header.
 *   **Quick Stats (Current Month):**
     *   *Pre-calculations:* Count of stages with "precalc" title.
     *   *Active Objects:* Unique projects with active stages.
@@ -102,4 +106,5 @@
 *   **Compact Visual Header:**
     *   Sections `Statistics`, `Finance`, `Objects`, `Stages`, `Estimates`, `Shields`, `Files`, `Directory`, and `Settings` use a unified compact top header style.
     *   Header must stay visually expressive (gradient + icon + title) while remaining mobile-friendly in height.
+    *   Header title typography should avoid over-bold rendering: prefer readable medium/semi-bold weight with slightly increased visual size.
     *   Detail sub-sections may show contextual subtitle (e.g., object address or selected directory entity).

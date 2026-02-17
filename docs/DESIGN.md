@@ -53,6 +53,16 @@
     *   **Paid Badge:** Green Pill with "PAID" text.
 *   **All Positions Hover:** Every clickable finance position has hover highlight (not only parent project card).
 
+### 3.4. Home Header & Main Navigation
+*   **Bottom Main Navigation:** Includes `Главная`, `Объекты`, `Финансы`, `Статистика`; no `Settings` destination.
+*   **Settings Entry Point:** Top-right settings icon in Home header gradient block.
+*   **Header Balance:** Keep greeting text area dominant while preserving touch-friendly settings icon hit target.
+
+### 3.5. Section Header Typography
+*   **Weight:** Use medium/semi-bold title weight to avoid visually heavy section names.
+*   **Scale:** Keep title slightly larger for quicker recognition on desktop and mobile.
+*   **Subtitle Contrast:** Subtitle remains lighter to preserve hierarchy under section title.
+
 ## 4. Icons & Assets
 *   **Style:** Material Symbols Rounded.
 *   **Files:**
@@ -61,7 +71,7 @@
     *   Image: Thumbnail preview (`BoxFit.cover`).
 
 
-### 3.4. Directory Screen (Reference Book)
+### 3.6. Directory Screen (Reference Book)
 *   **Navigation:** Bottom `NavigationBar` with two destinations: `System Sections` and `Catalog` (same pattern as main app sections).
 *   **Nested Navigation:** Keep the same bottom `NavigationBar` visible on second-level directory screens.
 *   **Naming:** System tab title in UI is `Система`.

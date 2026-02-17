@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../projects/presentation/providers/project_providers.dart';
-import '../widgets/welcome_header.dart';
-import '../widgets/quick_stats_row.dart';
-import '../widgets/new_project_card.dart';
-import '../widgets/recent_projects_list.dart';
 
-import '../widgets/smart_search_bar.dart';
+import '../../../projects/presentation/providers/project_providers.dart';
+import '../../../settings/presentation/screens/settings_screen.dart';
+import '../widgets/new_project_card.dart';
+import '../widgets/quick_stats_row.dart';
+import '../widgets/recent_projects_list.dart';
 import '../widgets/search_results_overlay.dart';
+import '../widgets/smart_search_bar.dart';
+import '../widgets/welcome_header.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
@@ -21,7 +22,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the filter provider
     final selectedStat = ref.watch(dashboardFilterProvider);
     final searchQuery = ref.watch(projectSearchQueryProvider);
     final isSearchActive = searchQuery != null && searchQuery.isNotEmpty;
@@ -30,11 +30,18 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       backgroundColor: Colors.grey.shade50,
       body: Stack(
         children: [
-          // Main Content
           SingleChildScrollView(
             child: Column(
               children: [
-                const WelcomeHeader(),
+                WelcomeHeader(
+                  onSettingsPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const SettingsScreen(),
+                      ),
+                    );
+                  },
+                ),
                 Transform.translate(
                   offset: const Offset(0, -20),
                   child: Padding(
@@ -44,7 +51,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         QuickStatsRow(
                           selectedStat: selectedStat,
                           onStatSelected: (stat) {
-                            // Update provider state
                             ref.read(dashboardFilterProvider.notifier).state =
                                 stat;
                           },
@@ -65,24 +71,19 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     child: NewProjectCard(),
                   ),
                 const SizedBox(height: 24),
-                // Only show Recent Projects if search is NOT active
                 if (!isSearchActive)
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
                     child: RecentProjectsList(),
                   ),
-                const SizedBox(
-                    height: 100), // Bottom padding for navigation bar
+                const SizedBox(height: 100),
               ],
             ),
           ),
-
-          // Search Results Overlay (Floating Dropdown)
           if (isSearchActive)
             Positioned.fill(
               child: Stack(
                 children: [
-                  // Barrier to close search on tap outside
                   GestureDetector(
                     onTap: () {
                       ref.read(projectSearchQueryProvider.notifier).state =
@@ -92,16 +93,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     behavior: HitTestBehavior.opaque,
                     child: Container(color: Colors.transparent),
                   ),
-                  // Dropdown
                   CompositedTransformFollower(
                     link: _layerLink,
                     showWhenUnlinked: false,
-                    offset: const Offset(
-                        0, 60), // Adjust vertical offset below search bar
+                    offset: const Offset(0, 60),
                     child: Align(
                       alignment: Alignment.topLeft,
                       child: SizedBox(
-                        // Constrain width to match search bar (screen width - 40px padding)
                         width: MediaQuery.of(context).size.width - 40,
                         child: const SearchResultsOverlay(),
                       ),

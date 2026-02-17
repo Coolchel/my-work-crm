@@ -62,6 +62,9 @@ Triggered when Materials are updated.
 *   **Home Smart Search Normalization:**
     *   Query and searchable text are normalized to lowercase before matching.
     *   Search behavior is always case-insensitive.
+*   **Home Settings Entry Flow:**
+    *   Settings screen is opened from Home header action button (`top-right`).
+    *   Bottom main navigation does not include a dedicated Settings destination.
 
 
 ## 5. Directory (Reference Book) Logic

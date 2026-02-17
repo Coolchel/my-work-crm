@@ -8,6 +8,7 @@ Create a premium, professional tool for electricians to manage projects, estimat
 *   **Automation:** Minimizing manual entry. Engineering data (Shields) automatically generates Estimates (Materials & Works).
 *   **Data Integrity:** "Safe" saving mechanisms, strict validation, and conflict resolution (e.g., smart merge logic for calculations).
 *   **Controlled Admin Access:** Entry to high-impact admin areas (Directory) must require explicit warning + credential confirmation for the current account.
+*   **Intentional Navigation:** Main bottom navigation stays focused on core work sections; Settings is accessed from the Home header action.
 *   **Education:** The code and structure should serve as a mentorship platform, using clear English code and Russian comments/explanations.
 
 ## 3. Tech Stack
