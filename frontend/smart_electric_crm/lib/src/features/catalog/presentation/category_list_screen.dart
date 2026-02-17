@@ -39,8 +39,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
       await ref.read(directoryRepositoryProvider).bootstrapDirectory();
       ref.invalidate(directorySectionsProvider);
       if (mounted && showSuccessMessage) {
-        _showSnack(
-            'Системные разделы успешно синхронизированы');
+        _showSnack('Системные разделы успешно синхронизированы');
       }
     } on DirectorySyncException catch (error) {
       if (mounted) _showSnack(error.message, isError: true);
@@ -390,8 +389,7 @@ class _SystemSectionsTab extends ConsumerWidget {
       error: (error, _) => Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Text(
-              'Не удалось загрузить разделы: $error',
+          child: Text('Не удалось загрузить разделы: $error',
               textAlign: TextAlign.center),
         ),
       ),
@@ -455,9 +453,7 @@ class _SectionEntriesScreen extends ConsumerWidget {
       body: entriesAsync.when(
         data: (entries) {
           if (entries.isEmpty) {
-            return const Center(
-                child: Text(
-                    'В этом разделе пока нет записей'));
+            return const Center(child: Text('В этом разделе пока нет записей'));
           }
 
           return ListView.builder(
@@ -603,8 +599,7 @@ class _CatalogTab extends ConsumerWidget {
       data: (categories) {
         if (categories.isEmpty) {
           return const Center(
-            child: Text(
-                'Категории справочника не созданы'),
+            child: Text('Категории справочника не созданы'),
           );
         }
 
@@ -641,8 +636,7 @@ class _CatalogTab extends ConsumerWidget {
                     await showDialog<void>(
                       context: context,
                       builder: (_) => _CategoryDialog(
-                        title:
-                            'Редактирование категории',
+                        title: 'Редактирование категории',
                         initial: category,
                         onSubmit: (name, slug, labor) async {
                           await ref
@@ -760,8 +754,7 @@ class _CategoryItemsScreen extends ConsumerWidget {
         data: (items) {
           if (items.isEmpty) {
             return const Center(
-                child: Text(
-                    'В этой категории пока нет позиций'));
+                child: Text('В этой категории пока нет позиций'));
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
@@ -1438,6 +1431,7 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
   late final TextEditingController _order;
   late final TextEditingController _metadata;
   bool _isActive = true;
+  String? _metadataError;
 
   @override
   void initState() {
@@ -1524,7 +1518,13 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
           TextField(
             controller: _metadata,
             maxLines: 5,
-            decoration: _dialogInputDecoration('Metadata JSON'),
+            onChanged: (_) {
+              if (_metadataError != null) {
+                setState(() => _metadataError = null);
+              }
+            },
+            decoration: _dialogInputDecoration('Metadata JSON')
+                .copyWith(errorText: _metadataError),
           ),
         ],
       ),
@@ -1533,21 +1533,24 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
 
   Map<String, dynamic>? _parseMetadata(String raw) {
     final text = raw.trim();
-    if (text.isEmpty) return <String, dynamic>{};
+    if (text.isEmpty) {
+      setState(() => _metadataError = null);
+      return <String, dynamic>{};
+    }
     try {
       final decoded = jsonDecode(text);
-      if (decoded is Map<String, dynamic>) return decoded;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content:
-                Text('Metadata должно быть JSON-объектом')),
-      );
+      if (decoded is Map<String, dynamic>) {
+        setState(() => _metadataError = null);
+        return decoded;
+      }
+      setState(() {
+        _metadataError = 'Metadata должно быть JSON-объектом';
+      });
       return null;
     } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Некорректный JSON в metadata')),
-      );
+      setState(() {
+        _metadataError = 'Некорректный JSON в metadata';
+      });
       return null;
     }
   }
@@ -1628,8 +1631,7 @@ class _CategoryDialogState extends State<_CategoryDialog> {
           TextField(
             controller: _labor,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration:
-                _dialogInputDecoration('Коэффициент труда'),
+            decoration: _dialogInputDecoration('Коэффициент труда'),
           ),
         ],
       ),

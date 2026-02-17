@@ -33,6 +33,8 @@
 *   **Lists:**
     *   Dense layout (min vertical padding).
     *   Vertical centering of all row elements.
+*   **Validation Messaging:** Prefer inline compact validation text near a field over bottom snackbar for form constraints.
+*   **Snackbar Density:** Keep snackbar usage concise and event-critical; avoid routine positive noise when result is already visible in UI.
 
 ## 3. Specific Screens
 
@@ -71,6 +73,15 @@
 *   **Scale:** Keep title slightly larger for quicker recognition on desktop and mobile.
 *   **Subtitle Contrast:** Subtitle remains lighter to preserve hierarchy under section title.
 
+### 3.6. Project Files Tab
+*   **Category Cards:** File category sections in project detail follow the same card family as `Objects`/`Stages` (neutral white surface, subtle shadow, compact readable typography, left accent stripe, `Clip.antiAlias`).
+*   **Header Accent Mapping:** Left stripe and header accents follow stage-like semantics by category: `PROJECT` -> BlueGrey (drawings), `WORK` -> Blue (implementation), `FINISH` -> Green (final photos).
+*   **Header Actions:** Upload and expand/collapse controls stay in the category header with compact neutral action chips; file count is shown as a compact readable pill (`N файл/файла/файлов`).
+*   **Vertical Rhythm:** Keep tighter spacing between collapsed file category headers to reduce visual gaps.
+*   **File Item Cards:** Uploaded file cards use a compact visual footprint (smaller size in grid, reduced radii/paddings, concise metadata badge) while preserving quick hover actions.
+*   **Quick Actions Contract:** Each file card keeps 4 hover actions (`rename`, `save as`, `share`, `delete`) and tap-to-open behavior unchanged.
+*   **Behavior Contract:** Visual refresh must not alter file operations flow (upload/rename/download/share/delete/open) or auto-expand rule for categories with <= 5 files.
+
 ## 4. Icons & Assets
 *   **Style:** Material Symbols Rounded.
 *   **Files:**
@@ -79,7 +90,7 @@
     *   Image: Thumbnail preview (`BoxFit.cover`).
 
 
-### 3.6. Directory Screen (Reference Book)
+### 3.7. Directory Screen (Reference Book)
 *   **Navigation:** Bottom `NavigationBar` with two destinations: `System Sections` and `Catalog` (same pattern as main app sections).
 *   **Nested Navigation:** Keep the same bottom `NavigationBar` visible on second-level directory screens.
 *   **Naming:** System tab title in UI is `Система`.

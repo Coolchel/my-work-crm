@@ -77,6 +77,10 @@ Triggered when Materials are updated.
 *   **Create Operation Stability (Project/Stage):**
     *   Frontend must treat `201 Created` as success without emitting secondary false errors from local async state transitions.
     *   UI dialogs should block repeated submit while request is in-flight.
+*   **User Feedback Routing:**
+    *   Domain/transport errors -> snackbar.
+    *   Input validation failures -> inline field error.
+    *   Success snackbar should be omitted when UI already reflects the completed action directly.
 
 
 ## 5. Directory (Reference Book) Logic

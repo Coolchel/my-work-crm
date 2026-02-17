@@ -117,3 +117,9 @@
     *   Header must stay visually expressive (gradient + icon + title) while remaining mobile-friendly in height.
     *   Header title typography should avoid over-bold rendering: prefer readable medium/semi-bold weight with slightly increased visual size.
     *   Detail sub-sections may show contextual subtitle (e.g., object address or selected directory entity).
+
+## 9. Feedback UX (Snackbar & Validation)
+*   **Error-first Snackbar:** keep snackbar primarily for operation/network/file errors.
+*   **Validation Inline:** form validation messages are displayed inline near the relevant input instead of snackbar where possible.
+*   **Success Signal Reduction:** avoid routine success snackbar when the result is immediately visible on screen (e.g., item added/deleted/renamed in-place).
+*   **Batch Actions:** avoid redundant "start + finish" snackbars for one flow; prefer one final status message.

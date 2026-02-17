@@ -731,10 +731,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       await ref.read(templateRepositoryProvider).deleteWorkTemplate(t.id);
       if (!mounted) return;
       Navigator.pop(context); // Close dialog to refresh or re-open
-      // Re-open/Refresh logic could be better, but closing is safe.
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Шаблон '${t.name}' удален")));
-      // Force refresh of provider?
       ref.invalidate(workTemplatesProvider);
     } catch (e) {
       ScaffoldMessenger.of(context)
@@ -747,8 +743,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       await ref.read(templateRepositoryProvider).deleteMaterialTemplate(t.id);
       if (!mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Шаблон '${t.name}' удален")));
       ref.invalidate(materialTemplatesProvider);
     } catch (e) {
       ScaffoldMessenger.of(context)
@@ -796,11 +790,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                 description: description);
         ref.invalidate(materialTemplatesProvider);
       }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Шаблон '$name' создан")));
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -832,8 +821,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           .read(templateRepositoryProvider)
           .applyWorkTemplate(widget.stage.id, templateId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Шаблон работ применен!")));
       ref.invalidate(projectListProvider);
       _refresh();
     } catch (e) {
@@ -868,8 +855,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           .read(templateRepositoryProvider)
           .applyMaterialTemplate(widget.stage.id, templateId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Шаблон материалов применен!")));
       ref.invalidate(projectListProvider);
       _refresh();
     } catch (e) {

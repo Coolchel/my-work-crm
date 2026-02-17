@@ -129,6 +129,7 @@ class ProjectOperations extends _$ProjectOperations {
       fileName: fileName,
       description: description,
     );
+    ref.invalidate(projectListProvider);
     ref.invalidate(projectByIdProvider(projectId.toString()));
   }
 
@@ -136,6 +137,7 @@ class ProjectOperations extends _$ProjectOperations {
   Future<void> deleteFile(int fileId, String projectId) async {
     final repository = ref.read(projectRepositoryProvider);
     await repository.deleteProjectFile(fileId);
+    ref.invalidate(projectListProvider);
     ref.invalidate(projectByIdProvider(projectId));
   }
 
@@ -143,6 +145,7 @@ class ProjectOperations extends _$ProjectOperations {
   Future<void> renameFile(int fileId, String newName, String projectId) async {
     final repository = ref.read(projectRepositoryProvider);
     await repository.updateProjectFile(fileId, {'original_name': newName});
+    ref.invalidate(projectListProvider);
     ref.invalidate(projectByIdProvider(projectId));
   }
 }

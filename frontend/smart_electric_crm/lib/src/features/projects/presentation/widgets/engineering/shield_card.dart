@@ -719,11 +719,6 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                 description: description);
         ref.invalidate(ledShieldTemplatesProvider);
       }
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Шаблон '$name' сохранен!")));
-      }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
@@ -808,11 +803,6 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
 
       ref.invalidate(projectListProvider);
       ref.invalidate(projectByIdProvider(widget.projectId));
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text("Шаблон применен!")));
-      }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
