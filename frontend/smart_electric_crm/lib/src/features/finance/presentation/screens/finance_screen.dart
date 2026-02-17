@@ -9,6 +9,7 @@ import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../../../projects/presentation/screens/estimate_screen.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 
 part 'finance_screen.g.dart';
 
@@ -189,10 +190,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
       appBar: const CompactSectionAppBar(
         title: 'Финансы',
         icon: Icons.account_balance_wallet_rounded,
+        gradientColors: AppDesignTokens.subtleSectionGradient,
       ),
       body: projectsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -236,7 +237,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             else
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 child: Column(
                   children: [
                     // Сортировка: сверху - старые, снизу - новые

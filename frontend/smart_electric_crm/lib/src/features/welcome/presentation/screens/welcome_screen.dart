@@ -9,6 +9,7 @@ import '../widgets/recent_projects_list.dart';
 import '../widgets/search_results_overlay.dart';
 import '../widgets/smart_search_bar.dart';
 import '../widgets/welcome_header.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
@@ -27,7 +28,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final isSearchActive = searchQuery != null && searchQuery.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: AppDesignTokens.appBackground,
       body: Stack(
         children: [
           SingleChildScrollView(

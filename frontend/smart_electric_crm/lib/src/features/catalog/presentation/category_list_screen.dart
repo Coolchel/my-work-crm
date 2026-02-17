@@ -304,7 +304,7 @@ class _SystemSectionsTab extends ConsumerWidget {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 112),
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 112),
           itemCount: sections.length,
           itemBuilder: (context, index) {
             final section = sections[index];
@@ -457,7 +457,7 @@ class _SectionEntriesScreen extends ConsumerWidget {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
             itemCount: entries.length,
             itemBuilder: (context, index) {
               final entry = entries[index];
@@ -604,7 +604,7 @@ class _CatalogTab extends ConsumerWidget {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
           itemCount: categories.length,
           itemBuilder: (context, index) {
             final category = categories[index];
@@ -757,7 +757,7 @@ class _CategoryItemsScreen extends ConsumerWidget {
                 child: Text('В этой категории пока нет позиций'));
           }
           return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 96),
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];

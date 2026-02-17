@@ -142,7 +142,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                         onTap: _toggleExpand,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                              horizontal: 12, vertical: 14),
                           decoration: BoxDecoration(
                             border: Border(
                               bottom: BorderSide(
@@ -153,8 +153,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                           child: Row(
                             children: [
                               Container(
-                                width: 32,
-                                height: 32,
+                                width: 34,
+                                height: 34,
                                 decoration: BoxDecoration(
                                   color: themeColor
                                       .withOpacity(0.1), // Accent icon bg
@@ -206,14 +206,12 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                         ),
                                         Text(
                                           (shield.mounting == 'internal'
-                                                  ? 'ВСТРАИВАЕМЫЙ'
-                                                  : 'НАВЕСНОЙ')
-                                              .toUpperCase(),
+                                              ? 'Встроенный'
+                                              : 'Навесной'),
                                           style: TextStyle(
                                             color: Colors.grey.shade500,
-                                            fontSize: 10,
+                                            fontSize: 11,
                                             fontWeight: FontWeight.w500,
-                                            letterSpacing: 0.3,
                                           ),
                                         ),
                                       ],
@@ -226,7 +224,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                     .animate(_expandAnimation),
                                 child: Icon(
                                   Icons.expand_more_rounded,
-                                  color: themeColor.withOpacity(0.4),
+                                  color: Colors.grey.shade700,
                                   size: 22,
                                 ),
                               ),
@@ -639,7 +637,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
       case 'led':
         return 'LED';
       case 'multimedia':
-        return 'Слаботочный';
+        return 'Слаботочный щит';
       default:
         return type;
     }
@@ -832,7 +830,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
       case 'led':
         return 'ЗОНЫ УПРАВЛЕНИЯ:';
       case 'multimedia':
-        return 'СЛАБОТОЧНЫЙ ЩИТ:';
+        return 'СЛАБОТОЧНЫЙ ЩИТ';
       default:
         return 'УСТРОЙСТВА:';
     }

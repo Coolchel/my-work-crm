@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/project_providers.dart';
 import '../../data/models/project_model.dart';
@@ -209,7 +210,7 @@ class _StagesTab extends ConsumerWidget {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -598,7 +599,7 @@ class _FilesTab extends ConsumerWidget {
       children: [
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
             children: [
               _FileCategorySection(
                 title: "Проекты и схемы",
@@ -847,6 +848,7 @@ class _FileCard extends ConsumerStatefulWidget {
 
 class _FileCardState extends ConsumerState<_FileCard> {
   bool _isHovered = false;
+  bool _areTouchActionsVisible = false;
 
   bool get isImage {
     final ext = widget.file.file.toLowerCase();
@@ -880,6 +882,11 @@ class _FileCardState extends ConsumerState<_FileCard> {
   @override
   Widget build(BuildContext context) {
     final fileUrl = widget.file.file;
+    final supportsHover = switch (defaultTargetPlatform) {
+      TargetPlatform.android || TargetPlatform.iOS => false,
+      _ => true,
+    };
+    final showActions = supportsHover ? _isHovered : _areTouchActionsVisible;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -890,7 +897,18 @@ class _FileCardState extends ConsumerState<_FileCard> {
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
         child: GestureDetector(
-          onTap: () => _openFile(context, fileUrl),
+          onLongPress: supportsHover
+              ? null
+              : () => setState(
+                    () => _areTouchActionsVisible = !_areTouchActionsVisible,
+                  ),
+          onTap: () {
+            if (!supportsHover && _areTouchActionsVisible) {
+              setState(() => _areTouchActionsVisible = false);
+              return;
+            }
+            _openFile(context, fileUrl);
+          },
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -995,15 +1013,22 @@ class _FileCardState extends ConsumerState<_FileCard> {
                   top: 6,
                   right: 6,
                   child: AnimatedOpacity(
-                    opacity: _isHovered ? 1.0 : 0.0,
+                    opacity: showActions ? 1.0 : 0.0,
                     duration: const Duration(milliseconds: 150),
                     child: Container(
                       padding: const EdgeInsets.all(3),
                       decoration: BoxDecoration(
-                        color: Colors.indigo.withOpacity(0.05),
+                        color: Colors.white.withOpacity(0.92),
                         borderRadius: BorderRadius.circular(8),
                         border:
-                            Border.all(color: Colors.indigo.withOpacity(0.14)),
+                            Border.all(color: Colors.black.withOpacity(0.1)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.12),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -1171,7 +1196,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
   }
 }
 
-class _ActionButton extends StatelessWidget {
+class _ActionButton extends StatefulWidget {
   final IconData icon;
   final String tooltip;
   final VoidCallback onTap;
@@ -1183,30 +1208,46 @@ class _ActionButton extends StatelessWidget {
   });
 
   @override
+  State<_ActionButton> createState() => _ActionButtonState();
+}
+
+class _ActionButtonState extends State<_ActionButton> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: tooltip,
+      message: widget.tooltip,
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(6),
-          child: Container(
-            width: 22,
-            height: 22,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6),
-              color: Colors.grey.withOpacity(0.08),
-              border: Border.all(
-                color: Colors.grey.withOpacity(0.18),
-                width: 1,
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(6),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 140),
+              width: 22,
+              height: 22,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                color: _isHovered
+                    ? Colors.black.withOpacity(0.12)
+                    : Colors.white.withOpacity(0.95),
+                border: Border.all(
+                  color: _isHovered
+                      ? Colors.black.withOpacity(0.28)
+                      : Colors.black.withOpacity(0.12),
+                  width: 1,
+                ),
               ),
-            ),
-            child: Icon(
-              icon,
-              size: 13,
-              color: Colors.grey.shade700,
+              child: Icon(
+                widget.icon,
+                size: 13,
+                color: Colors.black87,
+              ),
             ),
           ),
         ),
@@ -1405,24 +1446,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                               ],
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: widget.color.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                  color: widget.color.withOpacity(0.2)),
-                            ),
-                            child: Text(
-                              _filesCountLabel(widget.files.length),
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: widget.color.withOpacity(0.9),
-                              ),
-                            ),
-                          ),
+                          _buildFilesCountPill(widget.files.length),
                           const SizedBox(width: 8),
                           _buildHeaderActionButton(
                             icon: Icons.add_rounded,
@@ -1575,15 +1599,43 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
     );
   }
 
-  String _filesCountLabel(int count) {
-    final mod10 = count % 10;
-    final mod100 = count % 100;
-    if (mod10 == 1 && mod100 != 11) {
-      return '$count файл';
-    }
-    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-      return '$count файла';
-    }
-    return '$count файлов';
+  Widget _buildFilesCountPill(int count) {
+    return Container(
+      height: 34,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: widget.color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: widget.color.withOpacity(0.16)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              color: widget.color.withOpacity(0.16),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: widget.color.withOpacity(0.34)),
+            ),
+            child: Icon(
+              Icons.layers_outlined,
+              size: 12,
+              color: widget.color,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$count',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: widget.color,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

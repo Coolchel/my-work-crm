@@ -35,7 +35,7 @@ class EngineeringTab extends ConsumerWidget {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
         child: Column(
           children: [
             if (project.shields.isEmpty)

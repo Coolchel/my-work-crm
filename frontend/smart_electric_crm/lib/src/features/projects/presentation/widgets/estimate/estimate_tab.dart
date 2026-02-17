@@ -711,6 +711,8 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       child: CustomScrollView(
         primary: false,
         slivers: [
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
           if (!widget.hideTopActions)
             SliverToBoxAdapter(child: _buildActionButtons()),
 

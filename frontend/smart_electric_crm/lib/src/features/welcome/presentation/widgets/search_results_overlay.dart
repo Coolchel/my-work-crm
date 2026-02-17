@@ -115,21 +115,31 @@ class _SearchResultItemState extends State<_SearchResultItem> {
 
   @override
   Widget build(BuildContext context) {
+    const hoverAccent = Color(0xFF2B88CF);
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       cursor: SystemMouseCursors.click,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
-          color:
-              _isHovered ? Colors.indigo.withOpacity(0.08) : Colors.transparent,
-          border: Border(
-            left: BorderSide(
-              color: _isHovered ? Colors.indigo : Colors.transparent,
-              width: 3,
-            ),
+          color: _isHovered ? hoverAccent.withOpacity(0.07) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color:
+                _isHovered ? hoverAccent.withOpacity(0.28) : Colors.transparent,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: _isHovered
+                  ? hoverAccent.withOpacity(0.10)
+                  : Colors.black.withOpacity(0.02),
+              blurRadius: _isHovered ? 10 : 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: ListTile(
           dense: true,
@@ -139,7 +149,9 @@ class _SearchResultItemState extends State<_SearchResultItem> {
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.indigo.shade50,
+              color: _isHovered
+                  ? hoverAccent.withOpacity(0.14)
+                  : Colors.indigo.shade50,
               shape: BoxShape.circle,
             ),
             child:
@@ -174,8 +186,7 @@ class _SearchResultItemState extends State<_SearchResultItem> {
             ],
           ),
           trailing: Icon(Icons.chevron_right,
-              size: 16,
-              color: _isHovered ? Colors.indigo : Colors.grey.shade400),
+              size: 16, color: _isHovered ? hoverAccent : Colors.grey.shade400),
           onTap: widget.onTap,
         ),
       ),
