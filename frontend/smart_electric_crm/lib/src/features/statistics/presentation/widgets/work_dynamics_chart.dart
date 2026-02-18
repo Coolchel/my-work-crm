@@ -75,7 +75,7 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(
-              right: 16,
+              right: 22,
               left: 8,
               top: 10,
               bottom: 4,
@@ -281,10 +281,13 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
 
     return Padding(
       padding: const EdgeInsets.only(top: 6.0),
-      child: Text(
-        label,
-        style: TextStyle(
-            fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey[600]),
+      child: Transform.translate(
+        offset: Offset(index == data.length - 1 ? -14 : 0, 0),
+        child: Text(
+          label,
+          style: TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey[600]),
+        ),
       ),
     );
   }

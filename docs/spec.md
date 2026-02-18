@@ -38,7 +38,11 @@
 *   **Files:**
     *   Limit: 12 files/project, 20MB/file.
     *   Types: Images, Documents, Video.
-    *   Features: Rename (safe), Download, Auto-expand categories < 5 items.
+    *   Features: Rename (safe), Download.
+    *   Category Default Expand Rule:
+        *   0 files -> collapsed.
+        *   1-6 files -> expanded.
+        *   7+ files -> collapsed.
 
 ## 4. Estimates (The Core)
 *   **Structure:**
@@ -131,6 +135,10 @@
     *   `Objects`, `Finance`, and `Statistics` reuse the same motif in a restrained compact-header gradient (no layout or height increase).
 *   **Statistics Accent Rule:**
     *   Top period switch and decorative section stripes in `Statistics` use brand blue/indigo accent tokens.
+*   **Statistics Tooltip Rule:**
+    *   Work-dynamics charts (USD and BYN cards) show a compact `?` help icon in the top-right card corner.
+    *   Tooltip text: `Динамика работ. Показывает заработок по сделанным объектам. Не связано с оплатой.`
+    *   Legacy bottom note under charts is removed to reduce visual noise.
 *   **Statistics Refresh UX Rule:**
     *   Changing period in statistics updates data content without full-screen loading replacement.
     *   No moving top loading bar should appear under the header on period switch.

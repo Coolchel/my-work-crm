@@ -84,10 +84,18 @@ Triggered when Materials are updated.
 *   **No-Data Presentation Rule:**
     *   Any UI branch with `items.isEmpty`/`data.isEmpty` should render a unified friendly empty-state widget with icon + explanatory text.
     *   Empty-state rendering must not change existing data fetch/update flow; it is presentation-only.
+*   **Files Category Default Expansion:**
+    *   Initial category expansion depends on file count only.
+    *   `count == 0` -> collapsed.
+    *   `count >= 1 && count <= 6` -> expanded.
+    *   `count > 6` -> collapsed.
 *   **Statistics Period Switching:**
     *   Selecting the same period value must not trigger a new state update/fetch.
     *   On period change, previously loaded statistics remain visible while fresh data is requested.
     *   Period switching must not show a separate moving top loading bar under section header.
+*   **Statistics Work-Dynamics Help Hint:**
+    *   Help tooltip is anchored to the top-right corner of each chart card (USD/BYN), not inside chart legend row.
+    *   Tooltip message is multiline and explains that chart values are based on completed objects and are independent from payment state.
 
 
 ## 5. Directory (Reference Book) Logic

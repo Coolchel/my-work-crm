@@ -107,11 +107,15 @@
 *   **Mobile Actions:** On touch devices file actions are opened by long-press on a file card; short tap keeps open-file behavior.
 *   **Category Count Pill:** File-count indicator in category headers uses Finance-like compact pill styling (`layers` icon + numeric count).
 *   **Category Pill Shape/Palette:** File-count pill keeps the same corner geometry and color family as the category `+` action button.
-*   **Behavior Contract:** Visual refresh must not alter file operations flow (upload/rename/download/share/delete/open) or auto-expand rule for categories with <= 5 files.
+*   **Behavior Contract:** Visual refresh must not alter file operations flow (upload/rename/download/share/delete/open).
+*   **Category Default Expand Rule:** 0 files -> collapsed; 1-6 files -> expanded; 7+ files -> collapsed.
 
 ### 3.8. Statistics Accent Tone
 *   **Top Period Switch + Header Stripe:** Use app-brand blue/indigo accent family for selected states and decorative header stripes.
 *   **Refresh Presentation:** Period switch updates statistics content without replacing the whole page with a loading state and without any moving top loading bar under the header.
+*   **Help Hint Placement:** In work-dynamics cards, `?` help icon is positioned at top-right corner of each card (USD and BYN), not in centered legend row.
+*   **Help Hint Copy:** Tooltip uses compact multiline Russian copy explaining that dynamics reflect earnings by completed objects and do not depend on payment status.
+*   **Legacy Footer Note:** Bottom textual note under work-dynamics charts is removed; meaning is conveyed through the tooltip.
 
 ## 4. Icons & Assets
 *   **Style:** Material Symbols Rounded.

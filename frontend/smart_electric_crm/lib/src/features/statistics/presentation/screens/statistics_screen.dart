@@ -32,6 +32,11 @@ class StatisticsScreen extends ConsumerWidget {
     final statisticsAccent =
         Theme.of(context).floatingActionButtonTheme.backgroundColor ??
             Colors.indigo;
+    const workDynamicsTooltip =
+        '\u0414\u0438\u043d\u0430\u043c\u0438\u043a\u0430 \u0440\u0430\u0431\u043e\u0442.\n'
+        '\u041f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u0442 \u0437\u0430\u0440\u0430\u0431\u043e\u0442\u043e\u043a\n'
+        '\u043f\u043e \u0441\u0434\u0435\u043b\u0430\u043d\u043d\u044b\u043c \u043e\u0431\u044a\u0435\u043a\u0442\u0430\u043c.\n'
+        '\u041d\u0435 \u0441\u0432\u044f\u0437\u0430\u043d\u043e \u0441 \u043e\u043f\u043b\u0430\u0442\u043e\u0439.';
 
     return Scaffold(
       appBar: const CompactSectionAppBar(
@@ -189,13 +194,32 @@ class StatisticsScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                      child: WorkDynamicsChart(
-                        data: stats.workDynamics,
-                        isMonthly: currentPeriod != 'month',
-                        currencyLabel: "USD",
-                        currencySymbol: "\$",
-                        isUsd: true,
+                      child: Stack(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                            child: WorkDynamicsChart(
+                              data: stats.workDynamics,
+                              isMonthly: currentPeriod != 'month',
+                              currencyLabel: "USD",
+                              currencySymbol: "\$",
+                              isUsd: true,
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Tooltip(
+                              message: workDynamicsTooltip,
+                              textAlign: TextAlign.center,
+                              child: Icon(
+                                Icons.help_outline_rounded,
+                                size: 16,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -215,28 +239,35 @@ class StatisticsScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                      child: WorkDynamicsChart(
-                        data: stats.workDynamics,
-                        isMonthly: currentPeriod != 'month',
-                        currencyLabel: "BYN",
-                        currencySymbol: "р",
-                        isUsd: false,
+                      child: Stack(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                            child: WorkDynamicsChart(
+                              data: stats.workDynamics,
+                              isMonthly: currentPeriod != 'month',
+                              currencyLabel: "BYN",
+                              currencySymbol: '\u0440',
+                              isUsd: false,
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Tooltip(
+                              message: workDynamicsTooltip,
+                              textAlign: TextAlign.center,
+                              child: Icon(
+                                Icons.help_outline_rounded,
+                                size: 16,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  child: Text(
-                    "* За выполненные работы (фиксация по дате создания, не зависит от оплаты)",
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 24),
               ],
