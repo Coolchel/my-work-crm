@@ -55,6 +55,24 @@ Triggered manually from estimate `Actions` menu.
     *   Works transfer affects only `work` items.
     *   Materials transfer affects only non-`work` items.
 
+### 2.5. Stage 3 Armature Calculator -> Materials
+Triggered manually from estimate `Actions` menu on Materials tab in `stage_3`.
+1.  **Availability:**
+    *   Current stage title must be `stage_3`.
+    *   Active estimate tab must be Materials.
+2.  **Input Model:**
+    *   Dialog rows are fixed by predefined armature names (switches/sockets/frames).
+    *   Each row supports quick increment buttons (`+1`, `+2`, `+3`) and direct numeric total editing.
+    *   Row is actionable only if matching `CatalogItem(item_type='material')` exists by row `mapping_key` (legacy name match may be used as temporary fallback for old data).
+3.  **Apply Rule (Clear & Replace):**
+    *   Build transfer payload from rows where `total > 0`.
+    *   If target stage already has materials, require confirmation dialog.
+    *   Delete all existing target-stage material items.
+    *   Create new material estimate items from calculator payload using linked catalog item defaults.
+4.  **Scope Isolation:**
+    *   Flow affects only material items of current `stage_3`.
+    *   Works, notes, markup settings, and other estimate actions remain unchanged.
+
 ## 3. Engineering Logic
 ### 3.1. Shield Sizing
 *   **Power:** `Modules = Sum(DeviceWidths)`. 1P=1, 2P=2, 3P=3, 4P=4.

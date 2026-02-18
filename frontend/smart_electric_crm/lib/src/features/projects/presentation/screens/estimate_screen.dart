@@ -3,6 +3,7 @@ import 'dart:async'; // For Timer
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../catalog/data/catalog_repository.dart';
 import '../../data/models/estimate_item_model.dart';
 import '../../data/models/stage_model.dart';
 import '../../data/repositories/project_repository.dart';
@@ -12,6 +13,7 @@ import '../dialogs/estimate/add_item_dialog.dart';
 import '../dialogs/estimate/quantity_input_dialog.dart';
 import '../dialogs/estimate/edit_item_dialog.dart';
 import '../dialogs/estimate/estimate_actions_dialog.dart';
+import '../dialogs/estimate/stage3_armature_calculator_dialog.dart';
 import '../../../engineering/presentation/dialogs/template_selection_dialog.dart';
 import '../../../engineering/presentation/providers/template_providers.dart';
 import '../../../engineering/data/models/template_models.dart';
@@ -44,6 +46,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   bool _isCalculatingWorks = false;
   bool _isApplyingTemplate = false;
   bool _isImportingFromPrecalc = false;
+  bool _isApplyingStage3Calculator = false;
 
   // Local state for items (for optimistic updates and display)
   List<EstimateItemModel> _items = [];
@@ -196,6 +199,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                 case 'import_from_precalc':
                   _importFromPrecalc();
                   break;
+                case 'stage3_armature_calculator':
+                  _openStage3ArmatureCalculator();
+                  break;
                 case 'save_template':
                   _showSaveTemplateDialog(
                       _currentIndex == 0 ? 'work' : 'material');
@@ -247,6 +253,28 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                         Text(_isImportingFromPrecalc
                             ? 'Перенос...'
                             : 'Перенести из предпросчета'),
+                      ],
+                    ),
+                  ),
+                ],
+                if (!isWork && _stage.title == 'stage_3') ...[
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'stage3_armature_calculator',
+                    enabled: !_isApplyingStage3Calculator,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calculate_rounded,
+                          color: Colors.grey.shade600,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          _isApplyingStage3Calculator
+                              ? 'Обработка...'
+                              : 'Калькулятор арматуры',
+                        ),
                       ],
                     ),
                   ),
@@ -802,6 +830,94 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       );
     } finally {
       if (mounted) setState(() => _isImportingFromPrecalc = false);
+    }
+  }
+
+  Future<void> _openStage3ArmatureCalculator() async {
+    if (_stage.title != 'stage_3' || _currentIndex != 1) {
+      return;
+    }
+
+    try {
+      final catalogRepo = ref.read(catalogRepositoryProvider);
+      final materialCatalogItems =
+          await catalogRepo.fetchItemsByType('material');
+
+      if (!mounted) return;
+      final result = await showDialog<List<Stage3ArmatureCalculatorResult>>(
+        context: context,
+        builder: (context) => Stage3ArmatureCalculatorDialog(
+          materialCatalogItems: materialCatalogItems,
+        ),
+      );
+
+      if (result == null || result.isEmpty) return;
+      await _applyStage3ArmatureCalculator(result);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка загрузки калькулятора: $e')),
+      );
+    }
+  }
+
+  Future<void> _applyStage3ArmatureCalculator(
+    List<Stage3ArmatureCalculatorResult> rows,
+  ) async {
+    if (_materials.isNotEmpty) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        barrierColor: Colors.transparent,
+        builder: (ctx) => const ConfirmationDialog(
+          title: 'Перенос',
+          content:
+              'Все текущие позиции материалов этапа 3 будут удалены и заменены позициями из калькулятора. Продолжить?',
+          confirmText: 'Перенести',
+          themeColor: Colors.blue,
+        ),
+      );
+      if (confirm != true) return;
+    }
+
+    setState(() => _isApplyingStage3Calculator = true);
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+
+      for (final item in _materials) {
+        await repo.deleteEstimateItem(item.id);
+      }
+
+      for (final row in rows) {
+        await repo.addEstimateItem({
+          'stage': widget.stage.id,
+          'catalog_item': row.item.id,
+          'item_type': 'material',
+          'name': row.item.name,
+          'unit': row.item.unit,
+          'price_per_unit': row.item.defaultPrice,
+          'currency': row.item.defaultCurrency,
+          'total_quantity': row.quantity,
+          'employer_quantity': 0,
+        });
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Позиции материалов перенесены из калькулятора: ${rows.length}',
+          ),
+        ),
+      );
+      ref.invalidate(projectListProvider);
+      await _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка переноса из калькулятора: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isApplyingStage3Calculator = false);
     }
   }
 

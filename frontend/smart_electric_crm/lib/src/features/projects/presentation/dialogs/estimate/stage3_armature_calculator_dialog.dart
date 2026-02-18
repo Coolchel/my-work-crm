@@ -1,0 +1,415 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
+
+class Stage3ArmatureCalculatorResult {
+  final CatalogItem item;
+  final double quantity;
+
+  const Stage3ArmatureCalculatorResult({
+    required this.item,
+    required this.quantity,
+  });
+}
+
+class _ArmaturePosition {
+  final String label;
+  final String mappingKey;
+  final String legacyName;
+
+  const _ArmaturePosition({
+    required this.label,
+    required this.mappingKey,
+    required this.legacyName,
+  });
+}
+
+const List<_ArmaturePosition> _targetPositions = [
+  _ArmaturePosition(
+      label: 'вкл 1кл', mappingKey: 'arm_switch_1g', legacyName: 'вкл 1кл'),
+  _ArmaturePosition(
+      label: 'вкл 2кл', mappingKey: 'arm_switch_2g', legacyName: 'вкл 2кл'),
+  _ArmaturePosition(
+    label: 'вкл 1кл проходной',
+    mappingKey: 'arm_switch_1g_pass',
+    legacyName: 'вкл 1кл проходной',
+  ),
+  _ArmaturePosition(
+    label: 'вкл 2кл проходной',
+    mappingKey: 'arm_switch_2g_pass',
+    legacyName: 'вкл 2кл проходной',
+  ),
+  _ArmaturePosition(
+    label: 'вкл 1кл перекрестный',
+    mappingKey: 'arm_switch_1g_cross',
+    legacyName: 'вкл 1кл перекрестный',
+  ),
+  _ArmaturePosition(
+    label: 'вкл 2кл перекрестный',
+    mappingKey: 'arm_switch_2g_cross',
+    legacyName: 'вкл 2кл перекрестный',
+  ),
+  _ArmaturePosition(
+      label: 'розетка', mappingKey: 'arm_socket', legacyName: 'розетка'),
+  _ArmaturePosition(
+    label: 'розетка с влагозащитой',
+    mappingKey: 'arm_socket_ip',
+    legacyName: 'розетка с влагозащитой',
+  ),
+  _ArmaturePosition(
+    label: 'розетка LANx1',
+    mappingKey: 'arm_socket_lan_1',
+    legacyName: 'розетка LANx1',
+  ),
+  _ArmaturePosition(
+    label: 'розетка LANx2',
+    mappingKey: 'arm_socket_lan_2',
+    legacyName: 'розетка LANx2',
+  ),
+  _ArmaturePosition(
+      label: 'розетка TV',
+      mappingKey: 'arm_socket_tv',
+      legacyName: 'розетка TV'),
+  _ArmaturePosition(
+    label: 'розетка TEL',
+    mappingKey: 'arm_socket_tel',
+    legacyName: 'розетка TEL',
+  ),
+  _ArmaturePosition(
+    label: 'вывод кабеля',
+    mappingKey: 'arm_cable_output',
+    legacyName: 'вывод кабеля',
+  ),
+  _ArmaturePosition(
+      label: 'рамка 1х', mappingKey: 'arm_frame_1x', legacyName: 'рамка 1х'),
+  _ArmaturePosition(
+      label: 'рамка 2х', mappingKey: 'arm_frame_2x', legacyName: 'рамка 2х'),
+  _ArmaturePosition(
+      label: 'рамка 3х', mappingKey: 'arm_frame_3x', legacyName: 'рамка 3х'),
+  _ArmaturePosition(
+      label: 'рамка 4х', mappingKey: 'arm_frame_4x', legacyName: 'рамка 4х'),
+  _ArmaturePosition(
+      label: 'рамка 5х', mappingKey: 'arm_frame_5x', legacyName: 'рамка 5х'),
+];
+
+class Stage3ArmatureCalculatorDialog extends StatefulWidget {
+  final List<CatalogItem> materialCatalogItems;
+
+  const Stage3ArmatureCalculatorDialog({
+    super.key,
+    required this.materialCatalogItems,
+  });
+
+  @override
+  State<Stage3ArmatureCalculatorDialog> createState() =>
+      _Stage3ArmatureCalculatorDialogState();
+}
+
+class _Stage3ArmatureCalculatorDialogState
+    extends State<Stage3ArmatureCalculatorDialog> {
+  final Map<String, int> _quantities = {};
+  final Map<String, TextEditingController> _controllers = {};
+  String? _inlineError;
+
+  late final Map<String, CatalogItem> _catalogByMappingKey;
+  late final Map<String, CatalogItem> _catalogByName;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _catalogByMappingKey = {
+      for (final item in widget.materialCatalogItems)
+        if ((item.mappingKey ?? '').trim().isNotEmpty)
+          item.mappingKey!.trim(): item,
+    };
+    _catalogByName = {
+      for (final item in widget.materialCatalogItems) item.name.trim(): item,
+    };
+
+    for (final position in _targetPositions) {
+      _quantities[position.mappingKey] = 0;
+      _controllers[position.mappingKey] = TextEditingController(text: '0');
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  CatalogItem? _resolveCatalogItem(_ArmaturePosition position) {
+    final byKey = _catalogByMappingKey[position.mappingKey];
+    if (byKey != null) {
+      return byKey;
+    }
+    return _catalogByName[position.legacyName];
+  }
+
+  bool _isMissingCatalogItem(_ArmaturePosition position) =>
+      _resolveCatalogItem(position) == null;
+
+  void _increment(_ArmaturePosition position, int delta) {
+    if (_isMissingCatalogItem(position)) {
+      return;
+    }
+
+    final key = position.mappingKey;
+    final nextValue = (_quantities[key] ?? 0) + delta;
+    setState(() {
+      _quantities[key] = nextValue;
+      _controllers[key]?.text = nextValue.toString();
+      _inlineError = null;
+    });
+  }
+
+  void _setManualValue(_ArmaturePosition position, String value) {
+    if (_isMissingCatalogItem(position)) {
+      return;
+    }
+
+    final key = position.mappingKey;
+    final parsed = int.tryParse(value) ?? 0;
+    setState(() {
+      _quantities[key] = parsed < 0 ? 0 : parsed;
+      _inlineError = null;
+    });
+  }
+
+  void _submit() {
+    final results = <Stage3ArmatureCalculatorResult>[];
+
+    for (final position in _targetPositions) {
+      final quantity = _quantities[position.mappingKey] ?? 0;
+      if (quantity <= 0) {
+        continue;
+      }
+
+      final item = _resolveCatalogItem(position);
+      if (item == null) {
+        continue;
+      }
+
+      results.add(
+        Stage3ArmatureCalculatorResult(
+          item: item,
+          quantity: quantity.toDouble(),
+        ),
+      );
+    }
+
+    if (results.isEmpty) {
+      setState(() {
+        _inlineError = 'Добавьте хотя бы одну позицию с количеством больше 0.';
+      });
+      return;
+    }
+
+    Navigator.of(context).pop(results);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final missingItems = _targetPositions
+        .where(_isMissingCatalogItem)
+        .map((position) => position.label)
+        .toList();
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        width: 760,
+        constraints: const BoxConstraints(maxHeight: 760),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.15),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.calculate_rounded, color: Colors.blue),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Калькулятор арматуры (Этап 3)',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                    tooltip: 'Закрыть',
+                  ),
+                ],
+              ),
+            ),
+            if (missingItems.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.orange.withOpacity(0.35)),
+                ),
+                child: Text(
+                  'Не найдены в каталоге: ${missingItems.join(', ')}',
+                  style: const TextStyle(fontSize: 12.5),
+                ),
+              ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _targetPositions.length,
+                itemBuilder: (context, index) {
+                  final position = _targetPositions[index];
+                  final disabled = _isMissingCatalogItem(position);
+                  return _buildRow(position, disabled);
+                },
+              ),
+            ),
+            if (_inlineError != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    _inlineError!,
+                    style: TextStyle(
+                      color: Colors.red.shade600,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: Colors.grey.shade200)),
+              ),
+              child: Row(
+                children: [
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Отмена'),
+                  ),
+                  const Spacer(),
+                  ElevatedButton.icon(
+                    onPressed: _submit,
+                    icon: const Icon(Icons.playlist_add_check_rounded),
+                    label: const Text('Перенести в смету'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRow(_ArmaturePosition position, bool disabled) {
+    final textController = _controllers[position.mappingKey]!;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: disabled ? Colors.grey.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              position.label,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: disabled ? Colors.grey.shade500 : Colors.black87,
+              ),
+            ),
+          ),
+          _quickBtn(position, 1, disabled),
+          const SizedBox(width: 6),
+          _quickBtn(position, 2, disabled),
+          const SizedBox(width: 6),
+          _quickBtn(position, 3, disabled),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 86,
+            child: TextField(
+              controller: textController,
+              enabled: !disabled,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                isDense: true,
+                labelText: 'Итого',
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onChanged: (value) => _setManualValue(position, value),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _quickBtn(_ArmaturePosition position, int delta, bool disabled) {
+    return OutlinedButton(
+      onPressed: disabled ? null : () => _increment(position, delta),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        visualDensity: VisualDensity.compact,
+        side: BorderSide(color: Colors.blue.withOpacity(0.35)),
+      ),
+      child: Text(
+        '+$delta',
+        style: const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Colors.blue,
+        ),
+      ),
+    );
+  }
+}
