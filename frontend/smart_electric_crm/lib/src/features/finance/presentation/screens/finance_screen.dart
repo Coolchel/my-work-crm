@@ -36,6 +36,10 @@ class FinanceScreen extends ConsumerStatefulWidget {
 }
 
 class _FinanceScreenState extends ConsumerState<FinanceScreen> {
+  static const _financeAccent = Colors.green;
+  static const _cardRadius = AppDesignTokens.radiusM;
+  static const _sectionHPadding = AppDesignTokens.spacingM;
+  static const _cardBorderColor = Color(0xFFE5E7EB);
   // Контроллеры для глобальных полей
   final _estimateController = TextEditingController();
   final _notesController = TextEditingController();
@@ -84,7 +88,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   Widget _buildAmountDisplay(double usd, double byn,
       {double fontSize = 13, Color? color}) {
     final List<TextSpan> spans = [];
-    final effectiveColor = color ?? Colors.green;
+    final effectiveColor = color ?? _financeAccent;
 
     if (usd > 0) {
       spans.add(TextSpan(
@@ -238,7 +242,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             else
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    const EdgeInsets.symmetric(horizontal: _sectionHPadding, vertical: 16),
                 child: Column(
                   children: [
                     // Сортировка: сверху - старые, снизу - новые
@@ -271,24 +275,17 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildTotalSection(double totalUsd, double totalByn) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.fromLTRB(_sectionHPadding, 16, _sectionHPadding, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Colors.green.withOpacity(0.05),
-            Colors.green.withOpacity(0.2),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.withOpacity(0.2), width: 1),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(_cardRadius),
+        border: Border.all(color: _cardBorderColor, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -297,22 +294,22 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              color: _financeAccent.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
               Icons.account_balance_wallet,
-              color: Colors.green,
+              color: _financeAccent,
               size: 20,
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
+          Text(
             'Итого к получению',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: Colors.grey.shade800,
             ),
           ),
           const Spacer(),
@@ -323,7 +320,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 Text(
                   '${_formatAmount(totalUsd)} \$',
                   style: const TextStyle(
-                    color: Colors.green,
+                    color: _financeAccent,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -333,7 +330,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 Text(
                   '${_formatAmount(totalByn)} р',
                   style: const TextStyle(
-                    color: Colors.green,
+                    color: _financeAccent,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -376,22 +373,20 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       onExit: (_) => setState(() => _hoveredProjects[project.id] = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 6),
+        margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: shouldHighlight
-              ? Colors.green.shade50.withOpacity(0.22)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: shouldHighlight ? Colors.grey.shade50 : Colors.white,
+          borderRadius: BorderRadius.circular(_cardRadius),
           border: Border.all(
             color: shouldHighlight
-                ? Colors.green.withOpacity(0.3)
+                ? _financeAccent.withOpacity(0.24)
                 : Colors.grey.shade200,
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
               color: shouldHighlight
-                  ? Colors.green.withOpacity(0.08)
+                  ? _financeAccent.withOpacity(0.07)
                   : Colors.black.withOpacity(0.03),
               blurRadius: shouldHighlight ? 12 : 8,
               offset: const Offset(0, 3),
@@ -400,7 +395,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         ),
         clipBehavior: Clip.antiAlias,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(_cardRadius),
           child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -408,7 +403,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 // Акцентная полоса слева
                 Container(
                   width: 4,
-                  color: Colors.green.withOpacity(0.7),
+                  color: _financeAccent.withOpacity(0.72),
                 ),
                 Expanded(
                   child: Column(
@@ -425,17 +420,17 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                         child: Container(
                           // Добавляем подсветку при раскрытии
                           color: isExpanded
-                              ? Colors.green.withOpacity(0.03)
+                              ? Colors.grey.shade50
                               : Colors.transparent,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                              horizontal: 12, vertical: 10),
                           child: Row(
                             children: [
                               // Порядковый номер слева
                               Text(
                                 '$index.',
                                 style: TextStyle(
-                                  color: Colors.green.withOpacity(0.5),
+                                  color: _financeAccent.withOpacity(0.55),
                                   fontWeight: FontWeight.bold,
                                   fontSize: 13,
                                 ),
@@ -461,8 +456,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                             horizontal: 6, vertical: 1),
                                         decoration: BoxDecoration(
                                           color: Colors.grey[100],
-                                          borderRadius:
-                                              BorderRadius.circular(4),
+                                          borderRadius: BorderRadius.circular(8),
                                           border: Border.all(
                                               color: Colors.grey[300]!,
                                               width: 0.5),
@@ -470,7 +464,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                         child: Text(
                                           project.source!,
                                           style: TextStyle(
-                                            fontSize: 9, // Уменьшили с 10
+                                            fontSize: 10,
                                             color: Colors.grey[600],
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -498,15 +492,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 10, vertical: 5),
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.green.withOpacity(0.12),
-                                      Colors.green.withOpacity(0.06),
-                                    ],
-                                  ),
+                                  color: _financeAccent.withOpacity(0.08),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: Colors.green.withOpacity(0.3),
+                                    color: _financeAccent.withOpacity(0.25),
                                     width: 1,
                                   ),
                                 ),
@@ -516,13 +505,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                     const Icon(
                                       Icons.layers_outlined,
                                       size: 14,
-                                      color: Colors.green,
+                                      color: _financeAccent,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       '${project.stages.length}',
                                       style: const TextStyle(
-                                        color: Colors.green,
+                                        color: _financeAccent,
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -592,8 +581,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color:
-              isHovered ? Colors.green.withOpacity(0.04) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+              isHovered ? _financeAccent.withOpacity(0.035) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
           boxShadow: isHovered
               ? [
                   BoxShadow(
@@ -629,7 +618,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               }
             }
           },
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
             child: Row(
@@ -640,7 +629,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                   height: 6,
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.5),
+                    color: _financeAccent.withOpacity(0.6),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -702,7 +691,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                               widthFactor: _calculateOurShareFactor(stage),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.8),
+                                  color: _financeAccent.withOpacity(0.8),
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
@@ -793,24 +782,32 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildGlobalSettingsSection() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      padding: const EdgeInsets.all(14),
+      margin:
+          const EdgeInsets.fromLTRB(_sectionHPadding, 12, _sectionHPadding, 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(_cardRadius),
+        border: Border.all(color: _cardBorderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Icon(Icons.notes, size: 18, color: Colors.green),
+              Icon(Icons.notes, size: 18, color: _financeAccent),
               SizedBox(width: 8),
               Text(
                 'Финансовые заметки',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -840,15 +837,15 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 icon: const Icon(Icons.save, size: 14),
                 label: const Text('Сохранить'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.green,
-                  side: const BorderSide(color: Colors.green),
+                  foregroundColor: _financeAccent,
+                  side: const BorderSide(color: _financeAccent),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 ).copyWith(
                   overlayColor: WidgetStateProperty.resolveWith<Color?>(
                     (states) {
                       if (states.contains(WidgetState.hovered)) {
-                        return Colors.green.withOpacity(0.08);
+                        return _financeAccent.withOpacity(0.08);
                       }
                       return null;
                     },
@@ -875,7 +872,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         Text(
           label,
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: FontWeight.w500,
             color: Colors.grey[500],
           ),
@@ -885,24 +882,24 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           controller: controller,
           minLines: minLines,
           maxLines: maxLines,
-          style: const TextStyle(fontSize: 13),
+          style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             isDense: true,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             fillColor: Colors.grey[50],
             filled: true,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(color: Colors.grey.shade200),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(color: Colors.grey.shade200),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.green, width: 1),
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: _financeAccent, width: 1),
             ),
           ),
         ),
@@ -939,18 +936,19 @@ class _PayStageButtonState extends State<_PayStageButton> {
         height: 30,
         decoration: BoxDecoration(
           color: _isHovered
-              ? Colors.green.withOpacity(0.16)
-              : Colors.green.withOpacity(0.08),
+              ? _FinanceScreenState._financeAccent.withOpacity(0.16)
+              : _FinanceScreenState._financeAccent.withOpacity(0.08),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: _isHovered
-                ? Colors.green.withOpacity(0.45)
-                : Colors.green.withOpacity(0.25),
+                ? _FinanceScreenState._financeAccent.withOpacity(0.45)
+                : _FinanceScreenState._financeAccent.withOpacity(0.25),
           ),
           boxShadow: _isHovered
               ? [
                   BoxShadow(
-                    color: Colors.green.withOpacity(0.12),
+                    color:
+                        _FinanceScreenState._financeAccent.withOpacity(0.12),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -972,7 +970,7 @@ class _PayStageButtonState extends State<_PayStageButton> {
                         ? Icons.check_circle_rounded
                         : Icons.radio_button_unchecked_rounded,
                     size: 14,
-                    color: Colors.green,
+                    color: _FinanceScreenState._financeAccent,
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -980,7 +978,7 @@ class _PayStageButtonState extends State<_PayStageButton> {
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: Colors.green,
+                      color: _FinanceScreenState._financeAccent,
                     ),
                   ),
                 ],
@@ -992,3 +990,6 @@ class _PayStageButtonState extends State<_PayStageButton> {
     );
   }
 }
+
+
+
