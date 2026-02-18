@@ -99,6 +99,10 @@ Triggered manually from estimate `Actions` menu on Materials tab in `stage_3`.
 *   **Home Settings Entry Flow:**
     *   Settings screen is opened from Home header action button (`top-right`).
     *   Bottom main navigation does not include a dedicated Settings destination.
+*   **Theme Mode Persistence:**
+    *   App stores selected `ThemeMode` in local preferences.
+    *   MaterialApp applies `light`, `dark`, and `system` modes at runtime without restart.
+    *   Theme switch impacts presentation only; no business logic/payload changes are allowed.
 *   **Project List Stripe Color Priority (By Stage Composition):**
     *   Priority order: `stage_3` -> `stage_1/stage_2/stage_1_2` -> `extra/other` -> `precalc` -> default.
     *   Mapping:

@@ -1,4 +1,4 @@
-﻿# Functional Specifications (Specs)
+# Functional Specifications (Specs)
 
 ## 1. Authentication & Security
 *   **Mechanism:** JWT (Access + Refresh).
@@ -11,7 +11,7 @@
 *   **Smart Search:** Global search across Projects, Materials, and Works.
     *   Matching is always case-insensitive (forced normalization regardless of keyboard layout/case).
 *   **Main Navigation Contract:**
-    *   Home tab label in bottom navigation is `Р“Р»Р°РІРЅР°СЏ`.
+    *   Home tab label in bottom navigation is `Главная`.
     *   `Settings` is not present in the bottom navigation.
     *   Settings entry is available via top-right settings icon in the Home header.
     *   Bottom navigation labels are always visible under icons across primary app sections.
@@ -92,7 +92,7 @@
     *   "Employer Share" display (if > 0).
 *   **Expanded Card Tint:** Expanded/hovered project card background under header uses a soft low-intensity green tint (no saturated fill).
 *   **Stage Date Tone:** Stage date labels under project headers use neutral text tones (black/grey), not alert colors.
-*   **Pay Toggle UI:** "РћРїР»Р°С‡РµРЅРѕ/РќРµ РѕРїР»Р°С‡РµРЅРѕ" control in stage rows uses compact modern pill styling while preserving existing action behavior.
+*   **Pay Toggle UI:** "Оплачено/Не оплачено" control in stage rows uses compact modern pill styling while preserving existing action behavior.
 *   **Hover Consistency:** All interactive finance list positions use the same hover feedback pattern for pointer devices.
 *   **Card Family Consistency:** Finance project cards and nested stage rows follow the same visual family as Objects/Stages cards (neutral surface, shared radius/spacing rhythm, accent stripe semantics), while preserving existing finance interactions and calculations.
 *   **Finance Service States:** Finance loading/error empty-service states use friendly centered presentation with explicit retry action for recoverable fetch failures.
@@ -115,11 +115,11 @@
 *   **System Sync UX:**
     *   Auto-run sync when opening the directory screen.
     *   Show dedicated loading state (please wait) during sync.
-    *   Keep manual sync action in the directory AppBar as explicit retry tool on both tabs (`РЎРёСЃС‚РµРјР°` and `РљР°С‚Р°Р»РѕРі`).
+    *   Keep manual sync action in the directory AppBar as explicit retry tool on both tabs (`Система` and `Каталог`).
     *   Sync icon style must stay neutral (no blue-hover recolor) and match standard top-bar icon sizing.
 *   **Directory Navigation UX:**
     *   Bottom directory `NavigationBar` (`System Sections` / `Catalog`) must stay visible on second-level screens (entries/items).
-    *   Root tab label for system dictionaries is `РЎРёСЃС‚РµРјР°`.
+    *   Root tab label for system dictionaries is `Система`.
     *   Nested cards should not show chevron affordance; open/edit behavior is triggered by card tap.
     *   On second-level screens, tapping a row opens edit flow directly.
     *   Second-level screens keep FAB `+` tooltip and use explicit back-left AppBar icon for consistency.
@@ -166,3 +166,8 @@
 *   **Validation Inline:** form validation messages are displayed inline near the relevant input instead of snackbar where possible.
 *   **Success Signal Reduction:** avoid routine success snackbar when the result is immediately visible on screen (e.g., item added/deleted/renamed in-place).
 *   **Batch Actions:** avoid redundant "start + finish" snackbars for one flow; prefer one final status message.
+
+## 11. App Theme
+*   **Theme Modes:** Settings screen controls `Light` / `Dark` / `System` theme modes.
+*   **Persistence:** Selected theme mode is persisted locally and restored on next app launch.
+*   **Coverage Contract:** Dark theme must cover all primary sections and nested UI layers (dialogs, popups, cards, navigation bars, and empty states) without changing business behavior.

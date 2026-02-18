@@ -22,12 +22,13 @@ class FriendlyEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
           fontWeight: FontWeight.w600,
-          color: Colors.grey.shade700,
+          color: scheme.onSurface,
         );
     final subtitleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: Colors.grey.shade500,
+          color: scheme.onSurfaceVariant,
           height: 1.35,
         );
 
@@ -42,7 +43,9 @@ class FriendlyEmptyState extends StatelessWidget {
               Icon(
                 icon,
                 size: iconSize,
-                color: accentColor.withOpacity(0.28),
+                color: accentColor.withOpacity(
+                  Theme.of(context).brightness == Brightness.dark ? 0.48 : 0.28,
+                ),
               ),
               const SizedBox(height: 14),
               Text(

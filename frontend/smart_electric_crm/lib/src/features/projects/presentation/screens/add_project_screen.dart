@@ -165,7 +165,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 450),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -179,7 +179,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ─── Header ───
+              // в"Ђв"Ђв"Ђ Header в"Ђв"Ђв"Ђ
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -220,7 +220,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                 ),
               ),
 
-              // ─── Content ───
+              // в"Ђв"Ђв"Ђ Content в"Ђв"Ђв"Ђ
               if (_isLoading)
                 const Padding(
                   padding: EdgeInsets.all(48),
@@ -358,7 +358,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                   ),
                 ),
 
-              // ─── Footer ───
+              // в"Ђв"Ђв"Ђ Footer в"Ђв"Ђв"Ђ
               if (!_isLoading)
                 Padding(
                   padding: const EdgeInsets.all(24),
@@ -514,7 +514,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
   }
 }
 
-// ─── Stage Toggle Chip ─────────────────────────────────────────
+// в"Ђв"Ђв"Ђ Stage Toggle Chip в"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђ
 
 class _StageToggleChip extends StatefulWidget {
   final String label;

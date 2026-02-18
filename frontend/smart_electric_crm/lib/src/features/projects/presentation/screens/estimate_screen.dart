@@ -176,7 +176,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             elevation: 4,
-            surfaceTintColor: Colors.white,
+            surfaceTintColor: Theme.of(context).colorScheme.surface,
             onSelected: (value) {
               switch (value) {
                 case 'toggle_prices':
@@ -401,7 +401,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           onPressed: _showSearchDialog,
           backgroundColor:
               _currentIndex == 0 ? Colors.green.shade500 : Colors.blue.shade500,
-          foregroundColor: Colors.white,
+          foregroundColor: Theme.of(context).colorScheme.surface,
           // tooltip: 'Добавить позицию', // Removed
           child: const Icon(Icons.add),
         ),

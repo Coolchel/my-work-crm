@@ -32,7 +32,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 450),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -127,7 +127,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Text(
-                            "Тип",
+                            "РўРёРї",
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,

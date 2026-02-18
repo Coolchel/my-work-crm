@@ -64,7 +64,7 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 450),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(

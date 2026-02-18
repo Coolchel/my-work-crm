@@ -88,7 +88,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   @override
   void initState() {
     super.initState();
-    // debugPrint("📝 _EstimateTabState.initState: note='${widget.note}'");
+    // debugPrint("рџ"ќ _EstimateTabState.initState: note='${widget.note}'");
     _noteCtrl = TextEditingController(text: widget.note);
 
     // Default text logic for Materials
@@ -528,7 +528,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                               color: widget.markupPercent > 0
                                   ? markupAccent.shade700
                                   : Colors.grey.withOpacity(0.3)),
-                          tooltip: "Сброс",
+                          tooltip: "РЎР±СЂРѕСЃ",
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
@@ -829,7 +829,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
               margin: const EdgeInsets.fromLTRB(12, 4, 12, 12),
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.grey.shade200),
                 boxShadow: [

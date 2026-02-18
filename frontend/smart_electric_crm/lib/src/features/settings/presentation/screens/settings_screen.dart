@@ -239,7 +239,9 @@ class SettingsScreen extends ConsumerWidget {
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.red,
-                                        foregroundColor: Colors.white,
+                                        foregroundColor: Theme.of(context)
+                                            .colorScheme
+                                            .surface,
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(12),
@@ -366,7 +368,8 @@ class SettingsScreen extends ConsumerWidget {
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: themeColor,
-                          foregroundColor: Colors.white,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.surface,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -432,12 +435,12 @@ class SettingsScreen extends ConsumerWidget {
                                 }
                               },
                         child: isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 18,
                                 height: 18,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.surface,
                                 ),
                               )
                             : const Text('Я понимаю'),
@@ -575,7 +578,8 @@ class SettingsScreen extends ConsumerWidget {
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: themeColor,
-                            foregroundColor: Colors.white,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.surface,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -630,12 +634,13 @@ class SettingsScreen extends ConsumerWidget {
                                   }
                                 },
                           child: isLoading
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
+                                    color:
+                                        Theme.of(context).colorScheme.surface,
                                   ),
                                 )
                               : const Text('Сохранить'),

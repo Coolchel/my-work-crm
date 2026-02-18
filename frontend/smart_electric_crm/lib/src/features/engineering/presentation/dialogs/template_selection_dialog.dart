@@ -34,7 +34,7 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
         height: 600,
         constraints: const BoxConstraints(maxWidth: 500),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -94,7 +94,8 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                   ? FriendlyEmptyState(
                       icon: Icons.content_paste_off_rounded,
                       title: 'Нет доступных шаблонов',
-                      subtitle: 'Сохраните текущий набор как шаблон и используйте его повторно.',
+                      subtitle:
+                          'Сохраните текущий набор как шаблон и используйте его повторно.',
                       accentColor: themeColor,
                       iconSize: 62,
                       padding: const EdgeInsets.symmetric(
@@ -151,7 +152,7 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
 
   Widget _buildTemplateCard(BuildContext context, T template) {
     return Material(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
         side: BorderSide(color: Colors.grey.shade200),

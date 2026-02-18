@@ -57,7 +57,7 @@ class ShieldContentMultimedia extends ConsumerWidget {
         if (shield.internetLinesCount > 0)
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: themeColor.withOpacity(0.08)),
               boxShadow: [
@@ -109,7 +109,7 @@ class ShieldContentMultimedia extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              '× ${shield.internetLinesCount}',
+                              'Г— ${shield.internetLinesCount}',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Colors.grey.shade600,

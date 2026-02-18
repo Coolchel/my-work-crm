@@ -11,7 +11,7 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_secti
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
-// ─── Filter enums ─────────────────────────────────────────────
+// в"Ђв"Ђв"Ђ Filter enums в"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђ
 enum SortOrder { newest, oldest }
 
 class ProjectListScreen extends ConsumerStatefulWidget {
@@ -165,7 +165,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
-            tooltip: 'Поиск',
+            tooltip: 'РџРѕРёСЃРє',
             onPressed: _toggleSearch,
           ),
           IconButton(
@@ -291,7 +291,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
@@ -392,7 +392,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 400),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -600,7 +600,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   }
 }
 
-// ─── Project Card ──────────────────────────────────────────────
+// в"Ђв"Ђв"Ђ Project Card в"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђ
 
 class _ProjectCard extends StatefulWidget {
   final ProjectModel project;
@@ -797,7 +797,7 @@ class _ProjectCardState extends State<_ProjectCard> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Тип',
+                                    'РўРёРї',
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.grey.shade500,

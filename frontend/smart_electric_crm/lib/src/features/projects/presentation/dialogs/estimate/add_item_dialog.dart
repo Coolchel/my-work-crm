@@ -82,7 +82,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
         height: 600,
         constraints: const BoxConstraints(maxWidth: 500),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -148,7 +148,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                       prefixIcon:
                           Icon(Icons.search, color: themeColor, size: 20),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: Theme.of(context).colorScheme.surface,
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
@@ -260,7 +260,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
 
   Widget _buildItemCard(CatalogItem item, Color themeColor) {
     return Material(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
         side: BorderSide(color: Colors.grey.shade200),

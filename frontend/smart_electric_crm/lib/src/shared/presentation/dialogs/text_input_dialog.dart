@@ -47,6 +47,9 @@ class _TextInputDialogState extends State<TextInputDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 0,
@@ -54,12 +57,12 @@ class _TextInputDialogState extends State<TextInputDialog> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 450),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: scheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200, width: 1),
+          border: Border.all(color: scheme.outlineVariant, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
               blurRadius: 15,
               offset: const Offset(0, 5),
             )
@@ -145,7 +148,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.black87,
+                      foregroundColor: scheme.onSurfaceVariant,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 12),
                     ),
@@ -190,13 +193,15 @@ class _TextInputDialogState extends State<TextInputDialog> {
     bool autoFocus = false,
     int maxLines = 1,
   }) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: TextStyle(
-            color: Colors.grey.shade700,
+            color: scheme.onSurfaceVariant,
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),
@@ -206,10 +211,10 @@ class _TextInputDialogState extends State<TextInputDialog> {
           controller: controller,
           autofocus: autoFocus,
           maxLines: maxLines,
-          style: const TextStyle(fontSize: 14),
+          style: TextStyle(fontSize: 14, color: scheme.onSurface),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.grey.shade50,
+            fillColor: scheme.surfaceContainer.withOpacity(0.5),
             isDense: true,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 14),

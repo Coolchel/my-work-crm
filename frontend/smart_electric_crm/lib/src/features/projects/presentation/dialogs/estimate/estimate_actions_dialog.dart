@@ -605,7 +605,8 @@ class EstimatePdfActionsDialog extends ConsumerWidget
             ),
 
             // 1. Export PDF (Direct Actions)
-            buildSectionHeader("Экспорт в PDF", icon: Icons.save_alt_rounded),
+            buildSectionHeader("Р­РєСЃРїРѕСЂС' РІ PDF",
+                icon: Icons.save_alt_rounded),
             if (hasWorks)
               buildWideActionBtn(
                 context,
@@ -1060,7 +1061,7 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
         if (val) setState(() => _viewMode = mode);
       },
       selectedColor: color.shade100,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       labelStyle: TextStyle(
         color: isSelected ? color.shade900 : Colors.grey.shade700,
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,

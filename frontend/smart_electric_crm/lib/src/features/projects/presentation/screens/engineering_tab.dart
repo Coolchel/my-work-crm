@@ -29,7 +29,7 @@ class EngineeringTab extends ConsumerWidget {
           onPressed: () =>
               _showAddShieldDialog(context, ref, project.id.toString()),
           backgroundColor: Colors.indigo,
-          foregroundColor: Colors.white,
+          foregroundColor: Theme.of(context).colorScheme.surface,
           elevation: 2,
           tooltip: null, // Disable built-in tooltip
           child: const Icon(Icons.add),
@@ -43,7 +43,8 @@ class EngineeringTab extends ConsumerWidget {
               const FriendlyEmptyState(
                 icon: Icons.settings_input_component_outlined,
                 title: 'Нет щитов',
-                subtitle: 'Добавьте первый щит, чтобы начать инженерную часть проекта.',
+                subtitle:
+                    'Добавьте первый щит, чтобы начать инженерную часть проекта.',
                 accentColor: Colors.indigo,
               )
             else

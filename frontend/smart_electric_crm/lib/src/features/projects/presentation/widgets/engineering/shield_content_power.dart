@@ -126,7 +126,7 @@ class ShieldContentPower extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '$totalModules мод',
+                        '$totalModules РјРѕРґ',
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -141,7 +141,7 @@ class ShieldContentPower extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(vertical: 1),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(6),
                           border:
                               Border.all(color: themeColor.withOpacity(0.08)),
@@ -288,7 +288,7 @@ class ShieldContentPower extends ConsumerWidget {
     final map = {
       'circuit_breaker': 'Автоматические выключатели',
       'diff_breaker': 'Диф. автоматы',
-      'rcd': 'УЗО',
+      'rcd': 'РЈР—Рћ',
       'relay': 'Реле и автоматика',
       'contactor': 'Контакторы',
       'load_switch': 'Рубильники',

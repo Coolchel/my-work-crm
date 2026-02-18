@@ -97,7 +97,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color:
@@ -237,7 +237,9 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     SizeTransition(
                       sizeFactor: _expandAnimation,
                       child: Container(
-                        color: Colors.white, // Clean white background
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surface, // Clean white background
                         padding: const EdgeInsets.all(12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,7 +353,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'МОНТАЖ:',
+                        'РњРћРќРўРђР–:',
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 10,
@@ -380,7 +382,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: Colors.grey.withOpacity(0.08)),
                     boxShadow: [
@@ -490,7 +492,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                         color: themeColor,
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                            color: Colors.white, width: 1.5),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surface,
+                                            width: 1.5),
                                       ),
                                     ),
                                   ),

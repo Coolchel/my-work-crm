@@ -72,7 +72,7 @@ class _StageCardState extends State<StageCard> {
       constraints: const BoxConstraints(minHeight: 100),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [

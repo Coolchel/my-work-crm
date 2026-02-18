@@ -123,7 +123,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
               tooltip: _isSyncingSystemSections
                   ? 'Синхронизация...'
                   : 'Синхронизировать',
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               isLoading: _isSyncingSystemSections,
               onTap: _isSyncingSystemSections
                   ? null
@@ -296,8 +296,7 @@ class _SystemSectionsTab extends ConsumerWidget {
           return const FriendlyEmptyState(
             icon: Icons.schema_outlined,
             title: 'Разделы не найдены',
-            subtitle:
-                'Нажмите "Синхронизировать" или создайте раздел вручную.',
+            subtitle: 'Нажмите "Синхронизировать" или создайте раздел вручную.',
             accentColor: Colors.indigo,
             padding: EdgeInsets.all(24),
           );
@@ -1114,7 +1113,7 @@ class _DialogShell extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 560),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -1278,7 +1277,7 @@ class _DialogPopupSelectField<T> extends StatelessWidget {
                       elevation: 4,
                       shadowColor: Colors.black.withOpacity(0.2),
                       surfaceTintColor: Colors.transparent,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -1403,7 +1402,7 @@ class _DirectorySectionDialogState extends State<_DirectorySectionDialog> {
               decoration: _dialogInputDecoration('Название')),
           const SizedBox(height: 10),
           TextField(
-              controller: _code, decoration: _dialogInputDecoration('Код')),
+              controller: _code, decoration: _dialogInputDecoration('РљРѕРґ')),
           const SizedBox(height: 10),
           TextField(
             controller: _description,
@@ -1502,13 +1501,13 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
               decoration: _dialogInputDecoration('Название')),
           const SizedBox(height: 10),
           TextField(
-              controller: _code, decoration: _dialogInputDecoration('Код')),
+              controller: _code, decoration: _dialogInputDecoration('РљРѕРґ')),
           const SizedBox(height: 10),
           TextField(
             controller: _order,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: _dialogInputDecoration('Порядок'),
+            decoration: _dialogInputDecoration('РџРѕСЂСЏРґРѕРє'),
           ),
           const SizedBox(height: 10),
           Container(
@@ -1775,7 +1774,7 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
             children: [
               Expanded(
                 child: _DialogPopupSelectField<String>(
-                  label: 'Тип',
+                  label: 'РўРёРї',
                   value: _itemType,
                   options: const [
                     _PopupSelectOption(value: 'material', label: 'Материал'),

@@ -54,8 +54,8 @@ class WelcomeHeader extends StatelessWidget {
                 Expanded(
                   child: Text(
                     _getGreeting(),
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.surface,
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                     ),
@@ -65,7 +65,7 @@ class WelcomeHeader extends StatelessWidget {
                   tooltip: 'Настройки',
                   onPressed: onSettingsPressed,
                   icon: const Icon(Icons.settings_outlined),
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                 ),
               ],
             ),

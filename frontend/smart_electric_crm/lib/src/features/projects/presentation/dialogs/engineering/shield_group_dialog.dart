@@ -31,7 +31,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
   final Map<String, String> _deviceTypes = {
     'circuit_breaker': 'Автомат',
     'diff_breaker': 'Диф.автомат',
-    'rcd': 'УЗО',
+    'rcd': 'РЈР—Рћ',
     'relay': 'Реле напряжения',
     'contactor': 'Контактор',
     'load_switch': 'Выключатель нагрузки',
@@ -79,7 +79,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 500),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(

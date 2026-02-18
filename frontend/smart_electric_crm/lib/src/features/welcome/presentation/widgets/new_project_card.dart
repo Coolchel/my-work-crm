@@ -57,9 +57,9 @@ class NewProjectCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.add,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   size: 30,
                 ),
               ),

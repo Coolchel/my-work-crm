@@ -99,8 +99,11 @@ class _CatalogSearchScreenState extends ConsumerState<CatalogSearchScreen> {
             border: InputBorder.none,
             hintStyle: TextStyle(color: Colors.white70),
           ),
-          style: const TextStyle(color: Colors.white, fontSize: 18),
-          cursorColor: Colors.white,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.surface,
+            fontSize: 18,
+          ),
+          cursorColor: Theme.of(context).colorScheme.surface,
           onChanged: _onSearchChanged,
         ),
       ),

@@ -110,7 +110,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     if (byn > 0) {
       spans.add(TextSpan(
-        text: '${_formatAmount(byn)} р',
+        text: '${_formatAmount(byn)} СЂ',
         style: TextStyle(
           color: effectiveColor,
           fontWeight: FontWeight.w600,
@@ -312,10 +312,11 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildTotalSection(double totalUsd, double totalByn) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(_sectionHPadding, 16, _sectionHPadding, 12),
+      margin:
+          const EdgeInsets.fromLTRB(_sectionHPadding, 16, _sectionHPadding, 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(_cardRadius),
         border: Border.all(color: _cardBorderColor, width: 1),
         boxShadow: [
@@ -365,7 +366,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               if (totalUsd > 0 && totalByn > 0) const SizedBox(height: 2),
               if (totalByn > 0)
                 Text(
-                  '${_formatAmount(totalByn)} р',
+                  '${_formatAmount(totalByn)} СЂ',
                   style: const TextStyle(
                     color: _financeAccent,
                     fontSize: 18,
@@ -576,8 +577,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                           children: [
                                             _buildProjectMetaPill(
                                               icon: Icons.layers_outlined,
-                                              text:
-                                                  '${project.stages.length}',
+                                              text: '${project.stages.length}',
                                               active: true,
                                             ),
                                           ],
@@ -587,8 +587,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       _buildAmountDisplay(
                                         project.totalUsd,
@@ -621,8 +620,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                   ),
                                 ),
                               ),
-                              padding:
-                                  const EdgeInsets.fromLTRB(10, 6, 10, 6),
+                              padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
                               child: Column(
                                 children: [
                                   for (var i = 0;
@@ -666,8 +664,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.symmetric(vertical: 1),
         decoration: BoxDecoration(
-          color:
-              isHovered ? _financeAccent.withOpacity(0.035) : Colors.transparent,
+          color: isHovered
+              ? _financeAccent.withOpacity(0.035)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           boxShadow: isHovered
               ? [
@@ -760,7 +759,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
-                          'из ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
+                          'РёР· ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
                           style: TextStyle(
                             fontSize: 10,
                             color: Colors.grey[600],
@@ -773,7 +772,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                         width: 52,
                         height: 3,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(2),
                           border:
                               Border.all(color: Colors.grey[300]!, width: 0.5),
@@ -840,12 +839,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     required bool active,
     double? maxTextWidth,
   }) {
-    final background = active
-        ? _financeAccent.withOpacity(0.1)
-        : Colors.grey.shade100;
-    final border = active
-        ? _financeAccent.withOpacity(0.28)
-        : Colors.grey.shade300;
+    final background =
+        active ? _financeAccent.withOpacity(0.1) : Colors.grey.shade100;
+    final border =
+        active ? _financeAccent.withOpacity(0.28) : Colors.grey.shade300;
     final foreground = active ? _financeAccent : Colors.grey.shade700;
 
     final label = Text(
@@ -886,7 +883,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   String _formatExternalAmount(double usd, double byn) {
     final parts = <String>[];
     if (usd > 0) parts.add('${usd.toStringAsFixed(0)}\$');
-    if (byn > 0) parts.add('${byn.toStringAsFixed(0)}р');
+    if (byn > 0) parts.add('${byn.toStringAsFixed(0)}СЂ');
     return parts.join(' + ');
   }
 
@@ -955,7 +952,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           const EdgeInsets.fromLTRB(_sectionHPadding, 12, _sectionHPadding, 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(_cardRadius),
         border: Border.all(color: _cardBorderColor),
         boxShadow: [
@@ -1173,6 +1170,3 @@ class _PayStageButtonState extends State<_PayStageButton> {
     );
   }
 }
-
-
-

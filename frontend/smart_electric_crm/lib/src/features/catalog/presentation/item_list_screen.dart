@@ -140,7 +140,7 @@ class _PopupSelectField<T> extends StatelessWidget {
                       elevation: 4,
                       shadowColor: Colors.black.withOpacity(0.2),
                       surfaceTintColor: Colors.transparent,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -221,7 +221,7 @@ class _CreateItemDialogState extends ConsumerState<_CreateItemDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _PopupSelectField<String>(
-              label: 'Тип',
+              label: 'РўРёРї',
               value: _itemType,
               options: const [
                 _PopupSelectOption(value: 'material', label: 'Материал'),

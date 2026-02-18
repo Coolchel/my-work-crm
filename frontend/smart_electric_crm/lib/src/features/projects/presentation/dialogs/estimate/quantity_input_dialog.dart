@@ -117,7 +117,7 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 450),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
@@ -236,7 +236,7 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
                               child: TextField(
                                 controller: _myCtrl,
                                 decoration: InputDecoration(
-                                  labelText: "Мы",
+                                  labelText: "РњС‹",
                                   floatingLabelBehavior:
                                       FloatingLabelBehavior.always,
                                   border: OutlineInputBorder(

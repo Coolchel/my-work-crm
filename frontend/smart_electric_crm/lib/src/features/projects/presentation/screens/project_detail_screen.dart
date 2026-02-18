@@ -206,7 +206,7 @@ class _StagesTab extends ConsumerWidget {
         child: FloatingActionButton(
           onPressed: () => _showAddStageDialog(context, ref),
           backgroundColor: Colors.indigo,
-          foregroundColor: Colors.white,
+          foregroundColor: Theme.of(context).colorScheme.surface,
           child: const Icon(Icons.add),
         ),
       ),
@@ -229,7 +229,7 @@ class _StagesTab extends ConsumerWidget {
             // Premium Project Info Header
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -301,7 +301,8 @@ class _StagesTab extends ConsumerWidget {
               const FriendlyEmptyState(
                 icon: Icons.layers_clear_rounded,
                 title: 'Этапы еще не созданы',
-                subtitle: 'Добавьте первый этап, чтобы продолжить работу по объекту.',
+                subtitle:
+                    'Добавьте первый этап, чтобы продолжить работу по объекту.',
                 accentColor: Colors.indigo,
                 padding: EdgeInsets.symmetric(vertical: 8),
               ),
@@ -425,7 +426,7 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
@@ -531,7 +532,7 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
 
                     return Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.grey.shade100),
                         boxShadow: [
@@ -745,8 +746,9 @@ class _FilesTab extends ConsumerWidget {
         final sizeInMb = sizeInBytes / (1024 * 1024);
 
         if (sizeInMb > 20) {
-          sizeErrors
-              .add('${pickedFile.name} (${sizeInMb.toStringAsFixed(1)} МБ)');
+          sizeErrors.add(
+            '${pickedFile.name} (${sizeInMb.toStringAsFixed(1)} МБ)',
+          );
           continue;
         }
 
@@ -913,7 +915,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
           },
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
@@ -970,8 +972,8 @@ class _FileCardState extends ConsumerState<_FileCard> {
                     ),
                     Container(
                       padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
                       ),
                       child: Row(
                         children: [
@@ -1096,7 +1098,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
       context: context,
       builder: (context) => TextInputDialog(
         title: 'Переименовать файл',
-        labelText: 'Новое имя',
+        labelText: 'РќРѕРІРѕРµ РёРјСЏ',
         initialValue: nameWithoutExtension,
         confirmText: 'Сохранить',
         themeColor: Colors.indigo,

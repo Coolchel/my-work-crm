@@ -68,7 +68,7 @@ class ShieldContentLed extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 1),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: themeColor.withOpacity(0.08)),
                     boxShadow: [

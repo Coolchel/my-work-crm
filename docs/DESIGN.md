@@ -1,4 +1,4 @@
-﻿# Design System & UI/UX
+# Design System & UI/UX
 
 ## 1. Color Palette
 *   **Primary (Indigo):** Headers, Key Actions, Power Shields.
@@ -8,6 +8,7 @@
 *   **Warning (Orange):** Alerts, Markup, Power Shield Accents.
 *   **Purple:** LED Shields.
 *   **Green:** Multimedia Shields (aligned with unified app green token).
+*   **Dark Foundation:** Dark theme uses deep navy/graphite surfaces with preserved semantic accents (indigo/blue/green/orange) and readable contrast for text, icons, and controls.
 
 ## 2. Component Guidelines
 
@@ -42,6 +43,7 @@
 *   **Unified Bottom Navigation Family:** Main navigation, project-detail tabs, and estimate tabs share one visual token set (height, icon size, selected indicator style, label emphasis).
 *   **Shape/Depth/Spacing:** One primary medium radius token, soft low-intensity elevation presets, and base screen/card paddings are centralized and reused.
 *   **Hero Motif Echo:** Home keeps the strongest hero gradient; Objects/Finance/Statistics use a restrained top gradient motif in compact headers without increasing header height.
+*   **Dark Token Mirror:** The same shape/spacing/navigation tokens are mirrored for dark mode with dedicated background/surface/shadow/outline values.
 
 ### 2.5. Friendly Empty States
 *   **Visual Pattern:** Use a centered lightweight card with a large desaturated icon, short title, and concise helper subtitle.
@@ -83,7 +85,7 @@
 *   **Section Labeling:** Finance list area may include a compact top caption with project-count pill to match section hierarchy patterns used in other modules.
 
 ### 3.4. Home Header & Main Navigation
-*   **Bottom Main Navigation:** Includes `Р“Р»Р°РІРЅР°СЏ`, `РћР±СЉРµРєС‚С‹`, `Р¤РёРЅР°РЅСЃС‹`, `РЎС‚Р°С‚РёСЃС‚РёРєР°`; no `Settings` destination.
+*   **Bottom Main Navigation:** Includes `Главная`, `Объекты`, `Финансы`, `Статистика`; no `Settings` destination.
 *   **Bottom Labels Visibility:** Labels remain visible under icons in bottom navigation for primary sections.
 *   **Settings Entry Point:** Top-right settings icon in Home header gradient block.
 *   **Header Balance:** Keep greeting text area dominant while preserving touch-friendly settings icon hit target.
@@ -98,7 +100,7 @@
 ### 3.6. Project Files Tab
 *   **Category Cards:** File category sections in project detail follow the same card family as `Objects`/`Stages` (neutral white surface, subtle shadow, compact readable typography, left accent stripe, `Clip.antiAlias`).
 *   **Header Accent Mapping:** Left stripe and header accents follow stage-like semantics by category: `PROJECT` -> BlueGrey (drawings), `WORK` -> Blue (implementation), `FINISH` -> Green (final photos).
-*   **Header Actions:** Upload and expand/collapse controls stay in the category header with compact neutral action chips; file count is shown as a compact readable pill (`N С„Р°Р№Р»/С„Р°Р№Р»Р°/С„Р°Р№Р»РѕРІ`).
+*   **Header Actions:** Upload and expand/collapse controls stay in the category header with compact neutral action chips; file count is shown as a compact readable pill (`N файл/файла/файлов`).
 *   **Vertical Rhythm:** Keep tighter spacing between collapsed file category headers to reduce visual gaps.
 *   **File Item Cards:** Uploaded file cards use a compact visual footprint (smaller size in grid, reduced radii/paddings, concise metadata badge) while preserving quick hover actions.
 *   **Quick Actions Contract:** Each file card keeps 4 hover actions (`rename`, `save as`, `share`, `delete`) and tap-to-open behavior unchanged.
@@ -137,7 +139,7 @@
 ### 3.7. Directory Screen (Reference Book)
 *   **Navigation:** Bottom `NavigationBar` with two destinations: `System Sections` and `Catalog` (same pattern as main app sections).
 *   **Nested Navigation:** Keep the same bottom `NavigationBar` visible on second-level directory screens.
-*   **Naming:** System tab title in UI is `РЎРёСЃС‚РµРјР°`.
+*   **Naming:** System tab title in UI is `Система`.
 *   **Density:** Use compact list rows (`dense`, reduced vertical visual density).
 *   **Card Shape:** Rounded cards (~14px) with left accent stripe (entity color coding) to match object/stage cards.
 *   **Dialogs:** Reuse premium dialog shell (24px corners, tinted header, concise actions).

@@ -283,7 +283,7 @@ class StatisticsScreen extends ConsumerWidget {
       case 'month':
         return 'месяц';
       case 'year':
-        return 'год';
+        return 'РіРѕРґ';
       case 'all':
         return 'все время';
       default:
@@ -334,7 +334,7 @@ class StatisticsScreen extends ConsumerWidget {
             child: _buildFinanceCard(
               'Всего BYN',
               finances.byn,
-              'р',
+              'СЂ',
               Colors.indigo,
             ),
           ),

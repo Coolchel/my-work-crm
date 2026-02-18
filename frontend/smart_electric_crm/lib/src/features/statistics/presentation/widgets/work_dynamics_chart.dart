@@ -8,7 +8,7 @@ class WorkDynamicsChart extends StatefulWidget {
   final List<WorkDynamicsData> data;
   final bool isMonthly; // If true, data is grouped by YYYY-MM
   final String currencyLabel; // e.g., "USD" or "BYN"
-  final String currencySymbol; // e.g., "$" or "р"
+  final String currencySymbol; // e.g., "$" or "СЂ"
   final bool isUsd; // To determine which field to use and which color
 
   const WorkDynamicsChart({
@@ -196,8 +196,8 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
 
                         return LineTooltipItem(
                           '$formattedDate\n',
-                          const TextStyle(
-                            color: Colors.white,
+                          TextStyle(
+                            color: Theme.of(context).colorScheme.surface,
                             fontWeight: FontWeight.bold,
                             fontSize: 10,
                           ),
@@ -286,7 +286,9 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
         child: Text(
           label,
           style: TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey[600]),
+              fontWeight: FontWeight.bold,
+              fontSize: 10,
+              color: Colors.grey[600]),
         ),
       ),
     );

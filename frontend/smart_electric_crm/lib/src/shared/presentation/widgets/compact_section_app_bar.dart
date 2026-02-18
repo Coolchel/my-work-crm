@@ -32,11 +32,14 @@ class CompactSectionAppBar extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colors = gradientColors ??
-        [
-          const Color(0xFF3949AB),
-          const Color(0xFF1E88E5),
-        ];
+        (isDark
+            ? AppDesignTokens.subtleSectionGradientDark
+            : AppDesignTokens.subtleSectionGradient);
+    final foreground = Colors.white;
+    final iconBadgeBackground = Colors.white.withOpacity(isDark ? 0.2 : 0.16);
+    final subtitleColor = Colors.white.withOpacity(isDark ? 0.95 : 0.92);
 
     return AppBar(
       automaticallyImplyLeading: leading == null,
@@ -46,7 +49,7 @@ class CompactSectionAppBar extends StatelessWidget
       centerTitle: centerTitle,
       elevation: 0,
       backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
+      foregroundColor: foreground,
       flexibleSpace: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -66,7 +69,7 @@ class CompactSectionAppBar extends StatelessWidget
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.16),
+              color: iconBadgeBackground,
               borderRadius: BorderRadius.circular(9),
             ),
             child: Icon(icon, size: 17),
@@ -95,7 +98,7 @@ class CompactSectionAppBar extends StatelessWidget
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.white.withOpacity(0.92),
+                      color: subtitleColor,
                       fontWeight: FontWeight.w400,
                       height: 1.1,
                     ),

@@ -32,28 +32,28 @@ const List<_ArmaturePosition> _targetPositions = [
   _ArmaturePosition(
     label: 'Выключатель, 1 клавиша',
     mappingKey: 'arm_switch_1g',
-    legacyName: 'вкл 1кл',
+    legacyName: 'РІРєР» 1РєР»',
     icon: Icons.toggle_on_rounded,
     iconColor: Color(0xFF1565C0),
   ),
   _ArmaturePosition(
     label: 'Выключатель, 2 клавиши',
     mappingKey: 'arm_switch_2g',
-    legacyName: 'вкл 2кл',
+    legacyName: 'РІРєР» 2РєР»',
     icon: Icons.toggle_on_outlined,
     iconColor: Color(0xFF1565C0),
   ),
   _ArmaturePosition(
     label: 'Выключатель проходной, 1 клавиша',
     mappingKey: 'arm_switch_1g_pass',
-    legacyName: 'вкл 1кл проходной',
+    legacyName: 'РІРєР» 1РєР» РїСЂРѕС…РѕРґРЅРѕР№',
     icon: Icons.sync_alt_rounded,
     iconColor: Color(0xFF0D47A1),
   ),
   _ArmaturePosition(
     label: 'Выключатель проходной, 2 клавиши',
     mappingKey: 'arm_switch_2g_pass',
-    legacyName: 'вкл 2кл проходной',
+    legacyName: 'РІРєР» 2РєР» РїСЂРѕС…РѕРґРЅРѕР№',
     icon: Icons.swap_horiz_rounded,
     iconColor: Color(0xFF0D47A1),
   ),
@@ -291,7 +291,7 @@ class _Stage3ArmatureCalculatorDialogState
         width: 760,
         constraints: const BoxConstraints(maxHeight: 760),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -394,7 +394,7 @@ class _Stage3ArmatureCalculatorDialogState
                     label: const Text('Перенести в смету'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+                      foregroundColor: Theme.of(context).colorScheme.surface,
                     ),
                   ),
                 ],
