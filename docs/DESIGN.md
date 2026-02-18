@@ -124,7 +124,7 @@
 *   **Interaction Consistency:** Rows support standard pointer hover tint and preserve tap-to-edit with inline delete action.
 *   **Behavior Contract:** UI refresh does not change estimate business behavior (editing, delete confirmation flow, totals, markup controls, note fields).
 *   **Actions Menu Transfer Dialogs:** `Precalc -> Works/Materials` replacement confirmations keep section semantics: green accent for Works, blue accent for Materials.
-*   **Stage 3 Armature Calculator Dialog:** Materials section uses blue-accent premium dialog with dense vertical rows, compact quick-add chips (`+1/+2/+3`), editable `Итого` fields, and blue confirmation flow on apply.
+*   **Stage 3 Armature Calculator Dialog:** Materials section uses blue-accent premium dialog with dense vertical rows, readable Russian row labels, compact semantic leading icon-badges per armature type, compact quick-add chips (`+1/+2/+3`), editable `Итого` fields, and blue confirmation flow on apply.
 
 ## 4. Icons & Assets
 *   **Style:** Material Symbols Rounded.

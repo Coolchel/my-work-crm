@@ -61,7 +61,8 @@ Triggered manually from estimate `Actions` menu on Materials tab in `stage_3`.
     *   Current stage title must be `stage_3`.
     *   Active estimate tab must be Materials.
 2.  **Input Model:**
-    *   Dialog rows are fixed by predefined armature names (switches/sockets/frames).
+    *   Dialog rows are fixed by predefined armature names (switches/sockets/frames) with full readable Russian wording.
+    *   Each row has a semantic visual icon tied to armature type (switch/socket/network/tv/phone/frame/cable) for faster on-site recognition.
     *   Each row supports quick increment buttons (`+1`, `+2`, `+3`) and direct numeric total editing.
     *   Row is actionable only if matching `CatalogItem(item_type='material')` exists by row `mapping_key` (legacy name match may be used as temporary fallback for old data).
 3.  **Apply Rule (Clear & Replace):**

@@ -27,7 +27,7 @@ Create a premium, professional tool for electricians to manage projects, estimat
     *   **Smart Calculator:** Input 2 of 3 values (Total, Me, Partner) -> 3rd is auto-calculated.
     *   **Dense Estimate Workspace:** Works/Materials lists use compact card rows to keep many positions visible per screen while preserving existing estimate actions.
     *   **Precalc Reuse Flow:** For production stages (1/2/1+2), users can replace Works/Materials positions with positions from `precalc` stage through explicit confirmation action.
-    *   **Stage 3 Armature Calculator:** Materials section in `stage_3` includes a fast on-site counting dialog (`+1/+2/+3` with manual total edit) and applies results to estimate via clear-and-replace with confirmation.
+    *   **Stage 3 Armature Calculator:** Materials section in `stage_3` includes a fast on-site counting dialog (`+1/+2/+3` with manual total edit), readable full Russian position labels (no technical abbreviations), semantic type icons per armature row, and applies results to estimate via clear-and-replace with confirmation.
 *   **Engineering Map:**
     *   **Shields (Power):** Hierarchical structure (Shield -> Groups -> Devices).
     *   **Multimedia/LED:** Low-voltage systems and LED zones.

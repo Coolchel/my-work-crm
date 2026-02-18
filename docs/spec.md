@@ -64,7 +64,7 @@
         *   If target section is non-empty, user must pass confirmation dialog before replacement.
     *   **Stage 3 Materials Armature Calculator (Manual Action):**
         *   In estimate `Actions` menu for Materials tab, action is shown only for stage `stage_3`.
-        *   Action opens dedicated dialog with fixed armature positions from catalog (switches/sockets/frames), quick add buttons (`+1`, `+2`, `+3`) and editable total per row.
+        *   Action opens dedicated dialog with fixed armature positions from catalog (switches/sockets/frames), readable Russian labels, semantic row icons by armature type, quick add buttons (`+1`, `+2`, `+3`) and editable total per row.
         *   Catalog binding is resolved by technical `mapping_key` values for each armature row (name text can vary in catalog without breaking calculator mapping).
         *   Applying calculator transfers only rows with total > 0 into current stage materials estimate.
         *   If materials section already has items, user must confirm full replacement before old positions are deleted and replaced.

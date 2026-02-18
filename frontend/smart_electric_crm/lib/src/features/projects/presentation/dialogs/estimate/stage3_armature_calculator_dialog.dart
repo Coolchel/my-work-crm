@@ -16,80 +16,145 @@ class _ArmaturePosition {
   final String label;
   final String mappingKey;
   final String legacyName;
+  final IconData icon;
+  final Color iconColor;
 
   const _ArmaturePosition({
     required this.label,
     required this.mappingKey,
     required this.legacyName,
+    required this.icon,
+    required this.iconColor,
   });
 }
 
 const List<_ArmaturePosition> _targetPositions = [
   _ArmaturePosition(
-      label: 'вкл 1кл', mappingKey: 'arm_switch_1g', legacyName: 'вкл 1кл'),
+    label: 'Выключатель, 1 клавиша',
+    mappingKey: 'arm_switch_1g',
+    legacyName: 'вкл 1кл',
+    icon: Icons.toggle_on_rounded,
+    iconColor: Color(0xFF1565C0),
+  ),
   _ArmaturePosition(
-      label: 'вкл 2кл', mappingKey: 'arm_switch_2g', legacyName: 'вкл 2кл'),
+    label: 'Выключатель, 2 клавиши',
+    mappingKey: 'arm_switch_2g',
+    legacyName: 'вкл 2кл',
+    icon: Icons.toggle_on_outlined,
+    iconColor: Color(0xFF1565C0),
+  ),
   _ArmaturePosition(
-    label: 'вкл 1кл проходной',
+    label: 'Выключатель проходной, 1 клавиша',
     mappingKey: 'arm_switch_1g_pass',
     legacyName: 'вкл 1кл проходной',
+    icon: Icons.sync_alt_rounded,
+    iconColor: Color(0xFF0D47A1),
   ),
   _ArmaturePosition(
-    label: 'вкл 2кл проходной',
+    label: 'Выключатель проходной, 2 клавиши',
     mappingKey: 'arm_switch_2g_pass',
     legacyName: 'вкл 2кл проходной',
+    icon: Icons.swap_horiz_rounded,
+    iconColor: Color(0xFF0D47A1),
   ),
   _ArmaturePosition(
-    label: 'вкл 1кл перекрестный',
+    label: 'Выключатель перекрестный, 1 клавиша',
     mappingKey: 'arm_switch_1g_cross',
     legacyName: 'вкл 1кл перекрестный',
+    icon: Icons.call_split_rounded,
+    iconColor: Color(0xFF283593),
   ),
   _ArmaturePosition(
-    label: 'вкл 2кл перекрестный',
+    label: 'Выключатель перекрестный, 2 клавиши',
     mappingKey: 'arm_switch_2g_cross',
     legacyName: 'вкл 2кл перекрестный',
+    icon: Icons.alt_route_rounded,
+    iconColor: Color(0xFF283593),
   ),
   _ArmaturePosition(
-      label: 'розетка', mappingKey: 'arm_socket', legacyName: 'розетка'),
+    label: 'Розетка силовая',
+    mappingKey: 'arm_socket',
+    legacyName: 'розетка',
+    icon: Icons.power_outlined,
+    iconColor: Color(0xFF00897B),
+  ),
   _ArmaturePosition(
-    label: 'розетка с влагозащитой',
+    label: 'Розетка влагозащищённая',
     mappingKey: 'arm_socket_ip',
     legacyName: 'розетка с влагозащитой',
+    icon: Icons.shield_moon_rounded,
+    iconColor: Color(0xFF00897B),
   ),
   _ArmaturePosition(
-    label: 'розетка LANx1',
+    label: 'Розетка LAN, 1 порт',
     mappingKey: 'arm_socket_lan_1',
     legacyName: 'розетка LANx1',
+    icon: Icons.lan_rounded,
+    iconColor: Color(0xFF455A64),
   ),
   _ArmaturePosition(
-    label: 'розетка LANx2',
+    label: 'Розетка LAN, 2 порта',
     mappingKey: 'arm_socket_lan_2',
     legacyName: 'розетка LANx2',
+    icon: Icons.settings_ethernet_rounded,
+    iconColor: Color(0xFF455A64),
   ),
   _ArmaturePosition(
-      label: 'розетка TV',
-      mappingKey: 'arm_socket_tv',
-      legacyName: 'розетка TV'),
+    label: 'Розетка ТВ',
+    mappingKey: 'arm_socket_tv',
+    legacyName: 'розетка TV',
+    icon: Icons.tv_rounded,
+    iconColor: Color(0xFF5D4037),
+  ),
   _ArmaturePosition(
-    label: 'розетка TEL',
+    label: 'Розетка телефонная',
     mappingKey: 'arm_socket_tel',
     legacyName: 'розетка TEL',
+    icon: Icons.phone_in_talk_rounded,
+    iconColor: Color(0xFF5D4037),
   ),
   _ArmaturePosition(
-    label: 'вывод кабеля',
+    label: 'Вывод кабеля',
     mappingKey: 'arm_cable_output',
     legacyName: 'вывод кабеля',
+    icon: Icons.cable_rounded,
+    iconColor: Color(0xFF6D4C41),
   ),
   _ArmaturePosition(
-      label: 'рамка 1х', mappingKey: 'arm_frame_1x', legacyName: 'рамка 1х'),
+    label: 'Рамка, 1 пост',
+    mappingKey: 'arm_frame_1x',
+    legacyName: 'рамка 1х',
+    icon: Icons.crop_portrait_rounded,
+    iconColor: Color(0xFF6A1B9A),
+  ),
   _ArmaturePosition(
-      label: 'рамка 2х', mappingKey: 'arm_frame_2x', legacyName: 'рамка 2х'),
+    label: 'Рамка, 2 поста',
+    mappingKey: 'arm_frame_2x',
+    legacyName: 'рамка 2х',
+    icon: Icons.crop_16_9_rounded,
+    iconColor: Color(0xFF6A1B9A),
+  ),
   _ArmaturePosition(
-      label: 'рамка 3х', mappingKey: 'arm_frame_3x', legacyName: 'рамка 3х'),
+    label: 'Рамка, 3 поста',
+    mappingKey: 'arm_frame_3x',
+    legacyName: 'рамка 3х',
+    icon: Icons.view_week_rounded,
+    iconColor: Color(0xFF6A1B9A),
+  ),
   _ArmaturePosition(
-      label: 'рамка 4х', mappingKey: 'arm_frame_4x', legacyName: 'рамка 4х'),
+    label: 'Рамка, 4 поста',
+    mappingKey: 'arm_frame_4x',
+    legacyName: 'рамка 4х',
+    icon: Icons.grid_4x4_rounded,
+    iconColor: Color(0xFF6A1B9A),
+  ),
   _ArmaturePosition(
-      label: 'рамка 5х', mappingKey: 'arm_frame_5x', legacyName: 'рамка 5х'),
+    label: 'Рамка, 5 постов',
+    mappingKey: 'arm_frame_5x',
+    legacyName: 'рамка 5х',
+    icon: Icons.grid_view_rounded,
+    iconColor: Color(0xFF6A1B9A),
+  ),
 ];
 
 class Stage3ArmatureCalculatorDialog extends StatefulWidget {
@@ -354,6 +419,22 @@ class _Stage3ArmatureCalculatorDialogState
       ),
       child: Row(
         children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: disabled
+                  ? Colors.grey.shade200
+                  : position.iconColor.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              position.icon,
+              size: 18,
+              color: disabled ? Colors.grey.shade500 : position.iconColor,
+            ),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               position.label,
