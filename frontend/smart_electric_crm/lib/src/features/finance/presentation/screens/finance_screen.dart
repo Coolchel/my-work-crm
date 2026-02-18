@@ -489,36 +489,40 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                           child: Row(
                                             children: [
                                               Expanded(
-                                                child: Text(
-                                                  project.address,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w700,
-                                                    fontSize: 13.5,
-                                                    letterSpacing: -0.2,
-                                                  ),
+                                                child: Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  children: [
+                                                    Flexible(
+                                                      child: Text(
+                                                        project.address,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          fontSize: 13.5,
+                                                          letterSpacing: -0.2,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    if (hasSource) ...[
+                                                      const SizedBox(width: 4),
+                                                      _buildSourceSuperscript(
+                                                          project.source!),
+                                                    ],
+                                                  ],
                                                 ),
                                               ),
-                                              const SizedBox(width: 6),
-                                              _buildProjectMetaPill(
-                                                icon: Icons.layers_outlined,
-                                                text:
-                                                    '${project.stages.length}',
-                                                active: true,
-                                              ),
-                                              if (hasSource) ...[
-                                                const SizedBox(width: 4),
-                                                _buildProjectMetaPill(
-                                                  icon: Icons.info_outline,
-                                                  text: project.source!,
-                                                  active: false,
-                                                  maxTextWidth: 180,
-                                                ),
-                                              ],
                                             ],
                                           ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        _buildProjectMetaPill(
+                                          icon: Icons.layers_outlined,
+                                          text: '${project.stages.length}',
+                                          active: true,
                                         ),
                                         const SizedBox(width: 10),
                                         _buildAmountDisplay(
@@ -544,13 +548,26 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          project.address,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 13.5,
-                                            letterSpacing: -0.2,
-                                          ),
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                project.address,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 13.5,
+                                                  letterSpacing: -0.2,
+                                                ),
+                                              ),
+                                            ),
+                                            if (hasSource) ...[
+                                              const SizedBox(width: 4),
+                                              _buildSourceSuperscript(
+                                                  project.source!),
+                                            ],
+                                          ],
                                         ),
                                         const SizedBox(height: 3),
                                         Wrap(
@@ -563,12 +580,6 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                                   '${project.stages.length}',
                                               active: true,
                                             ),
-                                            if (hasSource)
-                                              _buildProjectMetaPill(
-                                                icon: Icons.info_outline,
-                                                text: project.source!,
-                                                active: false,
-                                              ),
                                           ],
                                         ),
                                       ],
@@ -791,6 +802,32 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSourceSuperscript(String text) {
+    return Transform.translate(
+      offset: const Offset(0, -5),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 130),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.grey.shade300, width: 0.8),
+        ),
+        child: Text(
+          text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade700,
+            height: 1.0,
           ),
         ),
       ),
@@ -1059,58 +1096,72 @@ class _PayStageButtonState extends State<_PayStageButton> {
 
   @override
   Widget build(BuildContext context) {
+    const accent = _FinanceScreenState._financeAccent;
+    final backgroundColor =
+        _isHovered ? accent.withOpacity(0.14) : Colors.white;
+    final borderColor =
+        _isHovered ? accent.withOpacity(0.45) : Colors.grey.shade300;
+    final textColor = _isHovered ? accent.shade800 : Colors.grey.shade700;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: 108,
-        height: 28,
+        duration: const Duration(milliseconds: 160),
+        width: 112,
+        height: 30,
         decoration: BoxDecoration(
-          color: _isHovered
-              ? _FinanceScreenState._financeAccent.withOpacity(0.16)
-              : _FinanceScreenState._financeAccent.withOpacity(0.08),
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: _isHovered
-                ? _FinanceScreenState._financeAccent.withOpacity(0.45)
-                : _FinanceScreenState._financeAccent.withOpacity(0.25),
-          ),
-          boxShadow: _isHovered
-              ? [
-                  BoxShadow(
-                    color:
-                        _FinanceScreenState._financeAccent.withOpacity(0.12),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+          border: Border.all(color: borderColor),
+          boxShadow: [
+            BoxShadow(
+              color: _isHovered
+                  ? accent.withOpacity(0.12)
+                  : Colors.black.withOpacity(0.04),
+              blurRadius: _isHovered ? 8 : 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onPressed,
             borderRadius: BorderRadius.circular(999),
+            hoverColor: Colors.transparent,
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    _isHovered
-                        ? Icons.check_circle_rounded
-                        : Icons.radio_button_unchecked_rounded,
-                    size: 12,
-                    color: _FinanceScreenState._financeAccent,
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: _isHovered
+                          ? accent.withOpacity(0.18)
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _isHovered
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      size: 12,
+                      color: textColor,
+                    ),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     _isHovered ? 'Оплачено' : 'Не оплачено',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: _FinanceScreenState._financeAccent,
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
                     ),
                   ),
                 ],
