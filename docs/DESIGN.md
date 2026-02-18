@@ -117,6 +117,13 @@
 *   **Help Hint Copy:** Tooltip uses compact multiline Russian copy explaining that dynamics reflect earnings by completed objects and do not depend on payment status.
 *   **Legacy Footer Note:** Bottom textual note under work-dynamics charts is removed; meaning is conveyed through the tooltip.
 
+### 3.9. Estimate Tabs (Works/Materials)
+*   **Card Family Alignment:** Estimate rows follow the same neutral card family as Objects/Stages/Finance (white surface, subtle border/shadow, left accent stripe).
+*   **Dense Rows:** Keep compact paddings, compact typography, and tight group spacing to fit large position lists on one screen.
+*   **Group Readability:** Category headers stay compact and show per-group item count for quick scanning.
+*   **Interaction Consistency:** Rows support standard pointer hover tint and preserve tap-to-edit with inline delete action.
+*   **Behavior Contract:** UI refresh does not change estimate business behavior (editing, delete confirmation flow, totals, markup controls, note fields).
+
 ## 4. Icons & Assets
 *   **Style:** Material Symbols Rounded.
 *   **Files:**

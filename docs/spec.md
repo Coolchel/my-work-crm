@@ -48,6 +48,8 @@
 *   **Structure:**
     *   **Stages:** Flexible workspace (e.g., "Stage 1", "Stage 2").
     *   **Tabs:** Works (Labor) vs. Materials (Goods).
+    *   **Compact Density Contract:** Works/Materials lists keep compact row/card density for high item count scenarios.
+    *   **Behavior Preservation:** Redesign must not alter existing estimate flows (add/edit/delete/import/template/text/PDF actions, markup handling, totals visibility rules).
 *   **Calculation Logic:**
     *   **Smart Input:** `Total = Me + Partner`. Editing any 2 updates the 3rd.
     *   **Markup:** Applies to Material Client Price only. `ClientPrice = BasePrice * (1 + Markup%)`.

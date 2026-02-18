@@ -299,55 +299,46 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   Widget _buildInputField({
     required String label,
     required TextEditingController controller,
-    required IconData icon,
     required ValueChanged<String> onChanged,
     Widget? suffix,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(icon, size: 14, color: _primaryColor.withOpacity(0.8)),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: _primaryColor.withOpacity(0.8),
-              ),
-            ),
-          ],
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey.shade500,
+          ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 5),
         TextField(
           controller: controller,
           maxLines: null,
           minLines: 2,
           keyboardType: TextInputType.multiline,
-          style: const TextStyle(fontSize: 12),
+          style: const TextStyle(fontSize: 14),
           onChanged: onChanged,
           readOnly: widget.isDisabled,
           decoration: InputDecoration(
             isDense: true,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            fillColor: _primaryColor.withOpacity(0.08),
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            fillColor: Colors.grey[50],
             filled: true,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                  color: _primaryColor.withOpacity(0.12), width: 0.5),
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey.shade200),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(
-                  color: _primaryColor.withOpacity(0.12), width: 0.5),
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey.shade200),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: _primaryColor, width: 1.0),
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: _primaryColor, width: 1),
             ),
             suffixIcon: suffix,
           ),
@@ -358,26 +349,25 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
 
   Widget _buildMarkupControl() {
     final hasMarkup = widget.markupPercent > 0;
+    const markupAccent = Colors.teal;
 
-    // Header Color: Very soft, almost white blue
     final headerColor = hasMarkup
-        ? Colors.blue.shade50.withOpacity(0.3)
-        : _primaryColorLight.withOpacity(0.5);
-
-    // Body Color: Even paler blue
+        ? markupAccent.withOpacity(0.11)
+        : _primaryColorLight.withOpacity(0.45);
     final bodyColor =
-        hasMarkup ? Colors.blue.shade50.withOpacity(0.15) : Colors.transparent;
+        hasMarkup ? markupAccent.withOpacity(0.06) : Colors.transparent;
 
-    final borderColor =
-        hasMarkup ? Colors.orange.shade300 : _primaryColor.withOpacity(0.12);
+    final borderColor = hasMarkup
+        ? markupAccent.withOpacity(0.55)
+        : _primaryColor.withOpacity(0.12);
     final iconColor =
-        hasMarkup ? Colors.orange.shade800 : _primaryColor.withOpacity(0.8);
+        hasMarkup ? markupAccent.shade700 : _primaryColor.withOpacity(0.8);
     final textColor =
-        hasMarkup ? Colors.orange.shade900 : _primaryColor.withOpacity(0.9);
+        hasMarkup ? markupAccent.shade800 : _primaryColor.withOpacity(0.9);
     final textWeight = hasMarkup ? FontWeight.bold : FontWeight.w500;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: headerColor,
         borderRadius: BorderRadius.circular(8),
@@ -420,9 +410,9 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                   Expanded(
                     child: SliderTheme(
                       data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: Colors.orange,
-                        inactiveTrackColor: Colors.orange.shade100,
-                        thumbColor: Colors.orange.shade800,
+                        activeTrackColor: markupAccent,
+                        inactiveTrackColor: markupAccent.withOpacity(0.2),
+                        thumbColor: markupAccent.shade700,
                         trackHeight: 4,
                         overlayShape:
                             const RoundSliderOverlayShape(overlayRadius: 18),
@@ -475,7 +465,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                             suffixStyle: TextStyle(
                               fontSize: 12,
                               color: hasMarkup
-                                  ? Colors.orange.shade700
+                                  ? markupAccent.shade700
                                   : Colors.blue.shade300,
                               fontWeight: FontWeight.bold,
                             ),
@@ -500,7 +490,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: hasMarkup
-                                ? Colors.orange.shade900
+                                ? markupAccent.shade800
                                 : Colors.blue.shade900,
                           ),
                           onTap: () {
@@ -536,7 +526,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                               size:
                                   18, // Increased icon size for better visibility
                               color: widget.markupPercent > 0
-                                  ? Colors.orange.shade800
+                                  ? markupAccent.shade700
                                   : Colors.grey.withOpacity(0.3)),
                           tooltip: "Сброс",
                           padding: EdgeInsets.zero,
@@ -647,8 +637,49 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     if (buttons.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(children: buttons),
+    );
+  }
+
+  Widget _buildItemsCaption(int itemCount) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+      child: Row(
+        children: [
+          Icon(
+            _isWorkTab ? Icons.handyman_outlined : Icons.inventory_2_outlined,
+            size: 14,
+            color: _primaryColor.withOpacity(0.85),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            _isWorkTab ? 'Позиции работ' : 'Позиции материалов',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey.shade800,
+            ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: _primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(color: _primaryColor.withOpacity(0.18)),
+            ),
+            child: Text(
+              '$itemCount',
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                color: _primaryColor,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -712,19 +743,21 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       child: CustomScrollView(
         primary: false,
         slivers: [
-          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
           if (!widget.hideTopActions)
             SliverToBoxAdapter(child: _buildActionButtons()),
+          SliverToBoxAdapter(child: _buildItemsCaption(widget.items.length)),
 
           if (widget.items.isEmpty)
             const SliverToBoxAdapter(
               child: FriendlyEmptyState(
                 icon: Icons.inventory_2_outlined,
                 title: 'Нет позиций',
-                subtitle: 'Добавьте первую позицию вручную или через автоматизацию.',
+                subtitle:
+                    'Добавьте первую позицию вручную или через автоматизацию.',
                 accentColor: Colors.blueGrey,
-                iconSize: 72,
+                iconSize: 66,
                 padding: EdgeInsets.all(8),
               ),
             )
@@ -732,12 +765,16 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             for (var category in sortedCategories) ...[
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GroupHeader(title: category, color: _primaryColor),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: GroupHeader(
+                    title: category,
+                    color: _primaryColor,
+                    itemCount: groupedItems[category]?.length,
+                  ),
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -756,7 +793,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                   ),
                 ),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 4)),
+              const SliverToBoxAdapter(child: SizedBox(height: 2)),
             ],
 
           // Total Section - Detailed Dashboard (Hidden if prices hidden)
@@ -789,12 +826,19 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
           // Notes & Remarks Section - at the bottom
           SliverToBoxAdapter(
             child: Container(
-              margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 20),
+              margin: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
               decoration: BoxDecoration(
-                color: _primaryColorLight.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _primaryColor.withOpacity(0.12)),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -802,7 +846,6 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                   _buildInputField(
                     label: "Примечания (для сметы)",
                     controller: _remarksCtrl,
-                    icon: Icons.description_outlined,
                     onChanged: _onRemarksChanged,
                     suffix: _buildSuffix(isSaving: _savingRemarks),
                   ),
@@ -815,7 +858,6 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                   _buildInputField(
                     label: "Заметки (для себя)",
                     controller: _noteCtrl,
-                    icon: Icons.sticky_note_2_outlined,
                     onChanged: _onNoteChanged,
                     suffix: _buildSuffix(isSaving: _savingNote),
                   ),

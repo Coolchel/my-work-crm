@@ -298,6 +298,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         child: FloatingActionButton(
           heroTag: 'add_estimate_item',
           onPressed: _showSearchDialog,
+          backgroundColor:
+              _currentIndex == 0 ? Colors.green.shade500 : Colors.blue.shade500,
+          foregroundColor: Colors.white,
           // tooltip: 'Добавить позицию', // Removed
           child: const Icon(Icons.add),
         ),

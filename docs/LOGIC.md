@@ -81,6 +81,9 @@ Triggered when Materials are updated.
     *   Domain/transport errors -> snackbar.
     *   Input validation failures -> inline field error.
     *   Success snackbar should be omitted when UI already reflects the completed action directly.
+*   **Estimate Dense UI Invariance:**
+    *   Compact redesign of estimate rows/groups is presentation-only.
+    *   Existing payloads, calculations, rounding, and stage update side-effects remain unchanged.
 *   **No-Data Presentation Rule:**
     *   Any UI branch with `items.isEmpty`/`data.isEmpty` should render a unified friendly empty-state widget with icon + explanatory text.
     *   Empty-state rendering must not change existing data fetch/update flow; it is presentation-only.

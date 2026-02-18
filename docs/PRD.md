@@ -25,6 +25,7 @@ Create a premium, professional tool for electricians to manage projects, estimat
 *   **Stage:** A phase of work (e.g., "Rough-in", "Finishing"). Contains the Estimate.
 *   **Estimate (Smeta):** Divided into **Works** and **Materials**.
     *   **Smart Calculator:** Input 2 of 3 values (Total, Me, Partner) -> 3rd is auto-calculated.
+    *   **Dense Estimate Workspace:** Works/Materials lists use compact card rows to keep many positions visible per screen while preserving existing estimate actions.
 *   **Engineering Map:**
     *   **Shields (Power):** Hierarchical structure (Shield -> Groups -> Devices).
     *   **Multimedia/LED:** Low-voltage systems and LED zones.
