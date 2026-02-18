@@ -354,13 +354,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.all(40),
+    return const Padding(
+      padding: EdgeInsets.all(40),
       child: Column(
         children: [
           Icon(Icons.check_circle_outline, size: 56, color: Colors.green),
-          const SizedBox(height: 12),
-          const Text(
+          SizedBox(height: 12),
+          Text(
             'Все этапы оплачены!',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),

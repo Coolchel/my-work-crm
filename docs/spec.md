@@ -20,8 +20,7 @@
     *   *Active Objects:* Unique projects with active stages.
     *   *Paid:* Count of paid stages.
 *   **Recent Projects:** Sorted by update time.
-*   **Recent Projects Hover:** Card hover behavior must match "Objects" section interaction style.
-    *   Hover highlight should stay card-level (surface/border/shadow) and avoid isolated text-only highlight effect.
+*   **Recent Projects Hover:** Card interaction in Home recent list follows the same visual behavior as `Stages` cards (no extra custom hover animation layer).
 
 ## 3. Project Management
 *   **Structure:**
@@ -122,12 +121,17 @@
     *   Header must stay visually expressive (gradient + icon + title) while remaining mobile-friendly in height.
     *   Header title typography should avoid over-bold rendering: prefer readable medium/semi-bold weight with slightly increased visual size.
     *   Detail sub-sections may show contextual subtitle (e.g., object address or selected directory entity).
-    *   Header keeps a small unified bottom gap before content to improve vertical rhythm.
+    *   Header keeps a unified bottom gap before content; non-home sections use increased spacing for clearer visual rhythm.
+    *   `Home` keeps its own hero spacing model and is not constrained by compact-section header gap rules.
+    *   `Statistics` keeps a compact header-to-content spacing profile compared to other sections.
 *   **Main Tabs Motif Rule:**
     *   `Home` remains the primary hero-gradient screen.
     *   `Objects`, `Finance`, and `Statistics` reuse the same motif in a restrained compact-header gradient (no layout or height increase).
 *   **Statistics Accent Rule:**
     *   Top period switch and decorative section stripes in `Statistics` use brand blue/indigo accent tokens.
+*   **Statistics Refresh UX Rule:**
+    *   Changing period in statistics updates data content without full-screen loading replacement.
+    *   No moving top loading bar should appear under the header on period switch.
 
 ## 9. Visual Consistency Contracts
 *   **Shared Background Contract:** Primary app screens use one common soft-light app background; foreground cards/dialogs remain visually distinct on light surfaces.

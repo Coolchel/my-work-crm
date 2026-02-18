@@ -80,13 +80,13 @@
 *   **Bottom Labels Visibility:** Labels remain visible under icons in bottom navigation for primary sections.
 *   **Settings Entry Point:** Top-right settings icon in Home header gradient block.
 *   **Header Balance:** Keep greeting text area dominant while preserving touch-friendly settings icon hit target.
-*   **Recent Objects Hover Tone:** Home recent object rows use subtle card-level tint/border/shadow hover; avoid isolated text-only highlight.
+*   **Recent Objects Interaction Tone:** Home recent object rows follow `Stages` card interaction behavior (clean static card surface with standard tap/ink response, without additional custom hover animation layer).
 
 ### 3.5. Section Header Typography
 *   **Weight:** Use medium/semi-bold title weight to avoid visually heavy section names.
 *   **Scale:** Keep title slightly larger for quicker recognition on desktop and mobile.
 *   **Subtitle Contrast:** Subtitle remains lighter to preserve hierarchy under section title.
-*   **Header-to-Content Rhythm:** Compact section headers keep a small unified bottom gap so body content does not start too close to header chrome.
+*   **Header-to-Content Rhythm:** Compact section headers keep an increased bottom gap in most sections for clearer separation; `Statistics` intentionally stays more compact, and `Home` follows its own hero rhythm.
 
 ### 3.6. Project Files Tab
 *   **Category Cards:** File category sections in project detail follow the same card family as `Objects`/`Stages` (neutral white surface, subtle shadow, compact readable typography, left accent stripe, `Clip.antiAlias`).
@@ -104,6 +104,7 @@
 
 ### 3.8. Statistics Accent Tone
 *   **Top Period Switch + Header Stripe:** Use app-brand blue/indigo accent family for selected states and decorative header stripes.
+*   **Refresh Presentation:** Period switch updates statistics content without replacing the whole page with a loading state and without any moving top loading bar under the header.
 
 ## 4. Icons & Assets
 *   **Style:** Material Symbols Rounded.

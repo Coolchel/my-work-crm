@@ -81,6 +81,10 @@ Triggered when Materials are updated.
     *   Domain/transport errors -> snackbar.
     *   Input validation failures -> inline field error.
     *   Success snackbar should be omitted when UI already reflects the completed action directly.
+*   **Statistics Period Switching:**
+    *   Selecting the same period value must not trigger a new state update/fetch.
+    *   On period change, previously loaded statistics remain visible while fresh data is requested.
+    *   Period switching must not show a separate moving top loading bar under section header.
 
 
 ## 5. Directory (Reference Book) Logic

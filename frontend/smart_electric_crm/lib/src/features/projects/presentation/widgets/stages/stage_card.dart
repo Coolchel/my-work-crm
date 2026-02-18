@@ -136,12 +136,12 @@ class _StageCardState extends State<StageCard> {
                                   border: Border.all(
                                       color: Colors.green.withOpacity(0.2)),
                                 ),
-                                child: Row(
+                                child: const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(Icons.check_circle_rounded,
                                         size: 10, color: Colors.green),
-                                    const SizedBox(width: 3),
+                                    SizedBox(width: 3),
                                     Text(
                                       'ОПЛАЧЕНО',
                                       style: TextStyle(
