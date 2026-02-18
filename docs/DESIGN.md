@@ -58,7 +58,7 @@
     *   default/no stages -> Indigo;
     *   `precalc` only -> BlueGrey;
     *   `stage_1` / `stage_2` / `stage_1_2` -> Blue;
-    *   `stage_3` -> Green;
+    *   `stage_3` with at least one work estimate position -> Green;
     *   `other` (or `precalc`+`other`) -> Amber;
     *   `extra` (or `precalc`+`extra`) -> Purple;
     *   core production stages (`stage_1/2/1+2/3`) visually override `other/extra`.
@@ -123,6 +123,7 @@
 *   **Group Readability:** Category headers stay compact and show per-group item count for quick scanning.
 *   **Interaction Consistency:** Rows support standard pointer hover tint and preserve tap-to-edit with inline delete action.
 *   **Behavior Contract:** UI refresh does not change estimate business behavior (editing, delete confirmation flow, totals, markup controls, note fields).
+*   **Actions Menu Transfer Dialogs:** `Precalc -> Works/Materials` replacement confirmations keep section semantics: green accent for Works, blue accent for Materials.
 
 ## 4. Icons & Assets
 *   **Style:** Material Symbols Rounded.

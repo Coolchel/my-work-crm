@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/features/projects/data/models/stage_model.dart';
 
 class ProjectStageColorResolver {
   static const Set<String> _coreBlueStages = {
@@ -7,14 +8,21 @@ class ProjectStageColorResolver {
     'stage_2',
   };
 
-  static Color resolveStripeColor(Iterable<String> stageTitles) {
-    final titles = stageTitles.toSet();
+  static Color resolveStripeColor(Iterable<StageModel> stages) {
+    final stageList = stages.toList();
+    final titles = stageList.map((stage) => stage.title).toSet();
 
     if (titles.isEmpty) {
       return Colors.indigo;
     }
 
-    if (titles.contains('stage_3')) {
+    final hasStage3WithWorks = stageList.any(
+      (stage) =>
+          stage.title == 'stage_3' &&
+          stage.estimateItems.any((item) => item.itemType == 'work'),
+    );
+
+    if (hasStage3WithWorks) {
       return Colors.green;
     }
 

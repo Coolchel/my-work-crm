@@ -31,7 +31,7 @@
         *   No stages -> Indigo (default).
         *   Has `precalc` only -> BlueGrey.
         *   Has `stage_1` / `stage_2` / `stage_1_2` -> Blue.
-        *   Has `stage_3` -> Green.
+        *   Has `stage_3` with at least one estimate item of type `work` -> Green.
         *   Only `other` (or `precalc` + `other`) -> Amber.
         *   Only `extra` (or `precalc` + `extra`) -> Purple.
         *   If `stage_1`/`stage_2`/`stage_1_2` or `stage_3` is present together with `other`/`extra`, core stage colors (Blue/Green) take priority.
@@ -57,6 +57,11 @@
 *   **Automation (Import):**
     *   **Shield -> Materials:** Devices in Shield map to Catalog Items via `mapping_key`.
     *   **Materials -> Works:** Materials map to Works via `related_work_item` or `aggregation_key`.
+    *   **Precalc -> Stage 1/2/1+2 (Manual Action):**
+        *   In estimate `Actions` menu, a transfer action is shown only for stages `stage_1`, `stage_2`, `stage_1_2`.
+        *   Action is available only when project has `precalc` stage with at least one position in the current section (`materials` or `works`).
+        *   On confirm, current section positions are fully replaced by positions from project `precalc` stage in the same section.
+        *   If target section is non-empty, user must pass confirmation dialog before replacement.
 *   **Reporting:**
     *   **Client:** Total amount.
     *   **Partner:** Their share (`employer_quantity`).

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/estimate_item_model.dart';
 import '../../data/models/stage_model.dart';
+import '../../data/repositories/project_repository.dart';
 import '../providers/project_providers.dart';
 import '../widgets/estimate/estimate_tab.dart';
 import '../dialogs/estimate/add_item_dialog.dart';
@@ -42,15 +43,26 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   bool _isImportingShields = false;
   bool _isCalculatingWorks = false;
   bool _isApplyingTemplate = false;
+  bool _isImportingFromPrecalc = false;
 
   // Local state for items (for optimistic updates and display)
   List<EstimateItemModel> _items = [];
   late StageModel _stage;
+  List<EstimateItemModel> _precalcWorkItems = const [];
+  List<EstimateItemModel> _precalcMaterialItems = const [];
 
   List<EstimateItemModel> get _works =>
       _items.where((i) => i.itemType == 'work').toList();
   List<EstimateItemModel> get _materials =>
       _items.where((i) => i.itemType != 'work').toList();
+  bool get _isTransferStage =>
+      _stage.title == 'stage_1' ||
+      _stage.title == 'stage_2' ||
+      _stage.title == 'stage_1_2';
+  bool get _canImportWorksFromPrecalc =>
+      _isTransferStage && _precalcWorkItems.isNotEmpty;
+  bool get _canImportMaterialsFromPrecalc =>
+      _isTransferStage && _precalcMaterialItems.isNotEmpty;
 
   @override
   void initState() {
@@ -69,15 +81,53 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       final repo = ref.read(projectRepositoryProvider);
       // Fetch stage data including items
       final stage = await repo.fetchStage(widget.stage.id);
+      final precalcItems = await _fetchPrecalcItems(repo, stage.title);
       if (mounted) {
         setState(() {
           _items = stage.estimateItems;
           _stage = stage;
           _markupPercent = stage.markupPercent;
+          _precalcWorkItems = precalcItems['work'] ?? const [];
+          _precalcMaterialItems = precalcItems['material'] ?? const [];
         });
       }
     } catch (e) {
       debugPrint('Error refreshing estimate: $e');
+    }
+  }
+
+  Future<Map<String, List<EstimateItemModel>>> _fetchPrecalcItems(
+    ProjectRepository repo,
+    String stageTitle,
+  ) async {
+    if (stageTitle != 'stage_1' &&
+        stageTitle != 'stage_2' &&
+        stageTitle != 'stage_1_2') {
+      return const {'work': [], 'material': []};
+    }
+
+    try {
+      final project = await repo.fetchProject(widget.projectId);
+      final precalcStage = project.stages.where((s) => s.title == 'precalc');
+      if (precalcStage.isEmpty) {
+        return const {'work': [], 'material': []};
+      }
+
+      final precalc = await repo.fetchStage(precalcStage.first.id);
+      final workItems = precalc.estimateItems
+          .where((item) => item.itemType == 'work')
+          .toList();
+      final materialItems = precalc.estimateItems
+          .where((item) => item.itemType != 'work')
+          .toList();
+
+      return {
+        'work': workItems,
+        'material': materialItems,
+      };
+    } catch (e) {
+      debugPrint('Error fetching precalc items: $e');
+      return const {'work': [], 'material': []};
     }
   }
 
@@ -143,6 +193,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                     _showMaterialTemplatesDialog();
                   }
                   break;
+                case 'import_from_precalc':
+                  _importFromPrecalc();
+                  break;
                 case 'save_template':
                   _showSaveTemplateDialog(
                       _currentIndex == 0 ? 'work' : 'material');
@@ -178,6 +231,26 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                     ],
                   ),
                 ),
+                if ((isWork && _canImportWorksFromPrecalc) ||
+                    (!isWork && _canImportMaterialsFromPrecalc)) ...[
+                  PopupMenuItem(
+                    value: 'import_from_precalc',
+                    enabled: !_isImportingFromPrecalc,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.move_down_rounded,
+                          color: Colors.grey.shade600,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(_isImportingFromPrecalc
+                            ? 'Перенос...'
+                            : 'Перенести из предпросчета'),
+                      ],
+                    ),
+                  ),
+                ],
                 const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'apply_template',
@@ -664,6 +737,71 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           .showSnackBar(SnackBar(content: Text("Ошибка расчета: $e")));
     } finally {
       if (mounted) setState(() => _isCalculatingWorks = false);
+    }
+  }
+
+  Future<void> _importFromPrecalc() async {
+    final isWork = _currentIndex == 0;
+    final sourceItems = isWork ? _precalcWorkItems : _precalcMaterialItems;
+    final targetItems = isWork ? _works : _materials;
+    final sectionName = isWork ? 'работ' : 'материалов';
+    final themeColor = isWork ? Colors.green : Colors.blue;
+
+    if (sourceItems.isEmpty) return;
+
+    if (targetItems.isNotEmpty) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        barrierColor: Colors.transparent,
+        builder: (ctx) => ConfirmationDialog(
+          title: 'Перенос',
+          content:
+              'Текущие позиции раздела $sectionName будут удалены и заменены позициями из этапа "Предпросчет". Продолжить?',
+          confirmText: 'Перенести',
+          themeColor: themeColor,
+        ),
+      );
+      if (confirm != true) return;
+    }
+
+    setState(() => _isImportingFromPrecalc = true);
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+
+      for (final item in targetItems) {
+        await repo.deleteEstimateItem(item.id);
+      }
+
+      for (final source in sourceItems) {
+        await repo.addEstimateItem({
+          'stage': widget.stage.id,
+          'item_type': source.itemType,
+          'name': source.name,
+          'unit': source.unit,
+          'price_per_unit': source.pricePerUnit ?? 0.0,
+          'currency': source.currency,
+          'total_quantity': source.totalQuantity,
+          'employer_quantity': source.employerQuantity,
+        });
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Позиции $sectionName перенесены из этапа "Предпросчет": ${sourceItems.length}',
+          ),
+        ),
+      );
+      ref.invalidate(projectListProvider);
+      await _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка переноса из предпросчета: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isImportingFromPrecalc = false);
     }
   }
 

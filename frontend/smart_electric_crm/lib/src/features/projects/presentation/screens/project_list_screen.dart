@@ -651,7 +651,7 @@ class _ProjectCardState extends State<_ProjectCard> {
     final createdAt = project.createdAt;
     final updatedAt = project.updatedAt;
     final stripeColor = ProjectStageColorResolver.resolveStripeColor(
-      project.stages.map((stage) => stage.title),
+      project.stages,
     );
 
     final isEdited =

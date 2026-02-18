@@ -40,6 +40,21 @@ Triggered when Materials are updated.
     3.  System inserts items from the template.
 *   **Safety:** Must trigger `ConfirmationDialog` before execution to prevent data loss.
 
+### 2.4. Precalc -> Active Stage Transfer (Estimate Sections)
+Triggered manually from estimate `Actions` menu.
+1.  **Availability:**
+    *   Current stage title must be one of `stage_1`, `stage_2`, `stage_1_2`.
+    *   Project must contain `precalc` stage.
+    *   `precalc` must have at least one estimate item in the currently opened section (`work` for Works tab, non-`work` for Materials tab).
+2.  **Confirmation Rule:**
+    *   If current section already has items, show confirmation dialog before replacement.
+3.  **Apply Rule (Clear & Replace):**
+    *   Delete all current section items in target stage.
+    *   Create new section items in target stage by copying fields from `precalc` section items (`item_type`, `name`, `unit`, `price_per_unit`, `currency`, `total_quantity`, `employer_quantity`).
+4.  **Scope Isolation:**
+    *   Works transfer affects only `work` items.
+    *   Materials transfer affects only non-`work` items.
+
 ## 3. Engineering Logic
 ### 3.1. Shield Sizing
 *   **Power:** `Modules = Sum(DeviceWidths)`. 1P=1, 2P=2, 3P=3, 4P=4.
@@ -68,7 +83,7 @@ Triggered when Materials are updated.
 *   **Project List Stripe Color Priority (By Stage Composition):**
     *   Priority order: `stage_3` -> `stage_1/stage_2/stage_1_2` -> `extra/other` -> `precalc` -> default.
     *   Mapping:
-        *   `stage_3` present -> Green.
+        *   `stage_3` present with at least one `work` estimate item -> Green.
         *   `stage_1` / `stage_2` / `stage_1_2` present (without `stage_3`) -> Blue.
         *   `extra` present (without core stages) -> Purple.
         *   `other` present (without core stages and without `extra`) -> Amber.
