@@ -76,9 +76,11 @@
     *   **Active:** Green border (width 2.0) when expanded.
     *   **Paid Badge:** Green Pill with "PAID" text.
     *   **Expanded Surface:** Keep expanded card/body fill soft and low-intensity in green (subtle tint only).
+    *   **Family Alignment:** Card composition/spacing should visually align with shared Objects/Stages card family (same corner rhythm, neutral white base surface, compact metadata pills), with green used as semantic accent only.
 *   **Stage Date Label:** Use neutral black/grey date colors under stage names (no warning/error hue coding).
 *   **Pay Toggle Button:** Stage payment button uses compact rounded pill style with soft green tint and subtle hover shadow.
 *   **All Positions Hover:** Every clickable finance position has hover highlight (not only parent project card).
+*   **Section Labeling:** Finance list area may include a compact top caption with project-count pill to match section hierarchy patterns used in other modules.
 
 ### 3.4. Home Header & Main Navigation
 *   **Bottom Main Navigation:** Includes `Р“Р»Р°РІРЅР°СЏ`, `РћР±СЉРµРєС‚С‹`, `Р¤РёРЅР°РЅСЃС‹`, `РЎС‚Р°С‚РёСЃС‚РёРєР°`; no `Settings` destination.

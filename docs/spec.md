@@ -77,6 +77,8 @@
 *   **Stage Date Tone:** Stage date labels under project headers use neutral text tones (black/grey), not alert colors.
 *   **Pay Toggle UI:** "РћРїР»Р°С‡РµРЅРѕ/РќРµ РѕРїР»Р°С‡РµРЅРѕ" control in stage rows uses compact modern pill styling while preserving existing action behavior.
 *   **Hover Consistency:** All interactive finance list positions use the same hover feedback pattern for pointer devices.
+*   **Card Family Consistency:** Finance project cards and nested stage rows follow the same visual family as Objects/Stages cards (neutral surface, shared radius/spacing rhythm, accent stripe semantics), while preserving existing finance interactions and calculations.
+*   **Finance Service States:** Finance loading/error empty-service states use friendly centered presentation with explicit retry action for recoverable fetch failures.
 
 ## 7. Catalog & Directory (Admin)
 *   **Catalog:**
