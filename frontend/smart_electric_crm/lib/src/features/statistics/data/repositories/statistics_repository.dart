@@ -40,6 +40,7 @@ class StatisticsFilter extends _$StatisticsFilter {
   String build() => 'month'; // По умолчанию "За текущий месяц"
 
   void setPeriod(String period) {
+    if (state == period) return;
     state = period;
   }
 }

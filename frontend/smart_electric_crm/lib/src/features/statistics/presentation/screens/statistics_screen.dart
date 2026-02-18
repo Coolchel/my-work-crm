@@ -28,7 +28,9 @@ class StatisticsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(statisticsDataProvider);
     final currentPeriod = ref.watch(statisticsFilterProvider);
-    const statisticsAccent = Color(0xFF4352B1);
+    final statisticsAccent =
+        Theme.of(context).floatingActionButtonTheme.backgroundColor ??
+            Colors.indigo;
 
     return Scaffold(
       appBar: const CompactSectionAppBar(
@@ -38,6 +40,8 @@ class StatisticsScreen extends ConsumerWidget {
         bottomGap: 10,
       ),
       body: statsAsync.when(
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('Ошибка: $error')),
         data: (stats) => RefreshIndicator(
@@ -76,26 +80,26 @@ class StatisticsScreen extends ConsumerWidget {
                     style: ButtonStyle(
                       visualDensity: VisualDensity.compact,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      side: MaterialStateProperty.all(BorderSide(
-                          color: statisticsAccent.withOpacity(0.26))),
+                      side: MaterialStateProperty.all(
+                          BorderSide(color: statisticsAccent)),
                       backgroundColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return statisticsAccent.withOpacity(0.12);
+                          return statisticsAccent;
                         }
                         return Colors.transparent;
                       }),
                       foregroundColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return statisticsAccent;
+                          return Colors.white;
                         }
                         return Colors.black87;
                       }),
                       iconColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return statisticsAccent;
+                          return Colors.white;
                         }
                         return Colors.grey;
                       }),
@@ -265,8 +269,7 @@ class StatisticsScreen extends ConsumerWidget {
           width: 4,
           height: 18,
           decoration: BoxDecoration(
-              color: stripeColor.withOpacity(0.6),
-              borderRadius: BorderRadius.circular(2)),
+              color: stripeColor, borderRadius: BorderRadius.circular(2)),
         ),
         const SizedBox(width: 8),
         Text(
