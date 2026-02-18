@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
+import '../../../../shared/presentation/widgets/friendly_empty_state.dart';
 
 class TemplateSelectionDialog<T> extends StatelessWidget {
   final String title;
@@ -90,20 +91,14 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
             // Content
             Expanded(
               child: templates.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.content_paste_off,
-                              size: 40, color: Colors.grey.shade300),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Нет доступных шаблонов",
-                            style: TextStyle(
-                                color: Colors.grey.shade500, fontSize: 13),
-                          ),
-                        ],
-                      ),
+                  ? FriendlyEmptyState(
+                      icon: Icons.content_paste_off_rounded,
+                      title: 'Нет доступных шаблонов',
+                      subtitle: 'Сохраните текущий набор как шаблон и используйте его повторно.',
+                      accentColor: themeColor,
+                      iconSize: 62,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 22),
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(12),

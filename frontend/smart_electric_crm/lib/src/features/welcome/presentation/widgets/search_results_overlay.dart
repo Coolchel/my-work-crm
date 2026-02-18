@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../../../projects/presentation/screens/project_detail_screen.dart';
 import '../../../projects/data/models/project_model.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class SearchResultsOverlay extends ConsumerWidget {
   const SearchResultsOverlay({super.key});
@@ -37,22 +38,13 @@ class SearchResultsOverlay extends ConsumerWidget {
           child: projectsAsync.when(
             data: (projects) {
               if (projects.isEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.search_off, size: 48, color: Colors.grey[300]),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Ничего не найдено',
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[500],
-                            fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
+                return const FriendlyEmptyState(
+                  icon: Icons.search_off_rounded,
+                  title: 'Ничего не найдено',
+                  subtitle: 'Попробуйте изменить запрос.',
+                  accentColor: Colors.blueGrey,
+                  iconSize: 62,
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                 );
               }
               return ListView.separated(

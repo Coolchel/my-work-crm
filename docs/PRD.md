@@ -5,6 +5,7 @@ Create a premium, professional tool for electricians to manage projects, estimat
 
 ## 2. Core Principles
 *   **Premium Aesthetics:** Use Glassmorphism, specific Color Palettes (Indigo, Teal, Orange), and custom UI components to avoid "default Flutter look".
+*   **Friendly Empty States:** Any "no content yet" scenario should use a polished centered empty-state block with a subtle large icon and explanatory text, not plain one-line placeholders.
 *   **Automation:** Minimizing manual entry. Engineering data (Shields) automatically generates Estimates (Materials & Works).
 *   **Data Integrity:** "Safe" saving mechanisms, strict validation, and conflict resolution (e.g., smart merge logic for calculations).
 *   **Controlled Admin Access:** Entry to high-impact admin areas (Directory) must require explicit warning + credential confirmation for the current account.

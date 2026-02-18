@@ -6,6 +6,7 @@ import '../../data/repositories/statistics_repository.dart';
 import '../widgets/work_dynamics_chart.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../../../core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class StatisticsScreen extends ConsumerWidget {
   const StatisticsScreen({super.key});
@@ -375,15 +376,21 @@ class StatisticsScreen extends ConsumerWidget {
   Widget _buildPieChartCard(List<_ChartData> data, {int paletteOffset = 0}) {
     if (data.isEmpty) {
       return Container(
-          height: 300,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.withOpacity(0.1)),
-          ),
-          child: Center(
-              child: Text('Нет данных',
-                  style: TextStyle(color: Colors.grey[500]))));
+        height: 300,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        ),
+        child: const FriendlyEmptyState(
+          icon: Icons.pie_chart_outline_rounded,
+          title: 'Нет данных',
+          subtitle: 'Данные появятся после добавления активности.',
+          accentColor: Colors.indigo,
+          iconSize: 64,
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      );
     }
 
     // Reverted palette (Mixed colors)

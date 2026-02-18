@@ -43,6 +43,11 @@
 *   **Shape/Depth/Spacing:** One primary medium radius token, soft low-intensity elevation presets, and base screen/card paddings are centralized and reused.
 *   **Hero Motif Echo:** Home keeps the strongest hero gradient; Objects/Finance/Statistics use a restrained top gradient motif in compact headers without increasing header height.
 
+### 2.5. Friendly Empty States
+*   **Visual Pattern:** Use a centered lightweight card with a large desaturated icon, short title, and concise helper subtitle.
+*   **Tone:** Text remains neutral and helpful (actionable hint), avoiding dry "empty/no data" one-liners.
+*   **Reuse:** The same empty-state component is used across sections (Objects, Stages, Estimates, Shields, Files, Catalog, Search, Statistics, Finance) to keep visual language consistent.
+
 ## 3. Specific Screens
 
 ### 3.1. Project Header (V6)

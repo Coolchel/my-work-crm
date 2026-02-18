@@ -4,6 +4,7 @@ import '../../../../engineering/data/models/shield_model.dart';
 import '../../../../engineering/data/models/shield_group_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
+import '../../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/shield_group_dialog.dart';
 // import '../../dialogs/engineering/apply_template_dialog.dart'; // Removed
@@ -70,23 +71,13 @@ class ShieldContentPower extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         if (groups.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 40.0),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade100),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.inventory_2_outlined,
-                    size: 40, color: Colors.grey.shade300),
-                const SizedBox(height: 12),
-                const Text('Список групп пуст',
-                    style: TextStyle(color: Colors.grey, fontSize: 13)),
-              ],
-            ),
+          const FriendlyEmptyState(
+            icon: Icons.inventory_2_outlined,
+            title: 'Список групп пуст',
+            subtitle: 'Добавьте первую группу устройств для этого щита.',
+            accentColor: Colors.blueGrey,
+            iconSize: 62,
+            padding: EdgeInsets.symmetric(vertical: 10),
           )
         else
           ...sortedKeys.map((type) {

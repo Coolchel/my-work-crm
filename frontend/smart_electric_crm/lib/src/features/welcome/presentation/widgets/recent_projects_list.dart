@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../projects/data/models/project_model.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../../../projects/presentation/screens/project_detail_screen.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class RecentProjectsList extends ConsumerWidget {
   const RecentProjectsList({super.key});
@@ -102,7 +103,14 @@ class RecentProjectsList extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              const Center(child: Text("Нет проектов по выбранному критерию")),
+              const FriendlyEmptyState(
+                icon: Icons.filter_alt_off_rounded,
+                title: 'Нет проектов по выбранному критерию',
+                subtitle: 'Попробуйте другой фильтр или сбросьте текущий.',
+                accentColor: Colors.blueGrey,
+                iconSize: 58,
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              ),
             ],
           );
         }

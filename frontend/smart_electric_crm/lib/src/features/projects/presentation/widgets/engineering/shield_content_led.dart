@@ -4,6 +4,7 @@ import '../../../../engineering/data/models/shield_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../../../engineering/data/models/led_zone_model.dart';
 import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
+import '../../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/led_zone_dialog.dart';
 // import '../../dialogs/engineering/apply_template_dialog.dart';
@@ -54,23 +55,13 @@ class ShieldContentLed extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         if (zones.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 40.0),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.withOpacity(0.1)),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.lightbulb_outline_rounded,
-                    size: 32, color: Colors.grey.shade300),
-                const SizedBox(height: 12),
-                const Text('Список зон пуст',
-                    style: TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
-            ),
+          const FriendlyEmptyState(
+            icon: Icons.lightbulb_outline_rounded,
+            title: 'Список зон пуст',
+            subtitle: 'Добавьте первую LED-зону для этого щита.',
+            accentColor: Colors.purple,
+            iconSize: 60,
+            padding: EdgeInsets.symmetric(vertical: 10),
           )
         else
           ...zones.map((zone) => Padding(

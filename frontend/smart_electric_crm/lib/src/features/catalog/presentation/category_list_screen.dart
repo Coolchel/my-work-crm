@@ -11,6 +11,7 @@ import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart
 import 'package:smart_electric_crm/src/features/catalog/domain/directory_models.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class CategoryListScreen extends ConsumerStatefulWidget {
   const CategoryListScreen({super.key});
@@ -292,14 +293,13 @@ class _SystemSectionsTab extends ConsumerWidget {
     return sectionsAsync.when(
       data: (sections) {
         if (sections.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Text(
-                'Разделы не найдены. Нажмите "Синхронизировать" или создайте раздел вручную.',
-                textAlign: TextAlign.center,
-              ),
-            ),
+          return const FriendlyEmptyState(
+            icon: Icons.schema_outlined,
+            title: 'Разделы не найдены',
+            subtitle:
+                'Нажмите "Синхронизировать" или создайте раздел вручную.',
+            accentColor: Colors.indigo,
+            padding: EdgeInsets.all(24),
           );
         }
 
@@ -453,7 +453,12 @@ class _SectionEntriesScreen extends ConsumerWidget {
       body: entriesAsync.when(
         data: (entries) {
           if (entries.isEmpty) {
-            return const Center(child: Text('В этом разделе пока нет записей'));
+            return const FriendlyEmptyState(
+              icon: Icons.list_alt_rounded,
+              title: 'В этом разделе пока нет записей',
+              subtitle: 'Добавьте первую запись, чтобы заполнить справочник.',
+              accentColor: Colors.teal,
+            );
           }
 
           return ListView.builder(
@@ -598,8 +603,11 @@ class _CatalogTab extends ConsumerWidget {
     return categoriesAsync.when(
       data: (categories) {
         if (categories.isEmpty) {
-          return const Center(
-            child: Text('Категории справочника не созданы'),
+          return const FriendlyEmptyState(
+            icon: Icons.folder_open_rounded,
+            title: 'Категории справочника не созданы',
+            subtitle: 'Добавьте первую категорию каталога.',
+            accentColor: Colors.indigo,
           );
         }
 
@@ -753,8 +761,12 @@ class _CategoryItemsScreen extends ConsumerWidget {
       body: itemsAsync.when(
         data: (items) {
           if (items.isEmpty) {
-            return const Center(
-                child: Text('В этой категории пока нет позиций'));
+            return const FriendlyEmptyState(
+              icon: Icons.inventory_2_outlined,
+              title: 'В этой категории пока нет позиций',
+              subtitle: 'Добавьте первую позицию в эту категорию.',
+              accentColor: Colors.blue,
+            );
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 96),

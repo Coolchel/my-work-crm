@@ -9,6 +9,7 @@ import '../utils/project_stage_color_resolver.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 // ─── Filter enums ─────────────────────────────────────────────
 enum SortOrder { newest, oldest }
@@ -200,44 +201,31 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                 data: (projects) {
                   final filtered = _applyFilters(projects);
                   if (projects.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.apartment_outlined,
-                              size: 64, color: Colors.grey.shade300),
-                          const SizedBox(height: 16),
-                          Text('Нет объектов',
-                              style: TextStyle(
-                                  color: Colors.grey.shade400, fontSize: 16)),
-                        ],
-                      ),
+                    return const FriendlyEmptyState(
+                      icon: Icons.apartment_outlined,
+                      title: 'Объекты пока не добавлены',
+                      subtitle: 'Создайте первый объект, чтобы начать работу.',
+                      accentColor: Colors.indigo,
                     );
                   }
                   return filtered.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.filter_list_off,
-                                  size: 48, color: Colors.grey.shade300),
-                              const SizedBox(height: 12),
-                              Text(
-                                _searchQuery.isNotEmpty
-                                    ? 'Ничего не найдено'
-                                    : 'Нет объектов по заданным фильтрам',
-                                style: TextStyle(
-                                    color: Colors.grey.shade400, fontSize: 14),
-                              ),
-                              if (_hasActiveFilters) ...[
-                                const SizedBox(height: 12),
-                                TextButton(
+                      ? FriendlyEmptyState(
+                          icon: _searchQuery.isNotEmpty
+                              ? Icons.search_off_rounded
+                              : Icons.filter_list_off_rounded,
+                          title: _searchQuery.isNotEmpty
+                              ? 'Ничего не найдено'
+                              : 'Нет объектов по заданным фильтрам',
+                          subtitle: _searchQuery.isNotEmpty
+                              ? 'Попробуйте изменить поисковый запрос.'
+                              : 'Измените параметры фильтра или сбросьте их.',
+                          accentColor: Colors.blueGrey,
+                          action: _hasActiveFilters
+                              ? TextButton(
                                   onPressed: _resetFilters,
                                   child: const Text('Сбросить фильтры'),
-                                ),
-                              ],
-                            ],
-                          ),
+                                )
+                              : null,
                         )
                       : ListView.builder(
                           padding: const EdgeInsets.fromLTRB(

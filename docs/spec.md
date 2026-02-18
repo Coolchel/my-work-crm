@@ -136,6 +136,7 @@
 ## 9. Visual Consistency Contracts
 *   **Shared Background Contract:** Primary app screens use one common soft-light app background; foreground cards/dialogs remain visually distinct on light surfaces.
 *   **Bottom Navigation Consistency:** Main app nav, project-detail nav, and estimate nav share one tokenized visual family (bar height, icon sizing, selected-state pill/indicator, text emphasis).
+*   **Empty State Contract:** In list/section areas where data can be absent, UI shows a reusable centered empty-state component (large low-contrast icon + title + short friendly hint) instead of plain `Text` placeholders.
 
 ## 10. Feedback UX (Snackbar & Validation)
 *   **Error-first Snackbar:** keep snackbar primarily for operation/network/file errors.

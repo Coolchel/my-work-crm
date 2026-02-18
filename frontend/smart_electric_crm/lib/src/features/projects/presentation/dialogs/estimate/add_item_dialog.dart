@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 /// Dialog for searching and adding catalog items to an estimate
 class AddItemDialog extends ConsumerStatefulWidget {
@@ -191,20 +192,15 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
               child: _results.isEmpty &&
                       _searchController.text.isNotEmpty &&
                       !_loading
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.search_off,
-                              size: 40, color: Colors.grey.shade300),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Ничего не найдено",
-                            style: TextStyle(
-                                color: Colors.grey.shade500, fontSize: 13),
-                          ),
-                        ],
-                      ),
+                  ? FriendlyEmptyState(
+                      icon: Icons.search_off_rounded,
+                      title: 'Ничего не найдено',
+                      subtitle:
+                          'Попробуйте другой запрос или добавьте новую позицию вручную.',
+                      accentColor: themeColor,
+                      iconSize: 62,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 18),
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(12),

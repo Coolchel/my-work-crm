@@ -9,6 +9,7 @@ import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../../../projects/presentation/screens/estimate_screen.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
+import '../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 
 part 'finance_screen.g.dart';
@@ -354,18 +355,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   Widget _buildEmptyState() {
-    return const Padding(
-      padding: EdgeInsets.all(40),
-      child: Column(
-        children: [
-          Icon(Icons.check_circle_outline, size: 56, color: Colors.green),
-          SizedBox(height: 12),
-          Text(
-            'Все этапы оплачены!',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
+    return const FriendlyEmptyState(
+      icon: Icons.check_circle_outline_rounded,
+      title: 'Все этапы оплачены',
+      subtitle: 'Новых задолженностей сейчас нет.',
+      accentColor: Colors.green,
+      iconSize: 72,
+      padding: EdgeInsets.all(24),
     );
   }
 

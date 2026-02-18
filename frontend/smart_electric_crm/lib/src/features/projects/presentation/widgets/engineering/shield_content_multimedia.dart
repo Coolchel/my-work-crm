@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../engineering/data/models/shield_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
+import '../../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../dialogs/engineering/ethernet_lines_dialog.dart';
 import '../../providers/project_providers.dart';
 
@@ -160,23 +161,13 @@ class ShieldContentMultimedia extends ConsumerWidget {
             ),
           )
         else
-          // Заглушка когда нет линий
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 40.0),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade100),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.router, size: 40, color: Colors.grey.shade300),
-                const SizedBox(height: 12),
-                const Text('Ethernet линии не добавлены',
-                    style: TextStyle(color: Colors.grey, fontSize: 13)),
-              ],
-            ),
+          const FriendlyEmptyState(
+            icon: Icons.router_outlined,
+            title: 'Ethernet линии не добавлены',
+            subtitle: 'Добавьте количество линий, чтобы заполнить этот раздел.',
+            accentColor: Colors.green,
+            iconSize: 62,
+            padding: EdgeInsets.symmetric(vertical: 10),
           ),
       ],
     );

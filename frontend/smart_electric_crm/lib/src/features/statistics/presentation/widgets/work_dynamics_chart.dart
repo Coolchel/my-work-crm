@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/features/statistics/data/models/statistics_model.dart';
 import 'package:intl/intl.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class WorkDynamicsChart extends StatefulWidget {
   final List<WorkDynamicsData> data;
@@ -32,9 +33,14 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
   @override
   Widget build(BuildContext context) {
     if (widget.data.isEmpty) {
-      return const Center(
-          child: Text("Нет данных",
-              style: TextStyle(color: Colors.grey, fontSize: 12)));
+      return const FriendlyEmptyState(
+        icon: Icons.show_chart_rounded,
+        title: 'Нет данных',
+        subtitle: 'График появится, когда накопятся данные за период.',
+        accentColor: Colors.indigo,
+        iconSize: 62,
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      );
     }
 
     // Colors based on currency

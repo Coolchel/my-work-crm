@@ -5,6 +5,7 @@ import 'package:smart_electric_crm/src/features/projects/presentation/utils/deci
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_list_tile.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/group_header.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/total_dashboard.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 /// Tab widget for displaying estimate items (Materials or Works)
 class EstimateTab extends ConsumerStatefulWidget {
@@ -718,11 +719,15 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
 
           if (widget.items.isEmpty)
             const SliverToBoxAdapter(
-                child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Center(
-                        child: Text("Нет позиций",
-                            style: TextStyle(color: Colors.grey)))))
+              child: FriendlyEmptyState(
+                icon: Icons.inventory_2_outlined,
+                title: 'Нет позиций',
+                subtitle: 'Добавьте первую позицию вручную или через автоматизацию.',
+                accentColor: Colors.blueGrey,
+                iconSize: 72,
+                padding: EdgeInsets.all(8),
+              ),
+            )
           else
             for (var category in sortedCategories) ...[
               SliverToBoxAdapter(

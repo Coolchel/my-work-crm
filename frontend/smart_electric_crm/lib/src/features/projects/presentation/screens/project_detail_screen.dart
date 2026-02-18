@@ -14,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 import 'dart:io';
 import '../../data/models/project_file_model.dart';
 import '../../../../shared/services/temp_file_service.dart';
@@ -297,14 +298,12 @@ class _StagesTab extends ConsumerWidget {
             const SizedBox(height: 16),
 
             if (project.stages.isEmpty)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Text(
-                    'Этапы еще не созданы',
-                    style: TextStyle(color: Colors.grey.shade400),
-                  ),
-                ),
+              const FriendlyEmptyState(
+                icon: Icons.layers_clear_rounded,
+                title: 'Этапы еще не созданы',
+                subtitle: 'Добавьте первый этап, чтобы продолжить работу по объекту.',
+                accentColor: Colors.indigo,
+                padding: EdgeInsets.symmetric(vertical: 8),
               ),
 
             // List of Stages
@@ -491,9 +490,12 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
                   padding: EdgeInsets.all(32),
                   child: Center(child: CircularProgressIndicator()))
             else if (stages.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(32),
-                child: Center(child: Text("Все основные этапы уже созданы")),
+              const FriendlyEmptyState(
+                icon: Icons.task_alt_rounded,
+                title: 'Все основные этапы уже созданы',
+                subtitle: 'При необходимости добавьте дополнительный этап.',
+                accentColor: Colors.green,
+                padding: EdgeInsets.all(20),
               )
             else
               Container(
@@ -1354,12 +1356,23 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
   bool _isHovered = false;
   bool _isExpandToggleHovered = false;
 
+  bool _shouldAutoExpandByCount(int count) {
+    return count >= 1 && count <= 6;
+  }
+
   @override
   void initState() {
     super.initState();
-    // Автоматически раскрываем спойлер, если файлов 5 и менее
-    if (widget.files.length <= 5) {
-      _isExpanded = true;
+    // Правило по умолчанию:
+    // 0 файлов -> закрыто, 1..6 -> открыто, 7+ -> закрыто.
+    _isExpanded = _shouldAutoExpandByCount(widget.files.length);
+  }
+
+  @override
+  void didUpdateWidget(covariant _FileCategorySection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.files.length != widget.files.length) {
+      _isExpanded = _shouldAutoExpandByCount(widget.files.length);
     }
   }
 
@@ -1468,18 +1481,14 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       child: widget.files.isEmpty
-                          ? Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 30),
-                              child: Center(
-                                child: Text(
-                                  'Нет загруженных файлов',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade400,
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
+                          ? const FriendlyEmptyState(
+                              icon: Icons.folder_open_rounded,
+                              title: 'Нет загруженных файлов',
+                              subtitle:
+                                  'Загрузите файлы этого типа, чтобы они появились в списке.',
+                              accentColor: Colors.blueGrey,
+                              iconSize: 66,
+                              padding: EdgeInsets.symmetric(vertical: 18),
                             )
                           : GridView.builder(
                               shrinkWrap: true,
