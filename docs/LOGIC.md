@@ -110,6 +110,9 @@ Triggered manually from estimate `Actions` menu on Materials tab in `stage_3`.
 *   **Dark Theming Is Presentation-only:**
     *   Tonal surfaces, AppBar tinting, field fills, and border contrast adjustments are visual-only changes.
     *   Pointer feedback in dark mode uses overlay tint layers (`hover/pressed`) and must not change business state or data payloads.
+    *   Home hover effects (recent rows, quick-stat cards, new-project card) in both themes are visual-only and do not affect filtering/navigation actions.
+    *   Thin borders for Home smart-search and project-filter chips are visual-only and do not change search/filter logic.
+    *   Finance light-theme stage-row hover uses stable overlay feedback only; removing blink is presentation-only and does not affect expand/open/payment logic.
     *   Statistics dark-mode cards use neutral borders/shadows; switching from colored glow to neutral depth does not affect chart data/state.
     *   Finance expanded-card hierarchy (header surface vs nested stages surface) is visual-only and must not affect expand/collapse logic.
     *   Header corner clipping and dialog-shadow neutralization are presentation-only and do not affect navigation/state/actions.

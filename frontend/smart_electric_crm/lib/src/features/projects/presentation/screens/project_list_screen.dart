@@ -586,6 +586,9 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             : themeColor.withOpacity(0.12);
         final idleChipColor =
             isDark ? scheme.surfaceContainerHigh : Colors.grey.shade50;
+        final hoverChipColor = isDark
+            ? scheme.surfaceContainerHighest.withOpacity(0.7)
+            : themeColor.withOpacity(0.08);
         return ChoiceChip(
           label: Text(
             entry.value,
@@ -596,12 +599,18 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             ),
           ),
           selected: isActive,
-          selectedColor: selectedChipColor,
-          backgroundColor: idleChipColor,
+          color: WidgetStateProperty.resolveWith<Color?>((states) {
+            if (isActive) return selectedChipColor;
+            if (states.contains(WidgetState.hovered)) return hoverChipColor;
+            return idleChipColor;
+          }),
           side: BorderSide(
             color: isActive
                 ? themeColor.withOpacity(isDark ? 0.32 : 0.22)
-                : AppDesignTokens.cardBorder(context).withOpacity(0.7),
+                : (isDark
+                    ? Colors.grey.shade600.withOpacity(0.7)
+                    : AppDesignTokens.cardBorder(context).withOpacity(0.7)),
+            width: isActive ? 1.0 : (isDark ? 0.7 : 1.0),
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),

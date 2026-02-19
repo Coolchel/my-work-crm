@@ -103,7 +103,9 @@
 *   **Bottom Labels Visibility:** Labels remain visible under icons in bottom navigation for primary sections.
 *   **Settings Entry Point:** Top-right settings icon in Home header gradient block.
 *   **Header Balance:** Keep greeting text area dominant while preserving touch-friendly settings icon hit target.
-*   **Recent Objects Interaction Tone:** Home recent object rows follow `Stages` card interaction behavior (clean static card surface with standard tap/ink response, without additional custom hover animation layer).
+*   **Recent Objects Interaction Tone:** Home recent object rows use the same hover border/shadow lift family as object cards in both themes.
+*   **Home Cards Hover Parity:** The large "new project" card and the 3 top quick-stat cards use the same hover family in both themes.
+*   **Home Search Border:** Smart-search field uses a thinner border in both themes.
 
 ### 3.5. Section Header Typography
 *   **Weight:** Use medium/semi-bold title weight to avoid visually heavy section names.

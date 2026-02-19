@@ -25,11 +25,15 @@
     *   *Active Objects:* Unique projects with active stages.
     *   *Paid:* Count of paid stages.
 *   **Recent Projects:** Sorted by update time.
-*   **Recent Projects Hover:** Card interaction in Home recent list follows the same visual behavior as `Stages` cards (no extra custom hover animation layer).
+*   **Recent Projects Hover:** Home recent-project cards in both light and dark themes use the same hover family as object cards.
+*   **Home Card Hover Parity:** Hover feedback is applied to the large "new project" card and the 3 top quick-stat cards in both themes.
+*   **Home Search Border Tone:** Home smart-search field uses a thinner border in both themes.
 
 ## 3. Project Management
 *   **Structure:**
     *   **List View:** Filters (Source, Type, Status), Sorting (Date, Profitability).
+    *   **Filter Dialog Chip Border (Dark):** Unselected filter options use a thin grey border to reduce visual contrast.
+    *   **Filter Dialog Chip Hover:** Filter option chips in the Objects dialog provide explicit hover feedback in both light and dark themes.
     *   **Detail View:** header with Client/Source info. Tabs: Stages, Shields, Files.
     *   **Create UX Reliability:** Successful create operations (`Project`, `Stage`) must not show false error banners after HTTP `201`.
     *   **Object Card Accent Stripe:** color depends on stage composition:
@@ -98,6 +102,7 @@
 *   **Expanded Card Tint:** Expanded/hovered project card background under header uses a soft low-intensity green tint (no saturated fill).
 *   **Expanded Contrast Rule:** In expanded finance cards, project header surface and nested stages surface must use different tonal layers for clear visual separation.
 *   **Stage Hover Rule (Finance):** Hover over nested stage rows uses neutral tonal overlay without blur-heavy shadow and without saturated green glow.
+*   **Stage Hover Stability (Finance Light):** In light theme, nested stage-row hover must be stable without one-frame/one-second darkening blink.
 *   **Stage Date Tone:** Stage date labels under project headers use neutral text tones (black/grey), not alert colors.
 *   **Pay Toggle UI:** "Оплачено/Не оплачено" control in stage rows uses compact modern pill styling while preserving existing action behavior.
 *   **Hover Consistency:** All interactive finance list positions use the same hover feedback pattern for pointer devices.

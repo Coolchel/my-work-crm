@@ -672,6 +672,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         stage.externalAmountUsd > 0 || stage.externalAmountByn > 0;
     final stageKey = '${project.id}_${stage.id}';
     final isHovered = _hoveredStages[stageKey] ?? false;
+    final isDark = AppDesignTokens.isDark(context);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -681,12 +682,12 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.symmetric(vertical: 1),
         decoration: BoxDecoration(
-          color: isHovered
+          color: isHovered && isDark
               ? AppDesignTokens.cardBackground(context, hovered: true)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isHovered
+            color: isHovered && isDark
                 ? AppDesignTokens.cardBorder(context, hovered: true)
                 : Colors.transparent,
           ),
@@ -717,9 +718,18 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             }
           },
           borderRadius: BorderRadius.circular(12),
-          hoverColor: Colors.transparent,
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (isDark) {
+              return Colors.transparent;
+            }
+            if (states.contains(WidgetState.pressed)) {
+              return AppDesignTokens.pressedOverlay(context);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return AppDesignTokens.hoverOverlay(context);
+            }
+            return null;
+          }),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
             child: Row(

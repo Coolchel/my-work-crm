@@ -123,7 +123,7 @@ class QuickStatsRow extends ConsumerWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
+class _StatCard extends StatefulWidget {
   final String title;
   final String value;
   final IconData icon;
@@ -143,115 +143,132 @@ class _StatCard extends StatelessWidget {
   });
 
   @override
+  State<_StatCard> createState() => _StatCardState();
+}
+
+class _StatCardState extends State<_StatCard> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
 
-    final selectedBg = isDark ? color.withOpacity(0.18) : color.shade50;
-    final normalBg = AppDesignTokens.cardBackground(context);
+    final selectedBg =
+        isDark ? widget.color.withOpacity(0.18) : widget.color.shade50;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        overlayColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.pressed)) {
-            return AppDesignTokens.pressedOverlay(context);
-          }
-          if (states.contains(WidgetState.hovered)) {
-            return AppDesignTokens.hoverOverlay(context);
-          }
-          return null;
-        }),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isSelected ? selectedBg : normalBg,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: AppDesignTokens.cardShadow(context),
-                blurRadius: 9,
-                offset: const Offset(0, 4),
-              ),
-            ],
-            border: Border.all(
-              color: isSelected
-                  ? color.withOpacity(isDark ? 0.8 : 1)
-                  : AppDesignTokens.cardBorder(context),
-              width: isSelected ? 1.5 : 1,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: widget.isSelected
+              ? selectedBg
+              : AppDesignTokens.cardBackground(context, hovered: _isHovered),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
+              blurRadius: _isHovered ? 13 : 9,
+              offset: const Offset(0, 4),
             ),
+          ],
+          border: Border.all(
+            color: widget.isSelected
+                ? widget.color.withOpacity(isDark ? 0.8 : 1)
+                : AppDesignTokens.cardBorder(context, hovered: _isHovered),
+            width: widget.isSelected ? 1.5 : 1,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(20),
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return AppDesignTokens.pressedOverlay(context);
+              }
+              if (states.contains(WidgetState.hovered)) {
+                return AppDesignTokens.hoverOverlay(context);
+              }
+              return null;
+            }),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? color.withOpacity(isDark ? 0.28 : 0.15)
-                          : color.withOpacity(isDark ? 0.14 : 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(icon, color: color, size: 22),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: widget.isSelected
+                              ? widget.color.withOpacity(isDark ? 0.28 : 0.15)
+                              : widget.color.withOpacity(isDark ? 0.14 : 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(widget.icon, color: widget.color, size: 22),
+                      ),
+                      if (widget.tooltip != null)
+                        Tooltip(
+                          message: widget.tooltip!,
+                          textAlign: TextAlign.center,
+                          child: Icon(
+                            Icons.help_outline,
+                            size: 18,
+                            color: scheme.onSurfaceVariant.withOpacity(0.75),
+                          ),
+                        ),
+                      if (widget.tooltip == null &&
+                          int.tryParse(widget.value) != null &&
+                          int.parse(widget.value) > 0)
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: widget.color,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
                   ),
-                  if (tooltip != null)
-                    Tooltip(
-                      message: tooltip!,
-                      textAlign: TextAlign.center,
-                      child: Icon(
-                        Icons.help_outline,
-                        size: 18,
-                        color: scheme.onSurfaceVariant.withOpacity(0.75),
+                  const SizedBox(height: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.value,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: scheme.onSurface,
+                          height: 1.0,
+                        ),
                       ),
-                    ),
-                  if (tooltip == null &&
-                      int.tryParse(value) != null &&
-                      int.parse(value) > 0)
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.title,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: scheme.onSurface,
-                      height: 1.0,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: scheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.2,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),

@@ -158,10 +158,17 @@ class RecentProjectsList extends ConsumerWidget {
   }
 }
 
-class _RecentProjectTile extends StatelessWidget {
+class _RecentProjectTile extends StatefulWidget {
   final ProjectModel project;
 
   const _RecentProjectTile({required this.project});
+
+  @override
+  State<_RecentProjectTile> createState() => _RecentProjectTileState();
+}
+
+class _RecentProjectTileState extends State<_RecentProjectTile> {
+  bool _isHovered = false;
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
@@ -190,100 +197,118 @@ class _RecentProjectTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final project = widget.project;
     final lastActivity = project.updatedAt ?? project.createdAt;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppDesignTokens.cardBackground(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppDesignTokens.cardBorder(context)),
-        boxShadow: [
-          BoxShadow(
-            color: AppDesignTokens.cardShadow(context),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: AppDesignTokens.cardBackground(
+            context,
+            hovered: _isHovered,
           ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(
               context,
-              MaterialPageRoute(
-                builder: (context) => ProjectDetailScreen(
-                  projectId: project.id.toString(),
-                ),
+              hovered: _isHovered,
+            ),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignTokens.cardShadow(
+                context,
+                hovered: _isHovered,
               ),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.indigo.withOpacity(0.18)
-                        : Colors.indigo.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    _getIcon(project.objectType),
-                    color: isDark ? Colors.indigo.shade200 : Colors.indigo,
-                    size: 20,
+              blurRadius: _isHovered ? 15 : 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProjectDetailScreen(
+                    projectId: project.id.toString(),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.indigo.withOpacity(0.18)
+                          : Colors.indigo.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      _getIcon(project.objectType),
+                      color: isDark ? Colors.indigo.shade200 : Colors.indigo,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          project.address,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: scheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (project.clientInfo.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              project.clientInfo,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        project.address,
+                        _formatDate(lastActivity),
                         style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: scheme.onSurface,
+                          fontSize: 12,
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      if (project.clientInfo.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            project.clientInfo,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
                     ],
                   ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      _formatDate(lastActivity),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
