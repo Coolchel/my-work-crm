@@ -48,7 +48,6 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   // Состояние раскрытых проектов (ID проекта -> раскрыт ли)
   final Map<int, bool> _expandedProjects = {};
   final Map<int, bool> _hoveredProjects = {};
-  final Map<String, bool> _hoveredStages = {};
 
   @override
   void initState() {
@@ -670,28 +669,12 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   Widget _buildStageRow(UnpaidProjectModel project, UnpaidStageModel stage) {
     final hasExternalAmount =
         stage.externalAmountUsd > 0 || stage.externalAmountByn > 0;
-    final stageKey = '${project.id}_${stage.id}';
-    final isHovered = _hoveredStages[stageKey] ?? false;
-    final isDark = AppDesignTokens.isDark(context);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hoveredStages[stageKey] = true),
-      onExit: (_) => setState(() => _hoveredStages[stageKey] = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.symmetric(vertical: 1),
-        decoration: BoxDecoration(
-          color: isHovered && isDark
-              ? AppDesignTokens.cardBackground(context, hovered: true)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isHovered && isDark
-                ? AppDesignTokens.cardBorder(context, hovered: true)
-                : Colors.transparent,
-          ),
-        ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () async {
@@ -717,18 +700,15 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               }
             }
           },
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           overlayColor: WidgetStateProperty.resolveWith((states) {
-            if (isDark) {
-              return Colors.transparent;
+            if (states.contains(WidgetState.hovered)) {
+              return AppDesignTokens.hoverOverlay(context);
             }
             if (states.contains(WidgetState.pressed)) {
               return AppDesignTokens.pressedOverlay(context);
             }
-            if (states.contains(WidgetState.hovered)) {
-              return AppDesignTokens.hoverOverlay(context);
-            }
-            return null;
+            return Colors.transparent;
           }),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),

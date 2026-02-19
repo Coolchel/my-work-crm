@@ -587,37 +587,22 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
         final idleChipColor =
             isDark ? scheme.surfaceContainerHigh : Colors.grey.shade50;
         final hoverChipColor = isDark
-            ? scheme.surfaceContainerHighest.withOpacity(0.7)
-            : themeColor.withOpacity(0.08);
-        return ChoiceChip(
-          label: Text(
-            entry.value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-              color: isActive ? scheme.onSurface : scheme.onSurfaceVariant,
-            ),
-          ),
-          selected: isActive,
-          color: WidgetStateProperty.resolveWith<Color?>((states) {
-            if (isActive) return selectedChipColor;
-            if (states.contains(WidgetState.hovered)) return hoverChipColor;
-            return idleChipColor;
-          }),
-          side: BorderSide(
-            color: isActive
-                ? themeColor.withOpacity(isDark ? 0.32 : 0.22)
-                : (isDark
-                    ? Colors.grey.shade600.withOpacity(0.7)
-                    : AppDesignTokens.cardBorder(context).withOpacity(0.7)),
-            width: isActive ? 1.0 : (isDark ? 0.7 : 1.0),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          visualDensity: VisualDensity.compact,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          onSelected: (_) => onSelected(entry.key),
+            ? scheme.surfaceContainerHighest
+            : themeColor.withOpacity(0.14);
+        return _HoverableFilterChip(
+          label: entry.value,
+          isActive: isActive,
+          isDark: isDark,
+          idleColor: isActive ? selectedChipColor : idleChipColor,
+          hoverColor: isActive ? selectedChipColor : hoverChipColor,
+          borderColor: isActive
+              ? themeColor.withOpacity(isDark ? 0.32 : 0.22)
+              : (isDark
+                  ? Colors.grey.shade600.withOpacity(0.7)
+                  : AppDesignTokens.cardBorder(context).withOpacity(0.7)),
+          borderWidth: isActive ? 1.0 : (isDark ? 0.7 : 1.0),
+          textColor: isActive ? scheme.onSurface : scheme.onSurfaceVariant,
+          onTap: () => onSelected(entry.key),
         );
       }).toList(),
     );
@@ -989,6 +974,81 @@ class _ActionButtonState extends State<_ActionButton> {
               widget.icon,
               size: 20,
               color: _isHovered ? widget.hoverColor : widget.color,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A custom hoverable chip for filter dialogs with explicit hover color transitions.
+class _HoverableFilterChip extends StatefulWidget {
+  final String label;
+  final bool isActive;
+  final bool isDark;
+  final Color idleColor;
+  final Color hoverColor;
+  final Color borderColor;
+  final double borderWidth;
+  final Color textColor;
+  final VoidCallback onTap;
+
+  const _HoverableFilterChip({
+    required this.label,
+    required this.isActive,
+    required this.isDark,
+    required this.idleColor,
+    required this.hoverColor,
+    required this.borderColor,
+    required this.borderWidth,
+    required this.textColor,
+    required this.onTap,
+  });
+
+  @override
+  State<_HoverableFilterChip> createState() => _HoverableFilterChipState();
+}
+
+class _HoverableFilterChipState extends State<_HoverableFilterChip> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        decoration: BoxDecoration(
+          color: _isHovered ? widget.hoverColor : widget.idleColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: widget.borderColor,
+            width: widget.borderWidth,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(20),
+            splashColor: widget.isDark
+                ? Colors.white.withOpacity(0.10)
+                : Colors.indigo.withOpacity(0.10),
+            highlightColor: Colors.transparent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Text(
+                widget.label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight:
+                      widget.isActive ? FontWeight.w600 : FontWeight.w500,
+                  color: widget.textColor,
+                ),
+              ),
             ),
           ),
         ),

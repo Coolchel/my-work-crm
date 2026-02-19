@@ -20,10 +20,15 @@ class _NewProjectCardState extends State<NewProjectCard> {
 
     final bgGradient = isDark
         ? const [Color(0xFF1C2028), Color(0xFF171A21)]
-        : [
-            Colors.indigo.shade50.withOpacity(0.5),
-            Colors.indigo.shade50.withOpacity(0.2),
-          ];
+        : _isHovered
+            ? [
+                Colors.indigo.shade100.withOpacity(0.5),
+                Colors.indigo.shade50.withOpacity(0.4),
+              ]
+            : [
+                Colors.indigo.shade50.withOpacity(0.5),
+                Colors.indigo.shade50.withOpacity(0.2),
+              ];
 
     final titleColor = scheme.onSurface;
     final subtitleColor = isDark

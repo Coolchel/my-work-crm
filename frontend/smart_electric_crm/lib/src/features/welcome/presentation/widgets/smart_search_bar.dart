@@ -48,7 +48,7 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: AppDesignTokens.cardBorder(context),
-          width: 0.7,
+          width: 0.5,
         ),
         boxShadow: [
           BoxShadow(
