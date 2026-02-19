@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 
 /// Comprehensive dashboard for summary totals.
 class TotalDashboard extends StatelessWidget {
@@ -31,28 +32,33 @@ class TotalDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (totalUsd == 0 && totalByn == 0) return const SizedBox.shrink();
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
 
     final hasEmployer = employerUsd > 0 || employerByn > 0;
     final hasUsd = totalUsd > 0 || employerUsd > 0 || ourUsd > 0;
     final hasByn = totalByn > 0 || employerByn > 0 || ourByn > 0;
 
     final effectiveBorderColor = isMarkupActive
-        ? Colors.teal.withOpacity(0.55)
-        : primaryColor.withOpacity(0.12);
+        ? Colors.teal.withOpacity(isDark ? 0.32 : 0.4)
+        : AppDesignTokens.softBorder(context);
+    final baseSurface = AppDesignTokens.surface2(context);
+    final headerSurface =
+        isDark ? baseSurface.withOpacity(0.9) : primaryColor.withOpacity(0.05);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
       decoration: BoxDecoration(
-        color: primaryColorLight.withOpacity(0.5),
+        color: isDark ? baseSurface : primaryColorLight.withOpacity(0.45),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: effectiveBorderColor, width: 0.8),
+        border: Border.all(color: effectiveBorderColor, width: 0.7),
       ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.05),
+              color: headerSurface,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(10),
                 topRight: Radius.circular(10),
@@ -77,7 +83,9 @@ class TotalDashboard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: primaryColor.withOpacity(0.9),
+                    color: isDark
+                        ? scheme.onSurface
+                        : primaryColor.withOpacity(0.9),
                   ),
                 ),
                 const Spacer(),

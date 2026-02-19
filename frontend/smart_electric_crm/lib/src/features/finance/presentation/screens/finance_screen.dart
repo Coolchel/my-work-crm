@@ -39,7 +39,6 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   static const _financeAccent = Colors.green;
   static const _cardRadius = AppDesignTokens.radiusM;
   static const _sectionHPadding = AppDesignTokens.spacingM;
-  static const _cardBorderColor = Color(0xFFE5E7EB);
   // Контроллеры для глобальных полей
   final _estimateController = TextEditingController();
   final _notesController = TextEditingController();
@@ -110,7 +109,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     if (byn > 0) {
       spans.add(TextSpan(
-        text: '${_formatAmount(byn)} СЂ',
+        text: '${_formatAmount(byn)} р',
         style: TextStyle(
           color: effectiveColor,
           fontWeight: FontWeight.w600,
@@ -318,10 +317,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(_cardRadius),
-        border: Border.all(color: _cardBorderColor, width: 1),
+        border: Border.all(color: AppDesignTokens.cardBorder(context), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: AppDesignTokens.cardShadow(context),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -347,7 +346,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade800,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const Spacer(),
@@ -366,7 +365,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               if (totalUsd > 0 && totalByn > 0) const SizedBox(height: 2),
               if (totalByn > 0)
                 Text(
-                  '${_formatAmount(totalByn)} СЂ',
+                  '${_formatAmount(totalByn)} р',
                   style: const TextStyle(
                     color: _financeAccent,
                     fontSize: 18,
@@ -374,10 +373,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                   ),
                 ),
               if (totalUsd == 0 && totalByn == 0)
-                const Text(
+                Text(
                   '0',
                   style: TextStyle(
-                    color: Colors.black45,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -533,7 +532,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                           project.totalUsd,
                                           project.totalByn,
                                           fontSize: 11.5,
-                                          color: Colors.black,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
                                         ),
                                         const SizedBox(width: 8),
                                         Icon(
@@ -596,7 +597,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                         project.totalUsd,
                                         project.totalByn,
                                         fontSize: 11.5,
-                                        color: Colors.black,
+                                        color:
+                                            Theme.of(context).colorScheme.onSurface,
                                       ),
                                       const SizedBox(height: 3),
                                       Icon(
@@ -616,10 +618,15 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                             Container(
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: Colors.grey.shade50.withOpacity(0.65),
+                                color: AppDesignTokens.isDark(context)
+                                    ? Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainer
+                                        .withOpacity(0.72)
+                                    : Colors.grey.shade50.withOpacity(0.65),
                                 border: Border(
                                   top: BorderSide(
-                                    color: Colors.grey.shade200,
+                                    color: AppDesignTokens.cardBorder(context),
                                   ),
                                 ),
                               ),
@@ -674,7 +681,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           boxShadow: isHovered
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: AppDesignTokens.cardShadow(context, hovered: true),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -741,10 +748,11 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            _getStageDateInfo(stage.updatedAt!).text,
+                            _getStageDateInfo(context, stage.updatedAt!).text,
                             style: TextStyle(
                               fontSize: 10,
-                              color: _getStageDateInfo(stage.updatedAt!).color,
+                              color:
+                                  _getStageDateInfo(context, stage.updatedAt!).color,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -897,31 +905,33 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   String _formatExternalAmount(double usd, double byn) {
     final parts = <String>[];
     if (usd > 0) parts.add('${usd.toStringAsFixed(0)}\$');
-    if (byn > 0) parts.add('${byn.toStringAsFixed(0)}СЂ');
+    if (byn > 0) parts.add('${byn.toStringAsFixed(0)}р');
     return parts.join(' + ');
   }
 
-  _StageDateInfo _getStageDateInfo(String dateString) {
+  _StageDateInfo _getStageDateInfo(BuildContext context, String dateString) {
+    final scheme = Theme.of(context).colorScheme;
     try {
       final date = DateTime.parse(dateString);
       final now = DateTime.now();
       final diff = now.difference(date);
 
       if (diff.inDays == 0) {
-        return _StageDateInfo('Сегодня', Colors.black87);
+        return _StageDateInfo('Сегодня', scheme.onSurface);
       } else if (diff.inDays == 1) {
-        return _StageDateInfo('Вчера', Colors.grey.shade700);
+        return _StageDateInfo('Вчера', scheme.onSurfaceVariant);
       } else if (diff.inDays < 4) {
-        return _StageDateInfo('${diff.inDays} дн. назад', Colors.grey.shade700);
+        return _StageDateInfo('${diff.inDays} дн. назад', scheme.onSurfaceVariant);
       } else if (diff.inDays < 7) {
-        return _StageDateInfo('${diff.inDays} дн. назад', Colors.grey.shade600);
+        return _StageDateInfo(
+            '${diff.inDays} дн. назад', scheme.onSurfaceVariant.withOpacity(0.9));
       } else {
         final formatted =
             '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
-        return _StageDateInfo(formatted, Colors.grey.shade600);
+        return _StageDateInfo(formatted, scheme.onSurfaceVariant.withOpacity(0.9));
       }
     } catch (e) {
-      return _StageDateInfo('', Colors.grey);
+      return _StageDateInfo('', scheme.onSurfaceVariant);
     }
   }
 
@@ -968,10 +978,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(_cardRadius),
-        border: Border.all(color: _cardBorderColor),
+        border: Border.all(color: AppDesignTokens.cardBorder(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: AppDesignTokens.cardShadow(context),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -1054,7 +1064,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w500,
-            color: Colors.grey[500],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 5),
@@ -1067,15 +1077,19 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             isDense: true,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            fillColor: Colors.grey[50],
+            fillColor: AppDesignTokens.isDark(context)
+                ? Theme.of(context).colorScheme.surfaceContainerHigh
+                : Colors.grey[50],
             filled: true,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderSide:
+                  BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderSide:
+                  BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -1134,7 +1148,7 @@ class _PayStageButtonState extends State<_PayStageButton> {
             BoxShadow(
               color: _isHovered
                   ? accent.withOpacity(0.12)
-                  : Colors.black.withOpacity(0.04),
+                  : AppDesignTokens.cardShadow(context),
               blurRadius: _isHovered ? 8 : 4,
               offset: const Offset(0, 2),
             ),

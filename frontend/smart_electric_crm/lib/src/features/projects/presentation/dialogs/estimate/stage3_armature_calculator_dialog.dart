@@ -32,28 +32,28 @@ const List<_ArmaturePosition> _targetPositions = [
   _ArmaturePosition(
     label: 'Выключатель, 1 клавиша',
     mappingKey: 'arm_switch_1g',
-    legacyName: 'РІРєР» 1РєР»',
+    legacyName: 'вкл 1кл',
     icon: Icons.toggle_on_rounded,
     iconColor: Color(0xFF1565C0),
   ),
   _ArmaturePosition(
     label: 'Выключатель, 2 клавиши',
     mappingKey: 'arm_switch_2g',
-    legacyName: 'РІРєР» 2РєР»',
+    legacyName: 'вкл 2кл',
     icon: Icons.toggle_on_outlined,
     iconColor: Color(0xFF1565C0),
   ),
   _ArmaturePosition(
     label: 'Выключатель проходной, 1 клавиша',
     mappingKey: 'arm_switch_1g_pass',
-    legacyName: 'РІРєР» 1РєР» РїСЂРѕС…РѕРґРЅРѕР№',
+    legacyName: 'вкл 1кл проходной',
     icon: Icons.sync_alt_rounded,
     iconColor: Color(0xFF0D47A1),
   ),
   _ArmaturePosition(
     label: 'Выключатель проходной, 2 клавиши',
     mappingKey: 'arm_switch_2g_pass',
-    legacyName: 'РІРєР» 2РєР» РїСЂРѕС…РѕРґРЅРѕР№',
+    legacyName: 'вкл 2кл проходной',
     icon: Icons.swap_horiz_rounded,
     iconColor: Color(0xFF0D47A1),
   ),
@@ -278,6 +278,7 @@ class _Stage3ArmatureCalculatorDialogState
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final missingItems = _targetPositions
         .where(_isMissingCatalogItem)
         .map((position) => position.label)
@@ -322,7 +323,7 @@ class _Stage3ArmatureCalculatorDialogState
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        color: Colors.blue,
                       ),
                     ),
                   ),
@@ -379,7 +380,7 @@ class _Stage3ArmatureCalculatorDialogState
             Container(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
               decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: Colors.grey.shade200)),
+                border: Border(top: BorderSide(color: scheme.outlineVariant)),
               ),
               child: Row(
                 children: [
@@ -394,7 +395,7 @@ class _Stage3ArmatureCalculatorDialogState
                     label: const Text('Перенести в смету'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
-                      foregroundColor: Theme.of(context).colorScheme.surface,
+                      foregroundColor: scheme.onPrimary,
                     ),
                   ),
                 ],
@@ -447,7 +448,7 @@ class _Stage3ArmatureCalculatorDialogState
               style: TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
-                color: disabled ? Colors.grey.shade500 : scheme.onSurface,
+              color: disabled ? Colors.grey.shade500 : scheme.onSurface,
               ),
             ),
           ),
@@ -483,12 +484,13 @@ class _Stage3ArmatureCalculatorDialogState
   }
 
   Widget _quickBtn(_ArmaturePosition position, int delta, bool disabled) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return OutlinedButton(
       onPressed: disabled ? null : () => _increment(position, delta),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         visualDensity: VisualDensity.compact,
-        side: BorderSide(color: Colors.blue.withOpacity(0.35)),
+        side: BorderSide(color: Colors.blue.withOpacity(isDark ? 0.55 : 0.35)),
       ),
       child: Text(
         '+$delta',

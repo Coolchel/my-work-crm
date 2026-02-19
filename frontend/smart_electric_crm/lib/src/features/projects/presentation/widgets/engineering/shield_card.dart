@@ -94,6 +94,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   Widget build(BuildContext context) {
     final themeColor = _getColorForType(widget.shield.shieldType);
     final shield = widget.shield;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -176,10 +178,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                   children: [
                                     Text(
                                       shield.name,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.black,
+                                        color: scheme.onSurface,
                                         letterSpacing: -0.4,
                                       ),
                                     ),
@@ -212,7 +214,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                               ? 'Встроенный'
                                               : 'Навесной'),
                                           style: TextStyle(
-                                            color: Colors.grey.shade500,
+                                            color: scheme.onSurfaceVariant,
                                             fontSize: 11,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -242,7 +244,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                       child: Container(
                         color: Theme.of(context)
                             .colorScheme
-                            .surface, // Clean white background
+                            .surface,
                         padding: const EdgeInsets.all(12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,10 +259,12 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                               width: double.infinity,
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.grey
-                                    .shade50, // Full opacity for better contrast
+                                color: isDark
+                                    ? scheme.surfaceContainer
+                                    : Colors.grey.shade50,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade300),
+                                border:
+                                    Border.all(color: scheme.outlineVariant),
                               ),
                               child: Column(
                                 children: [
@@ -298,12 +302,14 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
 
   Widget _buildTopInfo(BuildContext context, Color themeColor) {
     final shield = widget.shield;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50, // Full opacity for better contrast
+        color: isDark ? scheme.surfaceContainer : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,11 +331,11 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                         const SizedBox(width: 6),
                         Text(
                           _getStatsTitle(shield),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 10,
                             letterSpacing: 0.8,
-                            color: Color(0xFF374151),
+                            color: scheme.onSurface,
                           ),
                         ),
                       ],
@@ -339,10 +345,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                       padding: const EdgeInsets.only(left: 20.0),
                       child: Text(
                         _getStatsSubtitle(shield),
-                        style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 11,
-                            height: 1.1),
+                        style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11, height: 1.1),
                       ),
                     ),
                   ],
@@ -352,16 +355,16 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Row(
+                  Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'РњРћРќРўРђР–:',
+                        'МОНТАЖ:',
                         style: TextStyle(
                           fontWeight: FontWeight.w900,
                           fontSize: 10,
                           letterSpacing: 0.8,
-                          color: Color(0xFF374151),
+                          color: scheme.onSurfaceVariant,
                         ),
                       ),
                       // Icon removed
@@ -404,8 +407,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                       const SizedBox(width: 10),
                       RichText(
                         text: TextSpan(
-                          style: TextStyle(
-                              fontSize: 12, color: Colors.grey.shade600),
+                          style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
                           children: [
                             const TextSpan(text: 'Рекомендовано: '),
                             TextSpan(

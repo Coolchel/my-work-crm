@@ -78,6 +78,10 @@ Triggered manually from estimate `Actions` menu on Materials tab in `stage_3`.
 ### 3.1. Shield Sizing
 *   **Power:** `Modules = Sum(DeviceWidths)`. 1P=1, 2P=2, 3P=3, 4P=4.
 *   **LED (Transformers -> Modules):**
+
+## 4. Text Encoding Robustness
+*   **Storage/Source:** All project source files are UTF-8.
+*   **UI Safety Rule:** Any detected mojibake in user-facing labels/messages/tooltips must be repaired before release.
     *   1-2 -> 0 (External/Weak Current)
     *   3-4 -> 24 mod
     *   5-9 -> 36 mod
@@ -103,6 +107,9 @@ Triggered manually from estimate `Actions` menu on Materials tab in `stage_3`.
     *   App stores selected `ThemeMode` in local preferences.
     *   MaterialApp applies `light`, `dark`, and `system` modes at runtime without restart.
     *   Theme switch impacts presentation only; no business logic/payload changes are allowed.
+*   **Dark Theming Is Presentation-only:**
+    *   Tonal surfaces, AppBar tinting, field fills, and border contrast adjustments are visual-only changes.
+    *   No estimate/finance/project calculations, payloads, or backend flows are affected by theme styling.
 *   **Project List Stripe Color Priority (By Stage Composition):**
     *   Priority order: `stage_3` -> `stage_1/stage_2/stage_1_2` -> `extra/other` -> `precalc` -> default.
     *   Mapping:

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
@@ -253,7 +253,7 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       style:
-                          TextButton.styleFrom(foregroundColor: Colors.black87),
+                          TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurface),
                       child: const Text("Отмена"),
                     ),
                     const SizedBox(width: 8),
@@ -314,3 +314,4 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
     );
   }
 }
+

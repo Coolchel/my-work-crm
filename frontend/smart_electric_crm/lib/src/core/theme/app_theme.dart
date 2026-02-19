@@ -54,12 +54,19 @@ class AppTheme {
   }) {
     final selectedNavColor = scheme.primary;
     final unselectedNavColor = scheme.onSurfaceVariant;
+    final isDark = scheme.brightness == Brightness.dark;
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: scaffoldBackground,
       dividerColor: scheme.outlineVariant,
+      appBarTheme: AppBarTheme(
+        backgroundColor: scheme.surface,
+        foregroundColor: scheme.onSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+      ),
       navigationBarTheme: NavigationBarThemeData(
         height: AppDesignTokens.navBarHeight,
         backgroundColor: scheme.surface,
@@ -98,33 +105,70 @@ class AppTheme {
         shadowColor: cardShadow,
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: scheme.surface,
+        backgroundColor: isDark ? scheme.surfaceContainerHigh : scheme.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDesignTokens.radiusL),
         ),
       ),
       popupMenuTheme: PopupMenuThemeData(
-        color: scheme.surface,
+        color: isDark ? scheme.surfaceContainerHigh : scheme.surface,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(
+            isDark ? scheme.surfaceContainerHigh : scheme.surface,
+          ),
+          surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+          side: WidgetStatePropertyAll(
+            BorderSide(
+                color: scheme.outlineVariant.withOpacity(isDark ? 0.55 : 0.85)),
+          ),
+        ),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: isDark
+              ? scheme.surfaceContainerHigh
+              : scheme.surfaceContainer.withOpacity(0.45),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+                color: scheme.outlineVariant.withOpacity(isDark ? 0.55 : 0.85)),
+          ),
+        ),
+        menuStyle: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(
+            isDark ? scheme.surfaceContainerHigh : scheme.surface,
+          ),
+          surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        ),
+      ),
       dividerTheme: DividerThemeData(
-        color: scheme.outlineVariant,
+        color: scheme.outlineVariant.withOpacity(isDark ? 0.55 : 0.85),
         thickness: 1,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surfaceContainer.withOpacity(0.45),
+        fillColor: isDark
+            ? scheme.surfaceContainerHigh
+            : scheme.surfaceContainer.withOpacity(0.45),
         labelStyle: TextStyle(color: scheme.onSurfaceVariant),
         hintStyle: TextStyle(color: scheme.onSurfaceVariant.withOpacity(0.8)),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: scheme.outlineVariant),
+          borderSide: BorderSide(
+            color: scheme.outlineVariant.withOpacity(isDark ? 0.55 : 0.85),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: scheme.outlineVariant),
+          borderSide: BorderSide(
+            color: scheme.outlineVariant.withOpacity(isDark ? 0.55 : 0.85),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

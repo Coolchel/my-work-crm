@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/project_providers.dart';
@@ -563,10 +563,10 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
                                 Expanded(
                                   child: Text(
                                     entry.value,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
+                                      color: Theme.of(context).colorScheme.onSurface,
                                     ),
                                   ),
                                 ),
@@ -1107,7 +1107,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
       context: context,
       builder: (context) => TextInputDialog(
         title: 'Переименовать файл',
-        labelText: 'РќРѕРІРѕРµ РёРјСЏ',
+        labelText: 'Новое имя',
         initialValue: nameWithoutExtension,
         confirmText: 'Сохранить',
         themeColor: Colors.indigo,
@@ -1261,7 +1261,7 @@ class _ActionButtonState extends State<_ActionButton> {
               child: Icon(
                 widget.icon,
                 size: 13,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
@@ -1661,3 +1661,4 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
     );
   }
 }
+

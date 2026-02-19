@@ -8,7 +8,7 @@ class WorkDynamicsChart extends StatefulWidget {
   final List<WorkDynamicsData> data;
   final bool isMonthly; // If true, data is grouped by YYYY-MM
   final String currencyLabel; // e.g., "USD" or "BYN"
-  final String currencySymbol; // e.g., "$" or "СЂ"
+  final String currencySymbol; // e.g., "$" or "р"
   final bool isUsd; // To determine which field to use and which color
 
   const WorkDynamicsChart({
@@ -229,6 +229,7 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
   }
 
   Widget _buildLegendItem(String label, Color color) {
+    final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Container(
@@ -237,9 +238,13 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
-        Text(label,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, color: Colors.black54)),
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
       ],
     );
   }

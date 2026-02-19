@@ -46,17 +46,15 @@ class AppDesignTokens {
       Theme.of(context).brightness == Brightness.dark;
 
   static Color cardBackground(BuildContext context, {bool hovered = false}) {
-    final scheme = Theme.of(context).colorScheme;
     if (isDark(context)) {
-      return hovered ? const Color(0xFF21242A) : scheme.surface;
+      return hovered ? const Color(0xFF21242A) : surface1(context);
     }
-    return hovered ? const Color(0xFFF6F7FB) : scheme.surface;
+    return hovered ? const Color(0xFFF6F7FB) : surface1(context);
   }
 
   static Color cardBorder(BuildContext context, {bool hovered = false}) {
-    final scheme = Theme.of(context).colorScheme;
     if (isDark(context)) {
-      return hovered ? const Color(0xFF454A53) : scheme.outlineVariant;
+      return hovered ? const Color(0xFF3E434C) : softBorder(context);
     }
     return hovered ? const Color(0xFFD9DEE8) : const Color(0xFFE7EAF1);
   }
@@ -66,5 +64,24 @@ class AppDesignTokens {
       return Colors.black.withOpacity(hovered ? 0.45 : 0.30);
     }
     return Colors.black.withOpacity(hovered ? 0.08 : 0.04);
+  }
+
+  static Color surface1(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return isDark(context) ? scheme.surface : scheme.surface;
+  }
+
+  static Color surface2(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return isDark(context)
+        ? scheme.surfaceContainerHigh
+        : scheme.surfaceContainer.withOpacity(0.55);
+  }
+
+  static Color softBorder(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return isDark(context)
+        ? scheme.outlineVariant.withOpacity(0.55)
+        : scheme.outlineVariant.withOpacity(0.85);
   }
 }

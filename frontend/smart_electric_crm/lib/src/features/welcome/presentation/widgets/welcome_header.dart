@@ -30,9 +30,9 @@ class WelcomeHeader extends StatelessWidget {
 
     final gradientColors = isDark
         ? const [
-            Color(0xFF171A20),
-            Color(0xFF1F242D),
-            Color(0xFF1B222C),
+            Color(0xFF181B20),
+            Color(0xFF1D2229),
+            Color(0xFF1A1F26),
           ]
         : [
             Colors.indigo.shade700,

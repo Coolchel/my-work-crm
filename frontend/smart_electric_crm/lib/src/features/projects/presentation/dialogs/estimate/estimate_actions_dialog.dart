@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 
 import '../../../data/models/estimate_item_model.dart';
 import '../../../data/models/stage_model.dart';
@@ -605,8 +606,7 @@ class EstimatePdfActionsDialog extends ConsumerWidget
             ),
 
             // 1. Export PDF (Direct Actions)
-            buildSectionHeader("Р­РєСЃРїРѕСЂС' РІ PDF",
-                icon: Icons.save_alt_rounded),
+            buildSectionHeader("Экспорт в PDF", icon: Icons.save_alt_rounded),
             if (hasWorks)
               buildWideActionBtn(
                 context,
@@ -1005,9 +1005,13 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
                   margin: const EdgeInsets.symmetric(horizontal: 24),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
+                    color: AppDesignTokens.isDark(context)
+                        ? Theme.of(context).colorScheme.surfaceContainerHigh
+                        : Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: AppDesignTokens.softBorder(context),
+                    ),
                   ),
                   child: SingleChildScrollView(
                     child: SelectableText(

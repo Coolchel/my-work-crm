@@ -18,7 +18,7 @@ class NewProjectCard extends StatelessWidget {
             Colors.indigo.shade50.withOpacity(0.2),
           ];
 
-    final titleColor = isDark ? scheme.onSurface : Colors.black87;
+    final titleColor = scheme.onSurface;
     final subtitleColor = isDark
         ? scheme.onSurfaceVariant.withOpacity(0.9)
         : Colors.grey.shade600;

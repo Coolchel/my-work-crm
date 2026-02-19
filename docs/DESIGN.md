@@ -10,6 +10,11 @@
 *   **Green:** Multimedia Shields (aligned with unified app green token).
 *   **Dark Foundation:** Dark theme uses deep navy/graphite surfaces with preserved semantic accents (indigo/blue/green/orange) and readable contrast for text, icons, and controls.
 *   **Dark Neutral Direction:** Preferred dark palette is neutral dark-grey near black (not blue-tinted backgrounds) with restrained accent usage.
+*   **Dark Surface Levels:** Use three consistent dark levels:
+    *   `background` for scaffold/base;
+    *   `surface-1` for cards/lists;
+    *   `surface-2` for dialogs/forms/summary blocks (`Итог`/`Наценка`).
+*   **Dark Border Restraint:** Borders/dividers in dark mode stay low-contrast and secondary; avoid grid-like visual noise.
 
 ## 2. Component Guidelines
 
@@ -38,6 +43,7 @@
     *   Vertical centering of all row elements.
 *   **Validation Messaging:** Prefer inline compact validation text near a field over bottom snackbar for form constraints.
 *   **Snackbar Density:** Keep snackbar usage concise and event-critical; avoid routine positive noise when result is already visible in UI.
+*   **Text Encoding Quality:** Russian UI copy must be displayed without mojibake; UTF-8 integrity is part of visual quality acceptance.
 
 ### 2.4. Global Consistency Tokens
 *   **Base App Background:** Main screens use one shared soft-light background token; cards/containers stay on white `surface` to keep separation and readability.
@@ -98,6 +104,7 @@
 *   **Scale:** Keep title slightly larger for quicker recognition on desktop and mobile.
 *   **Subtitle Contrast:** Subtitle remains lighter to preserve hierarchy under section title.
 *   **Header-to-Content Rhythm:** Compact section headers keep an increased bottom gap in most sections for clearer separation; `Statistics` intentionally stays more compact, and `Home` follows its own hero rhythm.
+*   **Dark Header Fill Rule:** In dark mode, section AppBar background is neutral `surface`; accent is applied as subtle tint/stripe only, not a saturated full-width gradient fill.
 
 ### 3.6. Project Files Tab
 *   **Category Cards:** File category sections in project detail follow the same card family as `Objects`/`Stages` (neutral white surface, subtle shadow, compact readable typography, left accent stripe, `Clip.antiAlias`).

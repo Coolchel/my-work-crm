@@ -27,6 +27,7 @@ class StatisticsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
     final statsAsync = ref.watch(statisticsDataProvider);
     final currentPeriod = ref.watch(statisticsFilterProvider);
     final statisticsAccent =
@@ -100,7 +101,7 @@ class StatisticsScreen extends ConsumerWidget {
                         if (states.contains(MaterialState.selected)) {
                           return Colors.white;
                         }
-                        return Colors.black87;
+                        return scheme.onSurface;
                       }),
                       iconColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
@@ -117,6 +118,7 @@ class StatisticsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 _buildHeader(
+                  context,
                   'Финансы за ${_getPeriodTitle(currentPeriod)}',
                   stripeColor: statisticsAccent,
                 ),
@@ -133,6 +135,7 @@ class StatisticsScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildHeader(
+                              context,
                               'Откуда объекты',
                               stripeColor: statisticsAccent,
                             ),
@@ -153,6 +156,7 @@ class StatisticsScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildHeader(
+                              context,
                               'Типы объектов',
                               stripeColor: statisticsAccent,
                             ),
@@ -174,6 +178,7 @@ class StatisticsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 _buildHeader(
+                  context,
                   'Динамика работ',
                   stripeColor: statisticsAccent,
                 ),
@@ -285,7 +290,7 @@ class StatisticsScreen extends ConsumerWidget {
       case 'month':
         return 'месяц';
       case 'year':
-        return 'РіРѕРґ';
+        return 'год';
       case 'all':
         return 'все время';
       default:
@@ -294,6 +299,7 @@ class StatisticsScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(
+    BuildContext context,
     String title, {
     required Color stripeColor,
   }) {
@@ -308,10 +314,10 @@ class StatisticsScreen extends ConsumerWidget {
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],
@@ -338,7 +344,7 @@ class StatisticsScreen extends ConsumerWidget {
               context,
               'Всего BYN',
               finances.byn,
-              'СЂ',
+              'р',
               Colors.indigo,
             ),
           ),
@@ -394,10 +400,10 @@ class StatisticsScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             '${_formatAmount(amount)} $symbol',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
               letterSpacing: -0.5,
             ),
           ),

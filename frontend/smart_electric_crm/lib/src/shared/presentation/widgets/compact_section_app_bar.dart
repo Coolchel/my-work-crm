@@ -32,14 +32,18 @@ class CompactSectionAppBar extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colors = gradientColors ??
         (isDark
             ? AppDesignTokens.subtleSectionGradientDark
             : AppDesignTokens.subtleSectionGradient);
-    final foreground = Colors.white;
-    final iconBadgeBackground = Colors.white.withOpacity(isDark ? 0.2 : 0.16);
-    final subtitleColor = Colors.white.withOpacity(isDark ? 0.95 : 0.92);
+    final foreground = isDark ? scheme.onSurface : Colors.white;
+    final iconBadgeBackground = isDark
+        ? scheme.surfaceContainerHighest.withOpacity(0.8)
+        : Colors.white.withOpacity(0.16);
+    final subtitleColor =
+        isDark ? scheme.onSurfaceVariant : Colors.white.withOpacity(0.92);
 
     return AppBar(
       automaticallyImplyLeading: leading == null,
@@ -48,20 +52,70 @@ class CompactSectionAppBar extends StatelessWidget
       toolbarHeight: _toolbarHeight,
       centerTitle: centerTitle,
       elevation: 0,
-      backgroundColor: Colors.transparent,
+      backgroundColor: isDark ? scheme.surface : Colors.transparent,
       foregroundColor: foreground,
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: colors,
-          ),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(AppDesignTokens.radiusM),
-            bottomRight: Radius.circular(AppDesignTokens.radiusM),
-          ),
-        ),
+      flexibleSpace: isDark
+          ? Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: scheme.surface,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(AppDesignTokens.radiusM),
+                      bottomRight: Radius.circular(AppDesignTokens.radiusM),
+                    ),
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        scheme.primary.withOpacity(0.08),
+                        scheme.primary.withOpacity(0.03),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(AppDesignTokens.radiusM),
+                      bottomRight: Radius.circular(AppDesignTokens.radiusM),
+                    ),
+                  ),
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Container(
+                    height: 2,
+                    margin: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withOpacity(0.45),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: colors,
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(AppDesignTokens.radiusM),
+                  bottomRight: Radius.circular(AppDesignTokens.radiusM),
+                ),
+              ),
+            ),
+      iconTheme: IconThemeData(color: foreground),
+      actionsIconTheme: IconThemeData(color: foreground),
+      titleTextStyle: TextStyle(
+        color: foreground,
+        fontSize: 19,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.2,
       ),
       title: Row(
         children: [

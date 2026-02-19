@@ -26,6 +26,7 @@ class EstimateSpeedDial extends StatelessWidget {
     return AnimatedBuilder(
       animation: tabController,
       builder: (context, child) {
+        final scheme = Theme.of(context).colorScheme;
         final isWorks = tabController.index == 0;
         final mainFabColor = isWorks ? Colors.green : Colors.blue.shade200;
 
@@ -91,7 +92,7 @@ class EstimateSpeedDial extends StatelessWidget {
               onPressed: onToggle,
               heroTag: 'main_fab',
               backgroundColor: mainFabColor,
-              foregroundColor: Colors.black87,
+              foregroundColor: scheme.onPrimary,
               elevation: 2,
               child: Icon(isExpanded ? Icons.close : Icons.add),
             ),
@@ -109,7 +110,7 @@ class EstimateSpeedDial extends StatelessWidget {
     Color? textColor,
     required VoidCallback onTap,
   }) {
-    final fgColor = textColor ?? Colors.black87;
+    final fgColor = textColor ?? Colors.black;
 
     return ElevatedButton.icon(
       onPressed: onTap,

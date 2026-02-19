@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import '../../../../engineering/data/models/shield_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
@@ -106,7 +107,10 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                         floatingLabelBehavior: FloatingLabelBehavior.always,
                         hintText: "Щит квартирный",
                         hintStyle: TextStyle(
-                          color: Colors.grey.withOpacity(0.35),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withOpacity(0.75),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -137,7 +141,9 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Colors.indigo.shade700,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -198,8 +204,9 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      style:
-                          TextButton.styleFrom(foregroundColor: Colors.black87),
+                      style: TextButton.styleFrom(
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onSurface),
                       child: const Text("Отмена"),
                     ),
                     const SizedBox(width: 8),
@@ -265,16 +272,17 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
   Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,
       ValueChanged<String> onSelected) {
     const bg = Colors.indigo;
-    final fieldColor = Colors.indigo.shade50;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         return Container(
           height: 44,
           decoration: BoxDecoration(
-            color: fieldColor,
+            color: AppDesignTokens.surface2(context),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: bg.withOpacity(0.15)),
+            border: Border.all(color: AppDesignTokens.softBorder(context)),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
@@ -286,7 +294,7 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     elevation: 4,
-                    color: fieldColor,
+                    color: AppDesignTokens.surface2(context),
                   ),
                 ),
                 child: PopupMenuButton<String>(
@@ -301,7 +309,7 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                     cursor: SystemMouseCursors.click,
                     child: InkWell(
                       onTap: null, // PopupMenuButton handles tap
-                      hoverColor: bg.shade700.withOpacity(0.05),
+                      hoverColor: bg.shade700.withOpacity(isDark ? 0.12 : 0.05),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Row(
@@ -310,13 +318,14 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                             Text(
                               label,
                               style: TextStyle(
-                                color: bg.shade800,
+                                color: isDark ? scheme.onSurface : bg.shade800,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             Icon(Icons.arrow_drop_down,
-                                color: bg.shade800, size: 24),
+                                color: isDark ? scheme.onSurface : bg.shade800,
+                                size: 24),
                           ],
                         ),
                       ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
@@ -40,6 +40,8 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
   @override
   Widget build(BuildContext context) {
     final themeColor = widget.themeColor;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -125,7 +127,7 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
                     decoration: InputDecoration(
                       hintText: "Введите заметку для этого щита...",
                       hintStyle: TextStyle(
-                        color: Colors.grey.withOpacity(0.5),
+                        color: scheme.onSurfaceVariant.withOpacity(0.8),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -142,7 +144,9 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
                         borderSide: BorderSide(color: themeColor, width: 2),
                       ),
                       filled: true,
-                      fillColor: Colors.grey.shade50,
+                      fillColor: isDark
+                          ? scheme.surfaceContainerHigh
+                          : Colors.grey.shade50,
                     ),
                   ),
                 ),
@@ -158,7 +162,7 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       style:
-                          TextButton.styleFrom(foregroundColor: Colors.black87),
+                          TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurface),
                       child: const Text("Отмена"),
                     ),
                     const SizedBox(width: 8),
@@ -217,3 +221,4 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
     );
   }
 }
+

@@ -5,6 +5,7 @@ import 'package:smart_electric_crm/src/features/projects/presentation/utils/deci
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_list_tile.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/group_header.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/total_dashboard.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 /// Tab widget for displaying estimate items (Materials or Works)
@@ -88,7 +89,6 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   @override
   void initState() {
     super.initState();
-    // debugPrint("рџ"ќ _EstimateTabState.initState: note='${widget.note}'");
     _noteCtrl = TextEditingController(text: widget.note);
 
     // Default text logic for Materials
@@ -302,6 +302,8 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     required ValueChanged<String> onChanged,
     Widget? suffix,
   }) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -310,7 +312,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w500,
-            color: Colors.grey.shade500,
+            color: scheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 5),
@@ -326,15 +328,19 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             isDense: true,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-            fillColor: Colors.grey[50],
+            fillColor: isDark
+                ? scheme.surfaceContainer.withOpacity(0.7)
+                : scheme.surfaceContainer.withOpacity(0.4),
             filled: true,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderSide:
+                  BorderSide(color: AppDesignTokens.softBorder(context)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderSide:
+                  BorderSide(color: AppDesignTokens.softBorder(context)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -348,22 +354,33 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   }
 
   Widget _buildMarkupControl() {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     final hasMarkup = widget.markupPercent > 0;
     const markupAccent = Colors.teal;
 
     final headerColor = hasMarkup
-        ? markupAccent.withOpacity(0.11)
-        : _primaryColorLight.withOpacity(0.45);
-    final bodyColor =
-        hasMarkup ? markupAccent.withOpacity(0.06) : Colors.transparent;
+        ? (isDark
+            ? AppDesignTokens.surface2(context).withOpacity(0.96)
+            : markupAccent.withOpacity(0.11))
+        : (isDark
+            ? AppDesignTokens.surface2(context).withOpacity(0.92)
+            : _primaryColorLight.withOpacity(0.45));
+    final bodyColor = hasMarkup
+        ? (isDark
+            ? AppDesignTokens.surface2(context).withOpacity(0.84)
+            : markupAccent.withOpacity(0.06))
+        : Colors.transparent;
 
     final borderColor = hasMarkup
-        ? markupAccent.withOpacity(0.55)
-        : _primaryColor.withOpacity(0.12);
-    final iconColor =
-        hasMarkup ? markupAccent.shade700 : _primaryColor.withOpacity(0.8);
-    final textColor =
-        hasMarkup ? markupAccent.shade800 : _primaryColor.withOpacity(0.9);
+        ? markupAccent.withOpacity(isDark ? 0.36 : 0.55)
+        : AppDesignTokens.softBorder(context);
+    final iconColor = hasMarkup
+        ? (isDark ? markupAccent.shade300 : markupAccent.shade700)
+        : _primaryColor.withOpacity(0.8);
+    final textColor = hasMarkup
+        ? (isDark ? scheme.onSurface : markupAccent.shade800)
+        : (isDark ? scheme.onSurface : _primaryColor.withOpacity(0.9));
     final textWeight = hasMarkup ? FontWeight.bold : FontWeight.w500;
 
     return Container(
@@ -458,14 +475,20 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                           decoration: InputDecoration(
                             isDense: true,
                             filled: true,
-                            fillColor: Colors.white.withOpacity(0.9),
+                            fillColor: AppDesignTokens.isDark(context)
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHigh
+                                : Colors.white.withOpacity(0.9),
                             contentPadding:
                                 const EdgeInsets.symmetric(horizontal: 4),
                             suffixText: '%',
                             suffixStyle: TextStyle(
                               fontSize: 12,
                               color: hasMarkup
-                                  ? markupAccent.shade700
+                                  ? (isDark
+                                      ? markupAccent.shade300
+                                      : markupAccent.shade700)
                                   : Colors.blue.shade300,
                               fontWeight: FontWeight.bold,
                             ),
@@ -490,8 +513,12 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: hasMarkup
-                                ? markupAccent.shade800
-                                : Colors.blue.shade900,
+                                ? (isDark
+                                    ? scheme.onSurface
+                                    : markupAccent.shade800)
+                                : (isDark
+                                    ? scheme.onSurface
+                                    : Colors.blue.shade900),
                           ),
                           onTap: () {
                             _markupCtrl.selection = TextSelection(
@@ -528,7 +555,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                               color: widget.markupPercent > 0
                                   ? markupAccent.shade700
                                   : Colors.grey.withOpacity(0.3)),
-                          tooltip: "РЎР±СЂРѕСЃ",
+                          tooltip: "Сброс",
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
@@ -658,7 +685,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: Colors.grey.shade800,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const Spacer(),
@@ -691,6 +718,8 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     // 1. Calculate Displayed Items (Apply Markup if Materials)
     final displayedItems = _displayedItems;
 
@@ -829,12 +858,17 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
               margin: const EdgeInsets.fromLTRB(12, 4, 12, 12),
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                color: scheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(
+                  color: AppDesignTokens.softBorder(context),
+                  width: 0.8,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: isDark
+                        ? Colors.black.withOpacity(0.24)
+                        : Colors.black.withOpacity(0.03),
                     blurRadius: 10,
                     offset: const Offset(0, 3),
                   ),

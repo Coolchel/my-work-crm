@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/utils/decimal_input_formatter.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/marquee_text.dart';
@@ -236,7 +236,7 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
                               child: TextField(
                                 controller: _myCtrl,
                                 decoration: InputDecoration(
-                                  labelText: "РњС‹",
+                                  labelText: "Мы",
                                   floatingLabelBehavior:
                                       FloatingLabelBehavior.always,
                                   border: OutlineInputBorder(
@@ -369,7 +369,7 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       style:
-                          TextButton.styleFrom(foregroundColor: Colors.black87),
+                          TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurface),
                       child: const Text("Отмена"),
                     ),
                     const SizedBox(width: 8),
@@ -426,3 +426,4 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
     );
   }
 }
+

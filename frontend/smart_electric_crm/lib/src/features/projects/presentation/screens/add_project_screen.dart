@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import '../providers/project_providers.dart';
 import '../../data/models/project_model.dart';
 
@@ -179,7 +180,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // в"Ђв"Ђв"Ђ Header в"Ђв"Ђв"Ђ
+              // Header
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -220,7 +221,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                 ),
               ),
 
-              // в"Ђв"Ђв"Ђ Content в"Ђв"Ђв"Ђ
+              // Content
               if (_isLoading)
                 const Padding(
                   padding: EdgeInsets.all(48),
@@ -358,7 +359,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                   ),
                 ),
 
-              // в"Ђв"Ђв"Ђ Footer в"Ђв"Ђв"Ђ
+              // Footer
               if (!_isLoading)
                 Padding(
                   padding: const EdgeInsets.all(24),
@@ -368,7 +369,8 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                       TextButton(
                         onPressed: () => Navigator.pop(context),
                         style: TextButton.styleFrom(
-                            foregroundColor: Colors.black87),
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onSurface),
                         child: const Text('Отмена'),
                       ),
                       const SizedBox(width: 8),
@@ -402,6 +404,8 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
     String? Function(String?)? validator,
   }) {
     const themeColor = Colors.indigo;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     return TextFormField(
       controller: controller,
       validator: validator,
@@ -409,14 +413,18 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
         labelText: label,
         floatingLabelBehavior: FloatingLabelBehavior.always,
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey.withOpacity(0.35)),
+        hintStyle: TextStyle(color: scheme.onSurfaceVariant.withOpacity(0.75)),
+        fillColor: isDark
+            ? scheme.surfaceContainerHigh
+            : scheme.surfaceContainer.withOpacity(0.4),
+        filled: true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: themeColor.withOpacity(0.2)),
+          borderSide: BorderSide(color: AppDesignTokens.softBorder(context)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: themeColor.withOpacity(0.2)),
+          borderSide: BorderSide(color: AppDesignTokens.softBorder(context)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -434,7 +442,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: Colors.indigo.shade700,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -443,16 +451,17 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
   Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,
       ValueChanged<String> onSelected) {
     const bg = Colors.indigo;
-    final fieldColor = Colors.indigo.shade50;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         return Container(
           height: 44,
           decoration: BoxDecoration(
-            color: fieldColor,
+            color: AppDesignTokens.surface2(context),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: bg.withOpacity(0.15)),
+            border: Border.all(color: AppDesignTokens.softBorder(context)),
           ),
           child: Material(
             color: Colors.transparent,
@@ -473,9 +482,9 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                   ),
                   items: items,
                   elevation: 4,
-                  shadowColor: Colors.black.withOpacity(0.2),
+                  shadowColor: AppDesignTokens.cardShadow(context),
                   surfaceTintColor: Colors.transparent,
-                  color: fieldColor,
+                  color: AppDesignTokens.surface2(context),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                   constraints: BoxConstraints(
@@ -488,7 +497,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
               },
               borderRadius: BorderRadius.circular(12),
               mouseCursor: SystemMouseCursors.click,
-              hoverColor: bg.shade700.withOpacity(0.05),
+              hoverColor: bg.shade700.withOpacity(isDark ? 0.12 : 0.05),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -497,12 +506,14 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                     Text(
                       label,
                       style: TextStyle(
-                        color: bg.shade800,
+                        color: isDark ? scheme.onSurface : bg.shade800,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Icon(Icons.arrow_drop_down, color: bg.shade800, size: 24),
+                    Icon(Icons.arrow_drop_down,
+                        color: isDark ? scheme.onSurfaceVariant : bg.shade800,
+                        size: 24),
                   ],
                 ),
               ),
@@ -514,7 +525,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
   }
 }
 
-// в"Ђв"Ђв"Ђ Stage Toggle Chip в"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђ
+// Stage Toggle Chip
 
 class _StageToggleChip extends StatefulWidget {
   final String label;
@@ -539,6 +550,7 @@ class _StageToggleChipState extends State<_StageToggleChip> {
   @override
   Widget build(BuildContext context) {
     const themeColor = Colors.indigo;
+    final isDark = AppDesignTokens.isDark(context);
     final isSelected = widget.isSelected;
 
     return MouseRegion(
@@ -553,12 +565,18 @@ class _StageToggleChipState extends State<_StageToggleChip> {
           decoration: BoxDecoration(
             color: isSelected
                 ? themeColor.withOpacity(0.12)
-                : (_isHovered ? Colors.grey.shade100 : Colors.grey.shade50),
+                : (_isHovered
+                    ? (isDark
+                        ? Theme.of(context).colorScheme.surfaceContainerHigh
+                        : Colors.grey.shade100)
+                    : (isDark
+                        ? Theme.of(context).colorScheme.surfaceContainer
+                        : Colors.grey.shade50)),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
                   ? themeColor.withOpacity(0.4)
-                  : Colors.grey.shade200,
+                  : AppDesignTokens.softBorder(context),
               width: isSelected ? 1.5 : 1,
             ),
           ),

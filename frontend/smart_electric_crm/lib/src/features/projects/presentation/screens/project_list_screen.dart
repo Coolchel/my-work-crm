@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/project_providers.dart';
@@ -11,7 +11,7 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_secti
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
-// в"Ђв"Ђв"Ђ Filter enums в"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђ
+// Filter enums
 enum SortOrder { newest, oldest }
 
 class ProjectListScreen extends ConsumerStatefulWidget {
@@ -165,7 +165,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
-            tooltip: 'РџРѕРёСЃРє',
+            tooltip: 'Поиск',
             onPressed: _toggleSearch,
           ),
           IconButton(
@@ -604,7 +604,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   }
 }
 
-// в"Ђв"Ђв"Ђ Project Card в"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђв"Ђ
+// Project Card
 
 class _ProjectCard extends StatefulWidget {
   final ProjectModel project;
@@ -721,10 +721,10 @@ class _ProjectCardState extends State<_ProjectCard> {
                                     // Address (top, bold)
                                     Text(
                                       project.address,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
+                                        color: Theme.of(context).colorScheme.onSurface,
                                         letterSpacing: -0.3,
                                       ),
                                     ),
@@ -801,7 +801,7 @@ class _ProjectCardState extends State<_ProjectCard> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'РўРёРї',
+                                    'Тип',
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.grey.shade500,
@@ -974,3 +974,4 @@ class _ActionButtonState extends State<_ActionButton> {
     );
   }
 }
+

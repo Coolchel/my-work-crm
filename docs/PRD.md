@@ -6,6 +6,8 @@ Create a premium, professional tool for electricians to manage projects, estimat
 ## 2. Core Principles
 *   **Premium Aesthetics:** Use Glassmorphism, specific Color Palettes (Indigo, Teal, Orange), and custom UI components to avoid "default Flutter look".
 *   **Dual Theme Quality:** Full feature parity and visual consistency must be preserved in both light and dark themes across all screens, dialogs, and overlays.
+    *   Dark mode presentation uses tonal surface hierarchy (`background` / `surface-1` / `surface-2`) with restrained borders and no bright full-width header fills.
+*   **UTF-8 Integrity:** All source files and user-facing strings must be stored and rendered as UTF-8 to keep Russian text readable across the entire app.
 *   **Friendly Empty States:** Any "no content yet" scenario should use a polished centered empty-state block with a subtle large icon and explanatory text, not plain one-line placeholders.
 *   **Automation:** Minimizing manual entry. Engineering data (Shields) automatically generates Estimates (Materials & Works).
 *   **Data Integrity:** "Safe" saving mechanisms, strict validation, and conflict resolution (e.g., smart merge logic for calculations).

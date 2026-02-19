@@ -221,7 +221,7 @@ class _CreateItemDialogState extends ConsumerState<_CreateItemDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _PopupSelectField<String>(
-              label: 'РўРёРї',
+              label: 'Тип',
               value: _itemType,
               options: const [
                 _PopupSelectOption(value: 'material', label: 'Материал'),

@@ -124,7 +124,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
               tooltip: _isSyncingSystemSections
                   ? 'Синхронизация...'
                   : 'Синхронизировать',
-              color: Theme.of(context).colorScheme.surface,
+              color: AppDesignTokens.surface2(context),
               isLoading: _isSyncingSystemSections,
               onTap: _isSyncingSystemSections
                   ? null
@@ -963,10 +963,10 @@ class _DirectoryCardState extends State<_DirectoryCard> {
                           widget.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -1116,7 +1116,7 @@ class _DialogShell extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 560),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: AppDesignTokens.surface2(context),
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -1185,14 +1185,14 @@ InputDecoration _dialogInputDecoration(String label) {
   return InputDecoration(
     labelText: label,
     filled: true,
-    fillColor: Colors.grey.shade50,
+    fillColor: const Color(0x14000000),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.grey.shade300),
+      borderSide: const BorderSide(color: Color(0x334B5563)),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.grey.shade300),
+      borderSide: const BorderSide(color: Color(0x334B5563)),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
@@ -1232,6 +1232,8 @@ class _DialogPopupSelectField<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     final selected = options.cast<_PopupSelectOption<T>?>().firstWhere(
           (option) => option?.value == value,
           orElse: () => null,
@@ -1249,16 +1251,18 @@ class _DialogPopupSelectField<T> extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade700,
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
             ),
             Container(
               height: 46,
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: isDark
+                    ? scheme.surfaceContainerHigh
+                    : scheme.surfaceContainer.withOpacity(0.4),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: AppDesignTokens.softBorder(context)),
               ),
               child: Material(
                 color: Colors.transparent,
@@ -1278,9 +1282,9 @@ class _DialogPopupSelectField<T> extends StatelessWidget {
                         position.dy + size.height + 320,
                       ),
                       elevation: 4,
-                      shadowColor: Colors.black.withOpacity(0.2),
+                      shadowColor: AppDesignTokens.cardShadow(context),
                       surfaceTintColor: Colors.transparent,
-                      color: Theme.of(context).colorScheme.surface,
+                      color: AppDesignTokens.surface2(context),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -1308,7 +1312,7 @@ class _DialogPopupSelectField<T> extends StatelessWidget {
                   },
                   borderRadius: BorderRadius.circular(14),
                   mouseCursor: SystemMouseCursors.click,
-                  hoverColor: Colors.indigo.withOpacity(0.05),
+                  hoverColor: Colors.indigo.withOpacity(isDark ? 0.10 : 0.05),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: Row(
@@ -1324,7 +1328,8 @@ class _DialogPopupSelectField<T> extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const Icon(Icons.arrow_drop_down, size: 22),
+                        Icon(Icons.arrow_drop_down,
+                            size: 22, color: scheme.onSurfaceVariant),
                       ],
                     ),
                   ),
@@ -1405,7 +1410,7 @@ class _DirectorySectionDialogState extends State<_DirectorySectionDialog> {
               decoration: _dialogInputDecoration('Название')),
           const SizedBox(height: 10),
           TextField(
-              controller: _code, decoration: _dialogInputDecoration('РљРѕРґ')),
+              controller: _code, decoration: _dialogInputDecoration('Код')),
           const SizedBox(height: 10),
           TextField(
             controller: _description,
@@ -1471,6 +1476,8 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     return _DialogShell(
       title: widget.title,
       themeColor: Colors.indigo,
@@ -1504,20 +1511,22 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
               decoration: _dialogInputDecoration('Название')),
           const SizedBox(height: 10),
           TextField(
-              controller: _code, decoration: _dialogInputDecoration('РљРѕРґ')),
+              controller: _code, decoration: _dialogInputDecoration('Код')),
           const SizedBox(height: 10),
           TextField(
             controller: _order,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: _dialogInputDecoration('РџРѕСЂСЏРґРѕРє'),
+            decoration: _dialogInputDecoration('Порядок'),
           ),
           const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
-              color: Colors.grey.shade50,
+              color: isDark
+                  ? scheme.surfaceContainerHigh
+                  : scheme.surfaceContainer.withOpacity(0.4),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(color: AppDesignTokens.softBorder(context)),
             ),
             child: SwitchListTile(
               value: _isActive,
@@ -1777,7 +1786,7 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
             children: [
               Expanded(
                 child: _DialogPopupSelectField<String>(
-                  label: 'РўРёРї',
+                  label: 'Тип',
                   value: _itemType,
                   options: const [
                     _PopupSelectOption(value: 'material', label: 'Материал'),

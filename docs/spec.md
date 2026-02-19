@@ -1,5 +1,8 @@
 # Functional Specifications (Specs)
 
+## 0. Encoding Contract
+*   **UTF-8 Everywhere:** Frontend/backend source files and runtime UI strings must use UTF-8 encoding; any mojibake text is treated as a blocking defect.
+
 ## 1. Authentication & Security
 *   **Mechanism:** JWT (Access + Refresh).
 *   **Flow:**
@@ -171,3 +174,6 @@
 *   **Theme Modes:** Settings screen controls `Light` / `Dark` / `System` theme modes.
 *   **Persistence:** Selected theme mode is persisted locally and restored on next app launch.
 *   **Coverage Contract:** Dark theme must cover all primary sections and nested UI layers (dialogs, popups, cards, navigation bars, and empty states) without changing business behavior.
+*   **Dark Surface Hierarchy Contract:** Dark mode uses three tonal layers: scaffold `background`, content `surface-1` (cards/lists), and elevated `surface-2` (dialogs/forms/summary panels).
+*   **Dark Header Restraint Contract:** In dark mode, section AppBars use `surface` background with subtle accent tint only (no saturated full-width color fills).
+*   **Dark Controls Contract:** Text inputs, popup selects, dropdown menus, and popup menus in dark mode must use dark filled surfaces and low-contrast borders.

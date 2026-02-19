@@ -94,16 +94,17 @@ class _CatalogSearchScreenState extends ConsumerState<CatalogSearchScreen> {
         title: TextField(
           controller: _searchCtrl,
           autofocus: true,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: "Поиск в каталоге...",
             border: InputBorder.none,
-            hintStyle: TextStyle(color: Colors.white70),
+            hintStyle:
+                TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           style: TextStyle(
-            color: Theme.of(context).colorScheme.surface,
+            color: Theme.of(context).colorScheme.onSurface,
             fontSize: 18,
           ),
-          cursorColor: Theme.of(context).colorScheme.surface,
+          cursorColor: Theme.of(context).colorScheme.onSurface,
           onChanged: _onSearchChanged,
         ),
       ),
