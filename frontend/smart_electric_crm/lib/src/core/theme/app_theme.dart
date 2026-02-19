@@ -30,19 +30,19 @@ class AppTheme {
       surface: AppDesignTokens.appSurfaceDark,
       surfaceTint: Colors.transparent,
     ).copyWith(
-      surfaceContainer: const Color(0xFF202943),
-      surfaceContainerHigh: const Color(0xFF263151),
-      surfaceContainerHighest: const Color(0xFF303B5D),
-      outline: const Color(0xFF3A476B),
-      outlineVariant: const Color(0xFF2D3857),
-      onSurfaceVariant: const Color(0xFFB8C2E3),
+      surfaceContainer: const Color(0xFF1F2126),
+      surfaceContainerHigh: const Color(0xFF272A30),
+      surfaceContainerHighest: const Color(0xFF2F333B),
+      outline: const Color(0xFF5B606B),
+      outlineVariant: const Color(0xFF3A3E46),
+      onSurfaceVariant: const Color(0xFFB9BDC7),
     );
 
     return _buildTheme(
       scheme: scheme,
       scaffoldBackground: AppDesignTokens.appBackgroundDark,
       cardShadow: AppDesignTokens.cardShadowColorDark,
-      navIndicator: const Color(0xFF3D4B7A),
+      navIndicator: const Color(0xFF30343D),
     );
   }
 

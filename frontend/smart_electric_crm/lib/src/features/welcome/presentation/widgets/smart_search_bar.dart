@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+
 import '../../../projects/presentation/providers/project_providers.dart';
 
 class SmartSearchBar extends ConsumerStatefulWidget {
@@ -29,7 +31,6 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
 
   void _onFocusChange() {
     if (_searchFocusNode.hasFocus && _searchController.text.isNotEmpty) {
-      // Restore search state if we have text
       final normalized = _searchController.text.trim();
       ref.read(projectSearchQueryProvider.notifier).state =
           normalized.isEmpty ? null : normalized;
@@ -38,13 +39,17 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: AppDesignTokens.cardBackground(context),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppDesignTokens.cardBorder(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: AppDesignTokens.cardShadow(context),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -53,20 +58,20 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
       child: TextField(
         controller: _searchController,
         focusNode: _searchFocusNode,
-        style: const TextStyle(color: Colors.black87),
-        cursorColor: Colors.indigo,
+        style: TextStyle(color: scheme.onSurface),
+        cursorColor: scheme.primary,
         decoration: InputDecoration(
           hintText: 'Поиск: объект, домофон, заказчик...',
           hintStyle: TextStyle(
-            color: Colors.grey.shade400,
+            color: scheme.onSurfaceVariant.withOpacity(0.75),
           ),
           prefixIcon: Icon(
             Icons.search,
-            color: Colors.grey.shade400,
+            color: scheme.onSurfaceVariant.withOpacity(0.85),
           ),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.close, color: Colors.grey),
+                  icon: Icon(Icons.close, color: scheme.onSurfaceVariant),
                   onPressed: () {
                     _searchController.clear();
                     ref.read(projectSearchQueryProvider.notifier).state = null;
@@ -74,6 +79,10 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
                   },
                 )
               : null,
+          filled: true,
+          fillColor: isDark
+              ? scheme.surfaceContainer.withOpacity(0.36)
+              : scheme.surface.withOpacity(0.88),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,

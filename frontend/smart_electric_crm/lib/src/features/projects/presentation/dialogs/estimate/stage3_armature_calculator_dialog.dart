@@ -408,14 +408,18 @@ class _Stage3ArmatureCalculatorDialogState
 
   Widget _buildRow(_ArmaturePosition position, bool disabled) {
     final textController = _controllers[position.mappingKey]!;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
-        color: disabled ? Colors.grey.shade50 : Colors.white,
+        color: disabled
+            ? (isDark ? scheme.surfaceContainer : Colors.grey.shade50)
+            : scheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -424,7 +428,9 @@ class _Stage3ArmatureCalculatorDialogState
             height: 34,
             decoration: BoxDecoration(
               color: disabled
-                  ? Colors.grey.shade200
+                  ? (isDark
+                      ? scheme.surfaceContainerHigh
+                      : Colors.grey.shade200)
                   : position.iconColor.withOpacity(0.14),
               borderRadius: BorderRadius.circular(10),
             ),
@@ -441,7 +447,7 @@ class _Stage3ArmatureCalculatorDialogState
               style: TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
-                color: disabled ? Colors.grey.shade500 : Colors.black87,
+                color: disabled ? Colors.grey.shade500 : scheme.onSurface,
               ),
             ),
           ),

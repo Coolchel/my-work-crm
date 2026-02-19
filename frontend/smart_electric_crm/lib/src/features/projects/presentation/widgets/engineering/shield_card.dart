@@ -13,6 +13,7 @@ import '../../../../engineering/data/models/template_models.dart';
 import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../../shared/presentation/dialogs/text_input_dialog.dart';
 import '../../dialogs/engineering/shield_notes_dialog.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 
 class ShieldCard extends ConsumerStatefulWidget {
   final ShieldModel shield;
@@ -97,15 +98,16 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: AppDesignTokens.cardBackground(context),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color:
-              _isExpanded ? themeColor.withOpacity(0.3) : Colors.grey.shade200,
+          color: _isExpanded
+              ? themeColor.withOpacity(0.35)
+              : AppDesignTokens.cardBorder(context),
         ), // Accent when expanded
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.06),
+            color: AppDesignTokens.cardShadow(context, hovered: _isExpanded),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -137,7 +139,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     Material(
                       color: _isExpanded
                           ? themeColor.withOpacity(0.08)
-                          : Colors.grey.shade50, // Accent when expanded
+                          : AppDesignTokens.cardBackground(context,
+                              hovered: true),
                       child: InkWell(
                         onTap: _toggleExpand,
                         child: Container(
@@ -146,8 +149,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                           decoration: BoxDecoration(
                             border: Border(
                               bottom: BorderSide(
-                                  color:
-                                      Colors.grey.shade200), // Neutral border
+                                color: AppDesignTokens.cardBorder(context),
+                              ), // Neutral border
                             ),
                           ),
                           child: Row(

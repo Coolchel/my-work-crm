@@ -1,5 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import '../../../data/models/stage_model.dart';
 
 class StageCard extends StatefulWidget {
@@ -72,12 +73,12 @@ class _StageCardState extends State<StageCard> {
       constraints: const BoxConstraints(minHeight: 100),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: AppDesignTokens.cardBackground(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppDesignTokens.cardBorder(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: AppDesignTokens.cardShadow(context),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

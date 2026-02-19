@@ -121,7 +121,7 @@ class StatisticsScreen extends ConsumerWidget {
                   stripeColor: statisticsAccent,
                 ),
                 const SizedBox(height: 12),
-                _buildFinancialSummary(stats.finances),
+                _buildFinancialSummary(context, stats.finances),
                 const SizedBox(height: 24),
 
                 IntrinsicHeight(
@@ -139,6 +139,7 @@ class StatisticsScreen extends ConsumerWidget {
                             const SizedBox(height: 12),
                             Expanded(
                                 child: _buildPieChartCard(
+                              context,
                               stats.sources
                                   .map((e) => _ChartData(e.name, e.usd))
                                   .toList(),
@@ -158,6 +159,7 @@ class StatisticsScreen extends ConsumerWidget {
                             const SizedBox(height: 12),
                             Expanded(
                                 child: _buildPieChartCard(
+                              context,
                               stats.objectTypes
                                   .map((e) => _ChartData(e.name, e.usd))
                                   .toList(),
@@ -181,7 +183,7 @@ class StatisticsScreen extends ConsumerWidget {
                     Container(
                       height: 280,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppDesignTokens.cardBackground(context),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: Colors.green.withOpacity(0.15),
@@ -226,7 +228,7 @@ class StatisticsScreen extends ConsumerWidget {
                     Container(
                       height: 280,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppDesignTokens.cardBackground(context),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: Colors.indigo.withOpacity(0.15),
@@ -317,12 +319,13 @@ class StatisticsScreen extends ConsumerWidget {
   }
 
   // 1. Financial Summary Cards
-  Widget _buildFinancialSummary(CurrencyAmount finances) {
+  Widget _buildFinancialSummary(BuildContext context, CurrencyAmount finances) {
     return IntrinsicHeight(
       child: Row(
         children: [
           Expanded(
             child: _buildFinanceCard(
+              context,
               'Всего USD',
               finances.usd,
               '\$',
@@ -332,6 +335,7 @@ class StatisticsScreen extends ConsumerWidget {
           const SizedBox(width: 16),
           Expanded(
             child: _buildFinanceCard(
+              context,
               'Всего BYN',
               finances.byn,
               'СЂ',
@@ -343,12 +347,12 @@ class StatisticsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildFinanceCard(
-      String title, double amount, String symbol, Color color) {
+  Widget _buildFinanceCard(BuildContext context, String title, double amount,
+      String symbol, Color color) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppDesignTokens.cardBackground(context),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -404,14 +408,15 @@ class StatisticsScreen extends ConsumerWidget {
 
   // Helper class for chart data
 
-  Widget _buildPieChartCard(List<_ChartData> data, {int paletteOffset = 0}) {
+  Widget _buildPieChartCard(BuildContext context, List<_ChartData> data,
+      {int paletteOffset = 0}) {
     if (data.isEmpty) {
       return Container(
         height: 300,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppDesignTokens.cardBackground(context),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.withOpacity(0.1)),
+          border: Border.all(color: AppDesignTokens.cardBorder(context)),
         ),
         child: const FriendlyEmptyState(
           icon: Icons.pie_chart_outline_rounded,
@@ -505,7 +510,7 @@ class StatisticsScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppDesignTokens.cardBackground(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: Colors.green.withOpacity(0.15), // Greenish border

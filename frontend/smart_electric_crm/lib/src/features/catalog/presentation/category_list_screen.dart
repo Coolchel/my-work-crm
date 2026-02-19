@@ -9,6 +9,7 @@ import 'package:smart_electric_crm/src/features/catalog/data/directory_repositor
 import 'package:smart_electric_crm/src/features/catalog/domain/category_model.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/directory_models.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
@@ -1009,12 +1010,14 @@ class _DirectoryCardState extends State<_DirectoryCard> {
       duration: const Duration(milliseconds: 180),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: _isHovered ? Colors.grey.shade50 : Colors.white,
+        color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(_isHovered ? 0.07 : 0.04),
+            color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
             blurRadius: _isHovered ? 14 : 10,
             offset: const Offset(0, 4),
           ),

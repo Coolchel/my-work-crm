@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/estimate/edit_item_dialog.dart';
 
@@ -69,18 +70,16 @@ class _EstimateListTileState extends State<EstimateListTile> {
         duration: const Duration(milliseconds: 180),
         margin: const EdgeInsets.symmetric(vertical: 2),
         decoration: BoxDecoration(
-          color: _isHovered ? Colors.grey.shade50 : Colors.white,
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: _isHovered
                 ? widget.primaryColor.withOpacity(0.2)
-                : Colors.grey.shade200,
+                : AppDesignTokens.cardBorder(context),
           ),
           boxShadow: [
             BoxShadow(
-              color: _isHovered
-                  ? Colors.black.withOpacity(0.055)
-                  : Colors.black.withOpacity(0.028),
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
               blurRadius: _isHovered ? 8 : 4,
               offset: const Offset(0, 2),
             ),

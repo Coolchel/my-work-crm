@@ -415,19 +415,22 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: shouldHighlight ? Colors.grey.shade50 : Colors.white,
+          color: AppDesignTokens.cardBackground(
+            context,
+            hovered: shouldHighlight,
+          ),
           borderRadius: BorderRadius.circular(_cardRadius),
           border: Border.all(
             color: shouldHighlight
                 ? _financeAccent.withOpacity(0.24)
-                : Colors.grey.shade200,
+                : AppDesignTokens.cardBorder(context),
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
               color: shouldHighlight
                   ? _financeAccent.withOpacity(0.07)
-                  : Colors.black.withOpacity(0.03),
+                  : AppDesignTokens.cardShadow(context),
               blurRadius: shouldHighlight ? 12 : 8,
               offset: const Offset(0, 3),
             ),
@@ -808,15 +811,21 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   Widget _buildSourceSuperscript(String text) {
+    final isDark = AppDesignTokens.isDark(context);
     return Transform.translate(
       offset: const Offset(0, -5),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 130),
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
         decoration: BoxDecoration(
-          color: Colors.grey.shade100,
+          color: isDark
+              ? Theme.of(context).colorScheme.surfaceContainerHighest
+              : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.grey.shade300, width: 0.8),
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(context),
+            width: 0.8,
+          ),
         ),
         child: Text(
           text,
@@ -839,10 +848,15 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     required bool active,
     double? maxTextWidth,
   }) {
-    final background =
-        active ? _financeAccent.withOpacity(0.1) : Colors.grey.shade100;
-    final border =
-        active ? _financeAccent.withOpacity(0.28) : Colors.grey.shade300;
+    final isDark = AppDesignTokens.isDark(context);
+    final background = active
+        ? _financeAccent.withOpacity(isDark ? 0.22 : 0.1)
+        : (isDark
+            ? Theme.of(context).colorScheme.surfaceContainerHigh
+            : Colors.grey.shade100);
+    final border = active
+        ? _financeAccent.withOpacity(isDark ? 0.40 : 0.28)
+        : AppDesignTokens.cardBorder(context);
     final foreground = active ? _financeAccent : Colors.grey.shade700;
 
     final label = Text(
@@ -1094,11 +1108,16 @@ class _PayStageButtonState extends State<_PayStageButton> {
   @override
   Widget build(BuildContext context) {
     const accent = _FinanceScreenState._financeAccent;
-    final backgroundColor =
-        _isHovered ? accent.withOpacity(0.14) : Colors.white;
-    final borderColor =
-        _isHovered ? accent.withOpacity(0.45) : Colors.grey.shade300;
-    final textColor = _isHovered ? accent.shade800 : Colors.grey.shade700;
+    final isDark = AppDesignTokens.isDark(context);
+    final backgroundColor = _isHovered
+        ? accent.withOpacity(isDark ? 0.22 : 0.14)
+        : AppDesignTokens.cardBackground(context);
+    final borderColor = _isHovered
+        ? accent.withOpacity(0.45)
+        : AppDesignTokens.cardBorder(context);
+    final textColor = _isHovered
+        ? (isDark ? accent.shade200 : accent.shade800)
+        : Theme.of(context).colorScheme.onSurfaceVariant;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+
 import '../../../projects/presentation/screens/add_project_screen.dart';
 
 class NewProjectCard extends StatelessWidget {
@@ -6,6 +8,21 @@ class NewProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
+
+    final bgGradient = isDark
+        ? const [Color(0xFF1C2028), Color(0xFF171A21)]
+        : [
+            Colors.indigo.shade50.withOpacity(0.5),
+            Colors.indigo.shade50.withOpacity(0.2),
+          ];
+
+    final titleColor = isDark ? scheme.onSurface : Colors.black87;
+    final subtitleColor = isDark
+        ? scheme.onSurfaceVariant.withOpacity(0.9)
+        : Colors.grey.shade600;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -21,18 +38,22 @@ class NewProjectCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Colors.indigo.shade50.withOpacity(0.5),
-                Colors.indigo.shade50.withOpacity(0.2),
-              ],
+              colors: bgGradient,
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Colors.indigo.withOpacity(0.08),
+              color: AppDesignTokens.cardBorder(context),
               width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: AppDesignTokens.cardShadow(context),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -41,17 +62,16 @@ class NewProjectCard extends StatelessWidget {
                 height: 56,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      Colors.indigo.shade600,
-                      Colors.indigo.shade400,
-                    ],
+                    colors: isDark
+                        ? const [Color(0xFF4E67CF), Color(0xFF3A4FA8)]
+                        : [Colors.indigo.shade600, Colors.indigo.shade400],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.indigo.withOpacity(0.3),
+                      color: Colors.indigo.withOpacity(isDark ? 0.24 : 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -59,12 +79,12 @@ class NewProjectCard extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.add,
-                  color: Theme.of(context).colorScheme.surface,
+                  color: scheme.onPrimary,
                   size: 30,
                 ),
               ),
               const SizedBox(width: 20),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -73,15 +93,15 @@ class NewProjectCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: titleColor,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'Создать смету и инженерную карту',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey,
+                        color: subtitleColor,
                       ),
                     ),
                   ],
@@ -90,7 +110,9 @@ class NewProjectCard extends StatelessWidget {
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: Colors.indigo.withOpacity(0.5),
+                color: isDark
+                    ? scheme.onSurfaceVariant.withOpacity(0.8)
+                    : Colors.indigo.withOpacity(0.5),
               ),
             ],
           ),

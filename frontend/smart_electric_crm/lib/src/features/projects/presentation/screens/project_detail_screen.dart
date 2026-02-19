@@ -15,6 +15,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'dart:io';
 import '../../data/models/project_file_model.dart';
 import '../../../../shared/services/temp_file_service.dart';
@@ -428,10 +429,10 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: AppDesignTokens.cardBorder(context)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: AppDesignTokens.cardShadow(context),
               blurRadius: 15,
               offset: const Offset(0, 5),
             )
@@ -475,7 +476,12 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.5),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surface
+                              .withOpacity(
+                                AppDesignTokens.isDark(context) ? 0.22 : 0.5,
+                              ),
                         ),
                         child: Icon(Icons.close,
                             size: 18, color: themeColor.withOpacity(0.8)),
@@ -1022,7 +1028,10 @@ class _FileCardState extends ConsumerState<_FileCard> {
                     child: Container(
                       padding: const EdgeInsets.all(3),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.92),
+                        color:
+                            Theme.of(context).colorScheme.surface.withOpacity(
+                                  AppDesignTokens.isDark(context) ? 0.82 : 0.92,
+                                ),
                         borderRadius: BorderRadius.circular(8),
                         border:
                             Border.all(color: Colors.black.withOpacity(0.1)),
@@ -1239,7 +1248,9 @@ class _ActionButtonState extends State<_ActionButton> {
                 borderRadius: BorderRadius.circular(6),
                 color: _isHovered
                     ? Colors.black.withOpacity(0.12)
-                    : Colors.white.withOpacity(0.95),
+                    : Theme.of(context).colorScheme.surface.withOpacity(
+                          AppDesignTokens.isDark(context) ? 0.84 : 0.95,
+                        ),
                 border: Border.all(
                   color: _isHovered
                       ? Colors.black.withOpacity(0.28)
@@ -1388,14 +1399,14 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: _isHovered ? Colors.grey.shade50 : Colors.white,
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
+          ),
           boxShadow: [
             BoxShadow(
-              color: _isHovered
-                  ? Colors.black.withOpacity(0.06)
-                  : Colors.black.withOpacity(0.03),
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
               blurRadius: _isHovered ? 15 : 10,
               offset: const Offset(0, 4),
             ),

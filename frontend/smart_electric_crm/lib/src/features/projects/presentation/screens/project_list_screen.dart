@@ -581,13 +581,17 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             style: TextStyle(
               fontSize: 12,
               fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-              color: isActive ? Colors.white : Colors.grey.shade700,
+              color: isActive
+                  ? Theme.of(context).colorScheme.onPrimary
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           selected: isActive,
           selectedColor: themeColor,
-          backgroundColor: Colors.grey.shade100,
-          side: BorderSide.none,
+          backgroundColor: AppDesignTokens.cardBackground(context),
+          side: BorderSide(
+            color: AppDesignTokens.cardBorder(context),
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -665,14 +669,14 @@ class _ProjectCardState extends State<_ProjectCard> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: _isHovered ? Colors.grey.shade50 : Colors.white,
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
+          ),
           boxShadow: [
             BoxShadow(
-              color: _isHovered
-                  ? Colors.black.withOpacity(0.06)
-                  : Colors.black.withOpacity(0.03),
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
               blurRadius: _isHovered ? 15 : 10,
               offset: const Offset(0, 4),
             ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../../../projects/presentation/screens/project_detail_screen.dart';
 import '../../../projects/data/models/project_model.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class SearchResultsOverlay extends ConsumerWidget {
@@ -117,17 +118,20 @@ class _SearchResultItemState extends State<_SearchResultItem> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
-          color: _isHovered ? hoverAccent.withOpacity(0.07) : Colors.white,
+          color: _isHovered
+              ? hoverAccent.withOpacity(0.07)
+              : AppDesignTokens.cardBackground(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color:
-                _isHovered ? hoverAccent.withOpacity(0.28) : Colors.transparent,
+            color: _isHovered
+                ? hoverAccent.withOpacity(0.28)
+                : AppDesignTokens.cardBorder(context),
           ),
           boxShadow: [
             BoxShadow(
               color: _isHovered
                   ? hoverAccent.withOpacity(0.10)
-                  : Colors.black.withOpacity(0.02),
+                  : AppDesignTokens.cardShadow(context),
               blurRadius: _isHovered ? 10 : 4,
               offset: const Offset(0, 2),
             ),

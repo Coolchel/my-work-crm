@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+
 import '../../../projects/data/models/project_model.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../../../projects/presentation/screens/project_detail_screen.dart';
-import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class RecentProjectsList extends ConsumerWidget {
   const RecentProjectsList({super.key});
@@ -42,17 +44,15 @@ class RecentProjectsList extends ConsumerWidget {
             case 'active_objects':
               listTitle = 'Текущие объекты (активные)';
               filteredProjects = projects.where((p) {
-                // Ищем проекты, где есть этапы за этот месяц, НЕ являющиеся предпросчетами
                 return p.stages.any((s) =>
                     s.createdAt != null &&
                     s.createdAt!.year == currentYear &&
                     s.createdAt!.month == currentMonth &&
                     !s.title.toLowerCase().contains('предпросчет'));
               }).toList();
-              // ТЗ: "считаеться каждый объект, у которого в текущем месяце был добавлен новый этап, за исключением этапа предпросчет"
               break;
             case 'paid':
-              listTitle = 'Объекты с оплаченными этапами (тек. месяц)';
+              listTitle = 'Объекты с оплаченными этапами (текущий месяц)';
               filteredProjects = projects.where((p) {
                 return p.stages.any((s) =>
                     s.isPaid &&
@@ -64,14 +64,12 @@ class RecentProjectsList extends ConsumerWidget {
           }
         }
 
-        // Sort by updated_at (or created_at) DESC
         filteredProjects.sort((a, b) {
           final dateA = a.updatedAt ?? a.createdAt;
           final dateB = b.updatedAt ?? b.createdAt;
           return dateB.compareTo(dateA);
         });
 
-        // Если фильтр не активен - берем топ 5, иначе показываем все (или больше)
         final displayProjects = filter == null
             ? filteredProjects.take(5).toList()
             : filteredProjects;
@@ -89,7 +87,7 @@ class RecentProjectsList extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const Spacer(),
@@ -128,7 +126,7 @@ class RecentProjectsList extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   if (filter != null)
@@ -192,17 +190,18 @@ class _RecentProjectTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final project = this.project;
     final lastActivity = project.updatedAt ?? project.createdAt;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: AppDesignTokens.cardBackground(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppDesignTokens.cardBorder(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: AppDesignTokens.cardShadow(context),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -229,12 +228,14 @@ class _RecentProjectTile extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.indigo.shade50,
+                    color: isDark
+                        ? Colors.indigo.withOpacity(0.18)
+                        : Colors.indigo.shade50,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     _getIcon(project.objectType),
-                    color: Colors.indigo,
+                    color: isDark ? Colors.indigo.shade200 : Colors.indigo,
                     size: 20,
                   ),
                 ),
@@ -245,9 +246,10 @@ class _RecentProjectTile extends StatelessWidget {
                     children: [
                       Text(
                         project.address,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
+                          color: scheme.onSurface,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -259,7 +261,7 @@ class _RecentProjectTile extends StatelessWidget {
                             project.clientInfo,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade500,
+                              color: scheme.onSurfaceVariant,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -275,7 +277,7 @@ class _RecentProjectTile extends StatelessWidget {
                       _formatDate(lastActivity),
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey.shade600,
+                        color: scheme.onSurfaceVariant,
                         fontWeight: FontWeight.w500,
                       ),
                     ),

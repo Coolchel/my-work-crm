@@ -9,6 +9,7 @@
 *   **Purple:** LED Shields.
 *   **Green:** Multimedia Shields (aligned with unified app green token).
 *   **Dark Foundation:** Dark theme uses deep navy/graphite surfaces with preserved semantic accents (indigo/blue/green/orange) and readable contrast for text, icons, and controls.
+*   **Dark Neutral Direction:** Preferred dark palette is neutral dark-grey near black (not blue-tinted backgrounds) with restrained accent usage.
 
 ## 2. Component Guidelines
 
@@ -44,6 +45,7 @@
 *   **Shape/Depth/Spacing:** One primary medium radius token, soft low-intensity elevation presets, and base screen/card paddings are centralized and reused.
 *   **Hero Motif Echo:** Home keeps the strongest hero gradient; Objects/Finance/Statistics use a restrained top gradient motif in compact headers without increasing header height.
 *   **Dark Token Mirror:** The same shape/spacing/navigation tokens are mirrored for dark mode with dedicated background/surface/shadow/outline values.
+*   **Card Border/Hover in Dark:** Interactive cards in dark mode use subtle neutral outlines and soft hover border transition; avoid bright white borders and harsh contrast flashes.
 
 ### 2.5. Friendly Empty States
 *   **Visual Pattern:** Use a centered lightweight card with a large desaturated icon, short title, and concise helper subtitle.
