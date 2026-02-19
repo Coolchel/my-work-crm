@@ -155,6 +155,15 @@ class _StatCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.pressed)) {
+            return AppDesignTokens.pressedOverlay(context);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return AppDesignTokens.hoverOverlay(context);
+          }
+          return null;
+        }),
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -163,8 +172,8 @@ class _StatCard extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: AppDesignTokens.cardShadow(context),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
+                blurRadius: 9,
+                offset: const Offset(0, 4),
               ),
             ],
             border: Border.all(

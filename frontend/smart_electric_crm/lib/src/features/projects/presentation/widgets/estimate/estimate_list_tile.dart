@@ -49,6 +49,8 @@ class _EstimateListTileState extends State<EstimateListTile> {
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     final isUsd = item.currency == 'USD';
     final clientAmount = item.clientAmount ?? 0;
     final employerAmount = item.employerAmount ?? 0;
@@ -56,11 +58,8 @@ class _EstimateListTileState extends State<EstimateListTile> {
     final hasEmployer = employerAmount > 0;
     const markupAccent = Colors.teal;
 
-    final amountBgColor = isUsd
-        ? widget.primaryColor.withOpacity(0.1)
-        : Colors.deepPurple.shade50;
-    final amountTextColor =
-        isUsd ? widget.primaryColor : Colors.deepPurple.shade600;
+    final amountBgColor = widget.primaryColor.withOpacity(isDark ? 0.12 : 0.1);
+    final amountTextColor = widget.primaryColor;
 
     return MouseRegion(
       cursor: widget.isDisabled ? MouseCursor.defer : SystemMouseCursors.click,
@@ -183,8 +182,15 @@ class _EstimateListTileState extends State<EstimateListTile> {
                                       _buildMiniBadge(
                                         label:
                                             'Контрагент ${_formatCurrencyAmount(employerAmount, isUsd)}',
-                                        background: Colors.orange.shade50,
-                                        foreground: Colors.orange.shade700,
+                                        background: isDark
+                                            ? Colors.orange.withOpacity(0.14)
+                                            : Colors.orange.shade50,
+                                        foreground: isDark
+                                            ? Colors.orange.shade200
+                                            : Colors.orange.shade700,
+                                        border: isDark
+                                            ? Colors.orange.withOpacity(0.30)
+                                            : Colors.orange.shade100,
                                       ),
                                     if (hasEmployer)
                                       _buildMiniBadge(
@@ -197,6 +203,8 @@ class _EstimateListTileState extends State<EstimateListTile> {
                                         foreground: isUsd
                                             ? widget.primaryColor
                                             : Colors.deepPurple.shade600,
+                                        border:
+                                            AppDesignTokens.softBorder(context),
                                       ),
                                   ],
                                 ),
@@ -208,31 +216,43 @@ class _EstimateListTileState extends State<EstimateListTile> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               if (!widget.hidePrices)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 7,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: amountBgColor,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: widget.isMarkupActive
-                                        ? Border.all(
-                                            color:
-                                                markupAccent.withOpacity(0.6),
-                                            width: 0.8,
-                                          )
-                                        : Border.all(color: Colors.transparent),
-                                  ),
-                                  child: Text(
-                                    _formatCurrencyAmount(clientAmount, isUsd),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: amountTextColor,
-                                    ),
-                                  ),
-                                ),
+                                isUsd
+                                    ? Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 7,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: amountBgColor,
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: widget.isMarkupActive
+                                              ? Border.all(
+                                                  color: markupAccent
+                                                      .withOpacity(0.6),
+                                                  width: 0.8,
+                                                )
+                                              : Border.all(
+                                                  color: Colors.transparent),
+                                        ),
+                                        child: Text(
+                                          _formatCurrencyAmount(
+                                              clientAmount, isUsd),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: amountTextColor,
+                                          ),
+                                        ),
+                                      )
+                                    : Text(
+                                        '≈ ${_formatCurrencyAmount(clientAmount, false)}',
+                                        style: TextStyle(
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w600,
+                                          color: scheme.onSurfaceVariant,
+                                        ),
+                                      ),
                               const SizedBox(width: 2),
                               SizedBox(
                                 width: 24,
@@ -269,12 +289,14 @@ class _EstimateListTileState extends State<EstimateListTile> {
     required String label,
     required Color background,
     required Color foreground,
+    Color? border,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(5),
+        border: border == null ? null : Border.all(color: border, width: 0.7),
       ),
       child: Text(
         label,

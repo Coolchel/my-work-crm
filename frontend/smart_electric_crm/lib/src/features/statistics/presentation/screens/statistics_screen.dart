@@ -28,11 +28,14 @@ class StatisticsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     final statsAsync = ref.watch(statisticsDataProvider);
     final currentPeriod = ref.watch(statisticsFilterProvider);
     final statisticsAccent =
         Theme.of(context).floatingActionButtonTheme.backgroundColor ??
             Colors.indigo;
+    final headerStripeColor =
+        isDark ? scheme.primary.withOpacity(0.76) : statisticsAccent;
     const workDynamicsTooltip =
         '\u0414\u0438\u043d\u0430\u043c\u0438\u043a\u0430 \u0440\u0430\u0431\u043e\u0442.\n'
         '\u041f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u0442 \u0437\u0430\u0440\u0430\u0431\u043e\u0442\u043e\u043a\n'
@@ -87,14 +90,30 @@ class StatisticsScreen extends ConsumerWidget {
                     style: ButtonStyle(
                       visualDensity: VisualDensity.compact,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      side: MaterialStateProperty.all(
-                          BorderSide(color: statisticsAccent)),
+                      side: MaterialStateProperty.resolveWith<BorderSide>(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return BorderSide(
+                              color: isDark
+                                  ? scheme.primary.withOpacity(0.66)
+                                  : statisticsAccent.withOpacity(0.85),
+                            );
+                          }
+                          return BorderSide(
+                            color: AppDesignTokens.cardBorder(context),
+                          );
+                        },
+                      ),
                       backgroundColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return statisticsAccent;
+                          return isDark
+                              ? scheme.primary.withOpacity(0.28)
+                              : statisticsAccent.withOpacity(0.9);
                         }
-                        return Colors.transparent;
+                        return isDark
+                            ? scheme.surfaceContainerHigh
+                            : scheme.surface;
                       }),
                       foregroundColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
@@ -108,7 +127,17 @@ class StatisticsScreen extends ConsumerWidget {
                         if (states.contains(MaterialState.selected)) {
                           return Colors.white;
                         }
-                        return Colors.grey;
+                        return isDark ? scheme.onSurfaceVariant : Colors.grey;
+                      }),
+                      overlayColor:
+                          MaterialStateProperty.resolveWith<Color?>((states) {
+                        if (states.contains(MaterialState.hovered)) {
+                          return AppDesignTokens.hoverOverlay(context);
+                        }
+                        if (states.contains(MaterialState.pressed)) {
+                          return AppDesignTokens.pressedOverlay(context);
+                        }
+                        return null;
                       }),
                     ),
                   ),
@@ -120,7 +149,7 @@ class StatisticsScreen extends ConsumerWidget {
                 _buildHeader(
                   context,
                   'Финансы за ${_getPeriodTitle(currentPeriod)}',
-                  stripeColor: statisticsAccent,
+                  stripeColor: headerStripeColor,
                 ),
                 const SizedBox(height: 12),
                 _buildFinancialSummary(context, stats.finances),
@@ -137,7 +166,7 @@ class StatisticsScreen extends ConsumerWidget {
                             _buildHeader(
                               context,
                               'Откуда объекты',
-                              stripeColor: statisticsAccent,
+                              stripeColor: headerStripeColor,
                             ),
                             const SizedBox(height: 12),
                             Expanded(
@@ -158,7 +187,7 @@ class StatisticsScreen extends ConsumerWidget {
                             _buildHeader(
                               context,
                               'Типы объектов',
-                              stripeColor: statisticsAccent,
+                              stripeColor: headerStripeColor,
                             ),
                             const SizedBox(height: 12),
                             Expanded(
@@ -180,7 +209,7 @@ class StatisticsScreen extends ConsumerWidget {
                 _buildHeader(
                   context,
                   'Динамика работ',
-                  stripeColor: statisticsAccent,
+                  stripeColor: headerStripeColor,
                 ),
                 const SizedBox(height: 12),
                 Column(
@@ -191,13 +220,12 @@ class StatisticsScreen extends ConsumerWidget {
                         color: AppDesignTokens.cardBackground(context),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Colors.green.withOpacity(0.15),
-                        ),
+                            color: AppDesignTokens.cardBorder(context)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.green.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                            color: AppDesignTokens.cardShadow(context),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
@@ -236,13 +264,12 @@ class StatisticsScreen extends ConsumerWidget {
                         color: AppDesignTokens.cardBackground(context),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Colors.indigo.withOpacity(0.15),
-                        ),
+                            color: AppDesignTokens.cardBorder(context)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.indigo.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                            color: AppDesignTokens.cardShadow(context),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
@@ -362,12 +389,13 @@ class StatisticsScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: AppDesignTokens.cardShadow(context),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
-        border: Border.all(color: color.withOpacity(0.15), width: 1),
+        border:
+            Border.all(color: AppDesignTokens.cardBorder(context), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,14 +546,12 @@ class StatisticsScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppDesignTokens.cardBackground(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.green.withOpacity(0.15), // Greenish border
-        ),
+        border: Border.all(color: AppDesignTokens.cardBorder(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: AppDesignTokens.cardShadow(context),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),

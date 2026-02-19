@@ -23,6 +23,7 @@
     *   Rounded Corners: **24px**.
     *   Shadow: `blur: 20`, `offset: 0,10`, `opacity: 0.15`.
     *   Header: Light colored background (Theme Color with `opacity 0.12`).
+    *   Dark Mode Exception: use neutral black/grey depth shadow (no accent-colored glow).
 *   **Inputs:**
     *   No fill (transparent).
     *   Floating Labels.
@@ -33,6 +34,8 @@
 *   **Rendering:** MUST use `Clip.antiAlias` to prevent square hover effects on rounded cards.
 *   **Cursor:** `SystemMouseCursors.click` (Hand) for all clickable zones.
 *   **Consistency Rule:** Home recent objects and Finance interactive rows follow the same hover feedback family as object cards (matching visual intensity and timing).
+*   **Dark Feedback Rule:** use subtle tonal `overlayColor` for hover/pressed; avoid blur-heavy hover layers and avoid fading full card content via `Opacity`.
+*   **Finance Hover Clarification:** Nested finance stage rows in dark mode use neutral tonal hover overlays only; avoid green blur/glow effects.
 
 ### 2.3. Typography & Data
 *   **Numbers:**
@@ -86,10 +89,13 @@
     *   **Active:** Green border (width 2.0) when expanded.
     *   **Paid Badge:** Green Pill with "PAID" text.
     *   **Expanded Surface:** Keep expanded card/body fill soft and low-intensity in green (subtle tint only).
+    *   **Header vs Body Separation:** In expanded state, project header and nested stage list use different surface tones for clearer hierarchy.
     *   **Family Alignment:** Card composition/spacing should visually align with shared Objects/Stages card family (same corner rhythm, neutral white base surface, compact metadata pills), with green used as semantic accent only.
 *   **Stage Date Label:** Use neutral black/grey date colors under stage names (no warning/error hue coding).
 *   **Pay Toggle Button:** Stage payment button uses compact rounded pill style with soft green tint and subtle hover shadow.
 *   **All Positions Hover:** Every clickable finance position has hover highlight (not only parent project card).
+*   **Stage Hover Intensity:** Nested stage-row hover in expanded finance cards matches Objects card family intensity (subtle neutral tone, no bright fill).
+*   **Expanded Header Shade:** In expanded state, finance project header receives a slightly different tone than collapsed state while preserving the same card family.
 *   **Section Labeling:** Finance list area may include a compact top caption with project-count pill to match section hierarchy patterns used in other modules.
 
 ### 3.4. Home Header & Main Navigation
@@ -105,6 +111,12 @@
 *   **Subtitle Contrast:** Subtitle remains lighter to preserve hierarchy under section title.
 *   **Header-to-Content Rhythm:** Compact section headers keep an increased bottom gap in most sections for clearer separation; `Statistics` intentionally stays more compact, and `Home` follows its own hero rhythm.
 *   **Dark Header Fill Rule:** In dark mode, section AppBar background is neutral `surface`; accent is applied as subtle tint/stripe only, not a saturated full-width gradient fill.
+*   **Dark Header Divider Cleanup:** Remove decorative horizontal strip below compact section headers in dark mode.
+*   **Corner Clip Integrity:** Rounded bottom header corners are hard-clipped so no scaffold/background bleed is visible in corner arcs.
+
+### 2.6. Dialog Elevation
+*   **Neutral Depth:** App dialogs use neutral black/grey shadows in both light and dark themes.
+*   **No Accent Glow:** Colored shadow dispersion from dialog edges is forbidden; accent colors remain in header tint/buttons only.
 
 ### 3.6. Project Files Tab
 *   **Category Cards:** File category sections in project detail follow the same card family as `Objects`/`Stages` (neutral white surface, subtle shadow, compact readable typography, left accent stripe, `Clip.antiAlias`).
@@ -123,6 +135,8 @@
 
 ### 3.8. Statistics Accent Tone
 *   **Top Period Switch + Header Stripe:** Use app-brand blue/indigo accent family for selected states and decorative header stripes.
+*   **Dark Period Switch Tone:** In dark mode, unselected period segments stay on dark surfaces with neutral border; selected state uses restrained blue/indigo tint.
+*   **Card Border Neutrality:** Statistics finance/pie/dynamics cards use neutral grey borders and neutral depth shadows (no colored glow).
 *   **Refresh Presentation:** Period switch updates statistics content without replacing the whole page with a loading state and without any moving top loading bar under the header.
 *   **Help Hint Placement:** In work-dynamics cards, `?` help icon is positioned at top-right corner of each card (USD and BYN), not in centered legend row.
 *   **Help Hint Copy:** Tooltip uses compact multiline Russian copy explaining that dynamics reflect earnings by completed objects and do not depend on payment status.

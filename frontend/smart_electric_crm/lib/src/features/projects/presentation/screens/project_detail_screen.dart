@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/project_providers.dart';
@@ -222,8 +222,8 @@ class _StagesTab extends ConsumerWidget {
               child: Text(
                 'Об объекте',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
               ),
             ),
@@ -234,12 +234,12 @@ class _StagesTab extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 15,
-                    offset: const Offset(0, 4),
+                    color: AppDesignTokens.cardShadow(context),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
                   ),
                 ],
-                border: Border.all(color: Colors.grey.shade100),
+                border: Border.all(color: AppDesignTokens.softBorder(context)),
               ),
               clipBehavior: Clip.antiAlias,
               child: Stack(
@@ -290,8 +290,8 @@ class _StagesTab extends ConsumerWidget {
                 Text(
                   'Этапы работ',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                 ),
               ],
@@ -566,7 +566,9 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: Theme.of(context).colorScheme.onSurface,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                     ),
                                   ),
                                 ),
@@ -1661,4 +1663,3 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
     );
   }
 }
-

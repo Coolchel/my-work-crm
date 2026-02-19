@@ -7,6 +7,9 @@ Create a premium, professional tool for electricians to manage projects, estimat
 *   **Premium Aesthetics:** Use Glassmorphism, specific Color Palettes (Indigo, Teal, Orange), and custom UI components to avoid "default Flutter look".
 *   **Dual Theme Quality:** Full feature parity and visual consistency must be preserved in both light and dark themes across all screens, dialogs, and overlays.
     *   Dark mode presentation uses tonal surface hierarchy (`background` / `surface-1` / `surface-2`) with restrained borders and no bright full-width header fills.
+    *   Dark mode interactions use soft tonal `hover/pressed` overlays (no content opacity fade), and dialog depth uses neutral shadows (no colored glow).
+    *   Section headers in dark mode avoid decorative divider strips, and analytics/finance cards keep neutral grey borders without colored glow.
+    *   Dialog depth stays neutral (black/grey) and section-header rounded corners are visually clean without background bleed.
 *   **UTF-8 Integrity:** All source files and user-facing strings must be stored and rendered as UTF-8 to keep Russian text readable across the entire app.
 *   **Friendly Empty States:** Any "no content yet" scenario should use a polished centered empty-state block with a subtle large icon and explanatory text, not plain one-line placeholders.
 *   **Automation:** Minimizing manual entry. Engineering data (Shields) automatically generates Estimates (Materials & Works).

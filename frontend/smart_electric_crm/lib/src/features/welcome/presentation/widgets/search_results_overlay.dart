@@ -25,11 +25,12 @@ class SearchResultsOverlay extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppDesignTokens.softBorder(context)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              color: AppDesignTokens.cardShadow(context),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -119,20 +120,18 @@ class _SearchResultItemState extends State<_SearchResultItem> {
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
           color: _isHovered
-              ? hoverAccent.withOpacity(0.07)
+              ? AppDesignTokens.hoverOverlay(context)
               : AppDesignTokens.cardBackground(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: _isHovered
-                ? hoverAccent.withOpacity(0.28)
+                ? AppDesignTokens.softBorder(context)
                 : AppDesignTokens.cardBorder(context),
           ),
           boxShadow: [
             BoxShadow(
-              color: _isHovered
-                  ? hoverAccent.withOpacity(0.10)
-                  : AppDesignTokens.cardShadow(context),
-              blurRadius: _isHovered ? 10 : 4,
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
+              blurRadius: _isHovered ? 7 : 4,
               offset: const Offset(0, 2),
             ),
           ],
@@ -142,12 +141,15 @@ class _SearchResultItemState extends State<_SearchResultItem> {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           hoverColor: Colors.transparent,
+          selectedTileColor: Colors.transparent,
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: _isHovered
-                  ? hoverAccent.withOpacity(0.14)
-                  : Colors.indigo.shade50,
+                  ? AppDesignTokens.hoverOverlay(context)
+                  : (AppDesignTokens.isDark(context)
+                      ? Theme.of(context).colorScheme.surfaceContainerHigh
+                      : Colors.indigo.shade50),
               shape: BoxShape.circle,
             ),
             child:

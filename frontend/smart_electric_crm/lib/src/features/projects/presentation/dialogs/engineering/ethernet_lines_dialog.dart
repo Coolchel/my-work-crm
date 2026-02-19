@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
@@ -48,6 +49,7 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
   @override
   Widget build(BuildContext context) {
     final themeColor = widget.themeColor;
+    final isDark = AppDesignTokens.isDark(context);
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -65,9 +67,11 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: themeColor.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: isDark
+                    ? Colors.black.withOpacity(0.34)
+                    : Colors.black.withOpacity(0.12),
+                blurRadius: isDark ? 12 : 20,
+                offset: const Offset(0, 6),
               )
             ],
           ),
@@ -122,7 +126,7 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Быстрые кнопки выбора
+                      // Quick selection buttons
                       Text(
                         "Быстрый выбор:",
                         style: TextStyle(
@@ -134,7 +138,7 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                       const SizedBox(height: 8),
                       Column(
                         children: [
-                          // Первый ряд: 1, 2, 4
+                          // First row: 1, 2, 4
                           Row(
                             children: [1, 2, 4].map((value) {
                               return Expanded(
@@ -169,7 +173,7 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                             }).toList(),
                           ),
                           const SizedBox(height: 8),
-                          // Второй ряд: 6, 8, 10
+                          // Second row: 6, 8, 10
                           Row(
                             children: [6, 8, 10].map((value) {
                               return Expanded(
@@ -207,7 +211,7 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Поле ввода
+                      // Input field
                       TextField(
                         controller: _linesController,
                         autofocus: true,
@@ -252,8 +256,9 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      style:
-                          TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurface),
+                      style: TextButton.styleFrom(
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onSurface),
                       child: const Text("Отмена"),
                     ),
                     const SizedBox(width: 8),
@@ -314,4 +319,3 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
     );
   }
 }
-

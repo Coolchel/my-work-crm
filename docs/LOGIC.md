@@ -109,6 +109,10 @@ Triggered manually from estimate `Actions` menu on Materials tab in `stage_3`.
     *   Theme switch impacts presentation only; no business logic/payload changes are allowed.
 *   **Dark Theming Is Presentation-only:**
     *   Tonal surfaces, AppBar tinting, field fills, and border contrast adjustments are visual-only changes.
+    *   Pointer feedback in dark mode uses overlay tint layers (`hover/pressed`) and must not change business state or data payloads.
+    *   Statistics dark-mode cards use neutral borders/shadows; switching from colored glow to neutral depth does not affect chart data/state.
+    *   Finance expanded-card hierarchy (header surface vs nested stages surface) is visual-only and must not affect expand/collapse logic.
+    *   Header corner clipping and dialog-shadow neutralization are presentation-only and do not affect navigation/state/actions.
     *   No estimate/finance/project calculations, payloads, or backend flows are affected by theme styling.
 *   **Project List Stripe Color Priority (By Stage Composition):**
     *   Priority order: `stage_3` -> `stage_1/stage_2/stage_1_2` -> `extra/other` -> `precalc` -> default.

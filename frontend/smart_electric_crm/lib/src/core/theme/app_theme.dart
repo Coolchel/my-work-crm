@@ -33,8 +33,8 @@ class AppTheme {
       surfaceContainer: const Color(0xFF1F2126),
       surfaceContainerHigh: const Color(0xFF272A30),
       surfaceContainerHighest: const Color(0xFF2F333B),
-      outline: const Color(0xFF5B606B),
-      outlineVariant: const Color(0xFF3A3E46),
+      outline: const Color(0x24FFFFFF),
+      outlineVariant: const Color(0x1FFFFFFF),
       onSurfaceVariant: const Color(0xFFB9BDC7),
     );
 
@@ -55,10 +55,43 @@ class AppTheme {
     final selectedNavColor = scheme.primary;
     final unselectedNavColor = scheme.onSurfaceVariant;
     final isDark = scheme.brightness == Brightness.dark;
+    final bodyColor =
+        isDark ? scheme.onSurface.withOpacity(0.76) : scheme.onSurface;
+    final secondaryColor =
+        isDark ? scheme.onSurface.withOpacity(0.62) : scheme.onSurfaceVariant;
+
+    final textTheme = ThemeData(
+      useMaterial3: true,
+      brightness: scheme.brightness,
+    ).textTheme.copyWith(
+          headlineSmall: TextStyle(
+            color:
+                isDark ? scheme.onSurface.withOpacity(0.92) : scheme.onSurface,
+            fontWeight: FontWeight.w700,
+          ),
+          titleLarge: TextStyle(
+            color:
+                isDark ? scheme.onSurface.withOpacity(0.90) : scheme.onSurface,
+            fontWeight: FontWeight.w700,
+          ),
+          titleMedium: TextStyle(
+            color:
+                isDark ? scheme.onSurface.withOpacity(0.88) : scheme.onSurface,
+            fontWeight: FontWeight.w600,
+          ),
+          bodyLarge: TextStyle(color: bodyColor),
+          bodyMedium: TextStyle(color: bodyColor),
+          bodySmall: TextStyle(color: secondaryColor),
+          labelLarge: TextStyle(
+            color:
+                isDark ? scheme.onSurface.withOpacity(0.88) : scheme.onSurface,
+          ),
+        );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      textTheme: textTheme,
       scaffoldBackgroundColor: scaffoldBackground,
       dividerColor: scheme.outlineVariant,
       appBarTheme: AppBarTheme(
@@ -90,6 +123,10 @@ class AppTheme {
             fontSize: 12,
           );
         }),
+      ),
+      listTileTheme: ListTileThemeData(
+        iconColor: scheme.onSurfaceVariant,
+        textColor: scheme.onSurface,
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: scheme.primary,
@@ -180,6 +217,9 @@ class AppTheme {
         contentTextStyle: TextStyle(color: scheme.onSurface),
         behavior: SnackBarBehavior.floating,
       ),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
     );
   }
 }

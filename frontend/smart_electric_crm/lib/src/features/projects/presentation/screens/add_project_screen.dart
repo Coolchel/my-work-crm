@@ -153,6 +153,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
   @override
   Widget build(BuildContext context) {
     const themeColor = Colors.indigo;
+    final isDark = AppDesignTokens.isDark(context);
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -170,9 +171,11 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: themeColor.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: isDark
+                    ? Colors.black.withOpacity(0.34)
+                    : Colors.black.withOpacity(0.12),
+                blurRadius: isDark ? 12 : 20,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -237,7 +240,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // 1. Адрес
+                          // 1. Address
                           _buildTextField(
                             controller: _addressController,
                             label: 'Адрес объекта',
@@ -248,7 +251,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                           ),
                           const SizedBox(height: 16),
 
-                          // 2. Код домофона
+                          // 2. Intercom code
                           _buildTextField(
                             controller: _intercomController,
                             label: 'Код домофона',
@@ -256,7 +259,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                           ),
                           const SizedBox(height: 16),
 
-                          // 3. Заказчик
+                          // 3. Client
                           _buildTextField(
                             controller: _clientInfoController,
                             label: 'Заказчик',
@@ -264,7 +267,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                           ),
                           const SizedBox(height: 16),
 
-                          // 4. Тип объекта
+                          // 4. Object type
                           _buildFieldLabel('Тип объекта'),
                           _buildPopupBtn(
                             _objectTypes[_objectType] ?? _objectType,
@@ -297,7 +300,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                           ),
                           const SizedBox(height: 16),
 
-                          // 5. Источник
+                          // 5. Source
                           _buildFieldLabel('Источник'),
                           _buildPopupBtn(
                             _source,
@@ -328,7 +331,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                             (v) => setState(() => _source = v),
                           ),
 
-                          // Stages selection (creation only) — toggle chips
+                          // Stages selection (creation only) - toggle chips
                           if (!_isEditing) ...[
                             const SizedBox(height: 20),
                             _buildFieldLabel('Начальные этапы'),
@@ -404,8 +407,8 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
     String? Function(String?)? validator,
   }) {
     const themeColor = Colors.indigo;
-    final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final scheme = Theme.of(context).colorScheme;
     return TextFormField(
       controller: controller,
       validator: validator,

@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../engineering/data/models/led_zone_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
@@ -31,7 +32,7 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
   @override
   void initState() {
     super.initState();
-    // Автоматическая нумерация блоков питания для новых зон
+    // Auto-number power supplies for newly created zones.
     final defaultTransformer = widget.zone?.transformer ??
         (widget.existingZonesCount > 0
             ? 'Блок питания №${widget.existingZonesCount + 1}'
@@ -51,6 +52,7 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
   Widget build(BuildContext context) {
     final isEdit = widget.zone != null;
     final themeColor = widget.themeColor;
+    final isDark = AppDesignTokens.isDark(context);
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -68,9 +70,11 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: themeColor.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: isDark
+                    ? Colors.black.withOpacity(0.34)
+                    : Colors.black.withOpacity(0.12),
+                blurRadius: isDark ? 12 : 20,
+                offset: const Offset(0, 6),
               )
             ],
           ),
@@ -189,8 +193,9 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      style:
-                          TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurface),
+                      style: TextButton.styleFrom(
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onSurface),
                       child: const Text("Отмена"),
                     ),
                     const SizedBox(width: 8),
@@ -258,4 +263,3 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
     );
   }
 }
-

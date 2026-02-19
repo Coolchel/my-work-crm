@@ -317,7 +317,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(_cardRadius),
-        border: Border.all(color: AppDesignTokens.cardBorder(context), width: 1),
+        border:
+            Border.all(color: AppDesignTokens.cardBorder(context), width: 1),
         boxShadow: [
           BoxShadow(
             color: AppDesignTokens.cardShadow(context),
@@ -402,7 +403,12 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   Widget _buildProjectCard(UnpaidProjectModel project, int index) {
     final isExpanded = _expandedProjects[project.id] ?? false;
     final isHovered = _hoveredProjects[project.id] ?? false;
-    final shouldHighlight = isExpanded || isHovered;
+    final shouldHighlight = isHovered;
+    final cardBackground = isExpanded
+        ? (AppDesignTokens.isDark(context)
+            ? Theme.of(context).colorScheme.surfaceContainerHigh
+            : Colors.grey.shade50)
+        : AppDesignTokens.cardBackground(context, hovered: shouldHighlight);
     final hasSource = project.source != null && project.source!.isNotEmpty;
     final isWideHeader = MediaQuery.of(context).size.width >= 1100;
 
@@ -414,23 +420,22 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: AppDesignTokens.cardBackground(
-            context,
-            hovered: shouldHighlight,
-          ),
+          color: cardBackground,
           borderRadius: BorderRadius.circular(_cardRadius),
           border: Border.all(
             color: shouldHighlight
                 ? _financeAccent.withOpacity(0.24)
-                : AppDesignTokens.cardBorder(context),
+                : isExpanded
+                    ? AppDesignTokens.cardBorder(context, hovered: true)
+                    : AppDesignTokens.cardBorder(context),
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
               color: shouldHighlight
-                  ? _financeAccent.withOpacity(0.07)
+                  ? AppDesignTokens.cardShadow(context, hovered: true)
                   : AppDesignTokens.cardShadow(context),
-              blurRadius: shouldHighlight ? 12 : 8,
+              blurRadius: shouldHighlight ? 10 : 8,
               offset: const Offset(0, 3),
             ),
           ],
@@ -597,8 +602,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                         project.totalUsd,
                                         project.totalByn,
                                         fontSize: 11.5,
-                                        color:
-                                            Theme.of(context).colorScheme.onSurface,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
                                       ),
                                       const SizedBox(height: 3),
                                       Icon(
@@ -621,12 +627,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 color: AppDesignTokens.isDark(context)
                                     ? Theme.of(context)
                                         .colorScheme
-                                        .surfaceContainer
-                                        .withOpacity(0.72)
-                                    : Colors.grey.shade50.withOpacity(0.65),
+                                        .surfaceContainerHighest
+                                        .withOpacity(0.52)
+                                    : Colors.grey.shade100.withOpacity(0.9),
                                 border: Border(
                                   top: BorderSide(
-                                    color: AppDesignTokens.cardBorder(context),
+                                    color: AppDesignTokens.cardBorder(context,
+                                        hovered: true),
                                   ),
                                 ),
                               ),
@@ -675,18 +682,14 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         margin: const EdgeInsets.symmetric(vertical: 1),
         decoration: BoxDecoration(
           color: isHovered
-              ? _financeAccent.withOpacity(0.035)
+              ? AppDesignTokens.cardBackground(context, hovered: true)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: isHovered
-              ? [
-                  BoxShadow(
-                    color: AppDesignTokens.cardShadow(context, hovered: true),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+          border: Border.all(
+            color: isHovered
+                ? AppDesignTokens.cardBorder(context, hovered: true)
+                : Colors.transparent,
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -714,6 +717,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             }
           },
           borderRadius: BorderRadius.circular(12),
+          hoverColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
             child: Row(
@@ -752,7 +758,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                             style: TextStyle(
                               fontSize: 10,
                               color:
-                                  _getStageDateInfo(context, stage.updatedAt!).color,
+                                  _getStageDateInfo(context, stage.updatedAt!)
+                                      .color,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -921,14 +928,16 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       } else if (diff.inDays == 1) {
         return _StageDateInfo('Вчера', scheme.onSurfaceVariant);
       } else if (diff.inDays < 4) {
-        return _StageDateInfo('${diff.inDays} дн. назад', scheme.onSurfaceVariant);
-      } else if (diff.inDays < 7) {
         return _StageDateInfo(
-            '${diff.inDays} дн. назад', scheme.onSurfaceVariant.withOpacity(0.9));
+            '${diff.inDays} дн. назад', scheme.onSurfaceVariant);
+      } else if (diff.inDays < 7) {
+        return _StageDateInfo('${diff.inDays} дн. назад',
+            scheme.onSurfaceVariant.withOpacity(0.9));
       } else {
         final formatted =
             '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
-        return _StageDateInfo(formatted, scheme.onSurfaceVariant.withOpacity(0.9));
+        return _StageDateInfo(
+            formatted, scheme.onSurfaceVariant.withOpacity(0.9));
       }
     } catch (e) {
       return _StageDateInfo('', scheme.onSurfaceVariant);
@@ -1083,13 +1092,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             filled: true,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+              borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+              borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),

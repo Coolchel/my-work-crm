@@ -20,6 +20,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
   @override
   Widget build(BuildContext context) {
     const themeColor = Colors.indigo;
+    final isDark = AppDesignTokens.isDark(context);
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -37,9 +38,11 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: themeColor.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: isDark
+                    ? Colors.black.withOpacity(0.34)
+                    : Colors.black.withOpacity(0.12),
+                blurRadius: isDark ? 12 : 20,
+                offset: const Offset(0, 6),
               )
             ],
           ),

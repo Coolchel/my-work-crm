@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 
 class Stage3ArmatureCalculatorResult {
@@ -279,6 +280,7 @@ class _Stage3ArmatureCalculatorDialogState
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     final missingItems = _targetPositions
         .where(_isMissingCatalogItem)
         .map((position) => position.label)
@@ -296,9 +298,11 @@ class _Stage3ArmatureCalculatorDialogState
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.blue.withOpacity(0.15),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              color: isDark
+                  ? Colors.black.withOpacity(0.34)
+                  : Colors.blue.withOpacity(0.15),
+              blurRadius: isDark ? 12 : 20,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -307,7 +311,9 @@ class _Stage3ArmatureCalculatorDialogState
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: isDark
+                    ? AppDesignTokens.surface3(context)
+                    : Colors.blue.withOpacity(0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
@@ -315,15 +321,18 @@ class _Stage3ArmatureCalculatorDialogState
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calculate_rounded, color: Colors.blue),
+                  Icon(
+                    Icons.calculate_rounded,
+                    color: isDark ? scheme.onSurface : Colors.blue,
+                  ),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Калькулятор арматуры (Этап 3)',
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: Colors.blue,
+                        color: isDark ? scheme.onSurface : Colors.blue,
                       ),
                     ),
                   ),
@@ -344,7 +353,11 @@ class _Stage3ArmatureCalculatorDialogState
                 decoration: BoxDecoration(
                   color: Colors.orange.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.orange.withOpacity(0.35)),
+                  border: Border.all(
+                    color: isDark
+                        ? AppDesignTokens.softBorder(context)
+                        : Colors.orange.withOpacity(0.35),
+                  ),
                 ),
                 child: Text(
                   'Не найдены в каталоге: ${missingItems.join(', ')}',
@@ -380,7 +393,9 @@ class _Stage3ArmatureCalculatorDialogState
             Container(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
               decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: scheme.outlineVariant)),
+                border: Border(
+                  top: BorderSide(color: AppDesignTokens.softBorder(context)),
+                ),
               ),
               child: Row(
                 children: [
@@ -417,10 +432,10 @@ class _Stage3ArmatureCalculatorDialogState
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: disabled
-            ? (isDark ? scheme.surfaceContainer : Colors.grey.shade50)
-            : scheme.surface,
+            ? (isDark ? AppDesignTokens.surface2(context) : Colors.grey.shade50)
+            : (isDark ? AppDesignTokens.surface1(context) : scheme.surface),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scheme.outlineVariant),
+        border: Border.all(color: AppDesignTokens.softBorder(context)),
       ),
       child: Row(
         children: [
@@ -448,7 +463,7 @@ class _Stage3ArmatureCalculatorDialogState
               style: TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
-              color: disabled ? Colors.grey.shade500 : scheme.onSurface,
+                color: disabled ? Colors.grey.shade500 : scheme.onSurface,
               ),
             ),
           ),
@@ -490,7 +505,11 @@ class _Stage3ArmatureCalculatorDialogState
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         visualDensity: VisualDensity.compact,
-        side: BorderSide(color: Colors.blue.withOpacity(isDark ? 0.55 : 0.35)),
+        side: BorderSide(
+          color: isDark
+              ? AppDesignTokens.softBorder(context)
+              : Colors.blue.withOpacity(0.35),
+        ),
       ),
       child: Text(
         '+$delta',

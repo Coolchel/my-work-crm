@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/project_providers.dart';
@@ -384,6 +384,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
         return StatefulBuilder(
           builder: (context, setDialogState) {
             const themeColor = Colors.indigo;
+            final isDark = AppDesignTokens.isDark(context);
+            final scheme = Theme.of(context).colorScheme;
             return Dialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24)),
@@ -396,9 +398,9 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: themeColor.withOpacity(0.15),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: Colors.black.withOpacity(isDark ? 0.34 : 0.12),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
@@ -425,7 +427,9 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: themeColor.withOpacity(0.8),
+                              color: isDark
+                                  ? scheme.onSurface
+                                  : themeColor.withOpacity(0.8),
                             ),
                           ),
                           Align(
@@ -570,27 +574,34 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     required ValueChanged<T> onSelected,
     required Color themeColor,
   }) {
+    final isDark = AppDesignTokens.isDark(context);
+    final scheme = Theme.of(context).colorScheme;
     return Wrap(
       spacing: 8,
       runSpacing: 6,
       children: items.entries.map((entry) {
         final isActive = entry.key == selected;
+        final selectedChipColor = isDark
+            ? themeColor.withOpacity(0.24)
+            : themeColor.withOpacity(0.12);
+        final idleChipColor =
+            isDark ? scheme.surfaceContainerHigh : Colors.grey.shade50;
         return ChoiceChip(
           label: Text(
             entry.value,
             style: TextStyle(
               fontSize: 12,
               fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-              color: isActive
-                  ? Theme.of(context).colorScheme.onPrimary
-                  : Theme.of(context).colorScheme.onSurfaceVariant,
+              color: isActive ? scheme.onSurface : scheme.onSurfaceVariant,
             ),
           ),
           selected: isActive,
-          selectedColor: themeColor,
-          backgroundColor: AppDesignTokens.cardBackground(context),
+          selectedColor: selectedChipColor,
+          backgroundColor: idleChipColor,
           side: BorderSide(
-            color: AppDesignTokens.cardBorder(context),
+            color: isActive
+                ? themeColor.withOpacity(isDark ? 0.32 : 0.22)
+                : AppDesignTokens.cardBorder(context).withOpacity(0.7),
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -724,7 +735,9 @@ class _ProjectCardState extends State<_ProjectCard> {
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).colorScheme.onSurface,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
                                         letterSpacing: -0.3,
                                       ),
                                     ),
@@ -974,4 +987,3 @@ class _ActionButtonState extends State<_ActionButton> {
     );
   }
 }
-

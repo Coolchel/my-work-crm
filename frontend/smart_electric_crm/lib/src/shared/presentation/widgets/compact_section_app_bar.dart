@@ -42,8 +42,9 @@ class CompactSectionAppBar extends StatelessWidget
     final iconBadgeBackground = isDark
         ? scheme.surfaceContainerHighest.withOpacity(0.8)
         : Colors.white.withOpacity(0.16);
-    final subtitleColor =
-        isDark ? scheme.onSurfaceVariant : Colors.white.withOpacity(0.92);
+    final subtitleColor = isDark
+        ? scheme.onSurface.withOpacity(0.72)
+        : Colors.white.withOpacity(0.92);
 
     return AppBar(
       automaticallyImplyLeading: leading == null,
@@ -52,6 +53,13 @@ class CompactSectionAppBar extends StatelessWidget
       toolbarHeight: _toolbarHeight,
       centerTitle: centerTitle,
       elevation: 0,
+      clipBehavior: Clip.antiAlias,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(AppDesignTokens.radiusM),
+          bottomRight: Radius.circular(AppDesignTokens.radiusM),
+        ),
+      ),
       backgroundColor: isDark ? scheme.surface : Colors.transparent,
       foregroundColor: foreground,
       flexibleSpace: isDark
@@ -83,17 +91,6 @@ class CompactSectionAppBar extends StatelessWidget
                     ),
                   ),
                 ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Container(
-                    height: 2,
-                    margin: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: scheme.primary.withOpacity(0.45),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
               ],
             )
           : Container(
@@ -113,8 +110,8 @@ class CompactSectionAppBar extends StatelessWidget
       actionsIconTheme: IconThemeData(color: foreground),
       titleTextStyle: TextStyle(
         color: foreground,
-        fontSize: 19,
-        fontWeight: FontWeight.w600,
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.2,
       ),
       title: Row(
@@ -139,8 +136,8 @@ class CompactSectionAppBar extends StatelessWidget
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: 0.2,
                     height: 1.1,
                   ),

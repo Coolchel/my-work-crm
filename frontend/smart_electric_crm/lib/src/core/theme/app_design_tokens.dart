@@ -78,10 +78,27 @@ class AppDesignTokens {
         : scheme.surfaceContainer.withOpacity(0.55);
   }
 
+  static Color surface3(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return isDark(context)
+        ? scheme.surfaceContainerHighest
+        : scheme.surfaceContainerHigh.withOpacity(0.65);
+  }
+
   static Color softBorder(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return isDark(context)
-        ? scheme.outlineVariant.withOpacity(0.55)
+        ? Colors.white.withOpacity(0.12)
         : scheme.outlineVariant.withOpacity(0.85);
+  }
+
+  static Color hoverOverlay(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return scheme.primary.withOpacity(isDark(context) ? 0.10 : 0.06);
+  }
+
+  static Color pressedOverlay(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return scheme.primary.withOpacity(isDark(context) ? 0.14 : 0.10);
   }
 }

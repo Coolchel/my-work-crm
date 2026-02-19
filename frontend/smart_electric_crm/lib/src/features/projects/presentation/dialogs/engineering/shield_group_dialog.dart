@@ -67,6 +67,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
   Widget build(BuildContext context) {
     final isEdit = widget.group != null;
     final themeColor = widget.themeColor;
+    final isDark = AppDesignTokens.isDark(context);
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -84,9 +85,11 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: themeColor.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: isDark
+                    ? Colors.black.withOpacity(0.34)
+                    : Colors.black.withOpacity(0.12),
+                blurRadius: isDark ? 12 : 20,
+                offset: const Offset(0, 6),
               )
             ],
           ),
@@ -499,7 +502,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
     );
   }
 
-  // Определяет иконку для типа устройства
+  // Resolve icon by device type.
   IconData _getDeviceIcon(String type) {
     switch (type) {
       case 'circuit_breaker':
@@ -519,7 +522,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
     }
   }
 
-  // Определяет цвет для типа устройства
+  // Resolve accent color by device type.
   Color _getDeviceTypeColor(String type) {
     switch (type) {
       case 'load_switch':

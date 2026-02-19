@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/utils/decimal_input_formatter.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/marquee_text.dart';
@@ -127,7 +128,8 @@ class _EditItemDialogState extends State<EditItemDialog> {
   Widget build(BuildContext context) {
     final isNewManual = widget.item.id == 0;
     final isWork = widget.item.itemType == 'work';
-    final themeColor = isWork ? Colors.green : Colors.blue;
+    final themeColor = isWork ? Colors.teal : Colors.indigo;
+    final isDark = AppDesignTokens.isDark(context);
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -145,9 +147,11 @@ class _EditItemDialogState extends State<EditItemDialog> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: themeColor.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: isDark
+                    ? Colors.black.withOpacity(0.34)
+                    : Colors.black.withOpacity(0.12),
+                blurRadius: isDark ? 12 : 20,
+                offset: const Offset(0, 6),
               )
             ],
           ),
@@ -505,8 +509,9 @@ class _EditItemDialogState extends State<EditItemDialog> {
                     const Spacer(),
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      style:
-                          TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurface),
+                      style: TextButton.styleFrom(
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onSurface),
                       child: const Text("Отмена"),
                     ),
                     const SizedBox(width: 8),
@@ -566,4 +571,3 @@ class _EditItemDialogState extends State<EditItemDialog> {
         ));
   }
 }
-

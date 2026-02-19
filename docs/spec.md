@@ -2,6 +2,8 @@
 
 ## 0. Encoding Contract
 *   **UTF-8 Everywhere:** Frontend/backend source files and runtime UI strings must use UTF-8 encoding; any mojibake text is treated as a blocking defect.
+*   **Dark Interaction Contract:** In dark mode, hover/pressed feedback must be implemented with `overlayColor` tinting (not `Opacity`-based content fade).
+*   **Dark Dialog Depth Contract:** Dialogs/modals in dark mode use neutral black/grey shadows; colored `primary/secondary` glow shadows are not allowed.
 
 ## 1. Authentication & Security
 *   **Mechanism:** JWT (Access + Refresh).
@@ -94,6 +96,8 @@
     *   Visual "Paid" confirmation.
     *   "Employer Share" display (if > 0).
 *   **Expanded Card Tint:** Expanded/hovered project card background under header uses a soft low-intensity green tint (no saturated fill).
+*   **Expanded Contrast Rule:** In expanded finance cards, project header surface and nested stages surface must use different tonal layers for clear visual separation.
+*   **Stage Hover Rule (Finance):** Hover over nested stage rows uses neutral tonal overlay without blur-heavy shadow and without saturated green glow.
 *   **Stage Date Tone:** Stage date labels under project headers use neutral text tones (black/grey), not alert colors.
 *   **Pay Toggle UI:** "Оплачено/Не оплачено" control in stage rows uses compact modern pill styling while preserving existing action behavior.
 *   **Hover Consistency:** All interactive finance list positions use the same hover feedback pattern for pointer devices.
@@ -146,11 +150,14 @@
     *   Header keeps a unified bottom gap before content; non-home sections use increased spacing for clearer visual rhythm.
     *   `Home` keeps its own hero spacing model and is not constrained by compact-section header gap rules.
     *   `Statistics` keeps a compact header-to-content spacing profile compared to other sections.
+    *   Header container is clipped to rounded bottom corners so scaffold/background does not appear in lower corner arcs.
 *   **Main Tabs Motif Rule:**
     *   `Home` remains the primary hero-gradient screen.
     *   `Objects`, `Finance`, and `Statistics` reuse the same motif in a restrained compact-header gradient (no layout or height increase).
 *   **Statistics Accent Rule:**
     *   Top period switch and decorative section stripes in `Statistics` use brand blue/indigo accent tokens.
+    *   In dark mode, period switch keeps dark filled unselected segments and restrained selected tint; avoid bright/light chip appearance.
+    *   Statistics cards/charts use neutral grey borders in dark mode; colored border glow is not allowed.
 *   **Statistics Tooltip Rule:**
     *   Work-dynamics charts (USD and BYN cards) show a compact `?` help icon in the top-right card corner.
     *   Tooltip text: `Динамика работ. Показывает заработок по сделанным объектам. Не связано с оплатой.`
@@ -176,4 +183,6 @@
 *   **Coverage Contract:** Dark theme must cover all primary sections and nested UI layers (dialogs, popups, cards, navigation bars, and empty states) without changing business behavior.
 *   **Dark Surface Hierarchy Contract:** Dark mode uses three tonal layers: scaffold `background`, content `surface-1` (cards/lists), and elevated `surface-2` (dialogs/forms/summary panels).
 *   **Dark Header Restraint Contract:** In dark mode, section AppBars use `surface` background with subtle accent tint only (no saturated full-width color fills).
+*   **Dark Header Divider Rule:** Decorative horizontal strip under compact section headers is not rendered in dark mode.
 *   **Dark Controls Contract:** Text inputs, popup selects, dropdown menus, and popup menus in dark mode must use dark filled surfaces and low-contrast borders.
+*   **Dialog Shadow Contract (All Themes):** Dialog shells use neutral black/grey elevation shadows; colored accent glow from dialog borders is not allowed.

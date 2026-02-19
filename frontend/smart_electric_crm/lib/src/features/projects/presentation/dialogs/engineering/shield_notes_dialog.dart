@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
@@ -40,8 +41,8 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
   @override
   Widget build(BuildContext context) {
     final themeColor = widget.themeColor;
+    final isDark = AppDesignTokens.isDark(context);
     final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -59,9 +60,11 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: themeColor.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: isDark
+                    ? Colors.black.withOpacity(0.34)
+                    : Colors.black.withOpacity(0.12),
+                blurRadius: isDark ? 12 : 20,
+                offset: const Offset(0, 6),
               )
             ],
           ),
@@ -161,8 +164,9 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      style:
-                          TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurface),
+                      style: TextButton.styleFrom(
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onSurface),
                       child: const Text("Отмена"),
                     ),
                     const SizedBox(width: 8),
@@ -221,4 +225,3 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
     );
   }
 }
-
