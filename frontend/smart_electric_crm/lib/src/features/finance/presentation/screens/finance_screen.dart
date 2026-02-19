@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -14,14 +14,14 @@ import '../../../../core/theme/app_design_tokens.dart';
 
 part 'finance_screen.g.dart';
 
-// Провайдер для загрузки данных финансового монитора
+// РџСЂРѕРІР°Р№РґРµСЂ РґР»СЏ Р·Р°РіСЂСѓР·РєРё РґР°РЅРЅС‹С… С„РёРЅР°РЅСЃРѕРІРѕРіРѕ РјРѕРЅРёС‚РѕСЂР°
 @riverpod
 Future<UnpaidProjectsResponse> unpaidProjects(Ref ref) async {
   final repository = ref.watch(financeRepositoryProvider);
   return repository.fetchUnpaidProjects();
 }
 
-// Провайдер для загрузки глобальных настроек
+// РџСЂРѕРІР°Р№РґРµСЂ РґР»СЏ Р·Р°РіСЂСѓР·РєРё РіР»РѕР±Р°Р»СЊРЅС‹С… РЅР°СЃС‚СЂРѕРµРє
 @riverpod
 Future<FinanceSettingsModel> financeSettings(Ref ref) async {
   final repository = ref.watch(financeRepositoryProvider);
@@ -39,13 +39,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   static const _financeAccent = Colors.green;
   static const _cardRadius = AppDesignTokens.radiusM;
   static const _sectionHPadding = AppDesignTokens.spacingM;
-  // Контроллеры для глобальных полей
+  // РљРѕРЅС‚СЂРѕР»Р»РµСЂС‹ РґР»СЏ РіР»РѕР±Р°Р»СЊРЅС‹С… РїРѕР»РµР№
   final _estimateController = TextEditingController();
   final _notesController = TextEditingController();
   bool _hasChanges = false;
   bool _isDataLoaded = false;
 
-  // Состояние раскрытых проектов (ID проекта -> раскрыт ли)
+  // РЎРѕСЃС‚РѕСЏРЅРёРµ СЂР°СЃРєСЂС‹С‚С‹С… РїСЂРѕРµРєС‚РѕРІ (ID РїСЂРѕРµРєС‚Р° -> СЂР°СЃРєСЂС‹С‚ Р»Рё)
   final Map<int, bool> _expandedProjects = {};
   final Map<int, bool> _hoveredProjects = {};
 
@@ -108,7 +108,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     if (byn > 0) {
       spans.add(TextSpan(
-        text: '${_formatAmount(byn)} р',
+        text: '${_formatAmount(byn)} СЂ',
         style: TextStyle(
           color: effectiveColor,
           fontWeight: FontWeight.w600,
@@ -129,9 +129,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => ConfirmationDialog(
-        title: 'Закрыть этап?',
-        content: 'Отметить "$stageTitle" как оплаченный?',
-        confirmText: 'Закрыть',
+        title: 'Р—Р°РєСЂС‹С‚СЊ СЌС‚Р°Рї?',
+        content: 'РћС‚РјРµС‚РёС‚СЊ "$stageTitle" РєР°Рє РѕРїР»Р°С‡РµРЅРЅС‹Р№?',
+        confirmText: 'Р—Р°РєСЂС‹С‚СЊ',
         themeColor: Colors.green,
       ),
     );
@@ -144,7 +144,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
+            SnackBar(content: Text('РћС€РёР±РєР°: $e'), backgroundColor: Colors.red),
           );
         }
       }
@@ -163,13 +163,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Сохранено'), duration: Duration(seconds: 1)),
+              content: Text('РЎРѕС…СЂР°РЅРµРЅРѕ'), duration: Duration(seconds: 1)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('РћС€РёР±РєР°: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -180,7 +180,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     final projectsAsync = ref.watch(unpaidProjectsProvider);
     final settingsAsync = ref.watch(financeSettingsProvider);
 
-    // Безопасная инициализация данных
+    // Р‘РµР·РѕРїР°СЃРЅР°СЏ РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РґР°РЅРЅС‹С…
     if (!_isDataLoaded && settingsAsync.hasValue && !settingsAsync.isLoading) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!_isDataLoaded && mounted) {
@@ -194,7 +194,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     return Scaffold(
       appBar: const CompactSectionAppBar(
-        title: 'Финансы',
+        title: 'Р¤РёРЅР°РЅСЃС‹',
         icon: Icons.account_balance_wallet_rounded,
         gradientColors: AppDesignTokens.subtleSectionGradient,
       ),
@@ -202,13 +202,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => FriendlyEmptyState(
           icon: Icons.cloud_off_rounded,
-          title: 'Не удалось загрузить данные финансов',
-          subtitle: 'Проверьте соединение и попробуйте снова.\n$error',
+          title: 'РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РґР°РЅРЅС‹Рµ С„РёРЅР°РЅСЃРѕРІ',
+          subtitle: 'РџСЂРѕРІРµСЂСЊС‚Рµ СЃРѕРµРґРёРЅРµРЅРёРµ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°.\n$error',
           accentColor: Colors.red,
           action: FilledButton.icon(
             onPressed: () => ref.invalidate(unpaidProjectsProvider),
             icon: const Icon(Icons.refresh_rounded, size: 16),
-            label: const Text('Повторить'),
+            label: const Text('РџРѕРІС‚РѕСЂРёС‚СЊ'),
           ),
         ),
         data: (data) => _buildContent(data, settingsAsync),
@@ -223,7 +223,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       child: Row(
         children: [
           Text(
-            'Неоплаченные объекты',
+            'РќРµРѕРїР»Р°С‡РµРЅРЅС‹Рµ РѕР±СЉРµРєС‚С‹',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -254,19 +254,19 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildContent(UnpaidProjectsResponse data,
       AsyncValue<FinanceSettingsModel> settingsAsync) {
-    // Инициализация контроллеров перенесена в build с использованием addPostFrameCallback
+    // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РєРѕРЅС‚СЂРѕР»Р»РµСЂРѕРІ РїРµСЂРµРЅРµСЃРµРЅР° РІ build СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј addPostFrameCallback
 
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(unpaidProjectsProvider);
         ref.invalidate(financeSettingsProvider);
-        // Даём время на обновление
+        // Р”Р°С‘Рј РІСЂРµРјСЏ РЅР° РѕР±РЅРѕРІР»РµРЅРёРµ
         await Future.delayed(const Duration(milliseconds: 500));
       },
       child: SingleChildScrollView(
         child: Column(
           children: [
-            // Список проектов
+            // РЎРїРёСЃРѕРє РїСЂРѕРµРєС‚РѕРІ
             if (data.projects.isEmpty)
               _buildEmptyState()
             else
@@ -278,7 +278,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                         horizontal: _sectionHPadding, vertical: 8),
                     child: Column(
                       children: [
-                        // Сортировка: сверху - старые, снизу - новые
+                        // РЎРѕСЂС‚РёСЂРѕРІРєР°: СЃРІРµСЂС…Сѓ - СЃС‚Р°СЂС‹Рµ, СЃРЅРёР·Сѓ - РЅРѕРІС‹Рµ
                         ...(data.projects.toList()
                               ..sort((a, b) {
                                 final aDate = _getEarliestStageDate(a);
@@ -295,13 +295,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 ],
               ),
 
-            // Блок "Итого к получению" внизу
+            // Р‘Р»РѕРє "РС‚РѕРіРѕ Рє РїРѕР»СѓС‡РµРЅРёСЋ" РІРЅРёР·Сѓ
             _buildTotalSection(data.totalUsd, data.totalByn),
 
-            // Глобальные поля заметок
+            // Р“Р»РѕР±Р°Р»СЊРЅС‹Рµ РїРѕР»СЏ Р·Р°РјРµС‚РѕРє
             _buildGlobalSettingsSection(),
 
-            const SizedBox(height: 80), // Отступ снизу
+            const SizedBox(height: 80), // РћС‚СЃС‚СѓРї СЃРЅРёР·Сѓ
           ],
         ),
       ),
@@ -342,7 +342,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           ),
           const SizedBox(width: 12),
           Text(
-            'Итого к получению',
+            'РС‚РѕРіРѕ Рє РїРѕР»СѓС‡РµРЅРёСЋ',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -365,7 +365,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               if (totalUsd > 0 && totalByn > 0) const SizedBox(height: 2),
               if (totalByn > 0)
                 Text(
-                  '${_formatAmount(totalByn)} р',
+                  '${_formatAmount(totalByn)} СЂ',
                   style: const TextStyle(
                     color: _financeAccent,
                     fontSize: 18,
@@ -391,8 +391,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   Widget _buildEmptyState() {
     return const FriendlyEmptyState(
       icon: Icons.check_circle_outline_rounded,
-      title: 'Все этапы оплачены',
-      subtitle: 'Новых задолженностей сейчас нет.',
+      title: 'Р’СЃРµ СЌС‚Р°РїС‹ РѕРїР»Р°С‡РµРЅС‹',
+      subtitle: 'РќРѕРІС‹С… Р·Р°РґРѕР»Р¶РµРЅРЅРѕСЃС‚РµР№ СЃРµР№С‡Р°СЃ РЅРµС‚.',
       accentColor: Colors.green,
       iconSize: 72,
       padding: EdgeInsets.all(24),
@@ -672,11 +672,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
           onTap: () async {
             final projects = ref.read(projectListProvider).valueOrNull;
             if (projects != null) {
@@ -767,7 +769,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text(
-                          'РёР· ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
+                          'Р С‘Р В· ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
                           style: TextStyle(
                             fontSize: 10,
                             color: Colors.grey[600],
@@ -812,6 +814,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -902,7 +905,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   String _formatExternalAmount(double usd, double byn) {
     final parts = <String>[];
     if (usd > 0) parts.add('${usd.toStringAsFixed(0)}\$');
-    if (byn > 0) parts.add('${byn.toStringAsFixed(0)}р');
+    if (byn > 0) parts.add('${byn.toStringAsFixed(0)}СЂ');
     return parts.join(' + ');
   }
 
@@ -914,14 +917,14 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       final diff = now.difference(date);
 
       if (diff.inDays == 0) {
-        return _StageDateInfo('Сегодня', scheme.onSurface);
+        return _StageDateInfo('РЎРµРіРѕРґРЅСЏ', scheme.onSurface);
       } else if (diff.inDays == 1) {
-        return _StageDateInfo('Вчера', scheme.onSurfaceVariant);
+        return _StageDateInfo('Р’С‡РµСЂР°', scheme.onSurfaceVariant);
       } else if (diff.inDays < 4) {
         return _StageDateInfo(
-            '${diff.inDays} дн. назад', scheme.onSurfaceVariant);
+            '${diff.inDays} РґРЅ. РЅР°Р·Р°Рґ', scheme.onSurfaceVariant);
       } else if (diff.inDays < 7) {
-        return _StageDateInfo('${diff.inDays} дн. назад',
+        return _StageDateInfo('${diff.inDays} РґРЅ. РЅР°Р·Р°Рґ',
             scheme.onSurfaceVariant.withOpacity(0.9));
       } else {
         final formatted =
@@ -947,7 +950,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     return 1.0;
   }
 
-  // Получить самую раннюю дату обновления из этапов проекта
+  // РџРѕР»СѓС‡РёС‚СЊ СЃР°РјСѓСЋ СЂР°РЅРЅСЋСЋ РґР°С‚Сѓ РѕР±РЅРѕРІР»РµРЅРёСЏ РёР· СЌС‚Р°РїРѕРІ РїСЂРѕРµРєС‚Р°
   DateTime _getEarliestStageDate(UnpaidProjectModel project) {
     if (project.stages.isEmpty) {
       return DateTime.now();
@@ -962,7 +965,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             earliest = date;
           }
         } catch (e) {
-          // Игнорируем ошибки парсинга
+          // РРіРЅРѕСЂРёСЂСѓРµРј РѕС€РёР±РєРё РїР°СЂСЃРёРЅРіР°
         }
       }
     }
@@ -994,7 +997,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               Icon(Icons.notes, size: 18, color: _financeAccent),
               SizedBox(width: 8),
               Text(
-                'Финансовые заметки',
+                'Р¤РёРЅР°РЅСЃРѕРІС‹Рµ Р·Р°РјРµС‚РєРё',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -1005,14 +1008,14 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           const SizedBox(height: 12),
           const SizedBox(height: 12),
           _buildInputField(
-            label: 'Смета контрагента',
+            label: 'РЎРјРµС‚Р° РєРѕРЅС‚СЂР°РіРµРЅС‚Р°',
             controller: _estimateController,
             minLines: 2,
             maxLines: null,
           ),
           const SizedBox(height: 10),
           _buildInputField(
-            label: 'Заметки',
+            label: 'Р—Р°РјРµС‚РєРё',
             controller: _notesController,
             minLines: 2,
             maxLines: null,
@@ -1024,7 +1027,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               child: OutlinedButton.icon(
                 onPressed: _saveSettings,
                 icon: const Icon(Icons.save, size: 14),
-                label: const Text('Сохранить'),
+                label: const Text('РЎРѕС…СЂР°РЅРёС‚СЊ'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _financeAccent,
                   side: const BorderSide(color: _financeAccent),
@@ -1043,7 +1046,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               ),
             ),
           ],
-          const SizedBox(height: 20), // Фиксированный отступ снизу
+          const SizedBox(height: 20), // Р¤РёРєСЃРёСЂРѕРІР°РЅРЅС‹Р№ РѕС‚СЃС‚СѓРї СЃРЅРёР·Сѓ
         ],
       ),
     );
@@ -1186,7 +1189,7 @@ class _PayStageButtonState extends State<_PayStageButton> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    _isHovered ? 'Оплачено' : 'Не оплачено',
+                    _isHovered ? 'РћРїР»Р°С‡РµРЅРѕ' : 'РќРµ РѕРїР»Р°С‡РµРЅРѕ',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -1202,3 +1205,4 @@ class _PayStageButtonState extends State<_PayStageButton> {
     );
   }
 }
+
