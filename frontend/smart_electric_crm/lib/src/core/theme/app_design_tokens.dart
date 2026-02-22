@@ -54,7 +54,8 @@ class AppDesignTokens {
 
   static Color cardBorder(BuildContext context, {bool hovered = false}) {
     if (isDark(context)) {
-      return hovered ? const Color(0xFF3E434C) : softBorder(context);
+      // Dark theme: keep border stable across hover states to avoid flicker/jitter.
+      return softBorder(context);
     }
     return hovered ? const Color(0xFFCDD6E3) : const Color(0xFFE7EAF1);
   }

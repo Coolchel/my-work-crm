@@ -18,7 +18,9 @@ class SearchResultsOverlay extends ConsumerWidget {
   static const int _maxVisibleItems = 4;
   static const double _resultTileExtent = 58;
   static const double _separatorSpacing = 8;
-  static const double _listVerticalPadding = 20;
+  static const double _viewportEdgeInset = 10;
+  static const double _itemOuterVerticalMargin = 2;
+  static const double _listVerticalPadding = _viewportEdgeInset * 2;
 
   final double maxHeight;
 
@@ -67,6 +69,7 @@ class SearchResultsOverlay extends ConsumerWidget {
               final visibleItems = math.min(projects.length, _maxVisibleItems);
               final visibleSeparators = math.max(visibleItems - 1, 0);
               final desiredListHeight = (visibleItems * _resultTileExtent) +
+                  (visibleItems * (_itemOuterVerticalMargin * 2)) +
                   (visibleSeparators * _separatorSpacing) +
                   _listVerticalPadding;
               final constrainedHeight =
@@ -74,32 +77,36 @@ class SearchResultsOverlay extends ConsumerWidget {
 
               return SizedBox(
                 height: constrainedHeight,
-                child: ListView.separated(
-                  clipBehavior: Clip.none,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  itemCount: projects.length,
-                  separatorBuilder: (context, index) => SizedBox(
-                    height: _separatorSpacing,
-                    child: Center(
-                      child: Divider(height: 1, color: scheme.outlineVariant),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: _viewportEdgeInset),
+                  child: ListView.separated(
+                    clipBehavior: Clip.none,
+                    padding: EdgeInsets.zero,
+                    itemCount: projects.length,
+                    separatorBuilder: (context, index) => SizedBox(
+                      height: _separatorSpacing,
+                      child: Center(
+                        child: Divider(height: 1, color: scheme.outlineVariant),
+                      ),
                     ),
-                  ),
-                  itemBuilder: (context, index) {
-                    final project = projects[index];
-                    return _SearchResultItem(
-                      project: project,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ProjectDetailScreen(
-                              projectId: project.id.toString(),
+                    itemBuilder: (context, index) {
+                      final project = projects[index];
+                      return _SearchResultItem(
+                        project: project,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ProjectDetailScreen(
+                                projectId: project.id.toString(),
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    );
-                  },
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               );
             },
@@ -139,12 +146,27 @@ class _SearchResultItem extends StatefulWidget {
 class _SearchResultItemState extends State<_SearchResultItem> {
   bool _isHovered = false;
 
+  IconData _getIcon(String type) {
+    switch (type) {
+      case 'new_building':
+        return Icons.apartment;
+      case 'secondary':
+        return Icons.home;
+      case 'cottage':
+        return Icons.villa;
+      case 'office':
+        return Icons.business;
+      default:
+        return Icons.category;
+    }
+  }
+
   String _buildMetaLine(ProjectModel project) {
     final client = project.clientInfo.trim();
     final intercom = project.intercomCode.trim();
 
     if (client.isNotEmpty && intercom.isNotEmpty) {
-      return '$client | Домофон: $intercom';
+      return '$client • Домофон: $intercom';
     }
     if (client.isNotEmpty) {
       return client;
@@ -152,14 +174,14 @@ class _SearchResultItemState extends State<_SearchResultItem> {
     if (intercom.isNotEmpty) {
       return 'Домофон: $intercom';
     }
-    return 'Без данных';
+    return 'Без данных по клиенту';
   }
 
   @override
   Widget build(BuildContext context) {
-    const hoverAccent = Color(0xFF2B88CF);
+    final scheme = Theme.of(context).colorScheme;
     final metaLine = _buildMetaLine(widget.project);
-    final onSurfaceVariant = Theme.of(context).colorScheme.onSurfaceVariant;
+    final onSurfaceVariant = scheme.onSurfaceVariant;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -167,24 +189,25 @@ class _SearchResultItemState extends State<_SearchResultItem> {
       cursor: SystemMouseCursors.click,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        margin: const EdgeInsets.symmetric(
+          horizontal: 8,
+          vertical: SearchResultsOverlay._itemOuterVerticalMargin,
+        ),
         decoration: BoxDecoration(
-          color: _isHovered
-              ? AppDesignTokens.hoverOverlay(context)
-              : AppDesignTokens.cardBackground(context),
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _isHovered
-                ? AppDesignTokens.softBorder(context)
-                : AppDesignTokens.cardBorder(context),
+            color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
-              blurRadius: _isHovered ? 7 : 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          boxShadow: _isHovered
+              ? [
+                  BoxShadow(
+                    color: AppDesignTokens.cardShadow(context, hovered: true),
+                    blurRadius: 10,
+                    offset: const Offset(0, 0),
+                  ),
+                ]
+              : const [],
         ),
         child: SizedBox(
           height: SearchResultsOverlay._resultTileExtent,
@@ -199,21 +222,16 @@ class _SearchResultItemState extends State<_SearchResultItem> {
                 child: Row(
                   children: [
                     Container(
-                      width: 28,
-                      height: 28,
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: _isHovered
-                            ? AppDesignTokens.hoverOverlay(context)
-                            : (AppDesignTokens.isDark(context)
-                                ? Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerHigh
-                                : Colors.indigo.shade50),
-                        shape: BoxShape.circle,
+                        color: AppDesignTokens.isDark(context)
+                            ? scheme.surfaceContainerHigh
+                            : Colors.indigo.shade50,
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
-                        Icons.apartment,
-                        size: 16,
+                        _getIcon(widget.project.objectType),
+                        size: 20,
                         color: Colors.indigo.shade400,
                       ),
                     ),
@@ -228,8 +246,8 @@ class _SearchResultItemState extends State<_SearchResultItem> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
                               height: 1.1,
                             ),
                           ),
@@ -239,9 +257,9 @@ class _SearchResultItemState extends State<_SearchResultItem> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 12,
                               height: 1.1,
-                              color: onSurfaceVariant.withOpacity(0.9),
+                              color: onSurfaceVariant,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -252,7 +270,9 @@ class _SearchResultItemState extends State<_SearchResultItem> {
                     Icon(
                       Icons.chevron_right,
                       size: 16,
-                      color: _isHovered ? hoverAccent : Colors.grey.shade400,
+                      color: _isHovered
+                          ? scheme.onSurfaceVariant
+                          : scheme.onSurfaceVariant.withOpacity(0.7),
                     ),
                   ],
                 ),

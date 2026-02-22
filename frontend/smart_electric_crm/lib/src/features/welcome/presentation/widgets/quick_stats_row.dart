@@ -153,9 +153,16 @@ class _StatCardState extends State<_StatCard> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
-
-    final selectedBg =
-        isDark ? widget.color.withOpacity(0.18) : widget.color.shade50;
+    final effectiveHover = _isHovered;
+    final baseGradient = isDark
+        ? const [Color(0xFF171A21), Color(0xFF151920)]
+        : const [Color(0xFFF7F9FF), Color(0xFFF1F5FF)];
+    final selectedGradient = isDark
+        ? const [Color(0xFF1C2028), Color(0xFF171A21)]
+        : const [
+            Color(0xFFDCE6FF),
+            Color(0xFFEEF3FF),
+          ];
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -164,22 +171,26 @@ class _StatCardState extends State<_StatCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: widget.isSelected
-              ? selectedBg
-              : AppDesignTokens.cardBackground(context, hovered: _isHovered),
+          gradient: LinearGradient(
+            colors: widget.isSelected ? selectedGradient : baseGradient,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
-              blurRadius: _isHovered ? 13 : 9,
+              color:
+                  AppDesignTokens.cardShadow(context, hovered: effectiveHover),
+              blurRadius: effectiveHover ? 15 : 11,
               offset: const Offset(0, 4),
             ),
           ],
           border: Border.all(
-            color: widget.isSelected
-                ? widget.color.withOpacity(isDark ? 0.8 : 1)
-                : AppDesignTokens.cardBorder(context, hovered: _isHovered),
-            width: widget.isSelected ? 1.5 : 1,
+            color: AppDesignTokens.cardBorder(
+              context,
+              hovered: effectiveHover || widget.isSelected,
+            ),
+            width: 1,
           ),
         ),
         child: Material(
@@ -210,7 +221,7 @@ class _StatCardState extends State<_StatCard> {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: widget.isSelected
-                              ? widget.color.withOpacity(isDark ? 0.28 : 0.15)
+                              ? widget.color.withOpacity(isDark ? 0.22 : 0.14)
                               : widget.color.withOpacity(isDark ? 0.14 : 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),

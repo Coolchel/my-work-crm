@@ -17,22 +17,26 @@ class _NewProjectCardState extends State<NewProjectCard> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final borderHovered = isDark ? false : _isHovered;
+    final lightBaseCardBackground = AppDesignTokens.cardBackground(context);
 
     final bgGradient = isDark
-        ? const [Color(0xFF1C2028), Color(0xFF171A21)]
+        ? _isHovered
+            ? const [Color(0xFF252C37), Color(0xFF1D232D)]
+            : const [Color(0xFF1C2028), Color(0xFF171A21)]
         : _isHovered
             ? [
                 Colors.indigo.shade100.withOpacity(0.5),
                 Colors.indigo.shade50.withOpacity(0.4),
               ]
             : [
-                Colors.indigo.shade50.withOpacity(0.5),
-                Colors.indigo.shade50.withOpacity(0.2),
+                lightBaseCardBackground,
+                lightBaseCardBackground,
               ];
 
     final titleColor = scheme.onSurface;
     final subtitleColor = isDark
-        ? scheme.onSurfaceVariant.withOpacity(0.9)
+        ? scheme.onSurfaceVariant.withOpacity(_isHovered ? 0.98 : 0.9)
         : Colors.grey.shade600;
 
     return MouseRegion(
@@ -46,7 +50,7 @@ class _NewProjectCardState extends State<NewProjectCard> {
           border: Border.all(
             color: AppDesignTokens.cardBorder(
               context,
-              hovered: _isHovered,
+              hovered: borderHovered,
             ),
             width: 1,
           ),
@@ -70,6 +74,14 @@ class _NewProjectCardState extends State<NewProjectCard> {
                 builder: (context) => const AddProjectDialog(),
               );
             },
+            hoverColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return AppDesignTokens.pressedOverlay(context);
+              }
+              return Colors.transparent;
+            }),
             borderRadius: BorderRadius.circular(24),
             child: Container(
               width: double.infinity,

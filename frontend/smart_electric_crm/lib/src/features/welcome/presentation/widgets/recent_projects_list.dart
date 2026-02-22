@@ -195,10 +195,27 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
     }
   }
 
+  String _buildMetaLine(ProjectModel project) {
+    final client = project.clientInfo.trim();
+    final intercom = project.intercomCode.trim();
+
+    if (client.isNotEmpty && intercom.isNotEmpty) {
+      return '$client • Домофон: $intercom';
+    }
+    if (client.isNotEmpty) {
+      return client;
+    }
+    if (intercom.isNotEmpty) {
+      return 'Домофон: $intercom';
+    }
+    return 'Без данных по клиенту';
+  }
+
   @override
   Widget build(BuildContext context) {
     final project = widget.project;
     final lastActivity = project.updatedAt ?? project.createdAt;
+    final metaLine = _buildMetaLine(project);
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
 
@@ -271,26 +288,26 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                         Text(
                           project.address,
                           style: TextStyle(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             fontSize: 14,
                             color: scheme.onSurface,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (project.clientInfo.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              project.clientInfo,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            metaLine,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: scheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
+                        ),
                       ],
                     ),
                   ),
