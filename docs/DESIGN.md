@@ -1,180 +1,92 @@
-# Design System & UI/UX
+﻿# Design System & UX Contracts
 
-## 1. Color Palette
-*   **Primary (Indigo):** Headers, Key Actions, Power Shields.
-*   **Success (Teal/Green):** "Paid" status, Positive balances, Work Items.
-*   **Unified Green Token:** All green accents across app sections (Estimates/Dialogs/Finance/Statistics/Object & Stage accents/Files) use one base color token equal to object accent stripe green (`Colors.green`). Opacity rules remain context-specific.
-*   **Info (Blue):** Material Items, Files.
-*   **Warning (Orange):** Alerts, Markup, Power Shield Accents.
-*   **Purple:** LED Shields.
-*   **Green:** Multimedia Shields (aligned with unified app green token).
-*   **Dark Foundation:** Dark theme uses deep navy/graphite surfaces with preserved semantic accents (indigo/blue/green/orange) and readable contrast for text, icons, and controls.
-*   **Dark Neutral Direction:** Preferred dark palette is neutral dark-grey near black (not blue-tinted backgrounds) with restrained accent usage.
-*   **Dark Surface Levels:** Use three consistent dark levels:
-    *   `background` for scaffold/base;
-    *   `surface-1` for cards/lists;
-    *   `surface-2` for dialogs/forms/summary blocks (`Итог`/`Наценка`).
-*   **Dark Border Restraint:** Borders/dividers in dark mode stay low-contrast and secondary; avoid grid-like visual noise.
+## 1. Общие принципы
+- Интерфейс должен выглядеть аккуратно и профессионально, без дефолтной «сырой» стилистики.
+- Все пользовательские тексты отображаются корректно в UTF-8 (русский язык без mojibake).
+- Для пустых состояний используется единый friendly empty-state компонент.
+- Подтверждение обязательно для разрушительных действий.
 
-## 2. Component Guidelines
+## 2. Цвета и семантика
+- Основной брендовый акцент: `indigo/blue`.
+- Семантика разделов:
+  - работы -> зеленая группа оттенков,
+  - материалы -> синяя группа оттенков,
+  - LED -> фиолетовые акценты,
+  - multimedia -> зеленые акценты.
+- Цвет прогресса проекта задается логикой этапов (см. `docs/LOGIC.md`).
 
-### 2.1. Premium Dialogs
-*   **Structure:**
-    *   Rounded Corners: **24px**.
-    *   Shadow: `blur: 20`, `offset: 0,10`, `opacity: 0.15`.
-    *   Header: Light colored background (Theme Color with `opacity 0.12`).
-    *   Dark Mode Exception: use neutral black/grey depth shadow (no accent-colored glow).
-*   **Inputs:**
-    *   No fill (transparent).
-    *   Floating Labels.
-    *   Border Radius: **12px**.
+## 3. Темы и визуальные инварианты
 
-### 2.2. Interactive Cards (Hover)
-*   **Behavior:** Scale x1.05 on hover.
-*   **Rendering:** MUST use `Clip.antiAlias` to prevent square hover effects on rounded cards.
-*   **Cursor:** `SystemMouseCursors.click` (Hand) for all clickable zones.
-*   **Consistency Rule:** Home recent objects and Finance interactive rows follow the same hover feedback family as object cards (matching visual intensity and timing).
-*   **Dark Feedback Rule:** use subtle tonal `overlayColor` for hover/pressed; avoid blur-heavy hover layers and avoid fading full card content via `Opacity`.
-*   **Finance Hover Clarification:** Nested finance stage rows in dark mode use neutral tonal hover overlays only; avoid green blur/glow effects.
+### 3.1 ThemeMode
+- Поддержка `Light`, `Dark`, `System`.
+- Выбранный режим сохраняется локально и применяется без перезапуска.
 
-### 2.3. Typography & Data
-*   **Numbers:**
-    *   Prices/Sums: **Black** (for visibility).
-    *   Secondary Info (e.g., "from total"): **Grey** (11px).
-*   **Lists:**
-    *   Dense layout (min vertical padding).
-    *   Vertical centering of all row elements.
-*   **Validation Messaging:** Prefer inline compact validation text near a field over bottom snackbar for form constraints.
-*   **Snackbar Density:** Keep snackbar usage concise and event-critical; avoid routine positive noise when result is already visible in UI.
-*   **Text Encoding Quality:** Russian UI copy must be displayed without mojibake; UTF-8 integrity is part of visual quality acceptance.
+### 3.2 Dark mode
+- Контраст строится на иерархии `background` -> `surface-1` -> `surface-2`.
+- Hover/pressed в темной теме реализуется тональным overlay (не через fade содержимого).
+- Тени диалогов нейтральные (черный/серый), без цветного glow.
 
-### 2.4. Global Consistency Tokens
-*   **Base App Background:** Main screens use one shared soft-light background token; cards/containers stay on white `surface` to keep separation and readability.
-*   **Unified Bottom Navigation Family:** Main navigation, project-detail tabs, and estimate tabs share one visual token set (height, icon size, selected indicator style, label emphasis).
-*   **Shape/Depth/Spacing:** One primary medium radius token, soft low-intensity elevation presets, and base screen/card paddings are centralized and reused.
-*   **Hero Motif Echo:** Home keeps the strongest hero gradient; Objects/Finance/Statistics use a restrained top gradient motif in compact headers without increasing header height.
-*   **Dark Token Mirror:** The same shape/spacing/navigation tokens are mirrored for dark mode with dedicated background/surface/shadow/outline values.
-*   **Card Border/Hover in Dark:** Interactive cards in dark mode use subtle neutral outlines and soft hover border transition; avoid bright white borders and harsh contrast flashes.
+### 3.3 Инвариант поведения
+- Смена темы и визуальный рефакторинг не меняют бизнес-логику, расчеты, API-пейлоады и сценарии CRUD.
 
-### 2.5. Friendly Empty States
-*   **Visual Pattern:** Use a centered lightweight card with a large desaturated icon, short title, and concise helper subtitle.
-*   **Tone:** Text remains neutral and helpful (actionable hint), avoiding dry "empty/no data" one-liners.
-*   **Reuse:** The same empty-state component is used across sections (Objects, Stages, Estimates, Shields, Files, Catalog, Search, Statistics, Finance) to keep visual language consistent.
+## 4. Навигация
+- Главный `NavigationBar`: `Главная`, `Объекты`, `Финансы`, `Статистика`.
+- `Settings` не находится в нижней навигации и открывается из верхнего действия на Home.
+- Во вложенных модулях используется локальная навигация раздела (например, вкладки объекта/сметы/directory).
 
-## 3. Specific Screens
+## 5. Компонентные правила
 
-### 3.1. Project Header (V6)
-*   **Look:** White Card, 20px Radius, 6px Indigo Stripe left.
-*   **Content:** Vertical Stack: [Client Info] + [Source].
-*   **Interaction:** Selectable text for copy-paste.
-*   **Object List Card Stripe:** Left accent stripe reflects aggregate stage progress:
-    *   default/no stages -> Indigo;
-    *   `precalc` only -> BlueGrey;
-    *   `stage_1` / `stage_2` / `stage_1_2` -> Blue;
-    *   `stage_3` with at least one work estimate position -> Green;
-    *   `other` (or `precalc`+`other`) -> Amber;
-    *   `extra` (or `precalc`+`extra`) -> Purple;
-    *   core production stages (`stage_1/2/1+2/3`) visually override `other/extra`.
+### 5.1 Карточки и hover
+- Карточки кликабельных сущностей (объекты, этапы, файлы, финансы, статистика, настройки) используют согласованную hover-модель.
+- На desktop для интерактивных элементов включается `click` курсор.
 
-### 3.2. Shield Cards
-*   **Visual Logic:**
-    *   **Stripe:** 4px left border coding type (Blue=Power, Purple=LED, Green=Multimedia).
-    *   **Header:** Expands to show content. Background tints slightly on expand.
-    *   **Header Height:** Shield card header keeps the same visual height rhythm as file-category headers.
-    *   **Expand Chevron Tone:** Expand/collapse chevrons use neutral grey/charcoal tone (not accent-tinted).
-    *   **Devices:** Colored icons (Red=Switch, Blue=Breaker, Amber=RCD).
+### 5.2 Диалоги
+- Единая визуальная оболочка (скругление, заголовок, четкие CTA).
+- Для критичных действий — явная цветовая семантика и подтверждение.
 
-### 3.3. Finance Dashboard
-*   **Project Card:**
-    *   **Active:** Green border (width 2.0) when expanded.
-    *   **Paid Badge:** Green Pill with "PAID" text.
-    *   **Expanded Surface:** Keep expanded card/body fill soft and low-intensity in green (subtle tint only).
-    *   **Header vs Body Separation:** In expanded state, project header and nested stage list use different surface tones for clearer hierarchy.
-    *   **Family Alignment:** Card composition/spacing should visually align with shared Objects/Stages card family (same corner rhythm, neutral white base surface, compact metadata pills), with green used as semantic accent only.
-*   **Stage Date Label:** Use neutral black/grey date colors under stage names (no warning/error hue coding).
-*   **Pay Toggle Button:** Stage payment button uses compact rounded pill style with soft green tint and subtle hover shadow.
-*   **All Positions Hover:** Every clickable finance position has hover highlight (not only parent project card).
-*   **Stage Hover Intensity:** Nested stage-row hover in expanded finance cards matches Objects card family intensity (subtle neutral tone, no bright fill).
-*   **Expanded Header Shade:** In expanded state, finance project header receives a slightly different tone than collapsed state while preserving the same card family.
-*   **Section Labeling:** Finance list area may include a compact top caption with project-count pill to match section hierarchy patterns used in other modules.
+### 5.3 Формы
+- Ошибки валидации предпочтительно показываются рядом с полем.
+- Snackbar используется для сетевых/операционных ошибок и важных итоговых событий.
 
-### 3.4. Home Header & Main Navigation
-*   **Bottom Main Navigation:** Includes `Главная`, `Объекты`, `Финансы`, `Статистика`; no `Settings` destination.
-*   **Bottom Labels Visibility:** Labels remain visible under icons in bottom navigation for primary sections.
-*   **Settings Entry Point:** Top-right settings icon in Home header gradient block.
-*   **Header Balance:** Keep greeting text area dominant while preserving touch-friendly settings icon hit target.
-*   **Recent Objects Interaction Tone:** Home recent object rows use the same hover border/shadow lift family as object cards in both themes.
-*   **Home Cards Hover Parity:** The large "new project" card and the 3 top quick-stat cards use the same hover family in both themes.
-*   **Home Search Border:** Smart-search field uses a thinner border in both themes.
+## 6. Экранные контракты
 
-### 3.5. Section Header Typography
-*   **Weight:** Use medium/semi-bold title weight to avoid visually heavy section names.
-*   **Scale:** Keep title slightly larger for quicker recognition on desktop and mobile.
-*   **Subtitle Contrast:** Subtitle remains lighter to preserve hierarchy under section title.
-*   **Header-to-Content Rhythm:** Compact section headers keep an increased bottom gap in most sections for clearer separation; `Statistics` intentionally stays more compact, and `Home` follows its own hero rhythm.
-*   **Dark Header Fill Rule:** In dark mode, section AppBar background is neutral `surface`; accent is applied as subtle tint/stripe only, not a saturated full-width gradient fill.
-*   **Dark Header Divider Cleanup:** Remove decorative horizontal strip below compact section headers in dark mode.
-*   **Corner Clip Integrity:** Rounded bottom header corners are hard-clipped so no scaffold/background bleed is visible in corner arcs.
+### 6.1 Home
+- Поиск и недавние объекты.
+- Быстрый переход в настройки через верхнюю кнопку.
+- Hover для карточек статистики и новых действий согласован с остальной системой.
 
-### 2.6. Dialog Elevation
-*   **Neutral Depth:** App dialogs use neutral black/grey shadows in both light and dark themes.
-*   **No Accent Glow:** Colored shadow dispersion from dialog edges is forbidden; accent colors remain in header tint/buttons only.
+### 6.2 Проекты и этапы
+- Карточки объектов имеют левую акцентную полосу по состоянию этапов.
+- В карточке этапа доступны действия статуса и переход в смету.
 
-### 3.6. Project Files Tab
-*   **Category Cards:** File category sections in project detail follow the same card family as `Objects`/`Stages` (neutral white surface, subtle shadow, compact readable typography, left accent stripe, `Clip.antiAlias`).
-*   **Header Accent Mapping:** Left stripe and header accents follow stage-like semantics by category: `PROJECT` -> BlueGrey (drawings), `WORK` -> Blue (implementation), `FINISH` -> Green (final photos).
-*   **Header Actions:** Upload and expand/collapse controls stay in the category header with compact neutral action chips; file count is shown as a compact readable pill (`N файл/файла/файлов`).
-*   **Vertical Rhythm:** Keep tighter spacing between collapsed file category headers to reduce visual gaps.
-*   **File Item Cards:** Uploaded file cards use a compact visual footprint (smaller size in grid, reduced radii/paddings, concise metadata badge) while preserving quick hover actions.
-*   **Quick Actions Contract:** Each file card keeps 4 hover actions (`rename`, `save as`, `share`, `delete`) and tap-to-open behavior unchanged.
-*   **Quick Actions Contrast:** Action controls stay readable over colored previews by using a high-contrast action surface (opaque light background + clear border/shadow).
-*   **Per-Action Hover Feedback:** Each quick-action icon has its own explicit neutral-grey hover highlight so pointer focus is visually unambiguous.
-*   **Mobile Actions:** On touch devices file actions are opened by long-press on a file card; short tap keeps open-file behavior.
-*   **Category Count Pill:** File-count indicator in category headers uses Finance-like compact pill styling (`layers` icon + numeric count).
-*   **Category Pill Shape/Palette:** File-count pill keeps the same corner geometry and color family as the category `+` action button.
-*   **Behavior Contract:** Visual refresh must not alter file operations flow (upload/rename/download/share/delete/open).
-*   **Category Default Expand Rule:** 0 files -> collapsed; 1-6 files -> expanded; 7+ files -> collapsed.
+### 6.3 Смета
+- Две вкладки: `Работы` и `Материалы`.
+- Компактная плотность строк для длинных списков.
+- Меню действий содержит автоматизацию, шаблоны, переносы и очистку секции.
 
-### 3.8. Statistics Accent Tone
-*   **Top Period Switch + Header Stripe:** Use app-brand blue/indigo accent family for selected states and decorative header stripes.
-*   **Dark Period Switch Tone:** In dark mode, unselected period segments stay on dark surfaces with neutral border; selected state uses restrained blue/indigo tint.
-*   **Card Border Neutrality:** Statistics finance/pie/dynamics cards use neutral grey borders and neutral depth shadows (no colored glow).
-*   **Refresh Presentation:** Period switch updates statistics content without replacing the whole page with a loading state and without any moving top loading bar under the header.
-*   **Help Hint Placement:** In work-dynamics cards, `?` help icon is positioned at top-right corner of each card (USD and BYN), not in centered legend row.
-*   **Help Hint Copy:** Tooltip uses compact multiline Russian copy explaining that dynamics reflect earnings by completed objects and do not depend on payment status.
-*   **Legacy Footer Note:** Bottom textual note under work-dynamics charts is removed; meaning is conveyed through the tooltip.
+### 6.4 Файлы
+- Категории: `PROJECT`, `WORK`, `FINISH`.
+- Быстрые действия карточки: переименовать, сохранить как, поделиться, удалить.
+- Долгое нажатие на touch для вызова действий.
 
-### 3.9. Estimate Tabs (Works/Materials)
-*   **Card Family Alignment:** Estimate rows follow the same neutral card family as Objects/Stages/Finance (white surface, subtle border/shadow, left accent stripe).
-*   **Dense Rows:** Keep compact paddings, compact typography, and tight group spacing to fit large position lists on one screen.
-*   **Group Readability:** Category headers stay compact and show per-group item count for quick scanning.
-*   **Interaction Consistency:** Rows support standard pointer hover tint and preserve tap-to-edit with inline delete action.
-*   **Behavior Contract:** UI refresh does not change estimate business behavior (editing, delete confirmation flow, totals, markup controls, note fields).
-*   **Actions Menu Transfer Dialogs:** `Precalc -> Works/Materials` replacement confirmations keep section semantics: green accent for Works, blue accent for Materials.
-*   **Stage 3 Armature Calculator Dialog:** Materials section uses blue-accent premium dialog with dense vertical rows, readable Russian row labels, compact semantic leading icon-badges per armature type, compact quick-add chips (`+1/+2/+3`), editable `Итого` fields, and blue confirmation flow on apply.
+### 6.5 Финансы
+- Иерархия: проект -> этапы.
+- Четкая индикация оплаты и сумм (наши/внешние).
+- Интерактивные строки в списке имеют стабильный hover в обеих темах.
 
-## 4. Icons & Assets
-*   **Style:** Material Symbols Rounded.
-*   **Files:**
-    *   PDF: Neutral document icon with non-red accent.
-    *   DOC: Blue Icon.
-    *   Image: Thumbnail preview (`BoxFit.cover`).
+### 6.6 Статистика
+- Периоды `month/year/all`.
+- При смене периода ранее загруженные данные сохраняются на экране до прихода новых.
+- Подсказка по графику динамики работ располагается в углу карточки.
 
+### 6.7 Directory
+- Нижняя навигация: `System Sections` и `Catalog`.
+- На втором уровне экранов навигация остается видимой.
+- При входе выполняется автосинхронизация (bootstrap) с явным состоянием загрузки.
+- Вход в Directory из Settings защищен предупреждением и проверкой пароля.
 
-### 3.7. Directory Screen (Reference Book)
-*   **Navigation:** Bottom `NavigationBar` with two destinations: `System Sections` and `Catalog` (same pattern as main app sections).
-*   **Nested Navigation:** Keep the same bottom `NavigationBar` visible on second-level directory screens.
-*   **Naming:** System tab title in UI is `Система`.
-*   **Density:** Use compact list rows (`dense`, reduced vertical visual density).
-*   **Card Shape:** Rounded cards (~14px) with left accent stripe (entity color coding) to match object/stage cards.
-*   **Dialogs:** Reuse premium dialog shell (24px corners, tinted header, concise actions).
-*   **Dialog Controls:** Keep header/actions, but use refreshed form control styling (filled inputs, clearer focus border, styled switch container, consistent dropdown visual weight).
-*   **Select Controls:** Replace default dropdown controls in directory forms with custom popup-select fields (neutral palette, no logos/images in options).
-*   **Actions:** Fast inline CRUD icons (edit/delete/open) with minimal vertical space usage and hover tint.
-*   **Hover:** No card scaling in directory; use light surface tint + soft shadow increase, `Clip.antiAlias`, and pointer cursor for interactive cards.
-*   **Entry Behavior:** Auto-sync system sections on screen open; show blocking loading indicator with "please wait" message while synchronization is in progress.
-*   **AppBar Action:** Use a back arrow as leading action. Place manual sync in right AppBar action icon on both directory tabs (neutral style, standard top-bar icon size, no blue-hover recolor).
-*   **Nested Editing:** On second-level lists, tapping a row opens edit flow directly (inline edit icon remains available).
-*   **Delete Icon:** Use close icon with neutral grey hover tint; destructive semantics are communicated by confirmation dialog.
-*   **Affordance Cleanup:** Remove trailing chevron icon from cards that open nested lists.
-*   **Nested FAB:** Second-level FAB `+` uses tooltip with the same placement pattern as stage/object analogs.
+## 7. Empty state contract
+Во всех разделах с потенциально пустыми списками отображается единый friendly empty-state:
+- крупная нейтральная иконка,
+- короткий заголовок,
+- понятная подсказка следующего шага.

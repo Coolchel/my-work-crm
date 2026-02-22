@@ -1,193 +1,158 @@
-# Functional Specifications (Specs)
+﻿# Functional Specifications
 
-## 0. Encoding Contract
-*   **UTF-8 Everywhere:** Frontend/backend source files and runtime UI strings must use UTF-8 encoding; any mojibake text is treated as a blocking defect.
-*   **Dark Interaction Contract:** In dark mode, hover/pressed feedback must be implemented with `overlayColor` tinting (not `Opacity`-based content fade).
-*   **Dark Dialog Depth Contract:** Dialogs/modals in dark mode use neutral black/grey shadows; colored `primary/secondary` glow shadows are not allowed.
+## 0. Базовые контракты
+- Кодировка: UTF-8 во frontend/backend и в пользовательских данных.
+- Безопасность: подтверждение для разрушительных действий.
+- Визуальные изменения не должны менять бизнес-поведение.
 
-## 1. Authentication & Security
-*   **Mechanism:** JWT (Access + Refresh).
-*   **Flow:**
-    *   **App Start:** Check local storage for tokens. Verify validity via API.
-    *   **Interceptors:** Auto-inject `Bearer` token. Auto-refresh on 401. Redirect to Login on failure.
-*   **Settings:** Centralized "Account" section for Logout and Password Change.
+## 1. Authentication
 
-## 2. Dashboard (Home)
-*   **Smart Search:** Global search across Projects, Materials, and Works.
-    *   Matching is always case-insensitive (forced normalization regardless of keyboard layout/case).
-*   **Main Navigation Contract:**
-    *   Home tab label in bottom navigation is `Главная`.
-    *   `Settings` is not present in the bottom navigation.
-    *   Settings entry is available via top-right settings icon in the Home header.
-    *   Bottom navigation labels are always visible under icons across primary app sections.
-*   **Quick Stats (Current Month):**
-    *   *Pre-calculations:* Count of stages with "precalc" title.
-    *   *Active Objects:* Unique projects with active stages.
-    *   *Paid:* Count of paid stages.
-*   **Recent Projects:** Sorted by update time.
-*   **Recent Projects Hover:** Home recent-project cards in both light and dark themes use the same hover family as object cards.
-*   **Home Card Hover Parity:** Hover feedback is applied to the large "new project" card and the 3 top quick-stat cards in both themes.
-*   **Home Search Border Tone:** Home smart-search field uses a thinner border in both themes.
+### 1.1 Endpoints
+- `POST /api/auth/token/` — логин.
+- `POST /api/auth/refresh/` — обновление access.
+- `GET /api/auth/me/` — профиль текущего пользователя.
+- `POST /api/auth/change-password/` — смена пароля.
 
-## 3. Project Management
-*   **Structure:**
-    *   **List View:** Filters (Source, Type, Status), Sorting (Date, Profitability).
-    *   **Filter Dialog Chip Border (Dark):** Unselected filter options use a thin grey border to reduce visual contrast.
-    *   **Filter Dialog Chip Hover:** Filter option chips in the Objects dialog provide explicit hover feedback in both light and dark themes.
-    *   **Detail View:** header with Client/Source info. Tabs: Stages, Shields, Files.
-    *   **Create UX Reliability:** Successful create operations (`Project`, `Stage`) must not show false error banners after HTTP `201`.
-    *   **Object Card Accent Stripe:** color depends on stage composition:
-        *   No stages -> Indigo (default).
-        *   Has `precalc` only -> BlueGrey.
-        *   Has `stage_1` / `stage_2` / `stage_1_2` -> Blue.
-        *   Has `stage_3` with at least one estimate item of type `work` -> Green.
-        *   Only `other` (or `precalc` + `other`) -> Amber.
-        *   Only `extra` (or `precalc` + `extra`) -> Purple.
-        *   If `stage_1`/`stage_2`/`stage_1_2` or `stage_3` is present together with `other`/`extra`, core stage colors (Blue/Green) take priority.
-*   **Files:**
-    *   Limit: 12 files/project, 20MB/file.
-    *   Types: Images, Documents, Video.
-    *   Features: Rename (safe), Download.
-    *   Category Default Expand Rule:
-        *   0 files -> collapsed.
-        *   1-6 files -> expanded.
-        *   7+ files -> collapsed.
+### 1.2 Клиентский flow
+- На старте приложения проверяется валидность токенов.
+- Access автоматически подставляется в запросы.
+- При `401` выполняется refresh; при неуспехе — выход в экран логина.
 
-## 4. Estimates (The Core)
-*   **Structure:**
-    *   **Stages:** Flexible workspace (e.g., "Stage 1", "Stage 2").
-    *   **Tabs:** Works (Labor) vs. Materials (Goods).
-    *   **Compact Density Contract:** Works/Materials lists keep compact row/card density for high item count scenarios.
-    *   **Behavior Preservation:** Redesign must not alter existing estimate flows (add/edit/delete/import/template/text/PDF actions, markup handling, totals visibility rules).
-*   **Calculation Logic:**
-    *   **Smart Input:** `Total = Me + Partner`. Editing any 2 updates the 3rd.
-    *   **Markup:** Applies to Material Client Price only. `ClientPrice = BasePrice * (1 + Markup%)`.
-    *   **Currencies:** USD / BYN support per item.
-*   **Automation (Import):**
-    *   **Shield -> Materials:** Devices in Shield map to Catalog Items via `mapping_key`.
-    *   **Materials -> Works:** Materials map to Works via `related_work_item` or `aggregation_key`.
-    *   **Precalc -> Stage 1/2/1+2 (Manual Action):**
-        *   In estimate `Actions` menu, a transfer action is shown only for stages `stage_1`, `stage_2`, `stage_1_2`.
-        *   Action is available only when project has `precalc` stage with at least one position in the current section (`materials` or `works`).
-        *   On confirm, current section positions are fully replaced by positions from project `precalc` stage in the same section.
-        *   If target section is non-empty, user must pass confirmation dialog before replacement.
-    *   **Stage 3 Materials Armature Calculator (Manual Action):**
-        *   In estimate `Actions` menu for Materials tab, action is shown only for stage `stage_3`.
-        *   Action opens dedicated dialog with fixed armature positions from catalog (switches/sockets/frames), readable Russian labels, semantic row icons by armature type, quick add buttons (`+1`, `+2`, `+3`) and editable total per row.
-        *   Catalog binding is resolved by technical `mapping_key` values for each armature row (name text can vary in catalog without breaking calculator mapping).
-        *   Applying calculator transfers only rows with total > 0 into current stage materials estimate.
-        *   If materials section already has items, user must confirm full replacement before old positions are deleted and replaced.
-*   **Reporting:**
-    *   **Client:** Total amount.
-    *   **Partner:** Their share (`employer_quantity`).
-    *   **Internal:** "My Share" calculation.
-    *   **Export:** Native PDF generation.
+## 2. Projects & Stages
 
-## 5. Engineering Map (Shields)
-*   **Types:** Power, LED, Multimedia (Low-voltage).
-*   **Power Shields:**
-    *   Hierarchy: Shield -> Groups -> Devices.
-    *   Logic: Auto-calculate modules (`1P=1mod`, `3P=3mod`).
-*   **LED Shields:**
-    *   Logic: Suggest enclosure size based on transformer count (1-2->Small, 3-4->Medium...).
-*   **Multimedia:**
-    *   Logic: Suggest enclosure based on line count.
+### 2.1 Endpoints
+- `GET/POST /api/projects/`
+- `GET/PATCH/DELETE /api/projects/{id}/`
+- `GET/POST /api/stages/`
+- `GET/PATCH/DELETE /api/stages/{id}/`
 
-## 6. Financial Monitor
-*   **Purpose:** Track unpaid stages across all projects.
-*   **Views:**
-    *   List of projects with expandable stages.
-    *   Visual "Paid" confirmation.
-    *   "Employer Share" display (if > 0).
-*   **Expanded Card Tint:** Expanded/hovered project card background under header uses a soft low-intensity green tint (no saturated fill).
-*   **Expanded Contrast Rule:** In expanded finance cards, project header surface and nested stages surface must use different tonal layers for clear visual separation.
-*   **Stage Hover Rule (Finance):** Hover over nested stage rows uses neutral tonal overlay without blur-heavy shadow and without saturated green glow.
-*   **Stage Hover Stability (Finance Light):** In light theme, nested stage-row hover must be stable without one-frame/one-second darkening blink.
-*   **Stage Date Tone:** Stage date labels under project headers use neutral text tones (black/grey), not alert colors.
-*   **Pay Toggle UI:** "Оплачено/Не оплачено" control in stage rows uses compact modern pill styling while preserving existing action behavior.
-*   **Hover Consistency:** All interactive finance list positions use the same hover feedback pattern for pointer devices.
-*   **Card Family Consistency:** Finance project cards and nested stage rows follow the same visual family as Objects/Stages cards (neutral surface, shared radius/spacing rhythm, accent stripe semantics), while preserving existing finance interactions and calculations.
-*   **Finance Service States:** Finance loading/error empty-service states use friendly centered presentation with explicit retry action for recoverable fetch failures.
+### 2.2 Функциональные требования
+- Создание проекта поддерживает `init_stages`.
+- При создании проекта backend создает три базовых щита (`power/led/multimedia`).
+- Статусы/типы и этапы задаются choices backend + доступны через Directory bootstrap.
 
-## 7. Catalog & Directory (Admin)
-*   **Catalog:**
-    *   Editable categories.
-    *   Editable catalog items (materials/works) with advanced automation fields.
-    *   Keys:
-        *   `mapping_key`: Connects Shield Device -> Material.
-        *   `aggregation_key`: Groups multiple materials -> One Work (e.g., All cables -> "Cable Laying").
-        *   `related_work_item`: Direct material -> work relation (1-to-1 override).
-    *   Category field `labor_coefficient` must be editable from UI.
-*   **System Directory Sections:**
-    *   Editable dictionaries for values historically stored in model `choices`.
-    *   Includes statuses/types/currencies/shield and file classification enums.
-    *   Bootstrap endpoint to sync defaults into DB: `POST /api/directory-sections/bootstrap/`.
-*   **CRUD:** Full add/edit/delete from app UI for directory sections, directory entries, categories, and catalog items.
-*   **Entry Metadata:** `DirectoryEntry.metadata` is editable from UI as JSON object.
-*   **System Sync UX:**
-    *   Auto-run sync when opening the directory screen.
-    *   Show dedicated loading state (please wait) during sync.
-    *   Keep manual sync action in the directory AppBar as explicit retry tool on both tabs (`Система` and `Каталог`).
-    *   Sync icon style must stay neutral (no blue-hover recolor) and match standard top-bar icon sizing.
-*   **Directory Navigation UX:**
-    *   Bottom directory `NavigationBar` (`System Sections` / `Catalog`) must stay visible on second-level screens (entries/items).
-    *   Root tab label for system dictionaries is `Система`.
-    *   Nested cards should not show chevron affordance; open/edit behavior is triggered by card tap.
-    *   On second-level screens, tapping a row opens edit flow directly.
-    *   Second-level screens keep FAB `+` tooltip and use explicit back-left AppBar icon for consistency.
-*   **DB Not Ready Handling (Directory API):**
-    *   If directory tables are missing, backend returns `503` for directory CRUD and bootstrap/retrieve operations.
-    *   Directory list endpoints may return empty arrays as a safe fallback during startup/migration mismatch.
-*   **Settings Entry Protection (Directory):**
-    *   Entering Directory from Settings requires two-step confirmation:
-        *   warning dialog about high-impact edits;
-        *   current-account password validation before navigation.
-    *   Access is denied when password check fails; user receives explicit validation error.
-*   **Directory Form Controls:**
-    *   In Directory dialogs, default dropdown widgets are replaced with custom popup-select controls (clean neutral style, no logos/icons in options).
+## 3. Estimates
 
-## 8. Section Header UX
-*   **Compact Visual Header:**
-    *   Sections `Statistics`, `Finance`, `Objects`, `Stages`, `Estimates`, `Shields`, `Files`, `Directory`, and `Settings` use a unified compact top header style.
-    *   Header must stay visually expressive (gradient + icon + title) while remaining mobile-friendly in height.
-    *   Header title typography should avoid over-bold rendering: prefer readable medium/semi-bold weight with slightly increased visual size.
-    *   Detail sub-sections may show contextual subtitle (e.g., object address or selected directory entity).
-    *   Header keeps a unified bottom gap before content; non-home sections use increased spacing for clearer visual rhythm.
-    *   `Home` keeps its own hero spacing model and is not constrained by compact-section header gap rules.
-    *   `Statistics` keeps a compact header-to-content spacing profile compared to other sections.
-    *   Header container is clipped to rounded bottom corners so scaffold/background does not appear in lower corner arcs.
-*   **Main Tabs Motif Rule:**
-    *   `Home` remains the primary hero-gradient screen.
-    *   `Objects`, `Finance`, and `Statistics` reuse the same motif in a restrained compact-header gradient (no layout or height increase).
-*   **Statistics Accent Rule:**
-    *   Top period switch and decorative section stripes in `Statistics` use brand blue/indigo accent tokens.
-    *   In dark mode, period switch keeps dark filled unselected segments and restrained selected tint; avoid bright/light chip appearance.
-    *   Statistics cards/charts use neutral grey borders in dark mode; colored border glow is not allowed.
-*   **Statistics Tooltip Rule:**
-    *   Work-dynamics charts (USD and BYN cards) show a compact `?` help icon in the top-right card corner.
-    *   Tooltip text: `Динамика работ. Показывает заработок по сделанным объектам. Не связано с оплатой.`
-    *   Legacy bottom note under charts is removed to reduce visual noise.
-*   **Statistics Refresh UX Rule:**
-    *   Changing period in statistics updates data content without full-screen loading replacement.
-    *   No moving top loading bar should appear under the header on period switch.
+### 3.1 Endpoints
+- `GET/POST /api/estimate-items/`
+- `PATCH/DELETE /api/estimate-items/{id}/`
+- `GET /api/stages/{id}/get_report/?type=work|material`
 
-## 9. Visual Consistency Contracts
-*   **Shared Background Contract:** Primary app screens use one common soft-light app background; foreground cards/dialogs remain visually distinct on light surfaces.
-*   **Bottom Navigation Consistency:** Main app nav, project-detail nav, and estimate nav share one tokenized visual family (bar height, icon sizing, selected-state pill/indicator, text emphasis).
-*   **Empty State Contract:** In list/section areas where data can be absent, UI shows a reusable centered empty-state component (large low-contrast icon + title + short friendly hint) instead of plain `Text` placeholders.
+### 3.2 Функциональные требования
+- Разделы: `works` и `materials`.
+- Поддержка USD/BYN на уровне позиции.
+- Поддержка `markup_percent`, `show_prices`, заметок и remarks на уровне этапа.
 
-## 10. Feedback UX (Snackbar & Validation)
-*   **Error-first Snackbar:** keep snackbar primarily for operation/network/file errors.
-*   **Validation Inline:** form validation messages are displayed inline near the relevant input instead of snackbar where possible.
-*   **Success Signal Reduction:** avoid routine success snackbar when the result is immediately visible on screen (e.g., item added/deleted/renamed in-place).
-*   **Batch Actions:** avoid redundant "start + finish" snackbars for one flow; prefer one final status message.
+### 3.3 Формулы
+- `client_amount`, `employer_amount`, `my_amount` — по правилам из `docs/LOGIC.md`.
 
-## 11. App Theme
-*   **Theme Modes:** Settings screen controls `Light` / `Dark` / `System` theme modes.
-*   **Persistence:** Selected theme mode is persisted locally and restored on next app launch.
-*   **Coverage Contract:** Dark theme must cover all primary sections and nested UI layers (dialogs, popups, cards, navigation bars, and empty states) without changing business behavior.
-*   **Dark Surface Hierarchy Contract:** Dark mode uses three tonal layers: scaffold `background`, content `surface-1` (cards/lists), and elevated `surface-2` (dialogs/forms/summary panels).
-*   **Dark Header Restraint Contract:** In dark mode, section AppBars use `surface` background with subtle accent tint only (no saturated full-width color fills).
-*   **Dark Header Divider Rule:** Decorative horizontal strip under compact section headers is not rendered in dark mode.
-*   **Dark Controls Contract:** Text inputs, popup selects, dropdown menus, and popup menus in dark mode must use dark filled surfaces and low-contrast borders.
-*   **Dialog Shadow Contract (All Themes):** Dialog shells use neutral black/grey elevation shadows; colored accent glow from dialog borders is not allowed.
+## 4. Automation
+
+### 4.1 Из инженерки в материалы
+- `POST /api/stages/{id}/import_from_shields/`
+- Создает/заменяет material-позиции по `mapping_key`.
+- Добавляет/пересчитывает корпуса щитов.
+- При отсутствии ключа создается предупреждающая позиция.
+
+### 4.2 Из материалов в работы
+- `POST /api/stages/{id}/calculate_works/`
+- Поддержка `aggregation_key` и `related_work_item`.
+- Для найденных связей создаются/заменяются work-позиции.
+
+## 5. Templates
+
+### 5.1 Stage templates
+- Работы:
+  - `GET/POST /api/work-templates/`
+  - `POST /api/work-templates/create_from_stage/`
+  - `POST /api/stages/{id}/apply_work_template/`
+- Материалы:
+  - `GET/POST /api/material-templates/`
+  - `POST /api/material-templates/create_from_stage/`
+  - `POST /api/stages/{id}/apply_material_template/`
+
+### 5.2 Shield templates
+- Силовые:
+  - `GET/POST /api/powershield-templates/`
+  - `POST /api/powershield-templates/create_from_shield/`
+  - `POST /api/shields/{id}/apply_powershield_template/`
+- LED:
+  - `GET/POST /api/led-shield-templates/`
+  - `POST /api/led-shield-templates/create_from_shield/`
+  - `POST /api/shields/{id}/apply_led_shield_template/`
+
+### 5.3 Поведение
+- Применение шаблонов всегда `Clear & Apply` в границах выбранной секции.
+
+## 6. Frontend-only workflows (важные UX-контракты)
+
+### 6.1 `precalc` transfer
+- Только для этапов `stage_1/stage_2/stage_1_2`.
+- Переносится только текущая вкладка (`works` или `materials`).
+- Если целевая вкладка непуста — обязательное подтверждение.
+
+### 6.2 Stage 3 armature calculator
+- Только на `stage_3` и только во вкладке материалов.
+- Строки фиксированные, привязка к каталогу по `mapping_key` (с fallback по legacy имени).
+- В перенос попадают строки с количеством > 0.
+- Применение выполняется как `clear & replace` материалов этапа.
+
+## 7. Engineering
+
+### 7.1 Endpoints
+- `GET/POST /api/shields/`
+- `GET/POST /api/shield-groups/`
+- `GET/POST /api/led-zones/`
+
+### 7.2 Контракты
+- Нормализация `poles` и `rating` в `ShieldGroup.save()`.
+- Авторасчет `modules_count` по числу полюсов.
+- Backend возвращает `suggested_size` для щита.
+
+## 8. Files
+
+### 8.1 Endpoints
+- `GET/POST /api/project-files/`
+- `PATCH/DELETE /api/project-files/{id}/`
+
+### 8.2 Ограничения и поведение
+- До 12 файлов на проект.
+- До 20 МБ на файл.
+- Категории: `PROJECT`, `WORK`, `FINISH`.
+- На удалении файла backend удаляет физический файл с диска.
+
+## 9. Finance & Statistics
+
+### 9.1 Finance
+- `GET /api/projects/unpaid_projects/` — агрегат по неоплаченным этапам (кроме `precalc`).
+- `GET /api/finance/`, `PATCH /api/finance/1/` — singleton финансовых настроек.
+
+### 9.2 Statistics
+- `GET /api/statistics/?period=month|year|all`.
+- Возвращает: `finances`, `sources`, `object_types`, `work_dynamics`.
+
+## 10. Directory & Catalog
+
+### 10.1 Endpoints
+- `GET/POST /api/directory-sections/`
+- `GET/PUT/PATCH/DELETE /api/directory-sections/{id}/`
+- `POST /api/directory-sections/bootstrap/`
+- `GET/POST /api/directory-entries/`
+- `GET/PUT/PATCH/DELETE /api/directory-entries/{id}/`
+- `GET/POST /api/categories/`
+- `GET/POST /api/catalog-items/`
+
+### 10.2 Контракты
+- Полный CRUD для sections/entries/categories/items.
+- Должны сохраняться поля автоматизации (`mapping_key`, `aggregation_key`, `related_work_item`) и `metadata` у DirectoryEntry.
+- На входе в Directory выполняется bootstrap.
+
+### 10.3 Not-ready DB contract
+Если таблицы Directory не готовы:
+- list endpoints могут вернуть `[]`.
+- bootstrap/CRUD/retrieve должны вернуть `503` с человекочитаемой ошибкой.
+
+## 11. Settings
+- Переключение `ThemeMode` (`Light/Dark/System`) с persistence.
+- Вход в Directory из Settings: warning + проверка пароля текущего аккаунта.
+- Ошибка пароля отображается inline, без перехода на Directory.

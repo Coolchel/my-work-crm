@@ -1,57 +1,81 @@
-# Project: Smart Electric CRM (Constitution)
+﻿# Smart Electric CRM — PRD
 
-## 1. Project Goal
-Create a premium, professional tool for electricians to manage projects, estimates, and engineering documentation. The app must feel "expensive" and high-quality, inspiring confidence in the user.
+## 1. Цель продукта
+Smart Electric CRM — рабочий инструмент для электромонтажных проектов: учет объектов, этапов, смет, инженерных щитов, файлов и финансов.
 
-## 2. Core Principles
-*   **Premium Aesthetics:** Use Glassmorphism, specific Color Palettes (Indigo, Teal, Orange), and custom UI components to avoid "default Flutter look".
-*   **Dual Theme Quality:** Full feature parity and visual consistency must be preserved in both light and dark themes across all screens, dialogs, and overlays.
-    *   Dark mode presentation uses tonal surface hierarchy (`background` / `surface-1` / `surface-2`) with restrained borders and no bright full-width header fills.
-    *   Dark mode interactions use soft tonal `hover/pressed` overlays (no content opacity fade), and dialog depth uses neutral shadows (no colored glow).
-    *   Section headers in dark mode avoid decorative divider strips, and analytics/finance cards keep neutral grey borders without colored glow.
-    *   Dialog depth stays neutral (black/grey) and section-header rounded corners are visually clean without background bleed.
-*   **UTF-8 Integrity:** All source files and user-facing strings must be stored and rendered as UTF-8 to keep Russian text readable across the entire app.
-*   **Friendly Empty States:** Any "no content yet" scenario should use a polished centered empty-state block with a subtle large icon and explanatory text, not plain one-line placeholders.
-*   **Automation:** Minimizing manual entry. Engineering data (Shields) automatically generates Estimates (Materials & Works).
-*   **Data Integrity:** "Safe" saving mechanisms, strict validation, and conflict resolution (e.g., smart merge logic for calculations).
-*   **Controlled Admin Access:** Entry to high-impact admin areas (Directory) must require explicit warning + credential confirmation for the current account.
-*   **Intentional Navigation:** Main bottom navigation stays focused on core work sections; Settings is accessed from the Home header action.
-*   **Education:** The code and structure should serve as a mentorship platform, using clear English code and Russian comments/explanations.
+Ключевая цель: сократить ручной ввод за счет автоматизации связки `Инженерка -> Материалы -> Работы` и обеспечить предсказуемый управляемый процесс по всем этапам проекта.
 
-## 3. Tech Stack
-*   **Backend:** Django (Monolithic `core` app) + Django REST Framework.
-*   **Database:** SQLite (Dev), PostgreSQL (Prod).
-*   **Frontend:** Flutter (Windows focus, Android/Web compatible).
-*   **State Management:** Riverpod.
-*   **Auth:** JWT (Access/Refresh) with local secure storage.
+## 2. Основные пользователи
+- Руководитель/инженер проекта.
+- Монтажник (ввод факта и быстрые расчеты на объекте).
+- Администратор справочников (каталог, системные словари, ключи автоматизации).
 
-## 4. Key Entities
-*   **Project:** The central unit of work. Contains Stages, Shields, and Files.
-    *   **Project Card Progress Accent:** Object list cards use stage-aware left accent stripe colors to communicate progress at a glance.
-*   **Stage:** A phase of work (e.g., "Rough-in", "Finishing"). Contains the Estimate.
-*   **Estimate (Smeta):** Divided into **Works** and **Materials**.
-    *   **Smart Calculator:** Input 2 of 3 values (Total, Me, Partner) -> 3rd is auto-calculated.
-    *   **Dense Estimate Workspace:** Works/Materials lists use compact card rows to keep many positions visible per screen while preserving existing estimate actions.
-    *   **Precalc Reuse Flow:** For production stages (1/2/1+2), users can replace Works/Materials positions with positions from `precalc` stage through explicit confirmation action.
-    *   **Stage 3 Armature Calculator:** Materials section in `stage_3` includes a fast on-site counting dialog (`+1/+2/+3` with manual total edit), readable full Russian position labels (no technical abbreviations), semantic type icons per armature row, and applies results to estimate via clear-and-replace with confirmation.
-*   **Engineering Map:**
-    *   **Shields (Power):** Hierarchical structure (Shield -> Groups -> Devices).
-    *   **Multimedia/LED:** Low-voltage systems and LED zones.
-    *   **Catalog:** The source of truth for all Items (Goods/Services) with technical keys for automation.
-    *   **Directory (Reference Book):** Editable system dictionaries and catalog data to manage statuses/types/currencies and other app constants from UI.
-    *   **Manual DB Editing Scope:** Directory UI must expose full practical CRUD for sections/entries/categories/items including technical automation fields (`mapping_key`, `aggregation_key`, `related_work_item`) and entry `metadata`.
-    *   **Directory UX:** System dictionaries auto-synchronize on screen open with explicit loading feedback for admins.
-    *   **Directory Navigation UX:** Bottom directory navigation (`System Sections` / `Catalog`) must remain visible on nested directory levels.
-    *   **Directory Action UX:** Delete actions use neutral close icons with non-danger hover tint; edit on nested level is available by row tap in addition to inline actions.
-    *   **Directory Entry Security:** Opening Directory from Settings is protected by danger-warning dialog and current-account password check.
-    *   **Directory Data Robustness:** Text values from directory/catalog flows should stay readable in Russian even if legacy mojibake data appears (normalization + repair tooling).
+## 3. Функциональные блоки
 
-## 5. Language Rules
-*   **User Facing:** Russian (UI, DB Verbose Names, Messages).
-*   **Code:** English (Variables, Classes, Functions).
-*   **Comments/Docs:** Russian (Explaining *why* and *how*).
+### 3.1 Аутентификация
+- JWT (`access` + `refresh`).
+- Проверка сессии при старте приложения.
+- Выход из аккаунта.
+- Смена пароля.
 
-## 6. AI & Code Standards
-*   **Style:** PEP8 (Python), Effective Dart.
-*   **Logic:** Keep business logic in Backend (Services/Models) where possible.
-*   **Safety:** Destructive actions must always have a `ConfirmationDialog`.
+### 3.2 Проекты и этапы
+- CRUD проектов.
+- CRUD этапов в рамках проекта.
+- Структура этапов: `precalc`, `stage_1`, `stage_1_2`, `stage_2`, `stage_3`, `extra`, `other`.
+- У проекта автоматически создаются базовые щиты: `power`, `led`, `multimedia`.
+
+### 3.3 Смета
+- Разделение на `Работы` и `Материалы`.
+- Редактирование количества, цены, валюты, доли подрядчика.
+- Markup для материалов.
+- Текстовые/PDF отчеты.
+
+### 3.4 Инженерка
+- Щиты: силовой, LED, мультимедиа.
+- Силовой щит: группы устройств, полюса, номиналы, модули.
+- LED: зоны/трансформаторы.
+- Multimedia: учет линий.
+
+### 3.5 Автоматизация
+- Импорт материалов из щитов (`mapping_key`).
+- Расчет работ из материалов (`aggregation_key` и `related_work_item`).
+- Шаблоны (работы/материалы/щиты): сценарий `Clear & Apply`.
+- Ручной перенос разделов из `precalc` в `stage_1/stage_2/stage_1_2`.
+- Калькулятор арматуры для `stage_3` (материалы).
+
+### 3.6 Каталог и Directory (Справочник)
+- Полный CRUD: системные секции, записи, категории, позиции каталога.
+- Поддержка технических полей автоматизации:
+  - `mapping_key`
+  - `aggregation_key`
+  - `related_work_item`
+  - `metadata` (у DirectoryEntry)
+- Bootstrap системных секций из backend choices.
+
+### 3.7 Файлы проекта
+- Категории: `PROJECT`, `WORK`, `FINISH`.
+- Загрузка, переименование, удаление, открытие, скачивание, шаринг.
+- Ограничения: до 12 файлов на проект, до 20 МБ на файл.
+
+### 3.8 Финансы и статистика
+- Мониторинг неоплаченных этапов по всем проектам.
+- Глобальные финансовые заметки/смета подрядчика.
+- Статистика: финансы, источники, типы объектов, динамика работ.
+
+## 4. Нефункциональные требования
+- UTF-8 для исходников и пользовательских текстов.
+- Подтверждение для потенциально разрушительных действий.
+- Тема `Light/Dark/System` с сохранением в локальных настройках.
+- Доступ в Directory только через предупреждение + проверку пароля текущего аккаунта.
+- Поиск должен быть регистронезависимым.
+
+## 5. Технологический стек
+- Backend: Django + Django REST Framework.
+- Frontend: Flutter + Riverpod.
+- БД: SQLite (dev), PostgreSQL (prod).
+- Auth: JWT.
+
+## 6. Языковые правила
+- UI и сообщения: русский язык.
+- Код (классы, переменные, функции): английский.
+- Документация/комментарии: русский (с объяснением причин и логики).

@@ -35,21 +35,24 @@ class _EstimateListTileState extends State<EstimateListTile> {
       ? Icons.engineering_outlined
       : Icons.inventory_2_outlined;
 
-  String _formatNumber(double value) {
+  String _formatQuantity(double value) {
     if (widget.item.itemType == 'work') {
       return value.toStringAsFixed(0);
     }
     return value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
   }
 
+  String _formatMoney(double value) {
+    return value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
+  }
+
   String _formatCurrencyAmount(double value, bool isUsd) {
-    return '${_formatNumber(value)}${isUsd ? '\$' : 'р'}';
+    return '${_formatMoney(value)}${isUsd ? '\$' : 'р'}';
   }
 
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
-    final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
     final isUsd = item.currency == 'USD';
     final clientAmount = item.clientAmount ?? 0;
@@ -158,7 +161,7 @@ class _EstimateListTileState extends State<EstimateListTile> {
                                   runSpacing: 2,
                                   children: [
                                     Text(
-                                      '${_formatNumber(item.totalQuantity)} ${item.unit}',
+                                      '${_formatQuantity(item.totalQuantity)} ${item.unit}',
                                       style: TextStyle(
                                         fontSize: 10.5,
                                         color: Colors.grey.shade600,
@@ -216,43 +219,41 @@ class _EstimateListTileState extends State<EstimateListTile> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               if (!widget.hidePrices)
-                                isUsd
-                                    ? Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 7,
-                                          vertical: 3,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: amountBgColor,
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          border: widget.isMarkupActive
-                                              ? Border.all(
-                                                  color: markupAccent
-                                                      .withOpacity(0.6),
-                                                  width: 0.8,
-                                                )
-                                              : Border.all(
-                                                  color: Colors.transparent),
-                                        ),
-                                        child: Text(
-                                          _formatCurrencyAmount(
-                                              clientAmount, isUsd),
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
-                                            color: amountTextColor,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isUsd
+                                        ? amountBgColor
+                                        : Colors.deepPurple.withOpacity(
+                                            isDark ? 0.16 : 0.11,
                                           ),
-                                        ),
-                                      )
-                                    : Text(
-                                        '≈ ${_formatCurrencyAmount(clientAmount, false)}',
-                                        style: TextStyle(
-                                          fontSize: 10.5,
-                                          fontWeight: FontWeight.w600,
-                                          color: scheme.onSurfaceVariant,
-                                        ),
-                                      ),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: widget.isMarkupActive
+                                        ? Border.all(
+                                            color:
+                                                markupAccent.withOpacity(0.6),
+                                            width: 0.8,
+                                          )
+                                        : Border.all(
+                                            color: Colors.transparent,
+                                          ),
+                                  ),
+                                  child: Text(
+                                    _formatCurrencyAmount(clientAmount, isUsd),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: isUsd
+                                          ? amountTextColor
+                                          : (isDark
+                                              ? Colors.deepPurple.shade200
+                                              : Colors.deepPurple.shade700),
+                                    ),
+                                  ),
+                                ),
                               const SizedBox(width: 2),
                               SizedBox(
                                 width: 24,
