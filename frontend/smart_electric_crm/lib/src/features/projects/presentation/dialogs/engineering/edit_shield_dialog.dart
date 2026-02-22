@@ -35,6 +35,8 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
       data: Theme.of(context).copyWith(
         colorScheme:
             Theme.of(context).colorScheme.copyWith(primary: themeColor),
+        hoverColor: themeColor.withOpacity(isDark ? 0.24 : 0.10),
+        highlightColor: themeColor.withOpacity(isDark ? 0.18 : 0.08),
       ),
       child: Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -277,6 +279,8 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
     const bg = Colors.indigo;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final menuBackgroundColor =
+        isDark ? scheme.surfaceContainerHigh : scheme.surfaceContainer;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -297,7 +301,8 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                     elevation: 4,
-                    color: AppDesignTokens.surface2(context),
+                    color: menuBackgroundColor,
+                    surfaceTintColor: Colors.transparent,
                   ),
                 ),
                 child: PopupMenuButton<String>(

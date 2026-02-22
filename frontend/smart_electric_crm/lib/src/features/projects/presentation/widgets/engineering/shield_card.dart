@@ -679,7 +679,6 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   Future<void> _deleteShield(BuildContext context, WidgetRef ref) async {
     final confirm = await showDialog<bool>(
       context: context,
-      barrierColor: Colors.transparent,
       builder: (context) => const ConfirmationDialog(
         title: 'Удалить щит?',
         content: 'Все группы внутри будут удалены.',

@@ -144,7 +144,7 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: themeColor, width: 2),
+                        borderSide: BorderSide(color: themeColor, width: 1),
                       ),
                       filled: true,
                       fillColor: isDark

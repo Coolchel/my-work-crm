@@ -26,6 +26,8 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
       data: Theme.of(context).copyWith(
         colorScheme:
             Theme.of(context).colorScheme.copyWith(primary: themeColor),
+        hoverColor: themeColor.withOpacity(isDark ? 0.24 : 0.10),
+        highlightColor: themeColor.withOpacity(isDark ? 0.18 : 0.08),
       ),
       child: Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -368,6 +370,8 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
     const bg = Colors.indigo;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final menuBackgroundColor =
+        isDark ? scheme.surfaceContainerHigh : scheme.surfaceContainer;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -400,7 +404,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                   elevation: 4,
                   shadowColor: AppDesignTokens.cardShadow(context),
                   surfaceTintColor: Colors.transparent, // Disable M3 tint
-                  color: AppDesignTokens.surface2(context),
+                  color: menuBackgroundColor,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                   constraints: BoxConstraints(

@@ -586,15 +586,11 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             : themeColor.withOpacity(0.12);
         final idleChipColor =
             isDark ? scheme.surfaceContainerHigh : Colors.grey.shade50;
-        final hoverChipColor = isDark
-            ? scheme.surfaceContainerHighest
-            : themeColor.withOpacity(0.14);
         return _HoverableFilterChip(
           label: entry.value,
           isActive: isActive,
           isDark: isDark,
           idleColor: isActive ? selectedChipColor : idleChipColor,
-          hoverColor: isActive ? selectedChipColor : hoverChipColor,
           borderColor: isActive
               ? themeColor.withOpacity(isDark ? 0.32 : 0.22)
               : (isDark
@@ -988,7 +984,6 @@ class _HoverableFilterChip extends StatefulWidget {
   final bool isActive;
   final bool isDark;
   final Color idleColor;
-  final Color hoverColor;
   final Color borderColor;
   final double borderWidth;
   final Color textColor;
@@ -999,7 +994,6 @@ class _HoverableFilterChip extends StatefulWidget {
     required this.isActive,
     required this.isDark,
     required this.idleColor,
-    required this.hoverColor,
     required this.borderColor,
     required this.borderWidth,
     required this.textColor,
@@ -1011,43 +1005,35 @@ class _HoverableFilterChip extends StatefulWidget {
 }
 
 class _HoverableFilterChipState extends State<_HoverableFilterChip> {
-  bool _isHovered = false;
-
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        decoration: BoxDecoration(
-          color: _isHovered ? widget.hoverColor : widget.idleColor,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: widget.borderColor,
-            width: widget.borderWidth,
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        color: widget.idleColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: widget.borderColor,
+          width: widget.borderWidth,
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: widget.onTap,
-            borderRadius: BorderRadius.circular(20),
-            splashColor: widget.isDark
-                ? Colors.white.withOpacity(0.10)
-                : Colors.indigo.withOpacity(0.10),
-            highlightColor: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Text(
-                widget.label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight:
-                      widget.isActive ? FontWeight.w600 : FontWeight.w500,
-                  color: widget.textColor,
-                ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(20),
+          hoverColor: Colors.black.withOpacity(widget.isDark ? 0.20 : 0.06),
+          splashColor: widget.isDark
+              ? Colors.white.withOpacity(0.10)
+              : Colors.indigo.withOpacity(0.10),
+          highlightColor: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: Text(
+              widget.label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.w500,
+                color: widget.textColor,
               ),
             ),
           ),
