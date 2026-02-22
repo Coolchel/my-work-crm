@@ -59,6 +59,12 @@ class AppTheme {
         isDark ? scheme.onSurface.withOpacity(0.76) : scheme.onSurface;
     final secondaryColor =
         isDark ? scheme.onSurface.withOpacity(0.62) : scheme.onSurfaceVariant;
+    final hoverOverlayColor = isDark
+        ? Colors.white.withOpacity(0.08)
+        : Colors.black.withOpacity(0.045);
+    final highlightOverlayColor = isDark
+        ? Colors.white.withOpacity(0.06)
+        : Colors.black.withOpacity(0.035);
 
     final textTheme = ThemeData(
       useMaterial3: true,
@@ -217,9 +223,9 @@ class AppTheme {
         contentTextStyle: TextStyle(color: scheme.onSurface),
         behavior: SnackBarBehavior.floating,
       ),
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
-      hoverColor: Colors.transparent,
+      splashColor: highlightOverlayColor,
+      highlightColor: highlightOverlayColor,
+      hoverColor: hoverOverlayColor,
     );
   }
 }

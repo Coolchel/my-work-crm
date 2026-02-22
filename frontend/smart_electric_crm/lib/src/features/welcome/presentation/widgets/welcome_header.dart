@@ -74,8 +74,9 @@ class WelcomeHeader extends StatelessWidget {
                 IconButton(
                   tooltip: 'Настройки',
                   onPressed: onSettingsPressed,
-                  icon: const Icon(Icons.settings_outlined),
-                  color: Colors.white,
+                  icon: const Icon(Icons.settings_outlined, size: 22),
+                  color: Colors.white.withOpacity(isDark ? 0.82 : 0.9),
+                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
