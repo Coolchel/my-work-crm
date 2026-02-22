@@ -33,6 +33,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   late Animation<double> _pulseAnimation;
   bool _isExpanded = false;
   bool _isHovered = false;
+  bool _isHeaderHovered = false;
 
   @override
   void initState() {
@@ -99,7 +100,6 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     final isDark = AppDesignTokens.isDark(context);
 
     return MouseRegion(
-      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
@@ -147,104 +147,117 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     children: [
                       // Header (Tappable, neutral)
                       Material(
-                        color: _isExpanded
-                            ? themeColor.withOpacity(0.08)
-                            : AppDesignTokens.cardBackground(context,
-                                hovered: _isHovered),
-                        child: InkWell(
-                          onTap: _toggleExpand,
-                          hoverColor: Colors.transparent,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 14),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: AppDesignTokens.cardBorder(context),
-                                ), // Neutral border
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 34,
-                                  height: 34,
-                                  decoration: BoxDecoration(
-                                    color: themeColor
-                                        .withOpacity(0.1), // Accent icon bg
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    _getIconForType(shield.shieldType),
-                                    color: themeColor.withOpacity(0.8),
-                                    size: 18,
-                                  ),
+                        color: Colors.transparent,
+                        child: MouseRegion(
+                          onEnter: (_) =>
+                              setState(() => _isHeaderHovered = true),
+                          onExit: (_) =>
+                              setState(() => _isHeaderHovered = false),
+                          child: InkWell(
+                            onTap: _toggleExpand,
+                            mouseCursor: SystemMouseCursors.click,
+                            hoverColor: Colors.transparent,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 160),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 14),
+                              decoration: BoxDecoration(
+                                color: _isExpanded
+                                    ? (_isHeaderHovered
+                                        ? themeColor.withOpacity(0.14)
+                                        : themeColor.withOpacity(0.08))
+                                    : AppDesignTokens.cardBackground(context,
+                                        hovered:
+                                            _isHovered || _isHeaderHovered),
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: AppDesignTokens.cardBorder(context),
+                                  ), // Neutral border
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        shield.name,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: scheme.onSurface,
-                                          letterSpacing: -0.4,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Row(
-                                        children: [
-                                          Text(
-                                            _getTypeName(shield.shieldType)
-                                                .toUpperCase(),
-                                            style: TextStyle(
-                                              color:
-                                                  themeColor.withOpacity(0.7),
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: 0.5,
-                                            ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 34,
+                                    height: 34,
+                                    decoration: BoxDecoration(
+                                      color: themeColor
+                                          .withOpacity(0.1), // Accent icon bg
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      _getIconForType(shield.shieldType),
+                                      color: themeColor.withOpacity(0.8),
+                                      size: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          shield.name,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: scheme.onSurface,
+                                            letterSpacing: -0.4,
                                           ),
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 6),
-                                            child: Text(
-                                              '•',
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              _getTypeName(shield.shieldType)
+                                                  .toUpperCase(),
                                               style: TextStyle(
-                                                color: Colors.grey.shade400,
+                                                color:
+                                                    themeColor.withOpacity(0.7),
                                                 fontSize: 10,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 0.5,
                                               ),
                                             ),
-                                          ),
-                                          Text(
-                                            (shield.mounting == 'internal'
-                                                ? 'Встроенный'
-                                                : 'Навесной'),
-                                            style: TextStyle(
-                                              color: scheme.onSurfaceVariant,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w500,
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 6),
+                                              child: Text(
+                                                '•',
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade400,
+                                                  fontSize: 10,
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                            Text(
+                                              (shield.mounting == 'internal'
+                                                  ? 'Встроенный'
+                                                  : 'Навесной'),
+                                              style: TextStyle(
+                                                color: scheme.onSurfaceVariant,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                RotationTransition(
-                                  turns: Tween(begin: 0.0, end: 0.5)
-                                      .animate(_expandAnimation),
-                                  child: Icon(
-                                    Icons.expand_more_rounded,
-                                    color: Colors.grey.shade700,
-                                    size: 22,
+                                  RotationTransition(
+                                    turns: Tween(begin: 0.0, end: 0.5)
+                                        .animate(_expandAnimation),
+                                    child: Icon(
+                                      Icons.expand_more_rounded,
+                                      color: Colors.grey.shade700,
+                                      size: 22,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -587,43 +600,46 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
 
   Widget _buildMountingSegmented(Color themeColor) {
     final shield = widget.shield;
-    return SegmentedButton<String>(
-      segments: const [
-        ButtonSegment(
-          value: 'internal',
-          label: Text('Внутр.',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-        ),
-        ButtonSegment(
-          value: 'external',
-          label: Text('Наруж.',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-        ),
-      ],
-      selected: {shield.mounting},
-      onSelectionChanged: (Set<String> newSelection) async {
-        final newValue = newSelection.first;
-        try {
-          await ref
-              .read(engineeringRepositoryProvider)
-              .updateShield(shield.id, {'mounting': newValue});
-          ref.invalidate(projectListProvider);
-          ref.invalidate(projectByIdProvider(widget.projectId));
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text('Ошибка обновления: $e')));
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: SegmentedButton<String>(
+        segments: const [
+          ButtonSegment(
+            value: 'internal',
+            label: Text('Внутр.',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          ),
+          ButtonSegment(
+            value: 'external',
+            label: Text('Наруж.',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          ),
+        ],
+        selected: {shield.mounting},
+        onSelectionChanged: (Set<String> newSelection) async {
+          final newValue = newSelection.first;
+          try {
+            await ref
+                .read(engineeringRepositoryProvider)
+                .updateShield(shield.id, {'mounting': newValue});
+            ref.invalidate(projectListProvider);
+            ref.invalidate(projectByIdProvider(widget.projectId));
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Ошибка обновления: $e')));
+            }
           }
-        }
-      },
-      showSelectedIcon: false,
-      style: SegmentedButton.styleFrom(
-        visualDensity: VisualDensity.compact,
-        padding: EdgeInsets.zero,
-        selectedBackgroundColor: themeColor.withOpacity(0.1),
-        selectedForegroundColor: themeColor,
-        side: BorderSide(color: Colors.grey.withOpacity(0.1)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        },
+        showSelectedIcon: false,
+        style: SegmentedButton.styleFrom(
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          selectedBackgroundColor: themeColor.withOpacity(0.1),
+          selectedForegroundColor: themeColor,
+          side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        ),
       ),
     );
   }

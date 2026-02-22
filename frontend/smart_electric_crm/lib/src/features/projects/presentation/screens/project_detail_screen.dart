@@ -1260,6 +1260,7 @@ class _ActionButtonState extends State<_ActionButton> {
       child: Material(
         color: Colors.transparent,
         child: MouseRegion(
+          cursor: SystemMouseCursors.click,
           onEnter: (_) => setState(() => _isHovered = true),
           onExit: (_) => setState(() => _isHovered = false),
           child: InkWell(
@@ -1418,7 +1419,6 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
@@ -1455,6 +1455,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                 children: [
                   InkWell(
                     onTap: () => setState(() => _isExpanded = !_isExpanded),
+                    mouseCursor: SystemMouseCursors.click,
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(19, 14, 14, 14),
                       child: Row(
@@ -1580,6 +1581,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
+            mouseCursor: SystemMouseCursors.basic,
             borderRadius: BorderRadius.circular(6),
             hoverColor: Colors.transparent,
             splashColor: Colors.transparent,
@@ -1621,6 +1623,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
+          mouseCursor: SystemMouseCursors.click,
           borderRadius: BorderRadius.circular(8),
           child: Ink(
             width: 34,

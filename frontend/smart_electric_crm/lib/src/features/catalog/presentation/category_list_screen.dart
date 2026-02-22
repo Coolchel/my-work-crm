@@ -1109,6 +1109,8 @@ class _DialogShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       elevation: 0,
@@ -1116,8 +1118,9 @@ class _DialogShell extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 560),
         decoration: BoxDecoration(
-          color: AppDesignTokens.surface2(context),
+          color: isDark ? scheme.surfaceContainerHigh : scheme.surface,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppDesignTokens.softBorder(context)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.12),
@@ -1184,6 +1187,7 @@ class _DialogShell extends StatelessWidget {
 InputDecoration _dialogInputDecoration(String label) {
   return InputDecoration(
     labelText: label,
+    constraints: const BoxConstraints(minHeight: 56),
     filled: true,
     fillColor: const Color(0x14000000),
     border: OutlineInputBorder(
@@ -1217,7 +1221,7 @@ class _PopupSelectOption<T> {
   });
 }
 
-class _DialogPopupSelectField<T> extends StatelessWidget {
+class _DialogPopupSelectField<T> extends StatefulWidget {
   final String label;
   final T value;
   final List<_PopupSelectOption<T>> options;
@@ -1231,112 +1235,113 @@ class _DialogPopupSelectField<T> extends StatelessWidget {
   });
 
   @override
+  State<_DialogPopupSelectField<T>> createState() =>
+      _DialogPopupSelectFieldState<T>();
+}
+
+class _DialogPopupSelectFieldState<T>
+    extends State<_DialogPopupSelectField<T>> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
-    final selected = options.cast<_PopupSelectOption<T>?>().firstWhere(
-          (option) => option?.value == value,
+    final selected = widget.options.cast<_PopupSelectOption<T>?>().firstWhere(
+          (option) => option?.value == widget.value,
           orElse: () => null,
         );
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 2, bottom: 6),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            Container(
-              height: 46,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? scheme.surfaceContainerHigh
-                    : scheme.surfaceContainer.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppDesignTokens.softBorder(context)),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-                child: InkWell(
-                  onTap: () async {
-                    final box = context.findRenderObject() as RenderBox;
-                    final position = box.localToGlobal(Offset.zero);
-                    final size = box.size;
+        return ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            onEnter: (_) => setState(() => _isHovered = true),
+            onExit: (_) => setState(() => _isHovered = false),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () async {
+                final box = context.findRenderObject() as RenderBox;
+                final position = box.localToGlobal(Offset.zero);
+                final size = box.size;
 
-                    final selectedValue = await showMenu<T>(
-                      context: context,
-                      position: RelativeRect.fromLTRB(
-                        position.dx,
-                        position.dy + size.height + 4,
-                        position.dx + size.width,
-                        position.dy + size.height + 320,
-                      ),
-                      elevation: 4,
-                      shadowColor: AppDesignTokens.cardShadow(context),
-                      surfaceTintColor: Colors.transparent,
-                      color: AppDesignTokens.surface2(context),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      constraints: BoxConstraints(
-                        minWidth: constraints.maxWidth,
-                        maxWidth: constraints.maxWidth,
-                      ),
-                      items: options
-                          .map(
-                            (option) => PopupMenuItem<T>(
-                              value: option.value,
-                              height: 40,
-                              child: Text(
-                                option.label,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    );
-                    if (selectedValue != null) {
-                      onChanged(selectedValue);
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(14),
-                  mouseCursor: SystemMouseCursors.click,
-                  hoverColor: Colors.indigo.withOpacity(isDark ? 0.10 : 0.05),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Row(
-                      children: [
-                        Expanded(
+                final selectedValue = await showMenu<T>(
+                  context: context,
+                  position: RelativeRect.fromLTRB(
+                    position.dx,
+                    position.dy + size.height,
+                    position.dx + size.width,
+                    position.dy + size.height + 320,
+                  ),
+                  elevation: 6,
+                  shadowColor: AppDesignTokens.cardShadow(context),
+                  surfaceTintColor: Colors.transparent,
+                  color: isDark
+                      ? scheme.surfaceContainerHigh
+                      : scheme.surfaceContainerHighest.withOpacity(0.98),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side:
+                        BorderSide(color: AppDesignTokens.softBorder(context)),
+                  ),
+                  constraints: BoxConstraints(
+                    minWidth: constraints.maxWidth,
+                    maxWidth: constraints.maxWidth,
+                  ),
+                  items: widget.options
+                      .map(
+                        (option) => PopupMenuItem<T>(
+                          value: option.value,
+                          height: 40,
+                          textStyle: TextStyle(
+                            fontSize: 13,
+                            color: scheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                          ),
                           child: Text(
-                            selected?.label ?? '',
-                            maxLines: 1,
+                            option.label,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
                           ),
                         ),
-                        Icon(Icons.arrow_drop_down,
-                            size: 22, color: scheme.onSurfaceVariant),
-                      ],
+                      )
+                      .toList(),
+                );
+                if (selectedValue != null) {
+                  widget.onChanged(selectedValue);
+                }
+              },
+              child: InputDecorator(
+                isEmpty: selected == null,
+                isFocused: false,
+                decoration: _dialogInputDecoration(widget.label).copyWith(
+                  fillColor: _isHovered
+                      ? Colors.indigo.withOpacity(isDark ? 0.10 : 0.06)
+                      : null,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        selected?.label ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
-                  ),
+                    Icon(Icons.arrow_drop_down,
+                        size: 22, color: scheme.onSurfaceVariant),
+                  ],
                 ),
               ),
             ),
-          ],
+          ),
         );
       },
     );
