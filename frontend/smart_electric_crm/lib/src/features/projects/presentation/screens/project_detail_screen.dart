@@ -16,6 +16,8 @@ import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_di
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import '../../../settings/application/app_settings_controller.dart';
+import '../../../home/presentation/screens/home_screen.dart';
 import 'dart:io';
 import '../../data/models/project_file_model.dart';
 import '../../../../shared/services/temp_file_service.dart';
@@ -106,6 +108,9 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
 
   @override
   Widget build(BuildContext context) {
+    final showWelcome = ref.watch(
+      appSettingsProvider.select((value) => value.showWelcome),
+    );
     final screens = [
       _StagesTab(project: widget.project),
       EngineeringTab(project: widget.project),
@@ -128,27 +133,42 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
         children: screens,
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
         onDestinationSelected: (index) {
+          if (showWelcome && index == 0) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (_) => const HomeScreen(),
+              ),
+              (route) => false,
+            );
+            return;
+          }
           setState(() {
-            _currentIndex = index;
+            _currentIndex = showWelcome ? index - 1 : index;
           });
         },
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          if (showWelcome)
+            const NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+            ),
+          const NavigationDestination(
             icon: Icon(Icons.layers_outlined),
             selectedIcon: Icon(Icons.layers),
-            label: 'Этапы',
+            label: '\u042d\u0442\u0430\u043f\u044b',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.settings_input_component_outlined),
             selectedIcon: Icon(Icons.settings_input_component),
-            label: 'Щиты',
+            label: '\u0429\u0438\u0442\u044b',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.folder_open_outlined),
             selectedIcon: Icon(Icons.folder_open),
-            label: 'Файлы',
+            label: '\u0424\u0430\u0439\u043b\u044b',
           ),
         ],
       ),

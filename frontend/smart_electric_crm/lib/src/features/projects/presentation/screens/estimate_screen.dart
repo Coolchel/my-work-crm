@@ -17,6 +17,8 @@ import '../dialogs/estimate/stage3_armature_calculator_dialog.dart';
 import '../../../engineering/presentation/dialogs/template_selection_dialog.dart';
 import '../../../engineering/presentation/providers/template_providers.dart';
 import '../../../engineering/data/models/template_models.dart';
+import '../../../settings/application/app_settings_controller.dart';
+import '../../../home/presentation/screens/home_screen.dart';
 import '../../../../shared/presentation/dialogs/text_input_dialog.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
@@ -149,6 +151,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final showWelcome = ref.watch(
+      appSettingsProvider.select((value) => value.showWelcome),
+    );
     // Backdrop filter when FAB is expanded
     // Backdrop filter when FAB is expanded
     return Scaffold(
@@ -379,22 +384,37 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
         onDestinationSelected: (index) {
+          if (showWelcome && index == 0) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (_) => const HomeScreen(),
+              ),
+              (route) => false,
+            );
+            return;
+          }
           setState(() {
-            _currentIndex = index;
+            _currentIndex = showWelcome ? index - 1 : index;
           });
         },
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          if (showWelcome)
+            const NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+            ),
+          const NavigationDestination(
             icon: Icon(Icons.handyman_outlined),
             selectedIcon: Icon(Icons.handyman),
-            label: 'Работы',
+            label: '\u0420\u0430\u0431\u043e\u0442\u044b',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
             selectedIcon: Icon(Icons.inventory_2),
-            label: 'Материалы',
+            label: '\u041c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u044b',
           ),
         ],
       ),

@@ -92,7 +92,8 @@ class SettingsScreen extends ConsumerWidget {
                   title: const Text('Начальный экран'),
                   subtitle: const Text(
                     'Приветствие и быстрый поиск. '
-                    'Если экран выключен, вкладка настроек появится внизу.',
+                    'Если экран выключен, вкладка настроек появится внизу, '
+                    'а кнопка «Главная» в глубоких разделах скрывается.',
                   ),
                   value: settings.showWelcome,
                   onChanged: (value) => settingsNotifier.setShowWelcome(value),

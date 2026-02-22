@@ -13,6 +13,8 @@ import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/features/settings/application/app_settings_controller.dart';
+import '../../home/presentation/screens/home_screen.dart';
 
 class CategoryListScreen extends ConsumerStatefulWidget {
   const CategoryListScreen({super.key});
@@ -107,6 +109,10 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final showWelcome = ref.watch(
+      appSettingsProvider.select((value) => value.showWelcome),
+    );
+
     return Scaffold(
       appBar: CompactSectionAppBar(
         leading: IconButton(
@@ -149,18 +155,35 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
-        destinations: const [
-          NavigationDestination(
+        selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
+        onDestinationSelected: (index) {
+          if (showWelcome && index == 0) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (_) => const HomeScreen(),
+              ),
+              (route) => false,
+            );
+            return;
+          }
+          setState(() => _currentIndex = showWelcome ? index - 1 : index);
+        },
+        destinations: [
+          if (showWelcome)
+            const NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+            ),
+          const NavigationDestination(
             icon: Icon(Icons.schema_outlined),
             selectedIcon: Icon(Icons.schema),
-            label: 'Система',
+            label: '\u0421\u0438\u0441\u0442\u0435\u043c\u0430',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
             selectedIcon: Icon(Icons.inventory_2),
-            label: 'Каталог',
+            label: '\u041a\u0430\u0442\u0430\u043b\u043e\u0433',
           ),
         ],
       ),
@@ -411,6 +434,9 @@ class _SectionEntriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final entriesAsync = ref.watch(directoryEntriesProvider(section.id));
+    final showWelcome = ref.watch(
+      appSettingsProvider.select((value) => value.showWelcome),
+    );
 
     return Scaffold(
       appBar: CompactSectionAppBar(
@@ -564,22 +590,38 @@ class _SectionEntriesScreen extends ConsumerWidget {
         error: (error, _) => Center(child: Text('Ошибка: $error')),
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
+        selectedIndex: showWelcome ? 1 : 0,
         onDestinationSelected: (index) {
-          if (index == 0) return;
-          onSelectTab(index);
+          if (showWelcome && index == 0) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (_) => const HomeScreen(),
+              ),
+              (route) => false,
+            );
+            return;
+          }
+          final mappedIndex = showWelcome ? index - 1 : index;
+          if (mappedIndex == 0) return;
+          onSelectTab(mappedIndex);
           Navigator.of(context).pop();
         },
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          if (showWelcome)
+            const NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+            ),
+          const NavigationDestination(
             icon: Icon(Icons.schema_outlined),
             selectedIcon: Icon(Icons.schema),
-            label: 'Система',
+            label: '\u0421\u0438\u0441\u0442\u0435\u043c\u0430',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
             selectedIcon: Icon(Icons.inventory_2),
-            label: 'Каталог',
+            label: '\u041a\u0430\u0442\u0430\u043b\u043e\u0433',
           ),
         ],
       ),
@@ -714,6 +756,9 @@ class _CategoryItemsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final itemsAsync = ref.watch(catalogItemsByCategoryProvider(category.id));
     final workItemsAsync = ref.watch(catalogWorkItemsProvider);
+    final showWelcome = ref.watch(
+      appSettingsProvider.select((value) => value.showWelcome),
+    );
 
     return Scaffold(
       appBar: CompactSectionAppBar(
@@ -883,22 +928,38 @@ class _CategoryItemsScreen extends ConsumerWidget {
         error: (error, _) => Center(child: Text('Ошибка: $error')),
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: 1,
+        selectedIndex: showWelcome ? 2 : 1,
         onDestinationSelected: (index) {
-          if (index == 1) return;
-          onSelectTab(index);
+          if (showWelcome && index == 0) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (_) => const HomeScreen(),
+              ),
+              (route) => false,
+            );
+            return;
+          }
+          final mappedIndex = showWelcome ? index - 1 : index;
+          if (mappedIndex == 1) return;
+          onSelectTab(mappedIndex);
           Navigator.of(context).pop();
         },
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          if (showWelcome)
+            const NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+            ),
+          const NavigationDestination(
             icon: Icon(Icons.schema_outlined),
             selectedIcon: Icon(Icons.schema),
-            label: 'Система',
+            label: '\u0421\u0438\u0441\u0442\u0435\u043c\u0430',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
             selectedIcon: Icon(Icons.inventory_2),
-            label: 'Каталог',
+            label: '\u041a\u0430\u0442\u0430\u043b\u043e\u0433',
           ),
         ],
       ),

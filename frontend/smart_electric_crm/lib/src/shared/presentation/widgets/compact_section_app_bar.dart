@@ -26,9 +26,10 @@ class CompactSectionAppBar extends StatelessWidget
 
   static const double _toolbarHeight = 68;
   static const double _defaultBottomGap = 30;
+  double get _totalHeight => _toolbarHeight + bottomGap;
 
   @override
-  Size get preferredSize => Size.fromHeight(_toolbarHeight + bottomGap);
+  Size get preferredSize => Size.fromHeight(_totalHeight);
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +51,7 @@ class CompactSectionAppBar extends StatelessWidget
       automaticallyImplyLeading: leading == null,
       leading: leading,
       actions: actions,
-      toolbarHeight: _toolbarHeight,
+      toolbarHeight: _totalHeight,
       centerTitle: centerTitle,
       elevation: 0,
       clipBehavior: Clip.antiAlias,
@@ -114,54 +115,55 @@ class CompactSectionAppBar extends StatelessWidget
         fontWeight: FontWeight.w700,
         letterSpacing: 0.2,
       ),
-      title: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: iconBadgeBackground,
-              borderRadius: BorderRadius.circular(9),
+      title: SizedBox(
+        height: _totalHeight,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: iconBadgeBackground,
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Icon(icon, size: 17),
             ),
-            child: Icon(icon, size: 17),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
-                    height: 1.1,
-                  ),
-                ),
-                if (subtitle != null && subtitle!.trim().isNotEmpty)
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    subtitle!,
+                    title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: subtitleColor,
-                      fontWeight: FontWeight.w400,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
                       height: 1.1,
                     ),
                   ),
-              ],
+                  if (subtitle != null && subtitle!.trim().isNotEmpty)
+                    Text(
+                      subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: subtitleColor,
+                        fontWeight: FontWeight.w400,
+                        height: 1.1,
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-      bottom: PreferredSize(
-        preferredSize: Size.fromHeight(bottomGap),
-        child: SizedBox(height: bottomGap),
+          ],
+        ),
       ),
     );
   }
