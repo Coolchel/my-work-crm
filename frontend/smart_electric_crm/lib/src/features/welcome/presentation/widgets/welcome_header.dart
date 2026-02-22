@@ -6,13 +6,26 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_quotes.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 
-class WelcomeHeader extends StatelessWidget {
+class WelcomeHeader extends StatefulWidget {
   final VoidCallback onSettingsPressed;
 
   const WelcomeHeader({
     required this.onSettingsPressed,
     super.key,
   });
+
+  @override
+  State<WelcomeHeader> createState() => _WelcomeHeaderState();
+}
+
+class _WelcomeHeaderState extends State<WelcomeHeader> {
+  late final String _quote;
+
+  @override
+  void initState() {
+    super.initState();
+    _quote = appQuotes[Random().nextInt(appQuotes.length)];
+  }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -73,7 +86,7 @@ class WelcomeHeader extends StatelessWidget {
                 ),
                 IconButton(
                   tooltip: 'Настройки',
-                  onPressed: onSettingsPressed,
+                  onPressed: widget.onSettingsPressed,
                   icon: const Icon(Icons.settings_outlined, size: 22),
                   color: Colors.white.withOpacity(isDark ? 0.82 : 0.9),
                   visualDensity: VisualDensity.compact,
@@ -90,7 +103,7 @@ class WelcomeHeader extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              '"${appQuotes[Random().nextInt(appQuotes.length)]}"',
+              '"$_quote"',
               style: TextStyle(
                 color: Colors.white.withOpacity(isDark ? 0.62 : 0.8),
                 fontSize: 14,
