@@ -65,6 +65,12 @@ class AppTheme {
     final highlightOverlayColor = isDark
         ? Colors.white.withOpacity(0.06)
         : Colors.black.withOpacity(0.035);
+    final navBackgroundColor = isDark
+        ? scheme.surfaceContainerHigh
+        : Color.alphaBlend(
+            scheme.primary.withOpacity(0.025),
+            scheme.surface,
+          );
 
     final textTheme = ThemeData(
       useMaterial3: true,
@@ -108,7 +114,7 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         height: AppDesignTokens.navBarHeight,
-        backgroundColor: scheme.surface,
+        backgroundColor: navBackgroundColor,
         indicatorShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDesignTokens.radiusM),
         ),

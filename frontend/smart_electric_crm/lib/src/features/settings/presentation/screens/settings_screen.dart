@@ -10,7 +10,12 @@ import '../../application/app_settings_controller.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 
 class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+  final VoidCallback? onBackPressed;
+
+  const SettingsScreen({
+    this.onBackPressed,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,7 +28,13 @@ class SettingsScreen extends ConsumerWidget {
         leading: IconButton(
           tooltip: 'Назад',
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: () {
+            if (onBackPressed != null) {
+              onBackPressed!();
+              return;
+            }
+            Navigator.of(context).maybePop();
+          },
         ),
         title: 'Настройки',
         icon: Icons.settings_rounded,
@@ -79,7 +90,10 @@ class SettingsScreen extends ConsumerWidget {
                   hoverColor: AppDesignTokens.hoverOverlay(context),
                   secondary: const Icon(Icons.waving_hand_outlined),
                   title: const Text('Начальный экран'),
-                  subtitle: const Text('Приветствие и быстрый поиск'),
+                  subtitle: const Text(
+                    'Приветствие и быстрый поиск. '
+                    'Если экран выключен, вкладка настроек появится внизу.',
+                  ),
                   value: settings.showWelcome,
                   onChanged: (value) => settingsNotifier.setShowWelcome(value),
                 ),

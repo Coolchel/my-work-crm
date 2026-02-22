@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../projects/presentation/providers/project_providers.dart';
-import '../../../settings/presentation/screens/settings_screen.dart';
 import '../widgets/new_project_card.dart';
 import '../widgets/quick_stats_row.dart';
 import '../widgets/recent_projects_list.dart';
@@ -11,7 +10,12 @@ import '../widgets/smart_search_bar.dart';
 import '../widgets/welcome_header.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
-  const WelcomeScreen({super.key});
+  final VoidCallback onSettingsPressed;
+
+  const WelcomeScreen({
+    required this.onSettingsPressed,
+    super.key,
+  });
 
   @override
   ConsumerState<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -98,13 +102,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             child: Column(
               children: [
                 WelcomeHeader(
-                  onSettingsPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const SettingsScreen(),
-                      ),
-                    );
-                  },
+                  onSettingsPressed: widget.onSettingsPressed,
                 ),
                 Transform.translate(
                   offset: const Offset(0, -20),

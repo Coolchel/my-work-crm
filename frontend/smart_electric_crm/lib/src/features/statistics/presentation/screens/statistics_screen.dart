@@ -47,7 +47,6 @@ class StatisticsScreen extends ConsumerWidget {
         title: 'Статистика',
         icon: Icons.bar_chart_rounded,
         gradientColors: AppDesignTokens.subtleSectionGradient,
-        bottomGap: 10,
       ),
       body: statsAsync.when(
         skipLoadingOnReload: true,
