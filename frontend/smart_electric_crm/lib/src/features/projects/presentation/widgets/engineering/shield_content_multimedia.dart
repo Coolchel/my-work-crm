@@ -6,6 +6,7 @@ import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../dialogs/engineering/ethernet_lines_dialog.dart';
 import '../../providers/project_providers.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 
 class ShieldContentMultimedia extends ConsumerWidget {
   final ShieldModel shield;
@@ -73,6 +74,15 @@ class ShieldContentMultimedia extends ConsumerWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(6),
                 onTap: () => _showEthernetLinesDialog(context, ref),
+                overlayColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.hovered)) {
+                    return AppDesignTokens.hoverOverlay(context);
+                  }
+                  if (states.contains(WidgetState.pressed)) {
+                    return AppDesignTokens.pressedOverlay(context);
+                  }
+                  return Colors.transparent;
+                }),
                 child: Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 6),

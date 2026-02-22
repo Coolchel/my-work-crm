@@ -536,63 +536,95 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
                         itemColor = Colors.amber;
                     }
 
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade100),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => _addStage(entry.key),
-                          borderRadius: BorderRadius.circular(12),
-                          hoverColor: itemColor.withOpacity(0.05),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 10),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    entry.value,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: itemColor.withOpacity(0.08),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(Icons.add,
-                                      size: 18, color: itemColor),
-                                ),
-                              ],
-                            ), // Row
-                          ), // Padding
-                        ), // InkWell
-                      ), // Material
-                    ); // Container
+                    return _StageChoiceTile(
+                      title: entry.value,
+                      color: itemColor,
+                      onTap: () => _addStage(entry.key),
+                    );
                   }, // itemBuilder
                 ),
               ),
             const SizedBox(height: 8),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StageChoiceTile extends StatefulWidget {
+  final String title;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _StageChoiceTile({
+    required this.title,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<_StageChoiceTile> createState() => _StageChoiceTileState();
+}
+
+class _StageChoiceTileState extends State<_StageChoiceTile> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
+              blurRadius: _isHovered ? 10 : 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(12),
+            hoverColor: Colors.transparent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.title,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: widget.color.withOpacity(0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.add, size: 18, color: widget.color),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -904,10 +936,23 @@ class _FileCardState extends ConsumerState<_FileCard> {
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedScale(
-        scale: _isHovered ? 1.02 : 1.0,
+      child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
+              blurRadius: _isHovered ? 12 : 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
         child: GestureDetector(
           onLongPress: supportsHover
               ? null
@@ -921,163 +966,142 @@ class _FileCardState extends ConsumerState<_FileCard> {
             }
             _openFile(context, fileUrl);
           },
-          child: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(_isHovered ? 0.08 : 0.04),
-                  blurRadius: _isHovered ? 12 : 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-              border: Border.all(
-                color: _isHovered
-                    ? fileAccentColor.withOpacity(0.25)
-                    : Colors.grey.shade200,
-              ),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: fileAccentColor.withOpacity(0.08),
-                        ),
-                        child: isImage
-                            ? Image.network(
-                                fileUrl,
-                                fit: BoxFit.cover,
-                                cacheWidth: 300,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Icon(Icons.broken_image_rounded,
-                                        size: 30, color: Colors.grey.shade400),
-                              )
-                            : Center(
-                                child: Container(
-                                  width: 38,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: fileAccentColor.withOpacity(0.14),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Icon(
-                                    isPdf
-                                        ? Icons.description_rounded
-                                        : Icons.insert_drive_file_rounded,
-                                    color: fileAccentColor.withOpacity(0.9),
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              displayName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade800,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: fileAccentColor.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: Text(
-                              extensionLabel,
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w700,
-                                color: fileAccentColor.withOpacity(0.9),
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                // Кнопки управления (появляются при наведении)
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: AnimatedOpacity(
-                    opacity: showActions ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 150),
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
                     child: Container(
-                      padding: const EdgeInsets.all(3),
+                      width: double.infinity,
                       decoration: BoxDecoration(
-                        color:
-                            Theme.of(context).colorScheme.surface.withOpacity(
-                                  AppDesignTokens.isDark(context) ? 0.82 : 0.92,
+                        color: fileAccentColor.withOpacity(0.08),
+                      ),
+                      child: isImage
+                          ? Image.network(
+                              fileUrl,
+                              fit: BoxFit.cover,
+                              cacheWidth: 300,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Icon(Icons.broken_image_rounded,
+                                      size: 30, color: Colors.grey.shade400),
+                            )
+                          : Center(
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: fileAccentColor.withOpacity(0.14),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                        borderRadius: BorderRadius.circular(8),
-                        border:
-                            Border.all(color: Colors.black.withOpacity(0.1)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.12),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                                child: Icon(
+                                  isPdf
+                                      ? Icons.description_rounded
+                                      : Icons.insert_drive_file_rounded,
+                                  color: fileAccentColor.withOpacity(0.9),
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade800,
+                            ),
                           ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _ActionButton(
-                            icon: Icons.edit_rounded,
-                            tooltip: "Переименовать",
-                            onTap: () => _renameFile(context),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: fileAccentColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(5),
                           ),
-                          const SizedBox(width: 4),
-                          _ActionButton(
-                            icon: Icons.download_rounded,
-                            tooltip: "Сохранить как...",
-                            onTap: () => _saveAsFile(context, fileUrl),
+                          child: Text(
+                            extensionLabel,
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: fileAccentColor.withOpacity(0.9),
+                              letterSpacing: 0.2,
+                            ),
                           ),
-                          const SizedBox(width: 4),
-                          _ActionButton(
-                            icon: Icons.share_rounded,
-                            tooltip: "Поделиться",
-                            onTap: () => _shareFile(fileUrl),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // Кнопки управления (появляются при наведении)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: AnimatedOpacity(
+                  opacity: showActions ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 150),
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface.withOpacity(
+                            AppDesignTokens.isDark(context) ? 0.82 : 0.92,
                           ),
-                          const SizedBox(width: 4),
-                          _ActionButton(
-                            icon: Icons.close_rounded,
-                            tooltip: "Удалить",
-                            onTap: widget.onDelete,
-                          ),
-                        ],
-                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.black.withOpacity(0.1)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _ActionButton(
+                          icon: Icons.edit_rounded,
+                          tooltip: "Переименовать",
+                          onTap: () => _renameFile(context),
+                        ),
+                        const SizedBox(width: 4),
+                        _ActionButton(
+                          icon: Icons.download_rounded,
+                          tooltip: "Сохранить как...",
+                          onTap: () => _saveAsFile(context, fileUrl),
+                        ),
+                        const SizedBox(width: 4),
+                        _ActionButton(
+                          icon: Icons.share_rounded,
+                          tooltip: "Поделиться",
+                          onTap: () => _shareFile(fileUrl),
+                        ),
+                        const SizedBox(width: 4),
+                        _ActionButton(
+                          icon: Icons.close_rounded,
+                          tooltip: "Удалить",
+                          onTap: widget.onDelete,
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

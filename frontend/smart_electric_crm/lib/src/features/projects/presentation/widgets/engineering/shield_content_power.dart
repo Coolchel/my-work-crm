@@ -7,6 +7,7 @@ import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/shield_group_dialog.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 // import '../../dialogs/engineering/apply_template_dialog.dart'; // Removed
 
 class ShieldContentPower extends ConsumerWidget {
@@ -159,6 +160,16 @@ class ShieldContentPower extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(6),
                             onTap: () =>
                                 _showAddGroupDialog(context, ref, group: group),
+                            overlayColor:
+                                WidgetStateProperty.resolveWith((states) {
+                              if (states.contains(WidgetState.hovered)) {
+                                return AppDesignTokens.hoverOverlay(context);
+                              }
+                              if (states.contains(WidgetState.pressed)) {
+                                return AppDesignTokens.pressedOverlay(context);
+                              }
+                              return Colors.transparent;
+                            }),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 6),

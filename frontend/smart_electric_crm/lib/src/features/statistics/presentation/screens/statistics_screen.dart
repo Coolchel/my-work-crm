@@ -214,47 +214,37 @@ class StatisticsScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Column(
                   children: [
-                    Container(
-                      height: 280,
-                      decoration: BoxDecoration(
-                        color: AppDesignTokens.cardBackground(context),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: AppDesignTokens.cardBorder(context)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppDesignTokens.cardShadow(context),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                            child: WorkDynamicsChart(
-                              data: stats.workDynamics,
-                              isMonthly: currentPeriod != 'month',
-                              currencyLabel: "USD",
-                              currencySymbol: "\$",
-                              isUsd: true,
-                            ),
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: Tooltip(
-                              message: workDynamicsTooltip,
-                              textAlign: TextAlign.center,
-                              child: Icon(
-                                Icons.help_outline_rounded,
-                                size: 16,
-                                color: Colors.grey.shade400,
+                    _HoverStatsCard(
+                      borderRadius: 16,
+                      child: SizedBox(
+                        height: 280,
+                        child: Stack(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                              child: WorkDynamicsChart(
+                                data: stats.workDynamics,
+                                isMonthly: currentPeriod != 'month',
+                                currencyLabel: "USD",
+                                currencySymbol: "\$",
+                                isUsd: true,
                               ),
                             ),
-                          ),
-                        ],
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Tooltip(
+                                message: workDynamicsTooltip,
+                                textAlign: TextAlign.center,
+                                child: Icon(
+                                  Icons.help_outline_rounded,
+                                  size: 16,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -382,21 +372,9 @@ class StatisticsScreen extends ConsumerWidget {
 
   Widget _buildFinanceCard(BuildContext context, String title, double amount,
       String symbol, Color color) {
-    return Container(
+    return _HoverStatsCard(
+      borderRadius: 16,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppDesignTokens.cardBackground(context),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppDesignTokens.cardShadow(context),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-        border:
-            Border.all(color: AppDesignTokens.cardBorder(context), width: 1),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -541,20 +519,9 @@ class StatisticsScreen extends ConsumerWidget {
       }).toList(),
     );
 
-    return Container(
+    return _HoverStatsCard(
+      borderRadius: 16,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppDesignTokens.cardBackground(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppDesignTokens.cardBorder(context)),
-        boxShadow: [
-          BoxShadow(
-            color: AppDesignTokens.cardShadow(context),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
       child: Column(
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -617,4 +584,49 @@ class _ChartData {
   final String name;
   final double value;
   _ChartData(this.name, this.value);
+}
+
+class _HoverStatsCard extends StatefulWidget {
+  final Widget child;
+  final double borderRadius;
+  final EdgeInsetsGeometry? padding;
+
+  const _HoverStatsCard({
+    required this.child,
+    this.borderRadius = 16,
+    this.padding,
+  });
+
+  @override
+  State<_HoverStatsCard> createState() => _HoverStatsCardState();
+}
+
+class _HoverStatsCardState extends State<_HoverStatsCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: widget.padding,
+        decoration: BoxDecoration(
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
+          borderRadius: BorderRadius.circular(widget.borderRadius),
+          border: Border.all(
+              color: AppDesignTokens.cardBorder(context, hovered: _isHovered)),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
+              blurRadius: _isHovered ? 10 : 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: widget.child,
+      ),
+    );
+  }
 }

@@ -49,21 +49,21 @@ class AppDesignTokens {
     if (isDark(context)) {
       return hovered ? const Color(0xFF21242A) : surface1(context);
     }
-    return hovered ? const Color(0xFFF6F7FB) : surface1(context);
+    return hovered ? const Color(0xFFEFF3F9) : surface1(context);
   }
 
   static Color cardBorder(BuildContext context, {bool hovered = false}) {
     if (isDark(context)) {
       return hovered ? const Color(0xFF3E434C) : softBorder(context);
     }
-    return hovered ? const Color(0xFFD9DEE8) : const Color(0xFFE7EAF1);
+    return hovered ? const Color(0xFFCDD6E3) : const Color(0xFFE7EAF1);
   }
 
   static Color cardShadow(BuildContext context, {bool hovered = false}) {
     if (isDark(context)) {
       return Colors.black.withOpacity(hovered ? 0.45 : 0.30);
     }
-    return Colors.black.withOpacity(hovered ? 0.08 : 0.04);
+    return Colors.black.withOpacity(hovered ? 0.10 : 0.04);
   }
 
   static Color surface1(BuildContext context) {
