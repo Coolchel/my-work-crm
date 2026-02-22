@@ -946,6 +946,8 @@ class _FileCardState extends ConsumerState<_FileCard> {
   @override
   Widget build(BuildContext context) {
     final fileUrl = widget.file.file;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final supportsHover = switch (defaultTargetPlatform) {
       TargetPlatform.android || TargetPlatform.iOS => false,
       _ => true,
@@ -1040,7 +1042,9 @@ class _FileCardState extends ConsumerState<_FileCard> {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade800,
+                              color: isDark
+                                  ? scheme.onSurface
+                                  : Colors.grey.shade800,
                             ),
                           ),
                         ),
@@ -1438,6 +1442,8 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -1501,7 +1507,9 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.grey.shade900,
+                                    color: isDark
+                                        ? scheme.onSurface
+                                        : Colors.grey.shade900,
                                     letterSpacing: -0.2,
                                   ),
                                 ),
@@ -1513,7 +1521,9 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,
-                                    color: Colors.grey.shade500,
+                                    color: isDark
+                                        ? scheme.onSurfaceVariant
+                                        : Colors.grey.shade500,
                                   ),
                                 ),
                               ],

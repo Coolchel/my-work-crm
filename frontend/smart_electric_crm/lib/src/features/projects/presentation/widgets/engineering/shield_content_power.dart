@@ -23,6 +23,8 @@ class ShieldContentPower extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     // ... (same as before until Row with buttons)
     final groups = shield.groups;
 
@@ -55,7 +57,7 @@ class ShieldContentPower extends ConsumerWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 13,
-                    color: Colors.grey.shade700,
+                    color: isDark ? scheme.onSurface : Colors.grey.shade700,
                   )),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: themeColor.withOpacity(0.15)),
@@ -113,8 +115,10 @@ class ShieldContentPower extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         typeName.toUpperCase(),
-                        style: const TextStyle(
-                          color: Color(0xFF374151),
+                        style: TextStyle(
+                          color: isDark
+                              ? scheme.onSurface
+                              : const Color(0xFF374151),
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                           letterSpacing: 0.5,
@@ -202,12 +206,14 @@ class ShieldContentPower extends ConsumerWidget {
                                       children: [
                                         Text(
                                           group.device,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.w500,
                                             fontSize: 13,
                                             height: 1.2,
-                                            color: Color(
-                                                0xFF1F2937), // Reverting to dark grey for text
+                                            color: isDark
+                                                ? scheme.onSurface
+                                                : const Color(
+                                                    0xFF1F2937), // Reverting to dark grey for text
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -215,7 +221,9 @@ class ShieldContentPower extends ConsumerWidget {
                                         Text(
                                           group.zone,
                                           style: TextStyle(
-                                            color: Colors.grey.shade600,
+                                            color: isDark
+                                                ? scheme.onSurfaceVariant
+                                                : Colors.grey.shade600,
                                             fontSize: 11,
                                           ),
                                         ),

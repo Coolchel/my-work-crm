@@ -22,6 +22,9 @@ class ShieldContentMultimedia extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -33,11 +36,11 @@ class ShieldContentMultimedia extends ConsumerWidget {
               onPressed: () => _showEthernetLinesDialog(context, ref),
               icon: Icon(Icons.add_rounded,
                   size: 16, color: themeColor.withOpacity(0.7)),
-              label: const Text('Добавить',
+              label: Text('Добавить',
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 13,
-                    color: Color(0xFF616161),
+                    color: isDark ? scheme.onSurface : const Color(0xFF616161),
                   )),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: themeColor.withOpacity(0.15)),
@@ -109,20 +112,24 @@ class ShieldContentMultimedia extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Ethernet кабель',
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 13,
                                 height: 1.2,
-                                color: Color(0xFF1F2937),
+                                color: isDark
+                                    ? scheme.onSurface
+                                    : const Color(0xFF1F2937),
                               ),
                             ),
                             Text(
-                              'Г— ${shield.internetLinesCount}',
+                              'Линий: ${shield.internetLinesCount}',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey.shade600,
+                                color: isDark
+                                    ? scheme.onSurfaceVariant
+                                    : Colors.grey.shade600,
                               ),
                             ),
                           ],

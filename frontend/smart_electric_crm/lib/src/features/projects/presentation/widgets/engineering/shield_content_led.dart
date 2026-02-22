@@ -23,6 +23,8 @@ class ShieldContentLed extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final zones = shield.ledZones;
 
     return Column(
@@ -39,7 +41,7 @@ class ShieldContentLed extends ConsumerWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 13,
-                    color: Colors.grey.shade700,
+                    color: isDark ? scheme.onSurface : Colors.grey.shade700,
                   )),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: themeColor.withOpacity(0.15)),
@@ -121,11 +123,13 @@ class ShieldContentLed extends ConsumerWidget {
                                 children: [
                                   Text(
                                     zone.transformer,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w500,
                                       fontSize: 13,
                                       height: 1.2,
-                                      color: Color(0xFF1F2937),
+                                      color: isDark
+                                          ? scheme.onSurface
+                                          : const Color(0xFF1F2937),
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -133,7 +137,9 @@ class ShieldContentLed extends ConsumerWidget {
                                   Text(
                                     zone.zone,
                                     style: TextStyle(
-                                      color: Colors.grey.shade600,
+                                      color: isDark
+                                          ? scheme.onSurfaceVariant
+                                          : Colors.grey.shade600,
                                       fontSize: 11,
                                     ),
                                   ),

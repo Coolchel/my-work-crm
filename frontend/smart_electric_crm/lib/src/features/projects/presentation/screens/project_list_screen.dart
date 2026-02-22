@@ -156,6 +156,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   @override
   Widget build(BuildContext context) {
     final projectListAsync = ref.watch(projectListProvider);
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: CompactSectionAppBar(
@@ -289,21 +291,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
               opacity: _fadeAnimation,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(24),
-                    bottomRight: Radius.circular(24),
-                  ),
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
                 child: TextField(
                   controller: _searchController,
                   autofocus: true, // Auto-focus when panel opens (effectively)
@@ -330,22 +318,26 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                           )
                         : null,
                     filled: true,
-                    fillColor: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest
-                        .withOpacity(0.5),
+                    fillColor: scheme.surfaceContainerHighest.withOpacity(
+                      isDark ? 0.40 : 0.56,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: scheme.outlineVariant
+                            .withOpacity(isDark ? 0.34 : 0.26),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: scheme.outlineVariant
+                            .withOpacity(isDark ? 0.34 : 0.26),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                          color: Theme.of(context).primaryColor, width: 1.5),
+                      borderSide: BorderSide(color: scheme.primary, width: 1.5),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
