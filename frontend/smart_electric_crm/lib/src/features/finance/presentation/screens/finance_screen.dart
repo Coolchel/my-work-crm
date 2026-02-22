@@ -9,6 +9,7 @@ import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../../../projects/presentation/screens/estimate_screen.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
+import '../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 
 part 'finance_screen.g.dart';
@@ -35,6 +36,9 @@ class FinanceScreen extends ConsumerStatefulWidget {
 }
 
 class _FinanceScreenState extends ConsumerState<FinanceScreen> {
+  static const _financeAccent = Colors.green;
+  static const _cardRadius = AppDesignTokens.radiusM;
+  static const _sectionHPadding = AppDesignTokens.spacingM;
   // Контроллеры для глобальных полей
   final _estimateController = TextEditingController();
   final _notesController = TextEditingController();
@@ -83,7 +87,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   Widget _buildAmountDisplay(double usd, double byn,
       {double fontSize = 13, Color? color}) {
     final List<TextSpan> spans = [];
-    final effectiveColor = color ?? Colors.green;
+    final effectiveColor = color ?? _financeAccent;
 
     if (usd > 0) {
       spans.add(TextSpan(
@@ -126,8 +130,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => ConfirmationDialog(
-        title: 'Закрыть этап?',
-        content: 'Отметить "$stageTitle" как оплаченный?',
+        title: 'Р—Р°РєСЂС‹С‚СЊ СЌС‚Р°Рї?',
+        content: 'РћС‚РјРµС‚РёС‚СЊ "$stageTitle" РєР°Рє РѕРїР»Р°С‡РµРЅРЅС‹Р№?',
         confirmText: 'Закрыть',
         themeColor: Colors.green,
       ),
@@ -197,22 +201,54 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       ),
       body: projectsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
-              const SizedBox(height: 16),
-              Text('Ошибка: $error'),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => ref.invalidate(unpaidProjectsProvider),
-                child: const Text('Повторить'),
-              ),
-            ],
+        error: (error, stack) => FriendlyEmptyState(
+          icon: Icons.cloud_off_rounded,
+          title: 'Не удалось загрузить данные финансов',
+          subtitle: 'Проверьте соединение и попробуйте снова.\n$error',
+          accentColor: Colors.red,
+          action: FilledButton.icon(
+            onPressed: () => ref.invalidate(unpaidProjectsProvider),
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('Повторить'),
           ),
         ),
         data: (data) => _buildContent(data, settingsAsync),
+      ),
+    );
+  }
+
+  Widget _buildProjectsHeader(int projectsCount) {
+    return Padding(
+      padding:
+          const EdgeInsets.fromLTRB(_sectionHPadding, 10, _sectionHPadding, 4),
+      child: Row(
+        children: [
+          Text(
+            'Неоплаченные объекты',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey.shade800,
+            ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: _financeAccent.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _financeAccent.withOpacity(0.24)),
+            ),
+            child: Text(
+              '$projectsCount',
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: _financeAccent,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -235,24 +271,29 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             if (data.projects.isEmpty)
               _buildEmptyState()
             else
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                child: Column(
-                  children: [
-                    // Сортировка: сверху - старые, снизу - новые
-                    ...(data.projects.toList()
-                          ..sort((a, b) {
-                            final aDate = _getEarliestStageDate(a);
-                            final bDate = _getEarliestStageDate(b);
-                            return aDate.compareTo(bDate);
-                          }))
-                        .asMap()
-                        .entries
-                        .map((entry) =>
-                            _buildProjectCard(entry.value, entry.key + 1)),
-                  ],
-                ),
+              Column(
+                children: [
+                  _buildProjectsHeader(data.projects.length),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: _sectionHPadding, vertical: 8),
+                    child: Column(
+                      children: [
+                        // Сортировка: сверху - старые, снизу - новые
+                        ...(data.projects.toList()
+                              ..sort((a, b) {
+                                final aDate = _getEarliestStageDate(a);
+                                final bDate = _getEarliestStageDate(b);
+                                return aDate.compareTo(bDate);
+                              }))
+                            .asMap()
+                            .entries
+                            .map((entry) =>
+                                _buildProjectCard(entry.value, entry.key + 1)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
 
             // Блок "Итого к получению" внизу
@@ -270,24 +311,19 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildTotalSection(double totalUsd, double totalByn) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin:
+          const EdgeInsets.fromLTRB(_sectionHPadding, 16, _sectionHPadding, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Colors.green.withOpacity(0.05),
-            Colors.green.withOpacity(0.2),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.withOpacity(0.2), width: 1),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(_cardRadius),
+        border:
+            Border.all(color: AppDesignTokens.cardBorder(context), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.05),
+            color: AppDesignTokens.cardShadow(context),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -296,22 +332,22 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              color: _financeAccent.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
               Icons.account_balance_wallet,
-              color: Colors.green,
+              color: _financeAccent,
               size: 20,
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
+          Text(
             'Итого к получению',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const Spacer(),
@@ -322,7 +358,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 Text(
                   '${_formatAmount(totalUsd)} \$',
                   style: const TextStyle(
-                    color: Colors.green,
+                    color: _financeAccent,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -332,16 +368,16 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 Text(
                   '${_formatAmount(totalByn)} р',
                   style: const TextStyle(
-                    color: Colors.green,
+                    color: _financeAccent,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               if (totalUsd == 0 && totalByn == 0)
-                const Text(
+                Text(
                   '0',
                   style: TextStyle(
-                    color: Colors.black45,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -354,25 +390,27 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.all(40),
-      child: Column(
-        children: [
-          Icon(Icons.check_circle_outline, size: 56, color: Colors.green),
-          const SizedBox(height: 12),
-          const Text(
-            'Все этапы оплачены!',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
+    return const FriendlyEmptyState(
+      icon: Icons.check_circle_outline_rounded,
+      title: 'Все этапы оплачены',
+      subtitle: 'Новых задолженностей сейчас нет.',
+      accentColor: Colors.green,
+      iconSize: 72,
+      padding: EdgeInsets.all(24),
     );
   }
 
   Widget _buildProjectCard(UnpaidProjectModel project, int index) {
     final isExpanded = _expandedProjects[project.id] ?? false;
     final isHovered = _hoveredProjects[project.id] ?? false;
-    final shouldHighlight = isExpanded || isHovered;
+    final shouldHighlight = isHovered;
+    final cardBackground = isExpanded
+        ? (AppDesignTokens.isDark(context)
+            ? Theme.of(context).colorScheme.surfaceContainerHigh
+            : Colors.grey.shade50)
+        : AppDesignTokens.cardBackground(context, hovered: shouldHighlight);
+    final hasSource = project.source != null && project.source!.isNotEmpty;
+    final isWideHeader = MediaQuery.of(context).size.width >= 1100;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -380,198 +418,245 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       onExit: (_) => setState(() => _hoveredProjects[project.id] = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 6),
+        margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: shouldHighlight
-              ? Colors.green.shade50.withOpacity(0.22)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: cardBackground,
+          borderRadius: BorderRadius.circular(_cardRadius),
           border: Border.all(
             color: shouldHighlight
-                ? Colors.green.withOpacity(0.3)
-                : Colors.grey.shade200,
+                ? _financeAccent.withOpacity(0.24)
+                : isExpanded
+                    ? AppDesignTokens.cardBorder(context, hovered: true)
+                    : AppDesignTokens.cardBorder(context),
             width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
               color: shouldHighlight
-                  ? Colors.green.withOpacity(0.08)
-                  : Colors.black.withOpacity(0.03),
-              blurRadius: shouldHighlight ? 12 : 8,
+                  ? AppDesignTokens.cardShadow(context, hovered: true)
+                  : AppDesignTokens.cardShadow(context),
+              blurRadius: shouldHighlight ? 10 : 8,
               offset: const Offset(0, 3),
             ),
           ],
         ),
         clipBehavior: Clip.antiAlias,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(_cardRadius),
           child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Акцентная полоса слева
                 Container(
                   width: 4,
-                  color: Colors.green.withOpacity(0.7),
+                  color: _financeAccent.withOpacity(0.72),
                 ),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Кликабельный заголовок проекта
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            _expandedProjects[project.id] = !isExpanded;
-                          });
-                        },
-                        hoverColor: Colors.transparent,
-                        child: Container(
-                          // Добавляем подсветку при раскрытии
-                          color: isExpanded
-                              ? Colors.green.withOpacity(0.03)
-                              : Colors.transparent,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          child: Row(
-                            children: [
-                              // Порядковый номер слева
-                              Text(
-                                '$index.',
-                                style: TextStyle(
-                                  color: Colors.green.withOpacity(0.5),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      project.address,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14, // Уменьшили с 15
-                                        letterSpacing: -0.2,
-                                      ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _expandedProjects[project.id] = !isExpanded;
+                        });
+                      },
+                      hoverColor: Colors.transparent,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(10, 12, 10, 10),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 22,
+                                  height: 22,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: _financeAccent.withOpacity(0.12),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    '$index',
+                                    style: TextStyle(
+                                      color: _financeAccent.withOpacity(0.85),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11.5,
                                     ),
-                                    if (project.source != null &&
-                                        project.source!.isNotEmpty) ...[
-                                      const SizedBox(height: 2),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 1),
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey[100],
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                          border: Border.all(
-                                              color: Colors.grey[300]!,
-                                              width: 0.5),
-                                        ),
-                                        child: Text(
-                                          project.source!,
-                                          style: TextStyle(
-                                            fontSize: 9, // Уменьшили с 10
-                                            color: Colors.grey[600],
-                                            fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                if (isWideHeader)
+                                  Expanded(
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: Row(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.center,
+                                                  children: [
+                                                    Flexible(
+                                                      child: Text(
+                                                        project.address,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          fontSize: 13.5,
+                                                          letterSpacing: -0.2,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    if (hasSource) ...[
+                                                      const SizedBox(width: 4),
+                                                      _buildSourceSuperscript(
+                                                          project.source!),
+                                                    ],
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
+                                        const SizedBox(width: 6),
+                                        _buildProjectMetaPill(
+                                          icon: Icons.layers_outlined,
+                                          text: '${project.stages.length}',
+                                          active: true,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        _buildAmountDisplay(
+                                          project.totalUsd,
+                                          project.totalByn,
+                                          fontSize: 11.5,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Icon(
+                                          isExpanded
+                                              ? Icons.expand_less_rounded
+                                              : Icons.expand_more_rounded,
+                                          color: Colors.grey.shade400,
+                                          size: 20,
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                else ...[
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                project.address,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 13.5,
+                                                  letterSpacing: -0.2,
+                                                ),
+                                              ),
+                                            ),
+                                            if (hasSource) ...[
+                                              const SizedBox(width: 4),
+                                              _buildSourceSuperscript(
+                                                  project.source!),
+                                            ],
+                                          ],
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Wrap(
+                                          spacing: 4,
+                                          runSpacing: 4,
+                                          children: [
+                                            _buildProjectMetaPill(
+                                              icon: Icons.layers_outlined,
+                                              text: '${project.stages.length}',
+                                              active: true,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      _buildAmountDisplay(
+                                        project.totalUsd,
+                                        project.totalByn,
+                                        fontSize: 11.5,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Icon(
+                                        isExpanded
+                                            ? Icons.expand_less_rounded
+                                            : Icons.expand_more_rounded,
+                                        color: Colors.grey.shade400,
+                                        size: 20,
                                       ),
                                     ],
-                                  ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          if (isExpanded)
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: AppDesignTokens.isDark(context)
+                                    ? Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainerHighest
+                                        .withOpacity(0.52)
+                                    : Colors.grey.shade100.withOpacity(0.9),
+                                border: Border(
+                                  top: BorderSide(
+                                    color: AppDesignTokens.cardBorder(context,
+                                        hovered: true),
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              // Перенесли суммы сюда
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
+                              padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
+                              child: Column(
                                 children: [
-                                  _buildAmountDisplay(
-                                      project.totalUsd, project.totalByn,
-                                      fontSize: 12,
-                                      color: Colors.black), // Чисто черный
+                                  for (var i = 0;
+                                      i < project.stages.length;
+                                      i++) ...[
+                                    _buildStageRow(project, project.stages[i]),
+                                    if (i < project.stages.length - 1)
+                                      Divider(
+                                        height: 4,
+                                        thickness: 0.6,
+                                        color: Colors.grey.shade200,
+                                      ),
+                                  ],
                                 ],
                               ),
-                              const SizedBox(width: 12),
-                              const SizedBox(width: 8),
-                              // Красивая плашка с количеством этапов
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.green.withOpacity(0.12),
-                                      Colors.green.withOpacity(0.06),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.green.withOpacity(0.3),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.layers_outlined,
-                                      size: 14,
-                                      color: Colors.green,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '${project.stages.length}',
-                                      style: const TextStyle(
-                                        color: Colors.green,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              // Декоративная стрелочка перенесена вправо и стала серой
-                              Icon(
-                                isExpanded
-                                    ? Icons.expand_less
-                                    : Icons.expand_more,
-                                color: Colors.grey[400],
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                        ),
+                            ),
+                        ],
                       ),
-
-                      // Раскрывающийся список этапов
-                      if (isExpanded)
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              left: 12, right: 12, bottom: 4),
-                          child: Column(
-                            children: [
-                              for (var i = 0;
-                                  i < project.stages.length;
-                                  i++) ...[
-                                _buildStageRow(project, project.stages[i]),
-                                if (i < project.stages.length - 1)
-                                  Divider(
-                                    height: 1, // Минимум пространства
-                                    thickness: 0.5,
-                                    color: Colors.grey[200],
-                                    indent: 0,
-                                    endIndent: 0,
-                                  ),
-                              ],
-                            ],
-                          ),
-                        ),
-                    ],
+                    ),
                   ),
                 ),
               ],
@@ -585,146 +670,262 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   Widget _buildStageRow(UnpaidProjectModel project, UnpaidStageModel stage) {
     final hasExternalAmount =
         stage.externalAmountUsd > 0 || stage.externalAmountByn > 0;
-    final stageKey = '${project.id}_${stage.id}';
-    final isHovered = _hoveredStages[stageKey] ?? false;
+    final stageHoverKey = '${project.id}_${stage.id}';
+    final isHovered = _hoveredStages[stageHoverKey] ?? false;
+    final stageBackground =
+        AppDesignTokens.cardBackground(context, hovered: isHovered);
+    final stageBorderColor = isHovered
+        ? _financeAccent.withOpacity(0.24)
+        : AppDesignTokens.cardBorder(context);
+    final stageShadowColor = isHovered
+        ? AppDesignTokens.cardShadow(context, hovered: true)
+        : AppDesignTokens.cardShadow(context);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hoveredStages[stageKey] = true),
-      onExit: (_) => setState(() => _hoveredStages[stageKey] = false),
+      onEnter: (_) => setState(() => _hoveredStages[stageHoverKey] = true),
+      onExit: (_) => setState(() => _hoveredStages[stageHoverKey] = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.symmetric(vertical: 3),
         decoration: BoxDecoration(
-          color:
-              isHovered ? Colors.green.withOpacity(0.04) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: isHovered
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+          color: stageBackground,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: stageBorderColor, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: stageShadowColor,
+              blurRadius: isHovered ? 10 : 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () async {
-            final projects = ref.read(projectListProvider).valueOrNull;
-            if (projects != null) {
-              try {
-                final realProject =
-                    projects.firstWhere((p) => p.id == project.id);
-                final realStage =
-                    realProject.stages.firstWhere((s) => s.id == stage.id);
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () async {
+              final projects = ref.read(projectListProvider).valueOrNull;
+              if (projects != null) {
+                try {
+                  final realProject =
+                      projects.firstWhere((p) => p.id == project.id);
+                  final realStage =
+                      realProject.stages.firstWhere((s) => s.id == stage.id);
 
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EstimateScreen(
-                      projectId: realProject.id.toString(),
-                      stage: realStage,
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EstimateScreen(
+                        projectId: realProject.id.toString(),
+                        stage: realStage,
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  debugPrint("Navigation error: $e");
+                }
+              }
+            },
+            borderRadius: BorderRadius.circular(10),
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.hovered)) {
+                return AppDesignTokens.hoverOverlay(context);
+              }
+              if (states.contains(WidgetState.pressed)) {
+                return AppDesignTokens.pressedOverlay(context);
+              }
+              return Colors.transparent;
+            }),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 20,
+                    height: 20,
+                    margin: const EdgeInsets.only(right: 6),
+                    decoration: BoxDecoration(
+                      color: _financeAccent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Icon(
+                      Icons.engineering_outlined,
+                      size: 12,
+                      color: _financeAccent.withOpacity(0.8),
                     ),
                   ),
-                );
-              } catch (e) {
-                debugPrint("Navigation error: $e");
-              }
-            }
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  width: 6,
-                  height: 6,
-                  margin: const EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.5),
-                    shape: BoxShape.circle,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          stage.titleDisplay,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (stage.updatedAt != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              _getStageDateInfo(context, stage.updatedAt!).text,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color:
+                                    _getStageDateInfo(context, stage.updatedAt!)
+                                        .color,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        stage.titleDisplay,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      if (stage.updatedAt != null)
+                      _buildAmountDisplay(
+                          stage.ourAmountUsd, stage.ourAmountByn,
+                          fontSize: 12),
+                      if (hasExternalAmount) ...[
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            _getStageDateInfo(stage.updatedAt!).text,
+                            'из ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
                             style: TextStyle(
-                              fontSize: 11,
-                              color: _getStageDateInfo(stage.updatedAt!).color,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 10,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _buildAmountDisplay(stage.ourAmountUsd, stage.ourAmountByn,
-                        fontSize: 12),
-                    if (hasExternalAmount) ...[
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Text(
-                          'из ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
+                        const SizedBox(height: 3),
+                        Container(
+                          width: 52,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            borderRadius: BorderRadius.circular(2),
+                            border: Border.all(
+                                color: Colors.grey[300]!, width: 0.5),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 60,
-                        height: 3,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(2),
-                          border:
-                              Border.all(color: Colors.grey[300]!, width: 0.5),
-                        ),
-                        child: Stack(
-                          children: [
-                            FractionallySizedBox(
-                              alignment: Alignment.centerLeft,
-                              widthFactor: _calculateOurShareFactor(stage),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.8),
-                                  borderRadius: BorderRadius.circular(2),
+                          child: Stack(
+                            children: [
+                              FractionallySizedBox(
+                                alignment: Alignment.centerLeft,
+                                widthFactor: _calculateOurShareFactor(stage),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: _financeAccent.withOpacity(0.8),
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
                     ],
-                  ],
-                ),
-                const SizedBox(width: 8),
-                _PayStageButton(
-                  onPressed: () => _markStagePaid(stage.id, stage.titleDisplay),
-                ),
-              ],
+                  ),
+                  const SizedBox(width: 8),
+                  _PayStageButton(
+                    onPressed: () =>
+                        _markStagePaid(stage.id, stage.titleDisplay),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSourceSuperscript(String text) {
+    final isDark = AppDesignTokens.isDark(context);
+    return Transform.translate(
+      offset: const Offset(0, -5),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 130),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Theme.of(context).colorScheme.surfaceContainerHighest
+              : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(context),
+            width: 0.8,
+          ),
+        ),
+        child: Text(
+          text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade700,
+            height: 1.0,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProjectMetaPill({
+    required IconData icon,
+    required String text,
+    required bool active,
+    double? maxTextWidth,
+  }) {
+    final isDark = AppDesignTokens.isDark(context);
+    final background = active
+        ? _financeAccent.withOpacity(isDark ? 0.22 : 0.1)
+        : (isDark
+            ? Theme.of(context).colorScheme.surfaceContainerHigh
+            : Colors.grey.shade100);
+    final border = active
+        ? _financeAccent.withOpacity(isDark ? 0.40 : 0.28)
+        : AppDesignTokens.cardBorder(context);
+    final foreground = active ? _financeAccent : Colors.grey.shade700;
+
+    final label = Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        fontSize: 11.5,
+        fontWeight: FontWeight.w600,
+        color: foreground,
+      ),
+    );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: border, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: foreground),
+          const SizedBox(width: 4),
+          if (maxTextWidth != null)
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxTextWidth),
+              child: label,
+            )
+          else
+            label,
+        ],
       ),
     );
   }
@@ -736,27 +937,31 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     return parts.join(' + ');
   }
 
-  _StageDateInfo _getStageDateInfo(String dateString) {
+  _StageDateInfo _getStageDateInfo(BuildContext context, String dateString) {
+    final scheme = Theme.of(context).colorScheme;
     try {
       final date = DateTime.parse(dateString);
       final now = DateTime.now();
       final diff = now.difference(date);
 
       if (diff.inDays == 0) {
-        return _StageDateInfo('Сегодня', Colors.black87);
+        return _StageDateInfo('Сегодня', scheme.onSurface);
       } else if (diff.inDays == 1) {
-        return _StageDateInfo('Вчера', Colors.grey.shade700);
+        return _StageDateInfo('Вчера', scheme.onSurfaceVariant);
       } else if (diff.inDays < 4) {
-        return _StageDateInfo('${diff.inDays} дн. назад', Colors.grey.shade700);
+        return _StageDateInfo(
+            '${diff.inDays} дн. назад', scheme.onSurfaceVariant);
       } else if (diff.inDays < 7) {
-        return _StageDateInfo('${diff.inDays} дн. назад', Colors.grey.shade600);
+        return _StageDateInfo('${diff.inDays} дн. назад',
+            scheme.onSurfaceVariant.withOpacity(0.9));
       } else {
         final formatted =
             '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
-        return _StageDateInfo(formatted, Colors.grey.shade600);
+        return _StageDateInfo(
+            formatted, scheme.onSurfaceVariant.withOpacity(0.9));
       }
     } catch (e) {
-      return _StageDateInfo('', Colors.grey);
+      return _StageDateInfo('', scheme.onSurfaceVariant);
     }
   }
 
@@ -797,24 +1002,32 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildGlobalSettingsSection() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      padding: const EdgeInsets.all(14),
+      margin:
+          const EdgeInsets.fromLTRB(_sectionHPadding, 12, _sectionHPadding, 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade200),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(_cardRadius),
+        border: Border.all(color: AppDesignTokens.cardBorder(context)),
+        boxShadow: [
+          BoxShadow(
+            color: AppDesignTokens.cardShadow(context),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(
             children: [
-              Icon(Icons.notes, size: 18, color: Colors.green),
+              Icon(Icons.notes, size: 18, color: _financeAccent),
               SizedBox(width: 8),
               Text(
                 'Финансовые заметки',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -844,15 +1057,15 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                 icon: const Icon(Icons.save, size: 14),
                 label: const Text('Сохранить'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.green,
-                  side: const BorderSide(color: Colors.green),
+                  foregroundColor: _financeAccent,
+                  side: const BorderSide(color: _financeAccent),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 ).copyWith(
                   overlayColor: WidgetStateProperty.resolveWith<Color?>(
                     (states) {
                       if (states.contains(WidgetState.hovered)) {
-                        return Colors.green.withOpacity(0.08);
+                        return _financeAccent.withOpacity(0.08);
                       }
                       return null;
                     },
@@ -881,7 +1094,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w500,
-            color: Colors.grey[500],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 5),
@@ -889,24 +1102,28 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           controller: controller,
           minLines: minLines,
           maxLines: maxLines,
-          style: const TextStyle(fontSize: 13),
+          style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             isDense: true,
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            fillColor: Colors.grey[50],
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            fillColor: AppDesignTokens.isDark(context)
+                ? Theme.of(context).colorScheme.surfaceContainerHigh
+                : Colors.grey[50],
             filled: true,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade200),
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.green, width: 1),
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: _financeAccent, width: 1),
             ),
           ),
         ),
@@ -934,60 +1151,84 @@ class _PayStageButtonState extends State<_PayStageButton> {
 
   @override
   Widget build(BuildContext context) {
+    const accent = _FinanceScreenState._financeAccent;
+    final isDark = AppDesignTokens.isDark(context);
+    final backgroundColor = _isHovered
+        ? accent.withOpacity(isDark ? 0.22 : 0.14)
+        : AppDesignTokens.cardBackground(context);
+    final borderColor = _isHovered
+        ? accent.withOpacity(0.45)
+        : AppDesignTokens.cardBorder(context);
+    final textColor = _isHovered
+        ? (isDark ? accent.shade200 : accent.shade800)
+        : Theme.of(context).colorScheme.onSurfaceVariant;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: 118,
+        duration: const Duration(milliseconds: 160),
+        width: 112,
         height: 30,
         decoration: BoxDecoration(
-          color: _isHovered
-              ? Colors.green.withOpacity(0.16)
-              : Colors.green.withOpacity(0.08),
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: _isHovered
-                ? Colors.green.withOpacity(0.45)
-                : Colors.green.withOpacity(0.25),
-          ),
-          boxShadow: _isHovered
-              ? [
-                  BoxShadow(
-                    color: Colors.green.withOpacity(0.12),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+          border: Border.all(color: borderColor),
+          boxShadow: [
+            BoxShadow(
+              color: _isHovered
+                  ? accent.withOpacity(0.12)
+                  : AppDesignTokens.cardShadow(context),
+              blurRadius: _isHovered ? 8 : 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onPressed,
             borderRadius: BorderRadius.circular(999),
+            hoverColor: Colors.transparent,
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    _isHovered
-                        ? Icons.check_circle_rounded
-                        : Icons.radio_button_unchecked_rounded,
-                    size: 14,
-                    color: Colors.green,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    _isHovered ? 'Оплачено' : 'Не оплачено',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.green,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: _isHovered
+                            ? accent.withOpacity(0.18)
+                            : Colors.transparent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _isHovered
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked_rounded,
+                        size: 12,
+                        color: textColor,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 6),
+                    Text(
+                      _isHovered ? 'Оплачено' : 'Не оплачено',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: textColor,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

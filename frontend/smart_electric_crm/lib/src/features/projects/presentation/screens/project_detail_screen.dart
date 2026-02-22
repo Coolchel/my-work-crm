@@ -14,6 +14,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import '../../../settings/application/app_settings_controller.dart';
+import '../../../home/presentation/screens/home_screen.dart';
 import 'dart:io';
 import '../../data/models/project_file_model.dart';
 import '../../../../shared/services/temp_file_service.dart';
@@ -104,6 +108,9 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
 
   @override
   Widget build(BuildContext context) {
+    final showWelcome = ref.watch(
+      appSettingsProvider.select((value) => value.showWelcome),
+    );
     final screens = [
       _StagesTab(project: widget.project),
       EngineeringTab(project: widget.project),
@@ -126,27 +133,42 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
         children: screens,
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
         onDestinationSelected: (index) {
+          if (showWelcome && index == 0) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (_) => const HomeScreen(),
+              ),
+              (route) => false,
+            );
+            return;
+          }
           setState(() {
-            _currentIndex = index;
+            _currentIndex = showWelcome ? index - 1 : index;
           });
         },
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          if (showWelcome)
+            const NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+            ),
+          const NavigationDestination(
             icon: Icon(Icons.layers_outlined),
             selectedIcon: Icon(Icons.layers),
-            label: 'Этапы',
+            label: '\u042d\u0442\u0430\u043f\u044b',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.settings_input_component_outlined),
             selectedIcon: Icon(Icons.settings_input_component),
-            label: 'Щиты',
+            label: '\u0429\u0438\u0442\u044b',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.folder_open_outlined),
             selectedIcon: Icon(Icons.folder_open),
-            label: 'Файлы',
+            label: '\u0424\u0430\u0439\u043b\u044b',
           ),
         ],
       ),
@@ -205,7 +227,7 @@ class _StagesTab extends ConsumerWidget {
         child: FloatingActionButton(
           onPressed: () => _showAddStageDialog(context, ref),
           backgroundColor: Colors.indigo,
-          foregroundColor: Colors.white,
+          foregroundColor: Theme.of(context).colorScheme.surface,
           child: const Icon(Icons.add),
         ),
       ),
@@ -220,24 +242,24 @@ class _StagesTab extends ConsumerWidget {
               child: Text(
                 'Об объекте',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
               ),
             ),
             // Premium Project Info Header
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 15,
-                    offset: const Offset(0, 4),
+                    color: AppDesignTokens.cardShadow(context),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
                   ),
                 ],
-                border: Border.all(color: Colors.grey.shade100),
+                border: Border.all(color: AppDesignTokens.softBorder(context)),
               ),
               clipBehavior: Clip.antiAlias,
               child: Stack(
@@ -288,8 +310,8 @@ class _StagesTab extends ConsumerWidget {
                 Text(
                   'Этапы работ',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                 ),
               ],
@@ -297,14 +319,13 @@ class _StagesTab extends ConsumerWidget {
             const SizedBox(height: 16),
 
             if (project.stages.isEmpty)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Text(
-                    'Этапы еще не созданы',
-                    style: TextStyle(color: Colors.grey.shade400),
-                  ),
-                ),
+              const FriendlyEmptyState(
+                icon: Icons.layers_clear_rounded,
+                title: 'Этапы еще не созданы',
+                subtitle:
+                    'Добавьте первый этап, чтобы продолжить работу по объекту.',
+                accentColor: Colors.indigo,
+                padding: EdgeInsets.symmetric(vertical: 8),
               ),
 
             // List of Stages
@@ -426,12 +447,12 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: AppDesignTokens.cardBorder(context)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: AppDesignTokens.cardShadow(context),
               blurRadius: 15,
               offset: const Offset(0, 5),
             )
@@ -475,7 +496,12 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.5),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surface
+                              .withOpacity(
+                                AppDesignTokens.isDark(context) ? 0.22 : 0.5,
+                              ),
                         ),
                         child: Icon(Icons.close,
                             size: 18, color: themeColor.withOpacity(0.8)),
@@ -491,9 +517,12 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
                   padding: EdgeInsets.all(32),
                   child: Center(child: CircularProgressIndicator()))
             else if (stages.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(32),
-                child: Center(child: Text("Все основные этапы уже созданы")),
+              const FriendlyEmptyState(
+                icon: Icons.task_alt_rounded,
+                title: 'Все основные этапы уже созданы',
+                subtitle: 'При необходимости добавьте дополнительный этап.',
+                accentColor: Colors.green,
+                padding: EdgeInsets.all(20),
               )
             else
               Container(
@@ -527,61 +556,95 @@ class _AddStageDialogState extends ConsumerState<_AddStageDialog> {
                         itemColor = Colors.amber;
                     }
 
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade100),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => _addStage(entry.key),
-                          borderRadius: BorderRadius.circular(12),
-                          hoverColor: itemColor.withOpacity(0.05),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 10),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    entry.value,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: itemColor.withOpacity(0.08),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(Icons.add,
-                                      size: 18, color: itemColor),
-                                ),
-                              ],
-                            ), // Row
-                          ), // Padding
-                        ), // InkWell
-                      ), // Material
-                    ); // Container
+                    return _StageChoiceTile(
+                      title: entry.value,
+                      color: itemColor,
+                      onTap: () => _addStage(entry.key),
+                    );
                   }, // itemBuilder
                 ),
               ),
             const SizedBox(height: 8),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StageChoiceTile extends StatefulWidget {
+  final String title;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _StageChoiceTile({
+    required this.title,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<_StageChoiceTile> createState() => _StageChoiceTileState();
+}
+
+class _StageChoiceTileState extends State<_StageChoiceTile> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
+              blurRadius: _isHovered ? 10 : 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(12),
+            hoverColor: Colors.transparent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.title,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: widget.color.withOpacity(0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.add, size: 18, color: widget.color),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -743,8 +806,9 @@ class _FilesTab extends ConsumerWidget {
         final sizeInMb = sizeInBytes / (1024 * 1024);
 
         if (sizeInMb > 20) {
-          sizeErrors
-              .add('${pickedFile.name} (${sizeInMb.toStringAsFixed(1)} МБ)');
+          sizeErrors.add(
+            '${pickedFile.name} (${sizeInMb.toStringAsFixed(1)} МБ)',
+          );
           continue;
         }
 
@@ -882,6 +946,8 @@ class _FileCardState extends ConsumerState<_FileCard> {
   @override
   Widget build(BuildContext context) {
     final fileUrl = widget.file.file;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final supportsHover = switch (defaultTargetPlatform) {
       TargetPlatform.android || TargetPlatform.iOS => false,
       _ => true,
@@ -892,10 +958,23 @@ class _FileCardState extends ConsumerState<_FileCard> {
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedScale(
-        scale: _isHovered ? 1.02 : 1.0,
+      child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
+              blurRadius: _isHovered ? 12 : 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
         child: GestureDetector(
           onLongPress: supportsHover
               ? null
@@ -909,160 +988,144 @@ class _FileCardState extends ConsumerState<_FileCard> {
             }
             _openFile(context, fileUrl);
           },
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(_isHovered ? 0.08 : 0.04),
-                  blurRadius: _isHovered ? 12 : 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-              border: Border.all(
-                color: _isHovered
-                    ? fileAccentColor.withOpacity(0.25)
-                    : Colors.grey.shade200,
-              ),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: fileAccentColor.withOpacity(0.08),
-                        ),
-                        child: isImage
-                            ? Image.network(
-                                fileUrl,
-                                fit: BoxFit.cover,
-                                cacheWidth: 300,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Icon(Icons.broken_image_rounded,
-                                        size: 30, color: Colors.grey.shade400),
-                              )
-                            : Center(
-                                child: Container(
-                                  width: 38,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: fileAccentColor.withOpacity(0.14),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Icon(
-                                    isPdf
-                                        ? Icons.description_rounded
-                                        : Icons.insert_drive_file_rounded,
-                                    color: fileAccentColor.withOpacity(0.9),
-                                    size: 20,
-                                  ),
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: fileAccentColor.withOpacity(0.08),
+                      ),
+                      child: isImage
+                          ? Image.network(
+                              fileUrl,
+                              fit: BoxFit.cover,
+                              cacheWidth: 300,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Icon(Icons.broken_image_rounded,
+                                      size: 30, color: Colors.grey.shade400),
+                            )
+                          : Center(
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: fileAccentColor.withOpacity(0.14),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  isPdf
+                                      ? Icons.description_rounded
+                                      : Icons.insert_drive_file_rounded,
+                                  color: fileAccentColor.withOpacity(0.9),
+                                  size: 20,
                                 ),
                               ),
-                      ),
+                            ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              displayName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade800,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: fileAccentColor.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: Text(
-                              extensionLabel,
-                              style: TextStyle(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w700,
-                                color: fileAccentColor.withOpacity(0.9),
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(8, 6, 8, 7),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
                     ),
-                  ],
-                ),
-                // Кнопки управления (появляются при наведении)
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: AnimatedOpacity(
-                    opacity: showActions ? 1.0 : 0.0,
-                    duration: const Duration(milliseconds: 150),
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.92),
-                        borderRadius: BorderRadius.circular(8),
-                        border:
-                            Border.all(color: Colors.black.withOpacity(0.1)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.12),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? scheme.onSurface
+                                  : Colors.grey.shade800,
+                            ),
                           ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _ActionButton(
-                            icon: Icons.edit_rounded,
-                            tooltip: "Переименовать",
-                            onTap: () => _renameFile(context),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: fileAccentColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(5),
                           ),
-                          const SizedBox(width: 4),
-                          _ActionButton(
-                            icon: Icons.download_rounded,
-                            tooltip: "Сохранить как...",
-                            onTap: () => _saveAsFile(context, fileUrl),
+                          child: Text(
+                            extensionLabel,
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: fileAccentColor.withOpacity(0.9),
+                              letterSpacing: 0.2,
+                            ),
                           ),
-                          const SizedBox(width: 4),
-                          _ActionButton(
-                            icon: Icons.share_rounded,
-                            tooltip: "Поделиться",
-                            onTap: () => _shareFile(fileUrl),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // Кнопки управления (появляются при наведении)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: AnimatedOpacity(
+                  opacity: showActions ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 150),
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface.withOpacity(
+                            AppDesignTokens.isDark(context) ? 0.82 : 0.92,
                           ),
-                          const SizedBox(width: 4),
-                          _ActionButton(
-                            icon: Icons.close_rounded,
-                            tooltip: "Удалить",
-                            onTap: widget.onDelete,
-                          ),
-                        ],
-                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.black.withOpacity(0.1)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _ActionButton(
+                          icon: Icons.edit_rounded,
+                          tooltip: "Переименовать",
+                          onTap: () => _renameFile(context),
+                        ),
+                        const SizedBox(width: 4),
+                        _ActionButton(
+                          icon: Icons.download_rounded,
+                          tooltip: "Сохранить как...",
+                          onTap: () => _saveAsFile(context, fileUrl),
+                        ),
+                        const SizedBox(width: 4),
+                        _ActionButton(
+                          icon: Icons.share_rounded,
+                          tooltip: "Поделиться",
+                          onTap: () => _shareFile(fileUrl),
+                        ),
+                        const SizedBox(width: 4),
+                        _ActionButton(
+                          icon: Icons.close_rounded,
+                          tooltip: "Удалить",
+                          onTap: widget.onDelete,
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -1221,6 +1284,7 @@ class _ActionButtonState extends State<_ActionButton> {
       child: Material(
         color: Colors.transparent,
         child: MouseRegion(
+          cursor: SystemMouseCursors.click,
           onEnter: (_) => setState(() => _isHovered = true),
           onExit: (_) => setState(() => _isHovered = false),
           child: InkWell(
@@ -1235,7 +1299,9 @@ class _ActionButtonState extends State<_ActionButton> {
                 borderRadius: BorderRadius.circular(6),
                 color: _isHovered
                     ? Colors.black.withOpacity(0.12)
-                    : Colors.white.withOpacity(0.95),
+                    : Theme.of(context).colorScheme.surface.withOpacity(
+                          AppDesignTokens.isDark(context) ? 0.84 : 0.95,
+                        ),
                 border: Border.all(
                   color: _isHovered
                       ? Colors.black.withOpacity(0.28)
@@ -1246,7 +1312,7 @@ class _ActionButtonState extends State<_ActionButton> {
               child: Icon(
                 widget.icon,
                 size: 13,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
@@ -1354,33 +1420,45 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
   bool _isHovered = false;
   bool _isExpandToggleHovered = false;
 
+  bool _shouldAutoExpandByCount(int count) {
+    return count >= 1 && count <= 6;
+  }
+
   @override
   void initState() {
     super.initState();
-    // Автоматически раскрываем спойлер, если файлов 5 и менее
-    if (widget.files.length <= 5) {
-      _isExpanded = true;
+    // Правило по умолчанию:
+    // 0 файлов -> закрыто, 1..6 -> открыто, 7+ -> закрыто.
+    _isExpanded = _shouldAutoExpandByCount(widget.files.length);
+  }
+
+  @override
+  void didUpdateWidget(covariant _FileCategorySection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.files.length != widget.files.length) {
+      _isExpanded = _shouldAutoExpandByCount(widget.files.length);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return MouseRegion(
-      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: _isHovered ? Colors.grey.shade50 : Colors.white,
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
+          ),
           boxShadow: [
             BoxShadow(
-              color: _isHovered
-                  ? Colors.black.withOpacity(0.06)
-                  : Colors.black.withOpacity(0.03),
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
               blurRadius: _isHovered ? 15 : 10,
               offset: const Offset(0, 4),
             ),
@@ -1403,6 +1481,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                 children: [
                   InkWell(
                     onTap: () => setState(() => _isExpanded = !_isExpanded),
+                    mouseCursor: SystemMouseCursors.click,
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(19, 14, 14, 14),
                       child: Row(
@@ -1428,7 +1507,9 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.grey.shade900,
+                                    color: isDark
+                                        ? scheme.onSurface
+                                        : Colors.grey.shade900,
                                     letterSpacing: -0.2,
                                   ),
                                 ),
@@ -1440,7 +1521,9 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,
-                                    color: Colors.grey.shade500,
+                                    color: isDark
+                                        ? scheme.onSurfaceVariant
+                                        : Colors.grey.shade500,
                                   ),
                                 ),
                               ],
@@ -1468,18 +1551,14 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       child: widget.files.isEmpty
-                          ? Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 30),
-                              child: Center(
-                                child: Text(
-                                  'Нет загруженных файлов',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade400,
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
+                          ? const FriendlyEmptyState(
+                              icon: Icons.folder_open_rounded,
+                              title: 'Нет загруженных файлов',
+                              subtitle:
+                                  'Загрузите файлы этого типа, чтобы они появились в списке.',
+                              accentColor: Colors.blueGrey,
+                              iconSize: 66,
+                              padding: EdgeInsets.symmetric(vertical: 18),
                             )
                           : GridView.builder(
                               shrinkWrap: true,
@@ -1532,6 +1611,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
+            mouseCursor: SystemMouseCursors.basic,
             borderRadius: BorderRadius.circular(6),
             hoverColor: Colors.transparent,
             splashColor: Colors.transparent,
@@ -1573,6 +1653,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
+          mouseCursor: SystemMouseCursors.click,
           borderRadius: BorderRadius.circular(8),
           child: Ink(
             width: 34,

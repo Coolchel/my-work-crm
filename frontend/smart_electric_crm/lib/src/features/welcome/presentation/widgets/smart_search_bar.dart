@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+
 import '../../../projects/presentation/providers/project_providers.dart';
 
 class SmartSearchBar extends ConsumerStatefulWidget {
@@ -12,6 +14,8 @@ class SmartSearchBar extends ConsumerStatefulWidget {
 class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  bool _isHovered = false;
+  bool _isFocused = false;
 
   @override
   void initState() {
@@ -28,8 +32,11 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
   }
 
   void _onFocusChange() {
+    if (mounted) {
+      setState(() => _isFocused = _searchFocusNode.hasFocus);
+    }
+
     if (_searchFocusNode.hasFocus && _searchController.text.isNotEmpty) {
-      // Restore search state if we have text
       final normalized = _searchController.text.trim();
       ref.read(projectSearchQueryProvider.notifier).state =
           normalized.isEmpty ? null : normalized;
@@ -38,53 +45,76 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
+    final isInteractive = _isHovered;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.text,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        decoration: BoxDecoration(
+          color:
+              AppDesignTokens.cardBackground(context, hovered: isInteractive),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _isFocused
+                ? scheme.primary.withOpacity(isDark ? 0.34 : 0.28)
+                : AppDesignTokens.cardBorder(context, hovered: isInteractive),
+            width: 0.8,
           ),
-        ],
-      ),
-      child: TextField(
-        controller: _searchController,
-        focusNode: _searchFocusNode,
-        style: const TextStyle(color: Colors.black87),
-        cursorColor: Colors.indigo,
-        decoration: InputDecoration(
-          hintText: 'Поиск: объект, домофон, заказчик...',
-          hintStyle: TextStyle(
-            color: Colors.grey.shade400,
-          ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: Colors.grey.shade400,
-          ),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.close, color: Colors.grey),
-                  onPressed: () {
-                    _searchController.clear();
-                    ref.read(projectSearchQueryProvider.notifier).state = null;
-                    FocusScope.of(context).unfocus();
-                  },
-                )
-              : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
+          boxShadow: [
+            BoxShadow(
+              color:
+                  AppDesignTokens.cardShadow(context, hovered: isInteractive),
+              blurRadius: isInteractive ? 12 : 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        onChanged: (value) {
-          final normalized = value.trim();
-          ref.read(projectSearchQueryProvider.notifier).state =
-              normalized.isEmpty ? null : normalized;
-        },
+        child: TextField(
+          controller: _searchController,
+          focusNode: _searchFocusNode,
+          style: TextStyle(color: scheme.onSurface),
+          cursorColor: scheme.primary,
+          decoration: InputDecoration(
+            hintText: 'Поиск: объект, домофон, заказчик...',
+            hintStyle: TextStyle(
+              color: scheme.onSurfaceVariant.withOpacity(0.75),
+            ),
+            prefixIcon: Icon(
+              Icons.search,
+              color: scheme.onSurfaceVariant.withOpacity(0.85),
+            ),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: Icon(Icons.close, color: scheme.onSurfaceVariant),
+                    onPressed: () {
+                      _searchController.clear();
+                      ref.read(projectSearchQueryProvider.notifier).state =
+                          null;
+                      FocusScope.of(context).unfocus();
+                    },
+                  )
+                : null,
+            filled: true,
+            fillColor: isDark
+                ? scheme.surfaceContainer.withOpacity(0.36)
+                : scheme.surface.withOpacity(0.88),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+          ),
+          onChanged: (value) {
+            final normalized = value.trim();
+            ref.read(projectSearchQueryProvider.notifier).state =
+                normalized.isEmpty ? null : normalized;
+          },
+        ),
       ),
     );
   }

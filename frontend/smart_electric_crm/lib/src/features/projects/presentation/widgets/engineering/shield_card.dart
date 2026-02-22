@@ -13,6 +13,7 @@ import '../../../../engineering/data/models/template_models.dart';
 import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../../shared/presentation/dialogs/text_input_dialog.dart';
 import '../../dialogs/engineering/shield_notes_dialog.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 
 class ShieldCard extends ConsumerStatefulWidget {
   final ShieldModel shield;
@@ -31,6 +32,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   bool _isExpanded = false;
+  bool _isHovered = false;
+  bool _isHeaderHovered = false;
 
   @override
   void initState() {
@@ -93,198 +96,227 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   Widget build(BuildContext context) {
     final themeColor = _getColorForType(widget.shield.shieldType);
     final shield = widget.shield;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color:
-              _isExpanded ? themeColor.withOpacity(0.3) : Colors.grey.shade200,
-        ), // Accent when expanded
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: AppDesignTokens.cardBackground(context,
+              hovered: _isHovered && !_isExpanded),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: _isExpanded
+                ? themeColor.withOpacity(0.35)
+                : AppDesignTokens.cardBorder(context, hovered: _isHovered),
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Accent stripe on the left
-              Container(
-                width: 5,
-                decoration: BoxDecoration(
-                  color: themeColor,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(8),
-                    bottomLeft: Radius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignTokens.cardShadow(context,
+                  hovered: _isExpanded || _isHovered),
+              blurRadius: _isHovered ? 10 : 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Accent stripe on the left
+                Container(
+                  width: 5,
+                  decoration: BoxDecoration(
+                    color: themeColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      bottomLeft: Radius.circular(8),
+                    ),
                   ),
                 ),
-              ),
-              // Main content
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header (Tappable, neutral)
-                    Material(
-                      color: _isExpanded
-                          ? themeColor.withOpacity(0.08)
-                          : Colors.grey.shade50, // Accent when expanded
-                      child: InkWell(
-                        onTap: _toggleExpand,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 14),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                  color:
-                                      Colors.grey.shade200), // Neutral border
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: themeColor
-                                      .withOpacity(0.1), // Accent icon bg
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  _getIconForType(shield.shieldType),
-                                  color: themeColor.withOpacity(0.8),
-                                  size: 18,
+                // Main content
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Header (Tappable, neutral)
+                      Material(
+                        color: Colors.transparent,
+                        child: MouseRegion(
+                          onEnter: (_) =>
+                              setState(() => _isHeaderHovered = true),
+                          onExit: (_) =>
+                              setState(() => _isHeaderHovered = false),
+                          child: InkWell(
+                            onTap: _toggleExpand,
+                            mouseCursor: SystemMouseCursors.click,
+                            hoverColor: Colors.transparent,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 160),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 14),
+                              decoration: BoxDecoration(
+                                color: _isExpanded
+                                    ? (_isHeaderHovered
+                                        ? themeColor.withOpacity(0.14)
+                                        : themeColor.withOpacity(0.08))
+                                    : AppDesignTokens.cardBackground(context,
+                                        hovered:
+                                            _isHovered || _isHeaderHovered),
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: AppDesignTokens.cardBorder(context),
+                                  ), // Neutral border
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      shield.name,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                        letterSpacing: -0.4,
-                                      ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 34,
+                                    height: 34,
+                                    decoration: BoxDecoration(
+                                      color: themeColor
+                                          .withOpacity(0.1), // Accent icon bg
+                                      shape: BoxShape.circle,
                                     ),
-                                    const SizedBox(height: 2),
-                                    Row(
+                                    child: Icon(
+                                      _getIconForType(shield.shieldType),
+                                      color: themeColor.withOpacity(0.8),
+                                      size: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          _getTypeName(shield.shieldType)
-                                              .toUpperCase(),
+                                          shield.name,
                                           style: TextStyle(
-                                            color: themeColor.withOpacity(0.7),
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700,
-                                            letterSpacing: 0.5,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: scheme.onSurface,
+                                            letterSpacing: -0.4,
                                           ),
                                         ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 6),
-                                          child: Text(
-                                            '•',
-                                            style: TextStyle(
-                                              color: Colors.grey.shade400,
-                                              fontSize: 10,
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          children: [
+                                            Text(
+                                              _getTypeName(shield.shieldType)
+                                                  .toUpperCase(),
+                                              style: TextStyle(
+                                                color:
+                                                    themeColor.withOpacity(0.7),
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 0.5,
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                        Text(
-                                          (shield.mounting == 'internal'
-                                              ? 'Встроенный'
-                                              : 'Навесной'),
-                                          style: TextStyle(
-                                            color: Colors.grey.shade500,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 6),
+                                              child: Text(
+                                                '•',
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade400,
+                                                  fontSize: 10,
+                                                ),
+                                              ),
+                                            ),
+                                            Text(
+                                              (shield.mounting == 'internal'
+                                                  ? 'Встроенный'
+                                                  : 'Навесной'),
+                                              style: TextStyle(
+                                                color: scheme.onSurfaceVariant,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  RotationTransition(
+                                    turns: Tween(begin: 0.0, end: 0.5)
+                                        .animate(_expandAnimation),
+                                    child: Icon(
+                                      Icons.expand_more_rounded,
+                                      color: Colors.grey.shade700,
+                                      size: 22,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              RotationTransition(
-                                turns: Tween(begin: 0.0, end: 0.5)
-                                    .animate(_expandAnimation),
-                                child: Icon(
-                                  Icons.expand_more_rounded,
-                                  color: Colors.grey.shade700,
-                                  size: 22,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Content
+                      SizeTransition(
+                        sizeFactor: _expandAnimation,
+                        child: Container(
+                          color: Theme.of(context).colorScheme.surface,
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Mounting Toggle & Recommended Size
+                              _buildTopInfo(context, themeColor),
+
+                              const SizedBox(height: 16),
+
+                              // Shield Content based on type
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? scheme.surfaceContainer
+                                      : Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border:
+                                      Border.all(color: scheme.outlineVariant),
+                                ),
+                                child: Column(
+                                  children: [
+                                    if (shield.shieldType == 'power')
+                                      ShieldContentPower(
+                                          shield: shield,
+                                          projectId: widget.projectId,
+                                          themeColor: themeColor),
+                                    if (shield.shieldType == 'led')
+                                      ShieldContentLed(
+                                          shield: shield,
+                                          projectId: widget.projectId,
+                                          themeColor: themeColor),
+                                    if (shield.shieldType == 'multimedia')
+                                      ShieldContentMultimedia(
+                                          shield: shield,
+                                          projectId: widget.projectId,
+                                          themeColor: themeColor),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                    ),
-                    // Content
-                    SizeTransition(
-                      sizeFactor: _expandAnimation,
-                      child: Container(
-                        color: Colors.white, // Clean white background
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Mounting Toggle & Recommended Size
-                            _buildTopInfo(context, themeColor),
-
-                            const SizedBox(height: 16),
-
-                            // Shield Content based on type
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.grey
-                                    .shade50, // Full opacity for better contrast
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade300),
-                              ),
-                              child: Column(
-                                children: [
-                                  if (shield.shieldType == 'power')
-                                    ShieldContentPower(
-                                        shield: shield,
-                                        projectId: widget.projectId,
-                                        themeColor: themeColor),
-                                  if (shield.shieldType == 'led')
-                                    ShieldContentLed(
-                                        shield: shield,
-                                        projectId: widget.projectId,
-                                        themeColor: themeColor),
-                                  if (shield.shieldType == 'multimedia')
-                                    ShieldContentMultimedia(
-                                        shield: shield,
-                                        projectId: widget.projectId,
-                                        themeColor: themeColor),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -293,12 +325,14 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
 
   Widget _buildTopInfo(BuildContext context, Color themeColor) {
     final shield = widget.shield;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50, // Full opacity for better contrast
+        color: isDark ? scheme.surfaceContainer : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,11 +354,11 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                         const SizedBox(width: 6),
                         Text(
                           _getStatsTitle(shield),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 10,
                             letterSpacing: 0.8,
-                            color: Color(0xFF374151),
+                            color: scheme.onSurface,
                           ),
                         ),
                       ],
@@ -335,7 +369,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                       child: Text(
                         _getStatsSubtitle(shield),
                         style: TextStyle(
-                            color: Colors.grey.shade500,
+                            color: scheme.onSurfaceVariant,
                             fontSize: 11,
                             height: 1.1),
                       ),
@@ -347,7 +381,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Row(
+                  Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
@@ -356,7 +390,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                           fontWeight: FontWeight.w900,
                           fontSize: 10,
                           letterSpacing: 0.8,
-                          color: Color(0xFF374151),
+                          color: scheme.onSurfaceVariant,
                         ),
                       ),
                       // Icon removed
@@ -380,7 +414,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: Colors.grey.withOpacity(0.08)),
                     boxShadow: [
@@ -400,7 +434,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                       RichText(
                         text: TextSpan(
                           style: TextStyle(
-                              fontSize: 12, color: Colors.grey.shade600),
+                              fontSize: 12, color: scheme.onSurfaceVariant),
                           children: [
                             const TextSpan(text: 'Рекомендовано: '),
                             TextSpan(
@@ -490,7 +524,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                         color: themeColor,
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                            color: Colors.white, width: 1.5),
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .surface,
+                                            width: 1.5),
                                       ),
                                     ),
                                   ),
@@ -563,43 +600,46 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
 
   Widget _buildMountingSegmented(Color themeColor) {
     final shield = widget.shield;
-    return SegmentedButton<String>(
-      segments: const [
-        ButtonSegment(
-          value: 'internal',
-          label: Text('Внутр.',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-        ),
-        ButtonSegment(
-          value: 'external',
-          label: Text('Наруж.',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-        ),
-      ],
-      selected: {shield.mounting},
-      onSelectionChanged: (Set<String> newSelection) async {
-        final newValue = newSelection.first;
-        try {
-          await ref
-              .read(engineeringRepositoryProvider)
-              .updateShield(shield.id, {'mounting': newValue});
-          ref.invalidate(projectListProvider);
-          ref.invalidate(projectByIdProvider(widget.projectId));
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text('Ошибка обновления: $e')));
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: SegmentedButton<String>(
+        segments: const [
+          ButtonSegment(
+            value: 'internal',
+            label: Text('Внутр.',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          ),
+          ButtonSegment(
+            value: 'external',
+            label: Text('Наруж.',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+          ),
+        ],
+        selected: {shield.mounting},
+        onSelectionChanged: (Set<String> newSelection) async {
+          final newValue = newSelection.first;
+          try {
+            await ref
+                .read(engineeringRepositoryProvider)
+                .updateShield(shield.id, {'mounting': newValue});
+            ref.invalidate(projectListProvider);
+            ref.invalidate(projectByIdProvider(widget.projectId));
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Ошибка обновления: $e')));
+            }
           }
-        }
-      },
-      showSelectedIcon: false,
-      style: SegmentedButton.styleFrom(
-        visualDensity: VisualDensity.compact,
-        padding: EdgeInsets.zero,
-        selectedBackgroundColor: themeColor.withOpacity(0.1),
-        selectedForegroundColor: themeColor,
-        side: BorderSide(color: Colors.grey.withOpacity(0.1)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        },
+        showSelectedIcon: false,
+        style: SegmentedButton.styleFrom(
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          selectedBackgroundColor: themeColor.withOpacity(0.1),
+          selectedForegroundColor: themeColor,
+          side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        ),
       ),
     );
   }
@@ -655,7 +695,6 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   Future<void> _deleteShield(BuildContext context, WidgetRef ref) async {
     final confirm = await showDialog<bool>(
       context: context,
-      barrierColor: Colors.transparent,
       builder: (context) => const ConfirmationDialog(
         title: 'Удалить щит?',
         content: 'Все группы внутри будут удалены.',

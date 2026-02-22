@@ -4,14 +4,28 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_quotes.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 
-class WelcomeHeader extends StatelessWidget {
+class WelcomeHeader extends StatefulWidget {
   final VoidCallback onSettingsPressed;
 
   const WelcomeHeader({
     required this.onSettingsPressed,
     super.key,
   });
+
+  @override
+  State<WelcomeHeader> createState() => _WelcomeHeaderState();
+}
+
+class _WelcomeHeaderState extends State<WelcomeHeader> {
+  late final String _quote;
+
+  @override
+  void initState() {
+    super.initState();
+    _quote = appQuotes[Random().nextInt(appQuotes.length)];
+  }
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -25,16 +39,25 @@ class WelcomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final dateStr =
         DateFormat('d MMMM yyyy, EEEE', 'ru').format(DateTime.now());
+    final isDark = AppDesignTokens.isDark(context);
+
+    final gradientColors = isDark
+        ? const [
+            Color(0xFF181B20),
+            Color(0xFF1D2229),
+            Color(0xFF1A1F26),
+          ]
+        : [
+            Colors.indigo.shade700,
+            Colors.teal.shade500,
+          ];
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.indigo.shade700,
-            Colors.teal.shade500,
-          ],
+          colors: gradientColors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -63,9 +86,10 @@ class WelcomeHeader extends StatelessWidget {
                 ),
                 IconButton(
                   tooltip: 'Настройки',
-                  onPressed: onSettingsPressed,
-                  icon: const Icon(Icons.settings_outlined),
-                  color: Colors.white,
+                  onPressed: widget.onSettingsPressed,
+                  icon: const Icon(Icons.settings_outlined, size: 22),
+                  color: Colors.white.withOpacity(isDark ? 0.82 : 0.9),
+                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
@@ -73,15 +97,15 @@ class WelcomeHeader extends StatelessWidget {
             Text(
               dateStr,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withOpacity(isDark ? 0.74 : 0.9),
                 fontSize: 16,
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              '"${appQuotes[Random().nextInt(appQuotes.length)]}"',
+              '"$_quote"',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withOpacity(isDark ? 0.62 : 0.8),
                 fontSize: 14,
                 fontStyle: FontStyle.italic,
               ),

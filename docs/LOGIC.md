@@ -1,139 +1,154 @@
-# Business Logic & Algorithms
+﻿# Business Logic & Algorithms
 
-## 1. Calculation Rules
-*   **Rounding:**
-    *   **Works:** Always Integer (Round to nearest 1).
-    *   **Materials:** 2 decimal places.
-    *   **Display:** Strip trailing zeros (`10.00` -> `10`).
-*   **Smart Calculator (Volumes):**
-    *   `Total` is the Anchor.
-    *   `Partner` is usually the variable.
-    *   `Me = Total - Partner`.
-*   **Markup (Materials):**
-    *   `ClientPrice = BasePrice + (BasePrice * Markup% / 100)`.
-    *   `MyIncome = (ClientPrice * Qty) - (PartnerQty * BasePrice)`. Partner gets NO markup share.
+## 1. Доменные сущности
+- `Project` -> содержит `Stage`, `Shield`, `ProjectFile`.
+- `Stage` -> содержит `EstimateItem`.
+- `EstimateItem` -> позиция сметы (`work`/`material`).
+- `Shield` -> `power`/`led`/`multimedia`.
+- `ShieldGroup` -> устройства силового щита.
+- `LedZone` -> зоны LED щита.
+- `CatalogItem` -> источник норм/цен и ключей автоматизации.
+- `DirectorySection` + `DirectoryEntry` -> редактируемые системные словари.
 
-## 2. Automation Algorithms
-### 2.1. Shield -> Material (Import)
-1.  **Scan:** Iterate all `ShieldGroup` items.
-2.  **Key Gen:** Create key `shield_{device_type}_{poles}` (e.g., `shield_circuit_breaker_1P`).
-3.  **Lookup:** Find `CatalogItem` where `mapping_key` matches.
-4.  **Action:**
-    *   If found: Create/Update `EstimateItem` (Material).
-    *   If not found: Create Warning Item ("NOT FOUND: ...").
-    *   **Quantity:** Sum of physical devices.
+## 2. Расчеты сметы
 
-### 2.2. Material -> Work (Auto-Calc)
-Triggered when Materials are updated.
-1.  **Direct Link:** If Material has `related_work_item`, create Work Item 1-to-1.
-2.  **Aggregation:**
-    *   Group Materials by `aggregation_key` (e.g., `cable_laying`).
-    *   Sum Quantities (100m + 50m = 150m).
-    *   Find Work Item with corresponding matching key.
-    *   Create **ONE** Work Item with total quantity.
+### 2.1 Денежные формулы
+- `client_amount = total_quantity * price_per_unit * (1 + markup_percent/100)`.
+- `employer_amount = employer_quantity * price_per_unit`.
+- `my_amount = client_amount - employer_amount`.
 
-### 2.3. Template System
-*   **Behavior:** "Clear & Apply" (Полная замена).
-*   **Logic:**
-    1.  User selects a template (Work, Material, Shield).
-    2.  System **deletes all existing items** in that specific section/stage.
-    3.  System inserts items from the template.
-*   **Safety:** Must trigger `ConfirmationDialog` before execution to prevent data loss.
+Примечание: наценка относится к клиентской цене и не увеличивает долю подрядчика.
 
-## 3. Engineering Logic
-### 3.1. Shield Sizing
-*   **Power:** `Modules = Sum(DeviceWidths)`. 1P=1, 2P=2, 3P=3, 4P=4.
-*   **LED (Transformers -> Modules):**
-    *   1-2 -> 0 (External/Weak Current)
-    *   3-4 -> 24 mod
-    *   5-9 -> 36 mod
-    *   10-12 -> 48 mod
-    *   13+ -> 60 mod / Custom
-*   **Multimedia (Lines -> Modules):**
-    *   0-4 -> 24 mod
-    *   5-10 -> 36 mod
-    *   10+ -> Custom
+### 2.2 Отображение чисел
+- Денежные значения: до 2 знаков после запятой, с удалением незначащих нулей при выводе (`10.00 -> 10`, `1.50 -> 1.5`).
+- Для работ/материалов сохраняется фактическая десятичная точность (без принудительного округления до целого).
 
-## 4. Updates & Synchronization
-*   **Project Dates:**
-    *   `updated_at`: Updates only if changes > 2 hours after creation.
-*   **Stage Dates:**
-    *   Updating an Estimate Item touches parent Stage `updated_at`.
-*   **Home Smart Search Normalization:**
-    *   Query and searchable text are normalized to lowercase before matching.
-    *   Search behavior is always case-insensitive.
-*   **Home Settings Entry Flow:**
-    *   Settings screen is opened from Home header action button (`top-right`).
-    *   Bottom main navigation does not include a dedicated Settings destination.
-*   **Project List Stripe Color Priority (By Stage Composition):**
-    *   Priority order: `stage_3` -> `stage_1/stage_2/stage_1_2` -> `extra/other` -> `precalc` -> default.
-    *   Mapping:
-        *   `stage_3` present -> Green.
-        *   `stage_1` / `stage_2` / `stage_1_2` present (without `stage_3`) -> Blue.
-        *   `extra` present (without core stages) -> Purple.
-        *   `other` present (without core stages and without `extra`) -> Amber.
-        *   `precalc` only -> BlueGrey.
-        *   no stages -> Indigo.
-*   **Create Operation Stability (Project/Stage):**
-    *   Frontend must treat `201 Created` as success without emitting secondary false errors from local async state transitions.
-    *   UI dialogs should block repeated submit while request is in-flight.
-*   **User Feedback Routing:**
-    *   Domain/transport errors -> snackbar.
-    *   Input validation failures -> inline field error.
-    *   Success snackbar should be omitted when UI already reflects the completed action directly.
+## 3. Автоматизация
 
+### 3.1 Импорт из щитов в материалы
+Источник: `StageViewSet.import_from_shields` -> `EstimateAutomationService.import_shield_to_materials`.
 
-## 5. Directory (Reference Book) Logic
-### 5.1. Data Model
-*   `DirectorySection`: stores section-level metadata (`code`, `name`, `description`).
-*   `DirectoryEntry`: stores editable values for a section (`code`, `name`, `sort_order`, `is_active`, `metadata`).
-*   Uniqueness rule: `DirectoryEntry.code` must be unique inside one section.
+Алгоритм:
+1. Берется целевой этап проекта.
+2. Силовые группы агрегируются по ключу `(device_type, poles, rating)`.
+3. Для каждой группы формируется `mapping_key = shield_{device_type}_{poles}`.
+4. Ищется `CatalogItem` по `mapping_key`.
+5. Создается/заменяется material-позиция сметы.
+6. Отдельно рассчитываются корпуса щитов:
+   - силовые: `shield_enclosure_{size}_{mounting}`;
+   - слаботочные/LED: `shield_media_enclosure_{size}_{mounting}`.
+7. При отсутствии позиции в каталоге создается предупреждающая строка с ценой 0.
 
-### 5.2. Bootstrap Synchronization
-*   Endpoint: `POST /api/directory-sections/bootstrap/`.
-*   Purpose: synchronize built-in model choices into editable DB dictionaries.
-*   Source choices include: project statuses, object types, stage titles/statuses, catalog item types, currencies, estimate item types, shield types, shield mounting, shield device types, project file categories.
-*   Behavior: upsert sections and entries (safe re-run, idempotent in practice for existing codes).
+Особенности:
+- Перед пересчетом корпусов удаляются старые позиции корпусов/предупреждений, чтобы избежать дублей.
+- Для найденных catalog-позиций используется стратегия replace по `catalog_item`.
 
-### 5.3. CRUD Access
-*   `DirectorySection` and `DirectoryEntry` provide full CRUD via REST endpoints.
-*   Catalog admin part (categories + catalog items) also remains full CRUD from app UI.
-*   Catalog item CRUD must preserve technical fields: `mapping_key`, `aggregation_key`, `related_work_item`.
-*   Directory entry CRUD must preserve JSON `metadata`.
+### 3.2 Расчет работ из материалов
+Источник: `StageViewSet.calculate_works` -> `EstimateAutomationService.calculate_works_from_materials`.
 
+Алгоритм:
+1. Берутся все `material` позиции этапа.
+2. Если у материала задан `aggregation_key`, количество попадает в агрегат по ключу.
+3. Если `aggregation_key` нет, но есть `related_work_item`, количество идет в прямую связь 1-к-1.
+4. Для агрегатов ищется work-позиция каталога с `mapping_key == aggregation_key`.
+5. Целевые work-позиции создаются/заменяются в этапе.
+6. При отсутствии work-элемента для агрегата создается предупреждающая строка.
 
-### 5.4. UI Synchronization Flow
-*   On entering the directory screen, app triggers automatic `bootstrap` synchronization for system sections.
-*   During synchronization, system tab shows a loading state with explicit wait message to prevent editing stale data.
-*   Manual "Synchronize" action remains available as a recovery/retry path for admins.
-*   If backend returns `503` (tables not ready/migrations missing), UI shows a human-readable error message instead of raw transport error text.
+## 4. Шаблоны
 
-### 5.5. Directory Error Contract (Tables Not Ready)
-*   Backend detection: missing `core_directorysection` / `core_directoryentry` tables.
-*   Response strategy:
-    *   `list`: return empty array for directory sections/entries.
-    *   `bootstrap`, `retrieve`, `create`, `update`, `partial_update`, `destroy`: return HTTP `503` with readable `error`.
-*   Goal: safe startup behavior before migrations and predictable client UX.
+### 4.1 Применение шаблонов
+- Работы: удалить все `work` в этапе -> создать из шаблона.
+- Материалы: удалить все `material` в этапе -> создать из шаблона.
+- Силовой щит: удалить все `ShieldGroup` -> создать из шаблона.
+- LED щит: удалить все `LedZone` -> создать из шаблона.
 
-### 5.6. Directory Interaction Rules
-*   Second-level directory entities (section entries, category items) support row-tap edit flow.
-*   Bottom directory navigation remains accessible on second-level screens; switching tab returns to the corresponding root tab context.
-*   Delete icons use neutral hover styling (no danger-color hover escalation on icon hover itself); destructive intent remains in confirmation dialog.
+Это всегда `Clear & Apply` (полная замена выбранного раздела).
 
-### 5.7. Directory Access Gate (Settings)
-*   Entry point: Settings -> Directory.
-*   Flow:
-    1. Show warning dialog about high-impact dictionary/catalog changes.
-    2. Require current-account password.
-    3. Validate password using auth repository flow.
-    4. Navigate to Directory only on successful validation.
-*   Invalid password keeps dialog open and shows field-level error.
+### 4.2 Создание шаблонов из текущих данных
+- Из этапа: work/material шаблоны создаются из `EstimateItem` с привязкой к catalog.
+- Из щита: шаблоны создаются из `ShieldGroup`/`LedZone`.
 
-### 5.8. Text Encoding Resilience (Directory/Catalog)
-*   Backend normalizes potentially broken mojibake strings on serializer input/output for:
-    *   `DirectorySection.name`, `DirectorySection.description`
-    *   `DirectoryEntry.name`
-    *   `CatalogCategory.name`
-    *   `CatalogItem.name`, `CatalogItem.unit`
-*   Repair command is available for one-shot cleanup of persisted data:
-    *   `python manage.py repair_text_encoding`
+## 5. Переносы между этапами (frontend workflow)
+
+### 5.1 `precalc` -> активный этап
+Доступно только для этапов `stage_1`, `stage_2`, `stage_1_2`.
+
+Правила:
+1. Для текущего раздела (`works` или `materials`) проверяется наличие данных в `precalc`.
+2. Если в целевом разделе есть позиции, требуется подтверждение.
+3. Выполняется `clear & replace` только в выбранном разделе.
+
+### 5.2 Калькулятор арматуры (`stage_3`, материалы)
+Доступно только на этапе `stage_3` и только во вкладке материалов.
+
+Правила:
+1. Диалог содержит фиксированные строки арматуры.
+2. Привязка к каталогу идет по `mapping_key`, fallback — legacy name.
+3. В перенос попадают только строки с количеством `> 0`.
+4. При наличии материалов в этапе требуется подтверждение.
+5. Применение — `clear & replace` только material-позиций текущего этапа.
+
+## 6. Логика щитов и рекомендаций размера
+
+### 6.1 Power
+- Модули устройства = число полюсов (`1P=1`, `2P=2`, ...).
+- Размер корпуса подбирается по ближайшему стандарту.
+- При превышении лимитов — предупреждающая позиция.
+
+### 6.2 LED
+- По количеству трансформаторов:
+  - `<=2` -> рекомендация переноса в слаботочный щит;
+  - `3-4` -> 24 модуля;
+  - `5-9` -> 36;
+  - `10-12` -> 48;
+  - `13-15` -> 60;
+  - `>15` -> индивидуальный расчет.
+
+### 6.3 Multimedia
+- По количеству линий:
+  - `0-4` -> 24 модуля;
+  - `5-10` -> 36;
+  - `>10` -> индивидуальный расчет.
+
+## 7. Синхронизация и целостность
+- Сохранение/удаление `EstimateItem` обновляет `Stage.updated_at`.
+- Поиск по каталогу выполняется через lowercased `search_name`.
+- Поиск на главной — регистронезависимый.
+- Переключение тем влияет только на представление, не на payload/расчеты.
+
+## 8. Цвет прогресса проекта (левая полоса карточки)
+Приоритет:
+1. `stage_3` с хотя бы одной `work` позицией -> зеленый.
+2. Наличие `stage_1`/`stage_2`/`stage_1_2` -> синий.
+3. `extra` (без core stage) -> фиолетовый.
+4. `other` (без core stage и без `extra`) -> янтарный.
+5. Только `precalc` -> blueGrey.
+6. Нет этапов -> indigo.
+
+## 9. Files: правило начального раскрытия категории
+- `0` файлов -> свернуто.
+- `1..6` файлов -> развернуто.
+- `7+` файлов -> свернуто.
+
+## 10. Directory: bootstrap и отказоустойчивость
+
+### 10.1 Bootstrap
+Endpoint: `POST /api/directory-sections/bootstrap/`.
+
+Синхронизируются choices моделей:
+- статусы/типы проекта,
+- этапы,
+- типы catalog/estimate,
+- валюты,
+- типы/монтаж щитов,
+- типы устройств щита,
+- категории файлов.
+
+### 10.2 Поведение при неготовой БД
+Если отсутствуют таблицы Directory:
+- `list` -> `[]`.
+- CRUD/bootstrap/retrieve -> `503` + читабельный `error`.
+
+## 11. Нормализация текстов и mojibake
+- На входе/выходе сериализаторов для Directory/Catalog применяется `normalize_possible_mojibake`.
+- Для разовой правки данных: `python manage.py repair_text_encoding`.

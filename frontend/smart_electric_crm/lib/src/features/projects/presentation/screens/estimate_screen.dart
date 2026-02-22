@@ -3,22 +3,28 @@ import 'dart:async'; // For Timer
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../catalog/data/catalog_repository.dart';
 import '../../data/models/estimate_item_model.dart';
 import '../../data/models/stage_model.dart';
+import '../../data/repositories/project_repository.dart';
 import '../providers/project_providers.dart';
 import '../widgets/estimate/estimate_tab.dart';
 import '../dialogs/estimate/add_item_dialog.dart';
 import '../dialogs/estimate/quantity_input_dialog.dart';
 import '../dialogs/estimate/edit_item_dialog.dart';
 import '../dialogs/estimate/estimate_actions_dialog.dart';
+import '../dialogs/estimate/stage3_armature_calculator_dialog.dart';
 import '../../../engineering/presentation/dialogs/template_selection_dialog.dart';
 import '../../../engineering/presentation/providers/template_providers.dart';
 import '../../../engineering/data/models/template_models.dart';
+import '../../../settings/application/app_settings_controller.dart';
+import '../../../home/presentation/screens/home_screen.dart';
 import '../../../../shared/presentation/dialogs/text_input_dialog.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 
 import '../widgets/stages/stage_card.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -42,15 +48,32 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   bool _isImportingShields = false;
   bool _isCalculatingWorks = false;
   bool _isApplyingTemplate = false;
+  bool _isImportingFromPrecalc = false;
+  bool _isApplyingStage3Calculator = false;
+
+  Color _dialogBarrierColor(BuildContext context) =>
+      AppDesignTokens.isDark(context)
+          ? Colors.black.withOpacity(0.62)
+          : Colors.black.withOpacity(0.40);
 
   // Local state for items (for optimistic updates and display)
   List<EstimateItemModel> _items = [];
   late StageModel _stage;
+  List<EstimateItemModel> _precalcWorkItems = const [];
+  List<EstimateItemModel> _precalcMaterialItems = const [];
 
   List<EstimateItemModel> get _works =>
       _items.where((i) => i.itemType == 'work').toList();
   List<EstimateItemModel> get _materials =>
       _items.where((i) => i.itemType != 'work').toList();
+  bool get _isTransferStage =>
+      _stage.title == 'stage_1' ||
+      _stage.title == 'stage_2' ||
+      _stage.title == 'stage_1_2';
+  bool get _canImportWorksFromPrecalc =>
+      _isTransferStage && _precalcWorkItems.isNotEmpty;
+  bool get _canImportMaterialsFromPrecalc =>
+      _isTransferStage && _precalcMaterialItems.isNotEmpty;
 
   @override
   void initState() {
@@ -69,15 +92,53 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       final repo = ref.read(projectRepositoryProvider);
       // Fetch stage data including items
       final stage = await repo.fetchStage(widget.stage.id);
+      final precalcItems = await _fetchPrecalcItems(repo, stage.title);
       if (mounted) {
         setState(() {
           _items = stage.estimateItems;
           _stage = stage;
           _markupPercent = stage.markupPercent;
+          _precalcWorkItems = precalcItems['work'] ?? const [];
+          _precalcMaterialItems = precalcItems['material'] ?? const [];
         });
       }
     } catch (e) {
       debugPrint('Error refreshing estimate: $e');
+    }
+  }
+
+  Future<Map<String, List<EstimateItemModel>>> _fetchPrecalcItems(
+    ProjectRepository repo,
+    String stageTitle,
+  ) async {
+    if (stageTitle != 'stage_1' &&
+        stageTitle != 'stage_2' &&
+        stageTitle != 'stage_1_2') {
+      return const {'work': [], 'material': []};
+    }
+
+    try {
+      final project = await repo.fetchProject(widget.projectId);
+      final precalcStage = project.stages.where((s) => s.title == 'precalc');
+      if (precalcStage.isEmpty) {
+        return const {'work': [], 'material': []};
+      }
+
+      final precalc = await repo.fetchStage(precalcStage.first.id);
+      final workItems = precalc.estimateItems
+          .where((item) => item.itemType == 'work')
+          .toList();
+      final materialItems = precalc.estimateItems
+          .where((item) => item.itemType != 'work')
+          .toList();
+
+      return {
+        'work': workItems,
+        'material': materialItems,
+      };
+    } catch (e) {
+      debugPrint('Error fetching precalc items: $e');
+      return const {'work': [], 'material': []};
     }
   }
 
@@ -90,6 +151,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final showWelcome = ref.watch(
+      appSettingsProvider.select((value) => value.showWelcome),
+    );
     // Backdrop filter when FAB is expanded
     // Backdrop filter when FAB is expanded
     return Scaffold(
@@ -123,7 +187,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             elevation: 4,
-            surfaceTintColor: Colors.white,
+            surfaceTintColor: Theme.of(context).colorScheme.surface,
             onSelected: (value) {
               switch (value) {
                 case 'toggle_prices':
@@ -142,6 +206,12 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                   } else {
                     _showMaterialTemplatesDialog();
                   }
+                  break;
+                case 'import_from_precalc':
+                  _importFromPrecalc();
+                  break;
+                case 'stage3_armature_calculator':
+                  _openStage3ArmatureCalculator();
                   break;
                 case 'save_template':
                   _showSaveTemplateDialog(
@@ -178,6 +248,48 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                     ],
                   ),
                 ),
+                if ((isWork && _canImportWorksFromPrecalc) ||
+                    (!isWork && _canImportMaterialsFromPrecalc)) ...[
+                  PopupMenuItem(
+                    value: 'import_from_precalc',
+                    enabled: !_isImportingFromPrecalc,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.move_down_rounded,
+                          color: Colors.grey.shade600,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(_isImportingFromPrecalc
+                            ? 'Перенос...'
+                            : 'Перенести из предпросчета'),
+                      ],
+                    ),
+                  ),
+                ],
+                if (!isWork && _stage.title == 'stage_3') ...[
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'stage3_armature_calculator',
+                    enabled: !_isApplyingStage3Calculator,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calculate_rounded,
+                          color: Colors.grey.shade600,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          _isApplyingStage3Calculator
+                              ? 'Обработка...'
+                              : 'Калькулятор арматуры',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'apply_template',
@@ -272,22 +384,37 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
         onDestinationSelected: (index) {
+          if (showWelcome && index == 0) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (_) => const HomeScreen(),
+              ),
+              (route) => false,
+            );
+            return;
+          }
           setState(() {
-            _currentIndex = index;
+            _currentIndex = showWelcome ? index - 1 : index;
           });
         },
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          if (showWelcome)
+            const NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+            ),
+          const NavigationDestination(
             icon: Icon(Icons.handyman_outlined),
             selectedIcon: Icon(Icons.handyman),
-            label: 'Работы',
+            label: '\u0420\u0430\u0431\u043e\u0442\u044b',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
             selectedIcon: Icon(Icons.inventory_2),
-            label: 'Материалы',
+            label: '\u041c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u044b',
           ),
         ],
       ),
@@ -298,6 +425,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         child: FloatingActionButton(
           heroTag: 'add_estimate_item',
           onPressed: _showSearchDialog,
+          backgroundColor:
+              _currentIndex == 0 ? Colors.green.shade500 : Colors.blue.shade500,
+          foregroundColor: Theme.of(context).colorScheme.surface,
           // tooltip: 'Добавить позицию', // Removed
           child: const Icon(Icons.add),
         ),
@@ -342,7 +472,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
 
     final confirm = await showDialog<bool>(
       context: context,
-      barrierColor: Colors.transparent,
+      barrierColor: _dialogBarrierColor(context),
       builder: (context) => ConfirmationDialog(
         title: 'Очистить $sectionName?',
         content: 'Все позиции в разделе $sectionName будут удалены.',
@@ -494,7 +624,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     final themeColor = _currentIndex == 0 ? Colors.green : Colors.blue;
     final confirm = await showDialog<bool>(
         context: context,
-        barrierColor: Colors.transparent,
+        barrierColor: _dialogBarrierColor(context),
         builder: (ctx) => ConfirmationDialog(
               title: "Удалить позицию?",
               content: "Вы уверены, что хотите удалить эту позицию из сметы?",
@@ -586,7 +716,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     if (_materials.isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
-        barrierColor: Colors.transparent,
+        barrierColor: _dialogBarrierColor(context),
         builder: (ctx) => const ConfirmationDialog(
           title: "Импортировать оборудование?",
           content:
@@ -627,7 +757,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     if (_works.isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
-        barrierColor: Colors.transparent,
+        barrierColor: _dialogBarrierColor(context),
         builder: (ctx) => const ConfirmationDialog(
           title: "Рассчитать работы?",
           content:
@@ -661,6 +791,159 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           .showSnackBar(SnackBar(content: Text("Ошибка расчета: $e")));
     } finally {
       if (mounted) setState(() => _isCalculatingWorks = false);
+    }
+  }
+
+  Future<void> _importFromPrecalc() async {
+    final isWork = _currentIndex == 0;
+    final sourceItems = isWork ? _precalcWorkItems : _precalcMaterialItems;
+    final targetItems = isWork ? _works : _materials;
+    final sectionName = isWork ? 'работ' : 'материалов';
+    final themeColor = isWork ? Colors.green : Colors.blue;
+
+    if (sourceItems.isEmpty) return;
+
+    if (targetItems.isNotEmpty) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        barrierColor: _dialogBarrierColor(context),
+        builder: (ctx) => ConfirmationDialog(
+          title: 'Перенос',
+          content:
+              'Текущие позиции раздела $sectionName будут удалены и заменены позициями из этапа "Предпросчет". Продолжить?',
+          confirmText: 'Перенести',
+          themeColor: themeColor,
+        ),
+      );
+      if (confirm != true) return;
+    }
+
+    setState(() => _isImportingFromPrecalc = true);
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+
+      for (final item in targetItems) {
+        await repo.deleteEstimateItem(item.id);
+      }
+
+      for (final source in sourceItems) {
+        await repo.addEstimateItem({
+          'stage': widget.stage.id,
+          'item_type': source.itemType,
+          'name': source.name,
+          'unit': source.unit,
+          'price_per_unit': source.pricePerUnit ?? 0.0,
+          'currency': source.currency,
+          'total_quantity': source.totalQuantity,
+          'employer_quantity': source.employerQuantity,
+        });
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Позиции $sectionName перенесены из этапа "Предпросчет": ${sourceItems.length}',
+          ),
+        ),
+      );
+      ref.invalidate(projectListProvider);
+      await _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка переноса из предпросчета: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isImportingFromPrecalc = false);
+    }
+  }
+
+  Future<void> _openStage3ArmatureCalculator() async {
+    if (_stage.title != 'stage_3' || _currentIndex != 1) {
+      return;
+    }
+
+    try {
+      final catalogRepo = ref.read(catalogRepositoryProvider);
+      final materialCatalogItems =
+          await catalogRepo.fetchItemsByType('material');
+
+      if (!mounted) return;
+      final result = await showDialog<List<Stage3ArmatureCalculatorResult>>(
+        context: context,
+        builder: (context) => Stage3ArmatureCalculatorDialog(
+          materialCatalogItems: materialCatalogItems,
+        ),
+      );
+
+      if (result == null || result.isEmpty) return;
+      await _applyStage3ArmatureCalculator(result);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка загрузки калькулятора: $e')),
+      );
+    }
+  }
+
+  Future<void> _applyStage3ArmatureCalculator(
+    List<Stage3ArmatureCalculatorResult> rows,
+  ) async {
+    if (_materials.isNotEmpty) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        barrierColor: _dialogBarrierColor(context),
+        builder: (ctx) => const ConfirmationDialog(
+          title: 'Перенос',
+          content:
+              'Все текущие позиции материалов этапа 3 будут удалены и заменены позициями из калькулятора. Продолжить?',
+          confirmText: 'Перенести',
+          themeColor: Colors.blue,
+        ),
+      );
+      if (confirm != true) return;
+    }
+
+    setState(() => _isApplyingStage3Calculator = true);
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+
+      for (final item in _materials) {
+        await repo.deleteEstimateItem(item.id);
+      }
+
+      for (final row in rows) {
+        await repo.addEstimateItem({
+          'stage': widget.stage.id,
+          'catalog_item': row.item.id,
+          'item_type': 'material',
+          'name': row.item.name,
+          'unit': row.item.unit,
+          'price_per_unit': row.item.defaultPrice,
+          'currency': row.item.defaultCurrency,
+          'total_quantity': row.quantity,
+          'employer_quantity': 0,
+        });
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Позиции материалов перенесены из калькулятора: ${rows.length}',
+          ),
+        ),
+      );
+      ref.invalidate(projectListProvider);
+      await _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка переноса из калькулятора: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isApplyingStage3Calculator = false);
     }
   }
 
@@ -754,7 +1037,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     final themeColor = type == 'work' ? Colors.green : Colors.blue;
     final result = await showDialog<dynamic>(
       context: context,
-      barrierColor: Colors.transparent,
+      barrierColor: _dialogBarrierColor(context),
       builder: (context) => TextInputDialog(
         title: "Сохранить как шаблон",
         labelText: "Название шаблона",
@@ -802,7 +1085,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     if (_works.isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
-        barrierColor: Colors.transparent,
+        barrierColor: _dialogBarrierColor(context),
         builder: (ctx) => const ConfirmationDialog(
           title: "Применить шаблон?",
           content:
@@ -836,7 +1119,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     if (_materials.isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
-        barrierColor: Colors.transparent,
+        barrierColor: _dialogBarrierColor(context),
         builder: (ctx) => const ConfirmationDialog(
           title: "Применить шаблон?",
           content:

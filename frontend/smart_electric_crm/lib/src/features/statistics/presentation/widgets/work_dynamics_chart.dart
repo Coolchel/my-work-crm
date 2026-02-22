@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/features/statistics/data/models/statistics_model.dart';
 import 'package:intl/intl.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class WorkDynamicsChart extends StatefulWidget {
   final List<WorkDynamicsData> data;
@@ -32,9 +33,14 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
   @override
   Widget build(BuildContext context) {
     if (widget.data.isEmpty) {
-      return const Center(
-          child: Text("Нет данных",
-              style: TextStyle(color: Colors.grey, fontSize: 12)));
+      return const FriendlyEmptyState(
+        icon: Icons.show_chart_rounded,
+        title: 'Нет данных',
+        subtitle: 'График появится, когда накопятся данные за период.',
+        accentColor: Colors.indigo,
+        iconSize: 62,
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      );
     }
 
     // Colors based on currency
@@ -69,7 +75,7 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(
-              right: 16,
+              right: 22,
               left: 8,
               top: 10,
               bottom: 4,
@@ -190,8 +196,8 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
 
                         return LineTooltipItem(
                           '$formattedDate\n',
-                          const TextStyle(
-                            color: Colors.white,
+                          TextStyle(
+                            color: Theme.of(context).colorScheme.surface,
                             fontWeight: FontWeight.bold,
                             fontSize: 10,
                           ),
@@ -223,6 +229,7 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
   }
 
   Widget _buildLegendItem(String label, Color color) {
+    final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Container(
@@ -231,9 +238,13 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
-        Text(label,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, color: Colors.black54)),
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
       ],
     );
   }
@@ -275,10 +286,15 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
 
     return Padding(
       padding: const EdgeInsets.only(top: 6.0),
-      child: Text(
-        label,
-        style: TextStyle(
-            fontWeight: FontWeight.bold, fontSize: 10, color: Colors.grey[600]),
+      child: Transform.translate(
+        offset: Offset(index == data.length - 1 ? -14 : 0, 0),
+        child: Text(
+          label,
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 10,
+              color: Colors.grey[600]),
+        ),
       ),
     );
   }

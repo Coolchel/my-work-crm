@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
 
@@ -19,11 +20,14 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
   @override
   Widget build(BuildContext context) {
     const themeColor = Colors.indigo;
+    final isDark = AppDesignTokens.isDark(context);
 
     return Theme(
       data: Theme.of(context).copyWith(
         colorScheme:
             Theme.of(context).colorScheme.copyWith(primary: themeColor),
+        hoverColor: themeColor.withOpacity(isDark ? 0.24 : 0.10),
+        highlightColor: themeColor.withOpacity(isDark ? 0.18 : 0.08),
       ),
       child: Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -32,13 +36,15 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 450),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: themeColor.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: isDark
+                    ? Colors.black.withOpacity(0.34)
+                    : Colors.black.withOpacity(0.12),
+                blurRadius: isDark ? 12 : 20,
+                offset: const Offset(0, 6),
               )
             ],
           ),
@@ -100,7 +106,10 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                         floatingLabelBehavior: FloatingLabelBehavior.always,
                         hintText: "Щит квартирный",
                         hintStyle: TextStyle(
-                          color: Colors.grey.withOpacity(0.35),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withOpacity(0.75),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -131,7 +140,9 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Colors.indigo.shade700,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -214,7 +225,9 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Colors.indigo.shade700,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -277,8 +290,9 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      style:
-                          TextButton.styleFrom(foregroundColor: Colors.black87),
+                      style: TextButton.styleFrom(
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onSurface),
                       child: const Text("Отмена"),
                     ),
                     const SizedBox(width: 8),
@@ -354,16 +368,19 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
   Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,
       ValueChanged<String> onSelected) {
     const bg = Colors.indigo;
-    final fieldColor = Colors.indigo.shade50;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
+    final menuBackgroundColor =
+        isDark ? scheme.surfaceContainerHigh : scheme.surfaceContainer;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         return Container(
           height: 44,
           decoration: BoxDecoration(
-            color: fieldColor,
+            color: AppDesignTokens.surface2(context),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: bg.withOpacity(0.15)),
+            border: Border.all(color: AppDesignTokens.softBorder(context)),
           ),
           child: Material(
             color: Colors.transparent,
@@ -385,9 +402,9 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                   ),
                   items: items,
                   elevation: 4,
-                  shadowColor: Colors.black.withOpacity(0.2),
+                  shadowColor: AppDesignTokens.cardShadow(context),
                   surfaceTintColor: Colors.transparent, // Disable M3 tint
-                  color: fieldColor,
+                  color: menuBackgroundColor,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                   constraints: BoxConstraints(
@@ -402,7 +419,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
               },
               borderRadius: BorderRadius.circular(12),
               mouseCursor: SystemMouseCursors.click,
-              hoverColor: bg.shade700.withOpacity(0.05),
+              hoverColor: bg.shade700.withOpacity(isDark ? 0.12 : 0.05),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -411,12 +428,14 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                     Text(
                       label,
                       style: TextStyle(
-                        color: bg.shade800,
+                        color: isDark ? scheme.onSurface : bg.shade800,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Icon(Icons.arrow_drop_down, color: bg.shade800, size: 24),
+                    Icon(Icons.arrow_drop_down,
+                        color: isDark ? scheme.onSurface : bg.shade800,
+                        size: 24),
                   ],
                 ),
               ),

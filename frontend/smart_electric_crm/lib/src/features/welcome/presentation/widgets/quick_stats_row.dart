@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+
 import '../../../projects/presentation/providers/project_providers.dart';
 
 class QuickStatsRow extends ConsumerWidget {
@@ -22,8 +24,6 @@ class QuickStatsRow extends ConsumerWidget {
         final currentMonth = now.month;
         final currentYear = now.year;
 
-        // 1. Предпросчеты (этапы за месяц)
-        // Считаем этапы, созданные в текущем месяце, с "предпросчет" в названии
         int preCalcCount = 0;
         for (final project in projects) {
           for (final stage in project.stages) {
@@ -36,8 +36,6 @@ class QuickStatsRow extends ConsumerWidget {
           }
         }
 
-        // 2. Текущие объекты (активные этапы за месяц)
-        // Считаем ПРОЕКТЫ, у которых в текущем месяце создан этап (НЕ предпросчет)
         int activeObjectsCount = 0;
         for (final project in projects) {
           bool hasNewActiveStage = false;
@@ -50,13 +48,9 @@ class QuickStatsRow extends ConsumerWidget {
               break;
             }
           }
-          if (hasNewActiveStage) {
-            activeObjectsCount++;
-          }
+          if (hasNewActiveStage) activeObjectsCount++;
         }
 
-        // 3. Оплачено (Текущий месяц)
-        // Суммарное кол-во оплаченных этапов, созданных в текущем месяце
         int paidCount = 0;
         for (final project in projects) {
           for (final stage in project.stages) {
@@ -83,7 +77,7 @@ class QuickStatsRow extends ConsumerWidget {
                       ?.call(selectedStat == 'pre_calc' ? null : 'pre_calc'),
                   isSelected: selectedStat == 'pre_calc',
                   tooltip:
-                      'Объекты с новыми этапами\n"Предпросчет"\nв тек. месяце',
+                      'Объекты с новыми этапами\n"Предпросчет"\nв текущем месяце',
                 ),
               ),
               const SizedBox(width: 12),
@@ -94,12 +88,11 @@ class QuickStatsRow extends ConsumerWidget {
                   icon: Icons.engineering,
                   color: Colors.orange,
                   onTap: () => onStatSelected?.call(
-                      selectedStat == 'active_objects'
-                          ? null
-                          : 'active_objects'),
+                    selectedStat == 'active_objects' ? null : 'active_objects',
+                  ),
                   isSelected: selectedStat == 'active_objects',
                   tooltip:
-                      'Объекты с новыми этапами\n(кроме "Предпросчет")\nза тек. месяц',
+                      'Объекты с новыми этапами\n(кроме "Предпросчет")\nза текущий месяц',
                 ),
               ),
               const SizedBox(width: 12),
@@ -112,7 +105,7 @@ class QuickStatsRow extends ConsumerWidget {
                   onTap: () => onStatSelected
                       ?.call(selectedStat == 'paid' ? null : 'paid'),
                   isSelected: selectedStat == 'paid',
-                  tooltip: 'Оплаченные этапы\nв тек. месяце',
+                  tooltip: 'Оплаченные этапы\nв текущем месяце',
                 ),
               ),
             ],
@@ -120,16 +113,17 @@ class QuickStatsRow extends ConsumerWidget {
         );
       },
       loading: () => const Center(
-          child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: CircularProgressIndicator(),
-      )),
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: CircularProgressIndicator(),
+        ),
+      ),
       error: (err, stack) => const Text('Ошибка загрузки'),
     );
   }
 }
 
-class _StatCard extends StatelessWidget {
+class _StatCard extends StatefulWidget {
   final String title;
   final String value;
   final IconData icon;
@@ -149,108 +143,143 @@ class _StatCard extends StatelessWidget {
   });
 
   @override
+  State<_StatCard> createState() => _StatCardState();
+}
+
+class _StatCardState extends State<_StatCard> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isSelected ? color.shade50 : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.08),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
-            border: Border.all(
-              color: isSelected ? color : Colors.grey.withOpacity(0.1),
-              width: isSelected ? 2 : 1,
-            ),
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
+    final effectiveHover = _isHovered;
+    final baseGradient = isDark
+        ? const [Color(0xFF171A21), Color(0xFF151920)]
+        : const [Color(0xFFF7F9FF), Color(0xFFF1F5FF)];
+    final selectedGradient = isDark
+        ? const [Color(0xFF1C2028), Color(0xFF171A21)]
+        : const [
+            Color(0xFFDCE6FF),
+            Color(0xFFEEF3FF),
+          ];
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: widget.isSelected ? selectedGradient : baseGradient,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color:
+                  AppDesignTokens.cardShadow(context, hovered: effectiveHover),
+              blurRadius: effectiveHover ? 15 : 11,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(
+              context,
+              hovered: effectiveHover || widget.isSelected,
+            ),
+            width: 1,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(20),
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return AppDesignTokens.pressedOverlay(context);
+              }
+              if (states.contains(WidgetState.hovered)) {
+                return AppDesignTokens.hoverOverlay(context);
+              }
+              return null;
+            }),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.white : color.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(icon, color: color, size: 22),
-                  ),
-                  if (tooltip != null)
-                    Tooltip(
-                      message: tooltip!,
-                      textAlign: TextAlign.center,
-                      child: Icon(
-                        Icons.help_outline,
-                        size: 18,
-                        color: Colors.grey.shade400,
-                      ),
-                    ),
-                  if (tooltip == null &&
-                      int.tryParse(value) != null &&
-                      int.parse(value) > 0)
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    value,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black87,
-                      height: 1.0,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Show dot if no tooltip (already handled above, but here we want dot next to text if space permits?
-                      // Actually, let's keep the dot in the top right if no tooltip, OR maybe just remove the dot since we have the icon now.
-                      // The previous code had a dot. The user wants a tooltip.
-                      // Let's keep the design clean. The dot was a nice touch for "active".
-                      // I'll put the dot back if tooltip is null, or maybe always show it if not selected?
-                      // Let's just stick to the tooltip icon for now as requested.
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.2,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: widget.isSelected
+                              ? widget.color.withOpacity(isDark ? 0.22 : 0.14)
+                              : widget.color.withOpacity(isDark ? 0.14 : 0.1),
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        child: Icon(widget.icon, color: widget.color, size: 22),
+                      ),
+                      if (widget.tooltip != null)
+                        Tooltip(
+                          message: widget.tooltip!,
+                          textAlign: TextAlign.center,
+                          child: Icon(
+                            Icons.help_outline,
+                            size: 18,
+                            color: scheme.onSurfaceVariant.withOpacity(0.75),
+                          ),
+                        ),
+                      if (widget.tooltip == null &&
+                          int.tryParse(widget.value) != null &&
+                          int.parse(widget.value) > 0)
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: widget.color,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.value,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: scheme.onSurface,
+                          height: 1.0,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.title,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

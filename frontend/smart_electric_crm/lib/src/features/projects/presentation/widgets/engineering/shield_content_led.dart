@@ -4,8 +4,10 @@ import '../../../../engineering/data/models/shield_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../../../engineering/data/models/led_zone_model.dart';
 import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
+import '../../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/led_zone_dialog.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 // import '../../dialogs/engineering/apply_template_dialog.dart';
 
 class ShieldContentLed extends ConsumerWidget {
@@ -21,6 +23,8 @@ class ShieldContentLed extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final zones = shield.ledZones;
 
     return Column(
@@ -37,7 +41,7 @@ class ShieldContentLed extends ConsumerWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 13,
-                    color: Colors.grey.shade700,
+                    color: isDark ? scheme.onSurface : Colors.grey.shade700,
                   )),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: themeColor.withOpacity(0.15)),
@@ -54,30 +58,20 @@ class ShieldContentLed extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         if (zones.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 40.0),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.withOpacity(0.1)),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.lightbulb_outline_rounded,
-                    size: 32, color: Colors.grey.shade300),
-                const SizedBox(height: 12),
-                const Text('Список зон пуст',
-                    style: TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
-            ),
+          const FriendlyEmptyState(
+            icon: Icons.lightbulb_outline_rounded,
+            title: 'Список зон пуст',
+            subtitle: 'Добавьте первую LED-зону для этого щита.',
+            accentColor: Colors.purple,
+            iconSize: 60,
+            padding: EdgeInsets.symmetric(vertical: 10),
           )
         else
           ...zones.map((zone) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 1),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: themeColor.withOpacity(0.08)),
                     boxShadow: [
@@ -93,6 +87,15 @@ class ShieldContentLed extends ConsumerWidget {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(6),
                       onTap: () => _showAddZoneDialog(context, ref, zone: zone),
+                      overlayColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.hovered)) {
+                          return AppDesignTokens.hoverOverlay(context);
+                        }
+                        if (states.contains(WidgetState.pressed)) {
+                          return AppDesignTokens.pressedOverlay(context);
+                        }
+                        return Colors.transparent;
+                      }),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 6),
@@ -120,11 +123,13 @@ class ShieldContentLed extends ConsumerWidget {
                                 children: [
                                   Text(
                                     zone.transformer,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w500,
                                       fontSize: 13,
                                       height: 1.2,
-                                      color: Color(0xFF1F2937),
+                                      color: isDark
+                                          ? scheme.onSurface
+                                          : const Color(0xFF1F2937),
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -132,7 +137,9 @@ class ShieldContentLed extends ConsumerWidget {
                                   Text(
                                     zone.zone,
                                     style: TextStyle(
-                                      color: Colors.grey.shade600,
+                                      color: isDark
+                                          ? scheme.onSurfaceVariant
+                                          : Colors.grey.shade600,
                                       fontSize: 11,
                                     ),
                                   ),

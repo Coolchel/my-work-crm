@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
+import '../../../../shared/presentation/widgets/friendly_empty_state.dart';
 
 class TemplateSelectionDialog<T> extends StatelessWidget {
   final String title;
@@ -25,6 +27,8 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       elevation: 0,
@@ -33,13 +37,15 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
         height: 600,
         constraints: const BoxConstraints(maxWidth: 500),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: scheme.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: themeColor.withOpacity(0.15),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              color: isDark
+                  ? Colors.black.withOpacity(0.34)
+                  : Colors.black.withOpacity(0.12),
+              blurRadius: isDark ? 12 : 20,
+              offset: const Offset(0, 6),
             )
           ],
         ),
@@ -49,8 +55,9 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
-                color:
-                    themeColor.withOpacity(0.1), // Light background for header
+                color: isDark
+                    ? AppDesignTokens.surface3(context)
+                    : themeColor.withOpacity(0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
@@ -66,7 +73,9 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: themeColor.withOpacity(0.8),
+                        color: isDark
+                            ? scheme.onSurface
+                            : themeColor.withOpacity(0.8),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -90,20 +99,15 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
             // Content
             Expanded(
               child: templates.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.content_paste_off,
-                              size: 40, color: Colors.grey.shade300),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Нет доступных шаблонов",
-                            style: TextStyle(
-                                color: Colors.grey.shade500, fontSize: 13),
-                          ),
-                        ],
-                      ),
+                  ? FriendlyEmptyState(
+                      icon: Icons.content_paste_off_rounded,
+                      title: 'Нет доступных шаблонов',
+                      subtitle:
+                          'Сохраните текущий набор как шаблон и используйте его повторно.',
+                      accentColor: themeColor,
+                      iconSize: 62,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 22),
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(12),
@@ -122,7 +126,9 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                 decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: Colors.grey.shade100)),
+                  border: Border(
+                      top: BorderSide(
+                          color: AppDesignTokens.softBorder(context))),
                 ),
                 child: Center(
                   child: SizedBox(
@@ -155,11 +161,13 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
   }
 
   Widget _buildTemplateCard(BuildContext context, T template) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     return Material(
-      color: Colors.white,
+      color: scheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: AppDesignTokens.softBorder(context)),
       ),
       child: InkWell(
         onTap: () {
@@ -167,7 +175,9 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
           onSelected(template);
         },
         borderRadius: BorderRadius.circular(10),
-        hoverColor: Colors.grey.withOpacity(0.1),
+        hoverColor: isDark
+            ? AppDesignTokens.hoverOverlay(context)
+            : Colors.grey.withOpacity(0.1),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           child: Row(

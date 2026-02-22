@@ -20,6 +20,8 @@ class ConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final effectiveColor = isDestructive ? Colors.red : themeColor;
 
     return Dialog(
@@ -29,12 +31,12 @@ class ConfirmationDialog extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 400),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: scheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200, width: 1),
+          border: Border.all(color: scheme.outlineVariant, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
               blurRadius: 12,
               offset: const Offset(0, 4),
             )
@@ -91,7 +93,11 @@ class ConfirmationDialog extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               child: Text(
                 content,
-                style: const TextStyle(fontSize: 15, height: 1.4),
+                style: TextStyle(
+                  fontSize: 15,
+                  height: 1.4,
+                  color: scheme.onSurface,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -107,7 +113,7 @@ class ConfirmationDialog extends StatelessWidget {
                       child: TextButton(
                         onPressed: () => Navigator.pop(context, false),
                         style: TextButton.styleFrom(
-                          foregroundColor: Colors.grey,
+                          foregroundColor: scheme.onSurfaceVariant,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         child: Text(cancelText),

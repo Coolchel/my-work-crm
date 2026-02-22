@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/catalog_repository.dart';
 import '../../domain/catalog_item.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class CatalogSearchScreen extends ConsumerStatefulWidget {
   final String? initialQuery;
@@ -93,13 +94,17 @@ class _CatalogSearchScreenState extends ConsumerState<CatalogSearchScreen> {
         title: TextField(
           controller: _searchCtrl,
           autofocus: true,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: "Поиск в каталоге...",
             border: InputBorder.none,
-            hintStyle: TextStyle(color: Colors.white70),
+            hintStyle:
+                TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
-          style: const TextStyle(color: Colors.white, fontSize: 18),
-          cursorColor: Colors.white,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 18,
+          ),
+          cursorColor: Theme.of(context).colorScheme.onSurface,
           onChanged: _onSearchChanged,
         ),
       ),
@@ -116,7 +121,14 @@ class _CatalogSearchScreenState extends ConsumerState<CatalogSearchScreen> {
             child: _results.isEmpty &&
                     !_isLoading &&
                     _searchCtrl.text.isNotEmpty
-                ? const Center(child: Text("Ничего не найдено"))
+                ? const FriendlyEmptyState(
+                    icon: Icons.search_off_rounded,
+                    title: 'Ничего не найдено',
+                    subtitle: 'Попробуйте изменить поисковый запрос.',
+                    accentColor: Colors.blueGrey,
+                    iconSize: 62,
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  )
                 : ListView.separated(
                     itemCount: _results.length,
                     separatorBuilder: (_, __) => const Divider(height: 1),

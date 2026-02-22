@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+
 import '../../../projects/data/models/project_model.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../../../projects/presentation/screens/project_detail_screen.dart';
@@ -41,17 +44,15 @@ class RecentProjectsList extends ConsumerWidget {
             case 'active_objects':
               listTitle = 'Текущие объекты (активные)';
               filteredProjects = projects.where((p) {
-                // Ищем проекты, где есть этапы за этот месяц, НЕ являющиеся предпросчетами
                 return p.stages.any((s) =>
                     s.createdAt != null &&
                     s.createdAt!.year == currentYear &&
                     s.createdAt!.month == currentMonth &&
                     !s.title.toLowerCase().contains('предпросчет'));
               }).toList();
-              // ТЗ: "считаеться каждый объект, у которого в текущем месяце был добавлен новый этап, за исключением этапа предпросчет"
               break;
             case 'paid':
-              listTitle = 'Объекты с оплаченными этапами (тек. месяц)';
+              listTitle = 'Объекты с оплаченными этапами (текущий месяц)';
               filteredProjects = projects.where((p) {
                 return p.stages.any((s) =>
                     s.isPaid &&
@@ -63,14 +64,12 @@ class RecentProjectsList extends ConsumerWidget {
           }
         }
 
-        // Sort by updated_at (or created_at) DESC
         filteredProjects.sort((a, b) {
           final dateA = a.updatedAt ?? a.createdAt;
           final dateB = b.updatedAt ?? b.createdAt;
           return dateB.compareTo(dateA);
         });
 
-        // Если фильтр не активен - берем топ 5, иначе показываем все (или больше)
         final displayProjects = filter == null
             ? filteredProjects.take(5).toList()
             : filteredProjects;
@@ -88,7 +87,7 @@ class RecentProjectsList extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const Spacer(),
@@ -102,7 +101,14 @@ class RecentProjectsList extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              const Center(child: Text("Нет проектов по выбранному критерию")),
+              const FriendlyEmptyState(
+                icon: Icons.filter_alt_off_rounded,
+                title: 'Нет проектов по выбранному критерию',
+                subtitle: 'Попробуйте другой фильтр или сбросьте текущий.',
+                accentColor: Colors.blueGrey,
+                iconSize: 58,
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              ),
             ],
           );
         }
@@ -120,7 +126,7 @@ class RecentProjectsList extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   if (filter != null)
@@ -152,10 +158,17 @@ class RecentProjectsList extends ConsumerWidget {
   }
 }
 
-class _RecentProjectTile extends StatelessWidget {
+class _RecentProjectTile extends StatefulWidget {
   final ProjectModel project;
 
   const _RecentProjectTile({required this.project});
+
+  @override
+  State<_RecentProjectTile> createState() => _RecentProjectTileState();
+}
+
+class _RecentProjectTileState extends State<_RecentProjectTile> {
+  bool _isHovered = false;
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
@@ -182,98 +195,137 @@ class _RecentProjectTile extends StatelessWidget {
     }
   }
 
+  String _buildMetaLine(ProjectModel project) {
+    final client = project.clientInfo.trim();
+    final intercom = project.intercomCode.trim();
+
+    if (client.isNotEmpty && intercom.isNotEmpty) {
+      return '$client • Домофон: $intercom';
+    }
+    if (client.isNotEmpty) {
+      return client;
+    }
+    if (intercom.isNotEmpty) {
+      return 'Домофон: $intercom';
+    }
+    return 'Без данных по клиенту';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final project = this.project;
+    final project = widget.project;
     final lastActivity = project.updatedAt ?? project.createdAt;
+    final metaLine = _buildMetaLine(project);
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: AppDesignTokens.cardBackground(
+            context,
+            hovered: _isHovered,
           ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(
               context,
-              MaterialPageRoute(
-                builder: (context) => ProjectDetailScreen(
-                  projectId: project.id.toString(),
-                ),
+              hovered: _isHovered,
+            ),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignTokens.cardShadow(
+                context,
+                hovered: _isHovered,
               ),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.indigo.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    _getIcon(project.objectType),
-                    color: Colors.indigo,
-                    size: 20,
+              blurRadius: _isHovered ? 15 : 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProjectDetailScreen(
+                    projectId: project.id.toString(),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        project.address,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.indigo.withOpacity(0.18)
+                          : Colors.indigo.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      _getIcon(project.objectType),
+                      color: isDark ? Colors.indigo.shade200 : Colors.indigo,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          project.address,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: scheme.onSurface,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (project.clientInfo.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            project.clientInfo,
+                            metaLine,
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey.shade500,
+                              color: scheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        _formatDate(lastActivity),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      _formatDate(lastActivity),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

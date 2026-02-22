@@ -60,6 +60,15 @@ class CatalogRepository {
         .toList();
   }
 
+  Future<List<CatalogItem>> fetchItemsByType(String itemType) async {
+    final response = await _client
+        .get('/catalog-items/', queryParameters: {'item_type': itemType});
+    final List<dynamic> data = response.data as List<dynamic>;
+    return data
+        .map((e) => CatalogItem.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<void> createItem({
     required int categoryId,
     required String name,

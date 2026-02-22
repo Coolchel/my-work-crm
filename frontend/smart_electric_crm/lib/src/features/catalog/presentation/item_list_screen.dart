@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class ItemListScreen extends ConsumerWidget {
   final int categoryId;
@@ -24,8 +25,11 @@ class ItemListScreen extends ConsumerWidget {
       body: itemsAsync.when(
         data: (items) {
           if (items.isEmpty) {
-            return const Center(
-              child: Text('В этой категории пока нет товаров'),
+            return const FriendlyEmptyState(
+              icon: Icons.inventory_2_outlined,
+              title: 'В этой категории пока нет товаров',
+              subtitle: 'Добавьте первый элемент каталога.',
+              accentColor: Colors.blue,
             );
           }
           return ListView.builder(
@@ -136,7 +140,7 @@ class _PopupSelectField<T> extends StatelessWidget {
                       elevation: 4,
                       shadowColor: Colors.black.withOpacity(0.2),
                       surfaceTintColor: Colors.transparent,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

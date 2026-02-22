@@ -6,6 +6,7 @@ import '../../data/repositories/statistics_repository.dart';
 import '../widgets/work_dynamics_chart.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../../../core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class StatisticsScreen extends ConsumerWidget {
   const StatisticsScreen({super.key});
@@ -26,18 +27,30 @@ class StatisticsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     final statsAsync = ref.watch(statisticsDataProvider);
     final currentPeriod = ref.watch(statisticsFilterProvider);
-    const statisticsAccent = Color(0xFF4352B1);
+    final statisticsAccent =
+        Theme.of(context).floatingActionButtonTheme.backgroundColor ??
+            Colors.indigo;
+    final headerStripeColor =
+        isDark ? scheme.primary.withOpacity(0.76) : statisticsAccent;
+    const workDynamicsTooltip =
+        '\u0414\u0438\u043d\u0430\u043c\u0438\u043a\u0430 \u0440\u0430\u0431\u043e\u0442.\n'
+        '\u041f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u0442 \u0437\u0430\u0440\u0430\u0431\u043e\u0442\u043e\u043a\n'
+        '\u043f\u043e \u0441\u0434\u0435\u043b\u0430\u043d\u043d\u044b\u043c \u043e\u0431\u044a\u0435\u043a\u0442\u0430\u043c.\n'
+        '\u041d\u0435 \u0441\u0432\u044f\u0437\u0430\u043d\u043e \u0441 \u043e\u043f\u043b\u0430\u0442\u043e\u0439.';
 
     return Scaffold(
       appBar: const CompactSectionAppBar(
         title: 'Статистика',
         icon: Icons.bar_chart_rounded,
         gradientColors: AppDesignTokens.subtleSectionGradient,
-        bottomGap: 10,
       ),
       body: statsAsync.when(
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('Ошибка: $error')),
         data: (stats) => RefreshIndicator(
@@ -76,28 +89,54 @@ class StatisticsScreen extends ConsumerWidget {
                     style: ButtonStyle(
                       visualDensity: VisualDensity.compact,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      side: MaterialStateProperty.all(BorderSide(
-                          color: statisticsAccent.withOpacity(0.26))),
+                      side: MaterialStateProperty.resolveWith<BorderSide>(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return BorderSide(
+                              color: isDark
+                                  ? scheme.primary.withOpacity(0.66)
+                                  : statisticsAccent.withOpacity(0.85),
+                            );
+                          }
+                          return BorderSide(
+                            color: AppDesignTokens.cardBorder(context),
+                          );
+                        },
+                      ),
                       backgroundColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return statisticsAccent.withOpacity(0.12);
+                          return isDark
+                              ? scheme.primary.withOpacity(0.28)
+                              : statisticsAccent.withOpacity(0.9);
                         }
-                        return Colors.transparent;
+                        return isDark
+                            ? scheme.surfaceContainerHigh
+                            : scheme.surface;
                       }),
                       foregroundColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return statisticsAccent;
+                          return Colors.white;
                         }
-                        return Colors.black87;
+                        return scheme.onSurface;
                       }),
                       iconColor:
                           MaterialStateProperty.resolveWith<Color>((states) {
                         if (states.contains(MaterialState.selected)) {
-                          return statisticsAccent;
+                          return Colors.white;
                         }
-                        return Colors.grey;
+                        return isDark ? scheme.onSurfaceVariant : Colors.grey;
+                      }),
+                      overlayColor:
+                          MaterialStateProperty.resolveWith<Color?>((states) {
+                        if (states.contains(MaterialState.hovered)) {
+                          return AppDesignTokens.hoverOverlay(context);
+                        }
+                        if (states.contains(MaterialState.pressed)) {
+                          return AppDesignTokens.pressedOverlay(context);
+                        }
+                        return null;
                       }),
                     ),
                   ),
@@ -107,11 +146,12 @@ class StatisticsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 _buildHeader(
+                  context,
                   'Финансы за ${_getPeriodTitle(currentPeriod)}',
-                  stripeColor: statisticsAccent,
+                  stripeColor: headerStripeColor,
                 ),
                 const SizedBox(height: 12),
-                _buildFinancialSummary(stats.finances),
+                _buildFinancialSummary(context, stats.finances),
                 const SizedBox(height: 24),
 
                 IntrinsicHeight(
@@ -123,12 +163,14 @@ class StatisticsScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildHeader(
+                              context,
                               'Откуда объекты',
-                              stripeColor: statisticsAccent,
+                              stripeColor: headerStripeColor,
                             ),
                             const SizedBox(height: 12),
                             Expanded(
                                 child: _buildPieChartCard(
+                              context,
                               stats.sources
                                   .map((e) => _ChartData(e.name, e.usd))
                                   .toList(),
@@ -142,12 +184,14 @@ class StatisticsScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildHeader(
+                              context,
                               'Типы объектов',
-                              stripeColor: statisticsAccent,
+                              stripeColor: headerStripeColor,
                             ),
                             const SizedBox(height: 12),
                             Expanded(
                                 child: _buildPieChartCard(
+                              context,
                               stats.objectTypes
                                   .map((e) => _ChartData(e.name, e.usd))
                                   .toList(),
@@ -162,76 +206,81 @@ class StatisticsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 _buildHeader(
+                  context,
                   'Динамика работ',
-                  stripeColor: statisticsAccent,
+                  stripeColor: headerStripeColor,
                 ),
                 const SizedBox(height: 12),
                 Column(
                   children: [
-                    Container(
-                      height: 280,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.green.withOpacity(0.15),
+                    _HoverStatsCard(
+                      borderRadius: 16,
+                      child: SizedBox(
+                        height: 280,
+                        child: Stack(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                              child: WorkDynamicsChart(
+                                data: stats.workDynamics,
+                                isMonthly: currentPeriod != 'month',
+                                currencyLabel: "USD",
+                                currencySymbol: "\$",
+                                isUsd: true,
+                              ),
+                            ),
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Tooltip(
+                                message: workDynamicsTooltip,
+                                textAlign: TextAlign.center,
+                                child: Icon(
+                                  Icons.help_outline_rounded,
+                                  size: 16,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.green.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                      child: WorkDynamicsChart(
-                        data: stats.workDynamics,
-                        isMonthly: currentPeriod != 'month',
-                        currencyLabel: "USD",
-                        currencySymbol: "\$",
-                        isUsd: true,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Container(
-                      height: 280,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.indigo.withOpacity(0.15),
+                    _HoverStatsCard(
+                      borderRadius: 16,
+                      child: SizedBox(
+                        height: 280,
+                        child: Stack(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                              child: WorkDynamicsChart(
+                                data: stats.workDynamics,
+                                isMonthly: currentPeriod != 'month',
+                                currencyLabel: "BYN",
+                                currencySymbol: '\u0440',
+                                isUsd: false,
+                              ),
+                            ),
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Tooltip(
+                                message: workDynamicsTooltip,
+                                textAlign: TextAlign.center,
+                                child: Icon(
+                                  Icons.help_outline_rounded,
+                                  size: 16,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.indigo.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                      child: WorkDynamicsChart(
-                        data: stats.workDynamics,
-                        isMonthly: currentPeriod != 'month',
-                        currencyLabel: "BYN",
-                        currencySymbol: "р",
-                        isUsd: false,
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
-                  child: Text(
-                    "* За выполненные работы (фиксация по дате создания, не зависит от оплаты)",
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 24),
               ],
@@ -256,6 +305,7 @@ class StatisticsScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(
+    BuildContext context,
     String title, {
     required Color stripeColor,
   }) {
@@ -265,16 +315,15 @@ class StatisticsScreen extends ConsumerWidget {
           width: 4,
           height: 18,
           decoration: BoxDecoration(
-              color: stripeColor.withOpacity(0.6),
-              borderRadius: BorderRadius.circular(2)),
+              color: stripeColor, borderRadius: BorderRadius.circular(2)),
         ),
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],
@@ -282,12 +331,13 @@ class StatisticsScreen extends ConsumerWidget {
   }
 
   // 1. Financial Summary Cards
-  Widget _buildFinancialSummary(CurrencyAmount finances) {
+  Widget _buildFinancialSummary(BuildContext context, CurrencyAmount finances) {
     return IntrinsicHeight(
       child: Row(
         children: [
           Expanded(
             child: _buildFinanceCard(
+              context,
               'Всего USD',
               finances.usd,
               '\$',
@@ -297,6 +347,7 @@ class StatisticsScreen extends ConsumerWidget {
           const SizedBox(width: 16),
           Expanded(
             child: _buildFinanceCard(
+              context,
               'Всего BYN',
               finances.byn,
               'р',
@@ -308,22 +359,11 @@ class StatisticsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildFinanceCard(
-      String title, double amount, String symbol, Color color) {
-    return Container(
+  Widget _buildFinanceCard(BuildContext context, String title, double amount,
+      String symbol, Color color) {
+    return _HoverStatsCard(
+      borderRadius: 16,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: color.withOpacity(0.15), width: 1),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -355,10 +395,10 @@ class StatisticsScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             '${_formatAmount(amount)} $symbol',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
               letterSpacing: -0.5,
             ),
           ),
@@ -369,18 +409,25 @@ class StatisticsScreen extends ConsumerWidget {
 
   // Helper class for chart data
 
-  Widget _buildPieChartCard(List<_ChartData> data, {int paletteOffset = 0}) {
+  Widget _buildPieChartCard(BuildContext context, List<_ChartData> data,
+      {int paletteOffset = 0}) {
     if (data.isEmpty) {
       return Container(
-          height: 300,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.withOpacity(0.1)),
-          ),
-          child: Center(
-              child: Text('Нет данных',
-                  style: TextStyle(color: Colors.grey[500]))));
+        height: 300,
+        decoration: BoxDecoration(
+          color: AppDesignTokens.cardBackground(context),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppDesignTokens.cardBorder(context)),
+        ),
+        child: const FriendlyEmptyState(
+          icon: Icons.pie_chart_outline_rounded,
+          title: 'Нет данных',
+          subtitle: 'Данные появятся после добавления активности.',
+          accentColor: Colors.indigo,
+          iconSize: 64,
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+      );
     }
 
     // Reverted palette (Mixed colors)
@@ -461,22 +508,9 @@ class StatisticsScreen extends ConsumerWidget {
       }).toList(),
     );
 
-    return Container(
+    return _HoverStatsCard(
+      borderRadius: 16,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.green.withOpacity(0.15), // Greenish border
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
       child: Column(
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -539,4 +573,49 @@ class _ChartData {
   final String name;
   final double value;
   _ChartData(this.name, this.value);
+}
+
+class _HoverStatsCard extends StatefulWidget {
+  final Widget child;
+  final double borderRadius;
+  final EdgeInsetsGeometry? padding;
+
+  const _HoverStatsCard({
+    required this.child,
+    this.borderRadius = 16,
+    this.padding,
+  });
+
+  @override
+  State<_HoverStatsCard> createState() => _HoverStatsCardState();
+}
+
+class _HoverStatsCardState extends State<_HoverStatsCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: widget.padding,
+        decoration: BoxDecoration(
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
+          borderRadius: BorderRadius.circular(widget.borderRadius),
+          border: Border.all(
+              color: AppDesignTokens.cardBorder(context, hovered: _isHovered)),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
+              blurRadius: _isHovered ? 10 : 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: widget.child,
+      ),
+    );
+  }
 }

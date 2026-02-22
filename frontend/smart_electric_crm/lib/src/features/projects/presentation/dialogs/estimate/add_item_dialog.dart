@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 /// Dialog for searching and adding catalog items to an estimate
 class AddItemDialog extends ConsumerStatefulWidget {
@@ -72,6 +74,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
   @override
   Widget build(BuildContext context) {
     final themeColor = _primaryColor;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
+    final headerColor =
+        isDark ? AppDesignTokens.surface3(context) : _lightColor;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -81,13 +87,15 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
         height: 600,
         constraints: const BoxConstraints(maxWidth: 500),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: themeColor.withOpacity(0.15),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              color: isDark
+                  ? Colors.black.withOpacity(0.34)
+                  : Colors.black.withOpacity(0.12),
+              blurRadius: isDark ? 12 : 20,
+              offset: const Offset(0, 6),
             )
           ],
         ),
@@ -97,7 +105,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
-                color: _lightColor,
+                color: headerColor,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
@@ -116,7 +124,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: themeColor.withOpacity(0.8),
+                            color: isDark
+                                ? scheme.onSurface
+                                : themeColor.withOpacity(0.8),
                           ),
                         ),
                       ),
@@ -142,24 +152,26 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                     decoration: InputDecoration(
                       hintText: "Начните вводить название...",
                       hintStyle: TextStyle(
-                        color: Colors.grey.withOpacity(0.35),
+                        color: scheme.onSurfaceVariant.withOpacity(0.72),
                       ),
                       prefixIcon:
                           Icon(Icons.search, color: themeColor, size: 20),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: isDark
+                          ? scheme.surfaceContainerHigh
+                          : Theme.of(context).colorScheme.surface,
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide:
-                            BorderSide(color: themeColor.withOpacity(0.2)),
+                        borderSide: BorderSide(
+                            color: AppDesignTokens.softBorder(context)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide:
-                            BorderSide(color: themeColor.withOpacity(0.2)),
+                        borderSide: BorderSide(
+                            color: AppDesignTokens.softBorder(context)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -191,20 +203,15 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
               child: _results.isEmpty &&
                       _searchController.text.isNotEmpty &&
                       !_loading
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.search_off,
-                              size: 40, color: Colors.grey.shade300),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Ничего не найдено",
-                            style: TextStyle(
-                                color: Colors.grey.shade500, fontSize: 13),
-                          ),
-                        ],
-                      ),
+                  ? FriendlyEmptyState(
+                      icon: Icons.search_off_rounded,
+                      title: 'Ничего не найдено',
+                      subtitle:
+                          'Попробуйте другой запрос или добавьте новую позицию вручную.',
+                      accentColor: themeColor,
+                      iconSize: 62,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 18),
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(12),
@@ -221,7 +228,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
               decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: Colors.grey.shade100)),
+                border: Border(
+                    top:
+                        BorderSide(color: AppDesignTokens.softBorder(context))),
               ),
               child: Center(
                 child: SizedBox(
@@ -264,15 +273,23 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
 
   Widget _buildItemCard(CatalogItem item, Color themeColor) {
     return Material(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: AppDesignTokens.softBorder(context)),
       ),
       child: InkWell(
         onTap: () => _onItemAdded(item),
         borderRadius: BorderRadius.circular(10),
-        hoverColor: Colors.grey.withOpacity(0.1), // Match estimate menu style
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.pressed)) {
+            return AppDesignTokens.pressedOverlay(context);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return AppDesignTokens.hoverOverlay(context);
+          }
+          return null;
+        }),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           child: Row(

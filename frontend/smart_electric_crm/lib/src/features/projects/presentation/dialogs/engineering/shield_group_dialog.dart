@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import '../../../../engineering/data/models/shield_group_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
@@ -66,6 +67,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
   Widget build(BuildContext context) {
     final isEdit = widget.group != null;
     final themeColor = widget.themeColor;
+    final isDark = AppDesignTokens.isDark(context);
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -79,13 +81,15 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
         child: Container(
           constraints: const BoxConstraints(maxWidth: 500),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: themeColor.withOpacity(0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: isDark
+                    ? Colors.black.withOpacity(0.34)
+                    : Colors.black.withOpacity(0.12),
+                blurRadius: isDark ? 12 : 20,
+                offset: const Offset(0, 6),
               )
             ],
           ),
@@ -149,7 +153,9 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.brown.shade700,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                               ),
                             ),
                           ),
@@ -201,7 +207,9 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
-                                      color: Colors.brown.shade700,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -260,7 +268,9 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
-                                      color: Colors.brown.shade700,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -306,7 +316,10 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                           floatingLabelBehavior: FloatingLabelBehavior.always,
                           hintText: "Например: Кухня",
                           hintStyle: TextStyle(
-                            color: Colors.grey.withOpacity(0.35),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withOpacity(0.75),
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -337,8 +350,9 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      style:
-                          TextButton.styleFrom(foregroundColor: Colors.black87),
+                      style: TextButton.styleFrom(
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onSurface),
                       child: const Text("Отмена"),
                     ),
                     const SizedBox(width: 8),
@@ -412,16 +426,17 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
   Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,
       ValueChanged<String> onSelected) {
     const bg = Colors.brown;
-    const fieldColor = Color(0xFFEFEBE9);
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         return Container(
           height: 44,
           decoration: BoxDecoration(
-            color: fieldColor,
+            color: AppDesignTokens.surface2(context),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: bg.withOpacity(0.15)),
+            border: Border.all(color: AppDesignTokens.softBorder(context)),
           ),
           child: Material(
             color: Colors.transparent,
@@ -443,9 +458,9 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                   ),
                   items: items,
                   elevation: 4,
-                  shadowColor: Colors.black.withOpacity(0.2),
+                  shadowColor: AppDesignTokens.cardShadow(context),
                   surfaceTintColor: Colors.transparent, // Disable M3 tint
-                  color: fieldColor,
+                  color: AppDesignTokens.surface2(context),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                   constraints: BoxConstraints(
@@ -460,7 +475,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
               },
               borderRadius: BorderRadius.circular(12),
               mouseCursor: SystemMouseCursors.click,
-              hoverColor: bg.shade700.withOpacity(0.05),
+              hoverColor: bg.shade700.withOpacity(isDark ? 0.12 : 0.05),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
@@ -469,12 +484,14 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                     Text(
                       label,
                       style: TextStyle(
-                        color: bg.shade800,
+                        color: isDark ? scheme.onSurface : bg.shade800,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Icon(Icons.arrow_drop_down, color: bg.shade800, size: 24),
+                    Icon(Icons.arrow_drop_down,
+                        color: isDark ? scheme.onSurface : bg.shade800,
+                        size: 24),
                   ],
                 ),
               ),
@@ -485,7 +502,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
     );
   }
 
-  // Определяет иконку для типа устройства
+  // Resolve icon by device type.
   IconData _getDeviceIcon(String type) {
     switch (type) {
       case 'circuit_breaker':
@@ -505,7 +522,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
     }
   }
 
-  // Определяет цвет для типа устройства
+  // Resolve accent color by device type.
   Color _getDeviceTypeColor(String type) {
     switch (type) {
       case 'load_switch':

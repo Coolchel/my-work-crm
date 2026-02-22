@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/catalog_repository.dart';
 import '../../domain/catalog_item.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class CatalogSearchDelegate extends SearchDelegate<CatalogItem?> {
   final WidgetRef ref;
@@ -39,8 +40,13 @@ class CatalogSearchDelegate extends SearchDelegate<CatalogItem?> {
   @override
   Widget buildSuggestions(BuildContext context) {
     if (query.isEmpty) {
-      return const Center(
-        child: Text("Введите название для поиска..."),
+      return const FriendlyEmptyState(
+        icon: Icons.search_rounded,
+        title: 'Введите название для поиска',
+        subtitle: 'Начните вводить запрос, и результаты появятся сразу.',
+        accentColor: Colors.blueGrey,
+        iconSize: 58,
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       );
     }
     return _buildSearchResults(context);
@@ -57,7 +63,14 @@ class CatalogSearchDelegate extends SearchDelegate<CatalogItem?> {
     return asyncValue.when(
       data: (items) {
         if (items.isEmpty) {
-          return const Center(child: Text("Ничего не найдено"));
+          return const FriendlyEmptyState(
+            icon: Icons.search_off_rounded,
+            title: 'Ничего не найдено',
+            subtitle: 'Попробуйте другой запрос.',
+            accentColor: Colors.blueGrey,
+            iconSize: 58,
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          );
         }
         return ListView.separated(
           itemCount: items.length,

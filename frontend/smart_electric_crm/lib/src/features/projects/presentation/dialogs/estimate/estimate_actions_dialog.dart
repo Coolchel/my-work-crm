@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 
 import '../../../data/models/estimate_item_model.dart';
 import '../../../data/models/stage_model.dart';
@@ -179,55 +180,79 @@ mixin EstimateDialogHelpers {
     bool enabled = true,
   }) {
     final theme = Theme.of(context);
+    final isDark = AppDesignTokens.isDark(context);
     final effectiveColor = color ?? theme.colorScheme.onSurface;
     final contentColor = enabled ? effectiveColor : theme.disabledColor;
+    final menuHoverColor = isDark
+        ? Colors.white.withOpacity(0.08)
+        : Colors.black.withOpacity(0.045);
+    final triggerHoverColor = isDark
+        ? Colors.white.withOpacity(0.06)
+        : Colors.black.withOpacity(0.03);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-      child: PopupMenuButton<String>(
-        enabled: enabled,
-        onSelected: onSelected,
-        itemBuilder: (context) => items,
-        offset: const Offset(0, 56), // Show menu below button
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 3,
-        shadowColor: Colors.black.withOpacity(0.2),
-        splashRadius: 24,
-        position: PopupMenuPosition.over,
-        constraints:
-            const BoxConstraints(minWidth: 280), // Reasonable min width
-        child: Opacity(
-          opacity: enabled ? 1.0 : 0.6,
-          child: Container(
-            height: 52,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerLow,
+      child: Theme(
+        data: theme.copyWith(
+          hoverColor: menuHoverColor,
+          highlightColor: menuHoverColor,
+          splashColor: menuHoverColor,
+          popupMenuTheme: theme.popupMenuTheme.copyWith(
+            color: theme.colorScheme.surfaceContainer,
+            surfaceTintColor: Colors.transparent,
+          ),
+        ),
+        child: PopupMenuButton<String>(
+          enabled: enabled,
+          onSelected: onSelected,
+          itemBuilder: (context) => items,
+          offset: const Offset(0, 56), // Show menu below button
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          elevation: 3,
+          shadowColor: Colors.black.withOpacity(0.2),
+          splashRadius: 24,
+          position: PopupMenuPosition.over,
+          constraints:
+              const BoxConstraints(minWidth: 280), // Reasonable min width
+          child: Opacity(
+            opacity: enabled ? 1.0 : 0.6,
+            child: _HoverableMenuTrigger(
+              enabled: enabled,
+              hoverColor: triggerHoverColor,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: theme.colorScheme.outlineVariant),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Icon(icon, color: contentColor, size: 22),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: contentColor,
+              child: Container(
+                height: 52,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Icon(icon, color: contentColor, size: 22),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: contentColor,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                    Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: contentColor.withOpacity(0.7),
+                      size: 24,
+                    ),
+                  ],
                 ),
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: contentColor.withOpacity(0.7),
-                  size: 24,
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -246,25 +271,121 @@ mixin EstimateDialogHelpers {
     return PopupMenuItem<String>(
       value: value,
       height: 48,
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                color: color, // Use accent color for text as requested
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+      padding: EdgeInsets.zero,
+      child: _HoverablePopupMenuItemContent(
+        icon: icon,
+        text: text,
+        color: color,
+        isSelected: isSelected,
+      ),
+    );
+  }
+}
+
+class _HoverableMenuTrigger extends StatefulWidget {
+  final Widget child;
+  final Color hoverColor;
+  final BorderRadius borderRadius;
+  final bool enabled;
+
+  const _HoverableMenuTrigger({
+    required this.child,
+    required this.hoverColor,
+    required this.borderRadius,
+    required this.enabled,
+  });
+
+  @override
+  State<_HoverableMenuTrigger> createState() => _HoverableMenuTriggerState();
+}
+
+class _HoverableMenuTriggerState extends State<_HoverableMenuTrigger> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor:
+          widget.enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        child: Container(
+          foregroundDecoration: BoxDecoration(
+            color: _isHovered ? widget.hoverColor : Colors.transparent,
+            borderRadius: widget.borderRadius,
+          ),
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
+class _HoverablePopupMenuItemContent extends StatefulWidget {
+  final IconData icon;
+  final String text;
+  final Color color;
+  final bool isSelected;
+
+  const _HoverablePopupMenuItemContent({
+    required this.icon,
+    required this.text,
+    required this.color,
+    required this.isSelected,
+  });
+
+  @override
+  State<_HoverablePopupMenuItemContent> createState() =>
+      _HoverablePopupMenuItemContentState();
+}
+
+class _HoverablePopupMenuItemContentState
+    extends State<_HoverablePopupMenuItemContent> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppDesignTokens.isDark(context);
+    final baseColor = widget.isSelected
+        ? widget.color.withOpacity(isDark ? 0.14 : 0.08)
+        : Colors.transparent;
+    final hoverColor = widget.color.withOpacity(isDark ? 0.22 : 0.12);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        height: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: _isHovered ? hoverColor : baseColor,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Icon(widget.icon, color: widget.color, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                widget.text,
+                style: TextStyle(
+                  color: widget.color,
+                  fontSize: 14,
+                  fontWeight:
+                      widget.isSelected ? FontWeight.w600 : FontWeight.w400,
+                ),
               ),
             ),
-          ),
-          if (isSelected) ...[
-            const SizedBox(width: 8),
-            Icon(Icons.check_circle_rounded, color: color, size: 18),
+            if (widget.isSelected) ...[
+              const SizedBox(width: 8),
+              Icon(Icons.check_circle_rounded, color: widget.color, size: 18),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -1004,9 +1125,13 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
                   margin: const EdgeInsets.symmetric(horizontal: 24),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
+                    color: AppDesignTokens.isDark(context)
+                        ? Theme.of(context).colorScheme.surfaceContainerHigh
+                        : Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(
+                      color: AppDesignTokens.softBorder(context),
+                    ),
                   ),
                   child: SingleChildScrollView(
                     child: SelectableText(
@@ -1060,7 +1185,7 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
         if (val) setState(() => _viewMode = mode);
       },
       selectedColor: color.shade100,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       labelStyle: TextStyle(
         color: isSelected ? color.shade900 : Colors.grey.shade700,
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,

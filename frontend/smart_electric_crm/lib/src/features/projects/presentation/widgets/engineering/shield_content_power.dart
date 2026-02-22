@@ -4,8 +4,10 @@ import '../../../../engineering/data/models/shield_model.dart';
 import '../../../../engineering/data/models/shield_group_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
+import '../../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/shield_group_dialog.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 // import '../../dialogs/engineering/apply_template_dialog.dart'; // Removed
 
 class ShieldContentPower extends ConsumerWidget {
@@ -21,6 +23,8 @@ class ShieldContentPower extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     // ... (same as before until Row with buttons)
     final groups = shield.groups;
 
@@ -53,7 +57,7 @@ class ShieldContentPower extends ConsumerWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 13,
-                    color: Colors.grey.shade700,
+                    color: isDark ? scheme.onSurface : Colors.grey.shade700,
                   )),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: themeColor.withOpacity(0.15)),
@@ -70,23 +74,13 @@ class ShieldContentPower extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         if (groups.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 40.0),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade100),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.inventory_2_outlined,
-                    size: 40, color: Colors.grey.shade300),
-                const SizedBox(height: 12),
-                const Text('Список групп пуст',
-                    style: TextStyle(color: Colors.grey, fontSize: 13)),
-              ],
-            ),
+          const FriendlyEmptyState(
+            icon: Icons.inventory_2_outlined,
+            title: 'Список групп пуст',
+            subtitle: 'Добавьте первую группу устройств для этого щита.',
+            accentColor: Colors.blueGrey,
+            iconSize: 62,
+            padding: EdgeInsets.symmetric(vertical: 10),
           )
         else
           ...sortedKeys.map((type) {
@@ -121,8 +115,10 @@ class ShieldContentPower extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         typeName.toUpperCase(),
-                        style: const TextStyle(
-                          color: Color(0xFF374151),
+                        style: TextStyle(
+                          color: isDark
+                              ? scheme.onSurface
+                              : const Color(0xFF374151),
                           fontWeight: FontWeight.bold,
                           fontSize: 11,
                           letterSpacing: 0.5,
@@ -150,7 +146,7 @@ class ShieldContentPower extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(vertical: 1),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(6),
                           border:
                               Border.all(color: themeColor.withOpacity(0.08)),
@@ -168,6 +164,16 @@ class ShieldContentPower extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(6),
                             onTap: () =>
                                 _showAddGroupDialog(context, ref, group: group),
+                            overlayColor:
+                                WidgetStateProperty.resolveWith((states) {
+                              if (states.contains(WidgetState.hovered)) {
+                                return AppDesignTokens.hoverOverlay(context);
+                              }
+                              if (states.contains(WidgetState.pressed)) {
+                                return AppDesignTokens.pressedOverlay(context);
+                              }
+                              return Colors.transparent;
+                            }),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 6),
@@ -200,12 +206,14 @@ class ShieldContentPower extends ConsumerWidget {
                                       children: [
                                         Text(
                                           group.device,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.w500,
                                             fontSize: 13,
                                             height: 1.2,
-                                            color: Color(
-                                                0xFF1F2937), // Reverting to dark grey for text
+                                            color: isDark
+                                                ? scheme.onSurface
+                                                : const Color(
+                                                    0xFF1F2937), // Reverting to dark grey for text
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -213,7 +221,9 @@ class ShieldContentPower extends ConsumerWidget {
                                         Text(
                                           group.zone,
                                           style: TextStyle(
-                                            color: Colors.grey.shade600,
+                                            color: isDark
+                                                ? scheme.onSurfaceVariant
+                                                : Colors.grey.shade600,
                                             fontSize: 11,
                                           ),
                                         ),

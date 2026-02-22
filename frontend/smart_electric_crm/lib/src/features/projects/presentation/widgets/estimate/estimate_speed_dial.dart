@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 
 class EstimateSpeedDial extends StatelessWidget {
   final bool isExpanded;
@@ -22,21 +23,32 @@ class EstimateSpeedDial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Pastel colors for Main FAB based on active tab
     return AnimatedBuilder(
       animation: tabController,
       builder: (context, child) {
+        final scheme = Theme.of(context).colorScheme;
+        final isDark = AppDesignTokens.isDark(context);
         final isWorks = tabController.index == 0;
-        final mainFabColor = isWorks ? Colors.green : Colors.blue.shade200;
+        final mainFabColor = isWorks
+            ? (isDark ? const Color(0xFF2A5139) : Colors.green)
+            : (isDark ? const Color(0xFF2A4468) : Colors.blue.shade300);
 
-        // Contextual soft colors for SpeedDial buttons
-        final actionBtnColor = isWorks ? Colors.green : Colors.blue.shade50;
-        final actionBtnTextColor =
-            isWorks ? Colors.green : Colors.blue.shade800;
+        final actionBtnColor = isWorks
+            ? (isDark ? const Color(0xFF1F3A2A) : Colors.green.shade50)
+            : (isDark ? const Color(0xFF1F2E46) : Colors.blue.shade50);
+        final actionBtnTextColor = isWorks
+            ? (isDark ? const Color(0xFF8EE0AF) : Colors.green.shade800)
+            : (isDark ? const Color(0xFF8FBFFF) : Colors.blue.shade800);
+        final actionBtnHoverColor = isWorks
+            ? (isDark ? const Color(0xFF2A5139) : Colors.green.shade100)
+            : (isDark ? const Color(0xFF2A4468) : Colors.blue.shade100);
 
-        // Hover Colors
-        final actionBtnHoverColor =
-            isWorks ? Colors.green : Colors.blue.shade100;
+        final deleteBtnColor =
+            isDark ? const Color(0xFF4A2525) : Colors.red.shade50;
+        final deleteBtnTextColor =
+            isDark ? const Color(0xFFFFB4B4) : Colors.red.shade700;
+        final deleteBtnHoverColor =
+            isDark ? const Color(0xFF6A3131) : Colors.red.shade100;
 
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -49,16 +61,16 @@ class EstimateSpeedDial extends StatelessWidget {
                   children: [
                     _buildExtendedFab(
                       icon: Icons.delete_forever,
-                      label: "Очистить",
-                      color: Colors.red.shade50,
-                      hoverColor: Colors.red.shade100,
-                      textColor: Colors.red,
+                      label: 'Очистить',
+                      color: deleteBtnColor,
+                      hoverColor: deleteBtnHoverColor,
+                      textColor: deleteBtnTextColor,
                       onTap: onDeleteAll,
                     ),
                     const SizedBox(height: 8),
                     _buildExtendedFab(
                       icon: Icons.file_copy_outlined,
-                      label: "Шаблоны",
+                      label: 'Шаблоны',
                       color: actionBtnColor,
                       hoverColor: actionBtnHoverColor,
                       textColor: actionBtnTextColor,
@@ -67,7 +79,7 @@ class EstimateSpeedDial extends StatelessWidget {
                     const SizedBox(height: 8),
                     _buildExtendedFab(
                       icon: Icons.edit_outlined,
-                      label: "Вручную",
+                      label: 'Вручную',
                       color: actionBtnColor,
                       hoverColor: actionBtnHoverColor,
                       textColor: actionBtnTextColor,
@@ -76,7 +88,7 @@ class EstimateSpeedDial extends StatelessWidget {
                     const SizedBox(height: 8),
                     _buildExtendedFab(
                       icon: Icons.search,
-                      label: "Поиск",
+                      label: 'Поиск',
                       color: actionBtnColor,
                       hoverColor: actionBtnHoverColor,
                       textColor: actionBtnTextColor,
@@ -91,7 +103,7 @@ class EstimateSpeedDial extends StatelessWidget {
               onPressed: onToggle,
               heroTag: 'main_fab',
               backgroundColor: mainFabColor,
-              foregroundColor: Colors.black87,
+              foregroundColor: scheme.onPrimary,
               elevation: 2,
               child: Icon(isExpanded ? Icons.close : Icons.add),
             ),
@@ -109,36 +121,44 @@ class EstimateSpeedDial extends StatelessWidget {
     Color? textColor,
     required VoidCallback onTap,
   }) {
-    final fgColor = textColor ?? Colors.black87;
+    final fgColor = textColor ?? Colors.black;
 
     return ElevatedButton.icon(
       onPressed: onTap,
       style: ElevatedButton.styleFrom(
-        alignment: Alignment
-            .centerLeft, // Align content to left for better look in menu
+        alignment: Alignment.centerLeft,
         backgroundColor: color,
         foregroundColor: fgColor,
         elevation: 2,
         shadowColor: Colors.black38,
-        minimumSize: const Size(0, 42), // Increased height to 42
+        minimumSize: const Size(0, 42),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
         shape: const StadiumBorder(),
       ).copyWith(
-        overlayColor: WidgetStateProperty.resolveWith<Color?>(
-          (states) {
-            if (states.contains(WidgetState.hovered)) {
-              return hoverColor;
-            }
-            if (states.contains(WidgetState.pressed)) {
-              return hoverColor.withOpacity(0.8);
-            }
-            return null;
-          },
-        ),
+        backgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return hoverColor;
+          }
+          if (states.contains(WidgetState.pressed)) {
+            return hoverColor.withOpacity(0.92);
+          }
+          return color;
+        }),
+        overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return Colors.transparent;
+          }
+          if (states.contains(WidgetState.pressed)) {
+            return Colors.transparent;
+          }
+          return null;
+        }),
       ),
-      icon: Icon(icon, size: 20), // Slightly larger icon
-      label: Text(label,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+      icon: Icon(icon, size: 20),
+      label: Text(
+        label,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

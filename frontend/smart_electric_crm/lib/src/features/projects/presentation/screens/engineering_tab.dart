@@ -4,6 +4,7 @@ import '../../data/models/project_model.dart';
 import '../widgets/engineering/shield_card.dart';
 import '../../../engineering/data/models/shield_model.dart';
 import '../dialogs/engineering/add_shield_dialog.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class EngineeringTab extends ConsumerWidget {
   final ProjectModel project;
@@ -28,7 +29,7 @@ class EngineeringTab extends ConsumerWidget {
           onPressed: () =>
               _showAddShieldDialog(context, ref, project.id.toString()),
           backgroundColor: Colors.indigo,
-          foregroundColor: Colors.white,
+          foregroundColor: Theme.of(context).colorScheme.surface,
           elevation: 2,
           tooltip: null, // Disable built-in tooltip
           child: const Icon(Icons.add),
@@ -39,12 +40,12 @@ class EngineeringTab extends ConsumerWidget {
         child: Column(
           children: [
             if (project.shields.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: Text('Нет щитов. Добавьте первый щит.',
-                      style: TextStyle(color: Colors.grey)),
-                ),
+              const FriendlyEmptyState(
+                icon: Icons.settings_input_component_outlined,
+                title: 'Нет щитов',
+                subtitle:
+                    'Добавьте первый щит, чтобы начать инженерную часть проекта.',
+                accentColor: Colors.indigo,
               )
             else
               ...sortedShields.map((shield) => ShieldCard(

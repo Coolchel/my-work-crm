@@ -9,8 +9,9 @@ import '../utils/project_stage_color_resolver.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
-// ─── Filter enums ─────────────────────────────────────────────
+// Filter enums
 enum SortOrder { newest, oldest }
 
 class ProjectListScreen extends ConsumerStatefulWidget {
@@ -155,6 +156,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   @override
   Widget build(BuildContext context) {
     final projectListAsync = ref.watch(projectListProvider);
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: CompactSectionAppBar(
@@ -200,44 +203,31 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                 data: (projects) {
                   final filtered = _applyFilters(projects);
                   if (projects.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.apartment_outlined,
-                              size: 64, color: Colors.grey.shade300),
-                          const SizedBox(height: 16),
-                          Text('Нет объектов',
-                              style: TextStyle(
-                                  color: Colors.grey.shade400, fontSize: 16)),
-                        ],
-                      ),
+                    return const FriendlyEmptyState(
+                      icon: Icons.apartment_outlined,
+                      title: 'Объекты пока не добавлены',
+                      subtitle: 'Создайте первый объект, чтобы начать работу.',
+                      accentColor: Colors.indigo,
                     );
                   }
                   return filtered.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.filter_list_off,
-                                  size: 48, color: Colors.grey.shade300),
-                              const SizedBox(height: 12),
-                              Text(
-                                _searchQuery.isNotEmpty
-                                    ? 'Ничего не найдено'
-                                    : 'Нет объектов по заданным фильтрам',
-                                style: TextStyle(
-                                    color: Colors.grey.shade400, fontSize: 14),
-                              ),
-                              if (_hasActiveFilters) ...[
-                                const SizedBox(height: 12),
-                                TextButton(
+                      ? FriendlyEmptyState(
+                          icon: _searchQuery.isNotEmpty
+                              ? Icons.search_off_rounded
+                              : Icons.filter_list_off_rounded,
+                          title: _searchQuery.isNotEmpty
+                              ? 'Ничего не найдено'
+                              : 'Нет объектов по заданным фильтрам',
+                          subtitle: _searchQuery.isNotEmpty
+                              ? 'Попробуйте изменить поисковый запрос.'
+                              : 'Измените параметры фильтра или сбросьте их.',
+                          accentColor: Colors.blueGrey,
+                          action: _hasActiveFilters
+                              ? TextButton(
                                   onPressed: _resetFilters,
                                   child: const Text('Сбросить фильтры'),
-                                ),
-                              ],
-                            ],
-                          ),
+                                )
+                              : null,
                         )
                       : ListView.builder(
                           padding: const EdgeInsets.fromLTRB(
@@ -301,21 +291,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
               opacity: _fadeAnimation,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(24),
-                    bottomRight: Radius.circular(24),
-                  ),
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
                 child: TextField(
                   controller: _searchController,
                   autofocus: true, // Auto-focus when panel opens (effectively)
@@ -342,22 +318,26 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                           )
                         : null,
                     filled: true,
-                    fillColor: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest
-                        .withOpacity(0.5),
+                    fillColor: scheme.surfaceContainerHighest.withOpacity(
+                      isDark ? 0.40 : 0.56,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: scheme.outlineVariant
+                            .withOpacity(isDark ? 0.34 : 0.26),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(
+                        color: scheme.outlineVariant
+                            .withOpacity(isDark ? 0.34 : 0.26),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                          color: Theme.of(context).primaryColor, width: 1.5),
+                      borderSide: BorderSide(color: scheme.primary, width: 1.5),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
@@ -396,6 +376,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
         return StatefulBuilder(
           builder: (context, setDialogState) {
             const themeColor = Colors.indigo;
+            final isDark = AppDesignTokens.isDark(context);
+            final scheme = Theme.of(context).colorScheme;
             return Dialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24)),
@@ -404,13 +386,13 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 400),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: themeColor.withOpacity(0.15),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: Colors.black.withOpacity(isDark ? 0.34 : 0.12),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
@@ -437,7 +419,9 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: themeColor.withOpacity(0.8),
+                              color: isDark
+                                  ? scheme.onSurface
+                                  : themeColor.withOpacity(0.8),
                             ),
                           ),
                           Align(
@@ -582,37 +566,38 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     required ValueChanged<T> onSelected,
     required Color themeColor,
   }) {
+    final isDark = AppDesignTokens.isDark(context);
+    final scheme = Theme.of(context).colorScheme;
     return Wrap(
       spacing: 8,
       runSpacing: 6,
       children: items.entries.map((entry) {
         final isActive = entry.key == selected;
-        return ChoiceChip(
-          label: Text(
-            entry.value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-              color: isActive ? Colors.white : Colors.grey.shade700,
-            ),
-          ),
-          selected: isActive,
-          selectedColor: themeColor,
-          backgroundColor: Colors.grey.shade100,
-          side: BorderSide.none,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          visualDensity: VisualDensity.compact,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          onSelected: (_) => onSelected(entry.key),
+        final selectedChipColor = isDark
+            ? themeColor.withOpacity(0.24)
+            : themeColor.withOpacity(0.12);
+        final idleChipColor =
+            isDark ? scheme.surfaceContainerHigh : Colors.grey.shade50;
+        return _HoverableFilterChip(
+          label: entry.value,
+          isActive: isActive,
+          isDark: isDark,
+          idleColor: isActive ? selectedChipColor : idleChipColor,
+          borderColor: isActive
+              ? themeColor.withOpacity(isDark ? 0.32 : 0.22)
+              : (isDark
+                  ? Colors.grey.shade600.withOpacity(0.7)
+                  : AppDesignTokens.cardBorder(context).withOpacity(0.7)),
+          borderWidth: isActive ? 1.0 : (isDark ? 0.7 : 1.0),
+          textColor: isActive ? scheme.onSurface : scheme.onSurfaceVariant,
+          onTap: () => onSelected(entry.key),
         );
       }).toList(),
     );
   }
 }
 
-// ─── Project Card ──────────────────────────────────────────────
+// Project Card
 
 class _ProjectCard extends StatefulWidget {
   final ProjectModel project;
@@ -663,7 +648,7 @@ class _ProjectCardState extends State<_ProjectCard> {
     final createdAt = project.createdAt;
     final updatedAt = project.updatedAt;
     final stripeColor = ProjectStageColorResolver.resolveStripeColor(
-      project.stages.map((stage) => stage.title),
+      project.stages,
     );
 
     final isEdited =
@@ -677,14 +662,14 @@ class _ProjectCardState extends State<_ProjectCard> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: _isHovered ? Colors.grey.shade50 : Colors.white,
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(
+            color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
+          ),
           boxShadow: [
             BoxShadow(
-              color: _isHovered
-                  ? Colors.black.withOpacity(0.06)
-                  : Colors.black.withOpacity(0.03),
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
               blurRadius: _isHovered ? 15 : 10,
               offset: const Offset(0, 4),
             ),
@@ -729,10 +714,12 @@ class _ProjectCardState extends State<_ProjectCard> {
                                     // Address (top, bold)
                                     Text(
                                       project.address,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
                                         letterSpacing: -0.3,
                                       ),
                                     ),
@@ -975,6 +962,71 @@ class _ActionButtonState extends State<_ActionButton> {
               widget.icon,
               size: 20,
               color: _isHovered ? widget.hoverColor : widget.color,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A custom hoverable chip for filter dialogs with explicit hover color transitions.
+class _HoverableFilterChip extends StatefulWidget {
+  final String label;
+  final bool isActive;
+  final bool isDark;
+  final Color idleColor;
+  final Color borderColor;
+  final double borderWidth;
+  final Color textColor;
+  final VoidCallback onTap;
+
+  const _HoverableFilterChip({
+    required this.label,
+    required this.isActive,
+    required this.isDark,
+    required this.idleColor,
+    required this.borderColor,
+    required this.borderWidth,
+    required this.textColor,
+    required this.onTap,
+  });
+
+  @override
+  State<_HoverableFilterChip> createState() => _HoverableFilterChipState();
+}
+
+class _HoverableFilterChipState extends State<_HoverableFilterChip> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: widget.idleColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: widget.borderColor,
+          width: widget.borderWidth,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(20),
+          hoverColor: Colors.black.withOpacity(widget.isDark ? 0.20 : 0.06),
+          splashColor: widget.isDark
+              ? Colors.white.withOpacity(0.10)
+              : Colors.indigo.withOpacity(0.10),
+          highlightColor: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: Text(
+              widget.label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.w500,
+                color: widget.textColor,
+              ),
             ),
           ),
         ),

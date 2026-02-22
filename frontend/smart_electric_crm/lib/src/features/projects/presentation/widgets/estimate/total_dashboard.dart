@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 
-/// Comprehensive dashboard for summary totals
+/// Comprehensive dashboard for summary totals.
 class TotalDashboard extends StatelessWidget {
   final double totalUsd;
   final double totalByn;
@@ -30,30 +32,33 @@ class TotalDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (totalUsd == 0 && totalByn == 0) return const SizedBox.shrink();
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
 
     final hasEmployer = employerUsd > 0 || employerByn > 0;
     final hasUsd = totalUsd > 0 || employerUsd > 0 || ourUsd > 0;
     final hasByn = totalByn > 0 || employerByn > 0 || ourByn > 0;
 
-    // Determine colors based on markup state - only border changes with markup
     final effectiveBorderColor = isMarkupActive
-        ? Colors.orange.shade400
-        : primaryColor.withOpacity(0.12);
+        ? Colors.teal.withOpacity(isDark ? 0.32 : 0.4)
+        : AppDesignTokens.softBorder(context);
+    final baseSurface = AppDesignTokens.surface2(context);
+    final headerSurface =
+        isDark ? baseSurface.withOpacity(0.9) : primaryColor.withOpacity(0.05);
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
       decoration: BoxDecoration(
-        color: primaryColorLight.withOpacity(0.5),
+        color: isDark ? baseSurface : primaryColorLight.withOpacity(0.45),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: effectiveBorderColor, width: 0.8),
+        border: Border.all(color: effectiveBorderColor, width: 0.7),
       ),
       child: Column(
         children: [
-          // Header with background
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.05),
+              color: headerSurface,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(10),
                 topRight: Radius.circular(10),
@@ -78,7 +83,9 @@ class TotalDashboard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: primaryColor.withOpacity(0.9),
+                    color: isDark
+                        ? scheme.onSurface
+                        : primaryColor.withOpacity(0.9),
                   ),
                 ),
                 const Spacer(),
@@ -88,16 +95,20 @@ class TotalDashboard extends StatelessWidget {
               ],
             ),
           ),
-          // Table Content
           Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(9),
             child: Column(
               children: [
                 if (hasEmployer) ...[
                   _row('Наши', ourUsd, ourByn, Colors.green, isBold: true),
                   const SizedBox(height: 6),
-                  _row('Контрагент', employerUsd, employerByn, Colors.orange,
-                      isBold: true),
+                  _row(
+                    'Контрагент',
+                    employerUsd,
+                    employerByn,
+                    isWorkTab ? Colors.orange : Colors.teal,
+                    isBold: true,
+                  ),
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 4),
                     child: Divider(height: 1, thickness: 0.5),
@@ -127,8 +138,13 @@ class TotalDashboard extends StatelessWidget {
     );
   }
 
-  Widget _row(String label, double usd, double byn, Color color,
-      {bool isBold = false}) {
+  Widget _row(
+    String label,
+    double usd,
+    double byn,
+    Color color, {
+    bool isBold = false,
+  }) {
     final hasUsd = totalUsd > 0 || employerUsd > 0 || ourUsd > 0;
     final hasByn = totalByn > 0 || employerByn > 0 || ourByn > 0;
 
@@ -136,8 +152,10 @@ class TotalDashboard extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: GoogleFonts.manrope(
             color: isBold ? color : Colors.grey.shade700,
+            fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
+            letterSpacing: 0.2,
           ),
         ),
         const Spacer(),
@@ -145,14 +163,16 @@ class TotalDashboard extends StatelessWidget {
         if (hasUsd && hasByn) const SizedBox(width: 15),
         if (hasByn)
           _amount(
-              byn, label == 'Контрагент' ? color : Colors.deepPurple, isBold,
-              show: byn > 0),
+            byn,
+            label == 'Контрагент' ? color : Colors.deepPurple,
+            isBold,
+            show: byn > 0,
+          ),
       ],
     );
   }
 
   Widget _amount(double value, Color color, bool isBold, {required bool show}) {
-    // Show 2 decimal places for materials, 0 for works
     final formattedValue = isWorkTab
         ? value.toStringAsFixed(0)
         : value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
@@ -169,8 +189,11 @@ class TotalDashboard extends StatelessWidget {
                 color: isBold ? color : color.withOpacity(0.8),
               ),
             )
-          : const Text('—',
-              textAlign: TextAlign.right, style: TextStyle(color: Colors.grey)),
+          : const Text(
+              '—',
+              textAlign: TextAlign.right,
+              style: TextStyle(color: Colors.grey),
+            ),
     );
   }
 }

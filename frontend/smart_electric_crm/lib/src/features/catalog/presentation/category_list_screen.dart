@@ -9,8 +9,12 @@ import 'package:smart_electric_crm/src/features/catalog/data/directory_repositor
 import 'package:smart_electric_crm/src/features/catalog/domain/category_model.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/directory_models.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/features/settings/application/app_settings_controller.dart';
+import '../../home/presentation/screens/home_screen.dart';
 
 class CategoryListScreen extends ConsumerStatefulWidget {
   const CategoryListScreen({super.key});
@@ -105,6 +109,10 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final showWelcome = ref.watch(
+      appSettingsProvider.select((value) => value.showWelcome),
+    );
+
     return Scaffold(
       appBar: CompactSectionAppBar(
         leading: IconButton(
@@ -122,7 +130,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
               tooltip: _isSyncingSystemSections
                   ? 'Синхронизация...'
                   : 'Синхронизировать',
-              color: Colors.white,
+              color: AppDesignTokens.surface2(context),
               isLoading: _isSyncingSystemSections,
               onTap: _isSyncingSystemSections
                   ? null
@@ -147,18 +155,35 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
-        destinations: const [
-          NavigationDestination(
+        selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
+        onDestinationSelected: (index) {
+          if (showWelcome && index == 0) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (_) => const HomeScreen(),
+              ),
+              (route) => false,
+            );
+            return;
+          }
+          setState(() => _currentIndex = showWelcome ? index - 1 : index);
+        },
+        destinations: [
+          if (showWelcome)
+            const NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+            ),
+          const NavigationDestination(
             icon: Icon(Icons.schema_outlined),
             selectedIcon: Icon(Icons.schema),
-            label: 'Система',
+            label: '\u0421\u0438\u0441\u0442\u0435\u043c\u0430',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
             selectedIcon: Icon(Icons.inventory_2),
-            label: 'Каталог',
+            label: '\u041a\u0430\u0442\u0430\u043b\u043e\u0433',
           ),
         ],
       ),
@@ -292,14 +317,12 @@ class _SystemSectionsTab extends ConsumerWidget {
     return sectionsAsync.when(
       data: (sections) {
         if (sections.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Text(
-                'Разделы не найдены. Нажмите "Синхронизировать" или создайте раздел вручную.',
-                textAlign: TextAlign.center,
-              ),
-            ),
+          return const FriendlyEmptyState(
+            icon: Icons.schema_outlined,
+            title: 'Разделы не найдены',
+            subtitle: 'Нажмите "Синхронизировать" или создайте раздел вручную.',
+            accentColor: Colors.indigo,
+            padding: EdgeInsets.all(24),
           );
         }
 
@@ -411,6 +434,9 @@ class _SectionEntriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final entriesAsync = ref.watch(directoryEntriesProvider(section.id));
+    final showWelcome = ref.watch(
+      appSettingsProvider.select((value) => value.showWelcome),
+    );
 
     return Scaffold(
       appBar: CompactSectionAppBar(
@@ -453,7 +479,12 @@ class _SectionEntriesScreen extends ConsumerWidget {
       body: entriesAsync.when(
         data: (entries) {
           if (entries.isEmpty) {
-            return const Center(child: Text('В этом разделе пока нет записей'));
+            return const FriendlyEmptyState(
+              icon: Icons.list_alt_rounded,
+              title: 'В этом разделе пока нет записей',
+              subtitle: 'Добавьте первую запись, чтобы заполнить справочник.',
+              accentColor: Colors.teal,
+            );
           }
 
           return ListView.builder(
@@ -559,22 +590,38 @@ class _SectionEntriesScreen extends ConsumerWidget {
         error: (error, _) => Center(child: Text('Ошибка: $error')),
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
+        selectedIndex: showWelcome ? 1 : 0,
         onDestinationSelected: (index) {
-          if (index == 0) return;
-          onSelectTab(index);
+          if (showWelcome && index == 0) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (_) => const HomeScreen(),
+              ),
+              (route) => false,
+            );
+            return;
+          }
+          final mappedIndex = showWelcome ? index - 1 : index;
+          if (mappedIndex == 0) return;
+          onSelectTab(mappedIndex);
           Navigator.of(context).pop();
         },
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          if (showWelcome)
+            const NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+            ),
+          const NavigationDestination(
             icon: Icon(Icons.schema_outlined),
             selectedIcon: Icon(Icons.schema),
-            label: 'Система',
+            label: '\u0421\u0438\u0441\u0442\u0435\u043c\u0430',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
             selectedIcon: Icon(Icons.inventory_2),
-            label: 'Каталог',
+            label: '\u041a\u0430\u0442\u0430\u043b\u043e\u0433',
           ),
         ],
       ),
@@ -598,8 +645,11 @@ class _CatalogTab extends ConsumerWidget {
     return categoriesAsync.when(
       data: (categories) {
         if (categories.isEmpty) {
-          return const Center(
-            child: Text('Категории справочника не созданы'),
+          return const FriendlyEmptyState(
+            icon: Icons.folder_open_rounded,
+            title: 'Категории справочника не созданы',
+            subtitle: 'Добавьте первую категорию каталога.',
+            accentColor: Colors.indigo,
           );
         }
 
@@ -706,6 +756,9 @@ class _CategoryItemsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final itemsAsync = ref.watch(catalogItemsByCategoryProvider(category.id));
     final workItemsAsync = ref.watch(catalogWorkItemsProvider);
+    final showWelcome = ref.watch(
+      appSettingsProvider.select((value) => value.showWelcome),
+    );
 
     return Scaffold(
       appBar: CompactSectionAppBar(
@@ -753,8 +806,12 @@ class _CategoryItemsScreen extends ConsumerWidget {
       body: itemsAsync.when(
         data: (items) {
           if (items.isEmpty) {
-            return const Center(
-                child: Text('В этой категории пока нет позиций'));
+            return const FriendlyEmptyState(
+              icon: Icons.inventory_2_outlined,
+              title: 'В этой категории пока нет позиций',
+              subtitle: 'Добавьте первую позицию в эту категорию.',
+              accentColor: Colors.blue,
+            );
           }
           return ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 96),
@@ -871,22 +928,38 @@ class _CategoryItemsScreen extends ConsumerWidget {
         error: (error, _) => Center(child: Text('Ошибка: $error')),
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: 1,
+        selectedIndex: showWelcome ? 2 : 1,
         onDestinationSelected: (index) {
-          if (index == 1) return;
-          onSelectTab(index);
+          if (showWelcome && index == 0) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute<void>(
+                builder: (_) => const HomeScreen(),
+              ),
+              (route) => false,
+            );
+            return;
+          }
+          final mappedIndex = showWelcome ? index - 1 : index;
+          if (mappedIndex == 1) return;
+          onSelectTab(mappedIndex);
           Navigator.of(context).pop();
         },
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          if (showWelcome)
+            const NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+            ),
+          const NavigationDestination(
             icon: Icon(Icons.schema_outlined),
             selectedIcon: Icon(Icons.schema),
-            label: 'Система',
+            label: '\u0421\u0438\u0441\u0442\u0435\u043c\u0430',
           ),
-          NavigationDestination(
+          const NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
             selectedIcon: Icon(Icons.inventory_2),
-            label: 'Каталог',
+            label: '\u041a\u0430\u0442\u0430\u043b\u043e\u0433',
           ),
         ],
       ),
@@ -951,10 +1024,10 @@ class _DirectoryCardState extends State<_DirectoryCard> {
                           widget.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -998,12 +1071,14 @@ class _DirectoryCardState extends State<_DirectoryCard> {
       duration: const Duration(milliseconds: 180),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: _isHovered ? Colors.grey.shade50 : Colors.white,
+        color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(_isHovered ? 0.07 : 0.04),
+            color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
             blurRadius: _isHovered ? 14 : 10,
             offset: const Offset(0, 4),
           ),
@@ -1095,6 +1170,8 @@ class _DialogShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       elevation: 0,
@@ -1102,11 +1179,12 @@ class _DialogShell extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(maxWidth: 560),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? scheme.surfaceContainerHigh : scheme.surface,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppDesignTokens.softBorder(context)),
           boxShadow: [
             BoxShadow(
-              color: themeColor.withOpacity(0.15),
+              color: Colors.black.withOpacity(0.12),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -1170,15 +1248,16 @@ class _DialogShell extends StatelessWidget {
 InputDecoration _dialogInputDecoration(String label) {
   return InputDecoration(
     labelText: label,
+    constraints: const BoxConstraints(minHeight: 56),
     filled: true,
-    fillColor: Colors.grey.shade50,
+    fillColor: const Color(0x14000000),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.grey.shade300),
+      borderSide: const BorderSide(color: Color(0x334B5563)),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.grey.shade300),
+      borderSide: const BorderSide(color: Color(0x334B5563)),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
@@ -1203,7 +1282,7 @@ class _PopupSelectOption<T> {
   });
 }
 
-class _DialogPopupSelectField<T> extends StatelessWidget {
+class _DialogPopupSelectField<T> extends StatefulWidget {
   final String label;
   final T value;
   final List<_PopupSelectOption<T>> options;
@@ -1217,107 +1296,113 @@ class _DialogPopupSelectField<T> extends StatelessWidget {
   });
 
   @override
+  State<_DialogPopupSelectField<T>> createState() =>
+      _DialogPopupSelectFieldState<T>();
+}
+
+class _DialogPopupSelectFieldState<T>
+    extends State<_DialogPopupSelectField<T>> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    final selected = options.cast<_PopupSelectOption<T>?>().firstWhere(
-          (option) => option?.value == value,
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
+    final selected = widget.options.cast<_PopupSelectOption<T>?>().firstWhere(
+          (option) => option?.value == widget.value,
           orElse: () => null,
         );
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 2, bottom: 6),
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade700,
-                ),
-              ),
-            ),
-            Container(
-              height: 46,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(14),
-                child: InkWell(
-                  onTap: () async {
-                    final box = context.findRenderObject() as RenderBox;
-                    final position = box.localToGlobal(Offset.zero);
-                    final size = box.size;
+        return ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
+          child: MouseRegion(
+            cursor: SystemMouseCursors.click,
+            onEnter: (_) => setState(() => _isHovered = true),
+            onExit: (_) => setState(() => _isHovered = false),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () async {
+                final box = context.findRenderObject() as RenderBox;
+                final position = box.localToGlobal(Offset.zero);
+                final size = box.size;
 
-                    final selectedValue = await showMenu<T>(
-                      context: context,
-                      position: RelativeRect.fromLTRB(
-                        position.dx,
-                        position.dy + size.height + 4,
-                        position.dx + size.width,
-                        position.dy + size.height + 320,
-                      ),
-                      elevation: 4,
-                      shadowColor: Colors.black.withOpacity(0.2),
-                      surfaceTintColor: Colors.transparent,
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      constraints: BoxConstraints(
-                        minWidth: constraints.maxWidth,
-                        maxWidth: constraints.maxWidth,
-                      ),
-                      items: options
-                          .map(
-                            (option) => PopupMenuItem<T>(
-                              value: option.value,
-                              height: 40,
-                              child: Text(
-                                option.label,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    );
-                    if (selectedValue != null) {
-                      onChanged(selectedValue);
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(14),
-                  mouseCursor: SystemMouseCursors.click,
-                  hoverColor: Colors.indigo.withOpacity(0.05),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Row(
-                      children: [
-                        Expanded(
+                final selectedValue = await showMenu<T>(
+                  context: context,
+                  position: RelativeRect.fromLTRB(
+                    position.dx,
+                    position.dy + size.height,
+                    position.dx + size.width,
+                    position.dy + size.height + 320,
+                  ),
+                  elevation: 6,
+                  shadowColor: AppDesignTokens.cardShadow(context),
+                  surfaceTintColor: Colors.transparent,
+                  color: isDark
+                      ? scheme.surfaceContainerHigh
+                      : scheme.surfaceContainerHighest.withOpacity(0.98),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side:
+                        BorderSide(color: AppDesignTokens.softBorder(context)),
+                  ),
+                  constraints: BoxConstraints(
+                    minWidth: constraints.maxWidth,
+                    maxWidth: constraints.maxWidth,
+                  ),
+                  items: widget.options
+                      .map(
+                        (option) => PopupMenuItem<T>(
+                          value: option.value,
+                          height: 40,
+                          textStyle: TextStyle(
+                            fontSize: 13,
+                            color: scheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                          ),
                           child: Text(
-                            selected?.label ?? '',
-                            maxLines: 1,
+                            option.label,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
                           ),
                         ),
-                        const Icon(Icons.arrow_drop_down, size: 22),
-                      ],
+                      )
+                      .toList(),
+                );
+                if (selectedValue != null) {
+                  widget.onChanged(selectedValue);
+                }
+              },
+              child: InputDecorator(
+                isEmpty: selected == null,
+                isFocused: false,
+                decoration: _dialogInputDecoration(widget.label).copyWith(
+                  fillColor: _isHovered
+                      ? Colors.indigo.withOpacity(isDark ? 0.10 : 0.06)
+                      : null,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        selected?.label ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
-                  ),
+                    Icon(Icons.arrow_drop_down,
+                        size: 22, color: scheme.onSurfaceVariant),
+                  ],
                 ),
               ),
             ),
-          ],
+          ),
         );
       },
     );
@@ -1457,6 +1542,8 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
     return _DialogShell(
       title: widget.title,
       themeColor: Colors.indigo,
@@ -1501,9 +1588,11 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
           const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
-              color: Colors.grey.shade50,
+              color: isDark
+                  ? scheme.surfaceContainerHigh
+                  : scheme.surfaceContainer.withOpacity(0.4),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(color: AppDesignTokens.softBorder(context)),
             ),
             child: SwitchListTile(
               value: _isActive,

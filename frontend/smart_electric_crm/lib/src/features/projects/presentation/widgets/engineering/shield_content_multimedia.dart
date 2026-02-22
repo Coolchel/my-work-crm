@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../engineering/data/models/shield_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
+import '../../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../dialogs/engineering/ethernet_lines_dialog.dart';
 import '../../providers/project_providers.dart';
+import '../../../../../core/theme/app_design_tokens.dart';
 
 class ShieldContentMultimedia extends ConsumerWidget {
   final ShieldModel shield;
@@ -20,6 +22,9 @@ class ShieldContentMultimedia extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -31,11 +36,11 @@ class ShieldContentMultimedia extends ConsumerWidget {
               onPressed: () => _showEthernetLinesDialog(context, ref),
               icon: Icon(Icons.add_rounded,
                   size: 16, color: themeColor.withOpacity(0.7)),
-              label: const Text('Добавить',
+              label: Text('Добавить',
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 13,
-                    color: Color(0xFF616161),
+                    color: isDark ? scheme.onSurface : const Color(0xFF616161),
                   )),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: themeColor.withOpacity(0.15)),
@@ -56,7 +61,7 @@ class ShieldContentMultimedia extends ConsumerWidget {
         if (shield.internetLinesCount > 0)
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: themeColor.withOpacity(0.08)),
               boxShadow: [
@@ -72,6 +77,15 @@ class ShieldContentMultimedia extends ConsumerWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(6),
                 onTap: () => _showEthernetLinesDialog(context, ref),
+                overlayColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.hovered)) {
+                    return AppDesignTokens.hoverOverlay(context);
+                  }
+                  if (states.contains(WidgetState.pressed)) {
+                    return AppDesignTokens.pressedOverlay(context);
+                  }
+                  return Colors.transparent;
+                }),
                 child: Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -98,20 +112,24 @@ class ShieldContentMultimedia extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Ethernet кабель',
                               style: TextStyle(
                                 fontWeight: FontWeight.w500,
                                 fontSize: 13,
                                 height: 1.2,
-                                color: Color(0xFF1F2937),
+                                color: isDark
+                                    ? scheme.onSurface
+                                    : const Color(0xFF1F2937),
                               ),
                             ),
                             Text(
-                              '× ${shield.internetLinesCount}',
+                              'Линий: ${shield.internetLinesCount}',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey.shade600,
+                                color: isDark
+                                    ? scheme.onSurfaceVariant
+                                    : Colors.grey.shade600,
                               ),
                             ),
                           ],
@@ -160,23 +178,13 @@ class ShieldContentMultimedia extends ConsumerWidget {
             ),
           )
         else
-          // Заглушка когда нет линий
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 40.0),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade100),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.router, size: 40, color: Colors.grey.shade300),
-                const SizedBox(height: 12),
-                const Text('Ethernet линии не добавлены',
-                    style: TextStyle(color: Colors.grey, fontSize: 13)),
-              ],
-            ),
+          const FriendlyEmptyState(
+            icon: Icons.router_outlined,
+            title: 'Ethernet линии не добавлены',
+            subtitle: 'Добавьте количество линий, чтобы заполнить этот раздел.',
+            accentColor: Colors.green,
+            iconSize: 62,
+            padding: EdgeInsets.symmetric(vertical: 10),
           ),
       ],
     );

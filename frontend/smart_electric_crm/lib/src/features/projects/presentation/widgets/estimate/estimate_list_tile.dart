@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/estimate/edit_item_dialog.dart';
 
-/// A list tile widget for displaying an estimate item
-class EstimateListTile extends StatelessWidget {
+/// A compact row widget for displaying an estimate item.
+class EstimateListTile extends StatefulWidget {
   final EstimateItemModel item;
   final Function(EstimateItemModel) onUpdate;
   final VoidCallback onDelete;
@@ -23,202 +24,288 @@ class EstimateListTile extends StatelessWidget {
     this.isDisabled = false,
   });
 
-  IconData get _icon =>
-      item.itemType == 'work' ? Icons.engineering : Icons.inventory_2_outlined;
+  @override
+  State<EstimateListTile> createState() => _EstimateListTileState();
+}
+
+class _EstimateListTileState extends State<EstimateListTile> {
+  bool _isHovered = false;
+
+  IconData get _icon => widget.item.itemType == 'work'
+      ? Icons.engineering_outlined
+      : Icons.inventory_2_outlined;
+
+  String _formatQuantity(double value) {
+    if (widget.item.itemType == 'work') {
+      return value.toStringAsFixed(0);
+    }
+    return value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
+  }
+
+  String _formatMoney(double value) {
+    return value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
+  }
+
+  String _formatCurrencyAmount(double value, bool isUsd) {
+    return '${_formatMoney(value)}${isUsd ? '\$' : 'р'}';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final item = widget.item;
+    final isDark = AppDesignTokens.isDark(context);
     final isUsd = item.currency == 'USD';
-    final currencySymbol = isUsd ? '\$' : 'р';
     final clientAmount = item.clientAmount ?? 0;
     final employerAmount = item.employerAmount ?? 0;
     final myAmount = item.myAmount ?? 0;
     final hasEmployer = employerAmount > 0;
+    const markupAccent = Colors.teal;
 
-    // Amount badge colors based on currency
-    Color amountBgColor;
-    Color amountTextColor;
-    if (isUsd) {
-      amountBgColor = primaryColor.withOpacity(0.1);
-      amountTextColor = primaryColor;
-    } else {
-      // BYN - purple theme
-      amountBgColor = Colors.deepPurple.shade50;
-      amountTextColor = Colors.deepPurple.shade600;
-    }
+    final amountBgColor = widget.primaryColor.withOpacity(isDark ? 0.12 : 0.1);
+    final amountTextColor = widget.primaryColor;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
-      child: Material(
-        color: Theme.of(context).colorScheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6),
-          side: BorderSide(
-            color: Colors.grey.withOpacity(0.15),
+    return MouseRegion(
+      cursor: widget.isDisabled ? MouseCursor.defer : SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.symmetric(vertical: 2),
+        decoration: BoxDecoration(
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _isHovered
+                ? widget.primaryColor.withOpacity(0.2)
+                : AppDesignTokens.cardBorder(context),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
+              blurRadius: _isHovered ? 8 : 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: InkWell(
-          onTap: isDisabled
-              ? null
-              : () async {
-                  final result = await showDialog<dynamic>(
+        clipBehavior: Clip.antiAlias,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.isDisabled
+                ? null
+                : () async {
+                    final result = await showDialog<dynamic>(
                       context: context,
-                      builder: (_) =>
-                          EditItemDialog(item: item, hidePrices: hidePrices));
-
-                  if (result == 'delete') {
-                    onDelete();
-                  } else if (result is EstimateItemModel) {
-                    onUpdate(result);
-                  }
-                },
-          borderRadius: BorderRadius.circular(6),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Row(
-              children: [
-                // Leading: Colored circular icon (uses primaryColor)
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(_icon, size: 16, color: primaryColor),
-                ),
-                const SizedBox(width: 10),
-
-                // Middle: Name + compact info + Контрагент/Наши badges
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Name
-                      Text(
-                        item.name,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 13,
-                            height: 1.2),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      builder: (_) => EditItemDialog(
+                        item: item,
+                        hidePrices: widget.hidePrices,
                       ),
-                      const SizedBox(height: 2),
-                      // Compact stats row + Контрагент/Наши badges
-                      Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 6,
-                        runSpacing: 2,
+                    );
+
+                    if (result == 'delete') {
+                      widget.onDelete();
+                    } else if (result is EstimateItemModel) {
+                      widget.onUpdate(result);
+                    }
+                  },
+            borderRadius: BorderRadius.circular(12),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: 4,
+                    color: widget.primaryColor.withOpacity(0.65),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      child: Row(
                         children: [
-                          // Quantity part - always grey
-                          Text(
-                            '${item.totalQuantity.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")} ${item.unit} ',
-                            style: TextStyle(
-                                fontSize: 11, color: Colors.grey.shade600),
+                          Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: widget.primaryColor.withOpacity(0.11),
+                              borderRadius: BorderRadius.circular(7),
+                            ),
+                            child: Icon(
+                              _icon,
+                              size: 14,
+                              color: widget.primaryColor,
+                            ),
                           ),
-                          if (!hidePrices) ...[
-                            // Price part - orange when markup active
-                            Text(
-                              '× ${item.pricePerUnit?.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "") ?? "0"}$currencySymbol',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: isMarkupActive
-                                      ? Colors.deepOrange
-                                      : Colors.grey.shade600,
-                                  fontWeight: isMarkupActive
-                                      ? FontWeight.bold
-                                      : FontWeight.normal),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  item.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12.5,
+                                    height: 1.2,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Wrap(
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 5,
+                                  runSpacing: 2,
+                                  children: [
+                                    Text(
+                                      '${_formatQuantity(item.totalQuantity)} ${item.unit}',
+                                      style: TextStyle(
+                                        fontSize: 10.5,
+                                        color: Colors.grey.shade600,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    if (!widget.hidePrices)
+                                      Text(
+                                        'x ${_formatCurrencyAmount(item.pricePerUnit ?? 0, isUsd)}',
+                                        style: TextStyle(
+                                          fontSize: 10.5,
+                                          color: widget.isMarkupActive
+                                              ? markupAccent.shade700
+                                              : Colors.grey.shade600,
+                                          fontWeight: widget.isMarkupActive
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                        ),
+                                      ),
+                                    if (hasEmployer)
+                                      _buildMiniBadge(
+                                        label:
+                                            'Контрагент ${_formatCurrencyAmount(employerAmount, isUsd)}',
+                                        background: isDark
+                                            ? Colors.orange.withOpacity(0.14)
+                                            : Colors.orange.shade50,
+                                        foreground: isDark
+                                            ? Colors.orange.shade200
+                                            : Colors.orange.shade700,
+                                        border: isDark
+                                            ? Colors.orange.withOpacity(0.30)
+                                            : Colors.orange.shade100,
+                                      ),
+                                    if (hasEmployer)
+                                      _buildMiniBadge(
+                                        label:
+                                            'Наши ${_formatCurrencyAmount(myAmount, isUsd)}',
+                                        background: isUsd
+                                            ? widget.primaryColor
+                                                .withOpacity(0.1)
+                                            : Colors.deepPurple.shade50,
+                                        foreground: isUsd
+                                            ? widget.primaryColor
+                                            : Colors.deepPurple.shade600,
+                                        border:
+                                            AppDesignTokens.softBorder(context),
+                                      ),
+                                  ],
+                                ),
+                              ],
                             ),
-                          ],
-                          if (hasEmployer) ...[
-                            // Контрагент mini badge (horizontal)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 1),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade50,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'Контрагент ${employerAmount.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")}$currencySymbol',
-                                style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.orange.shade600),
-                              ),
-                            ),
-                            // Наши mini badge (horizontal) - purple when BYN
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 1),
-                              decoration: BoxDecoration(
-                                color: isUsd
-                                    ? primaryColor.withOpacity(0.1)
-                                    : Colors.deepPurple.shade50,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'Наши ${myAmount.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")}$currencySymbol',
-                                style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w500,
+                          ),
+                          const SizedBox(width: 6),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (!widget.hidePrices)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
                                     color: isUsd
-                                        ? primaryColor
-                                        : Colors.deepPurple.shade500),
+                                        ? amountBgColor
+                                        : Colors.deepPurple.withOpacity(
+                                            isDark ? 0.16 : 0.11,
+                                          ),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: widget.isMarkupActive
+                                        ? Border.all(
+                                            color:
+                                                markupAccent.withOpacity(0.6),
+                                            width: 0.8,
+                                          )
+                                        : Border.all(
+                                            color: Colors.transparent,
+                                          ),
+                                  ),
+                                  child: Text(
+                                    _formatCurrencyAmount(clientAmount, isUsd),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: isUsd
+                                          ? amountTextColor
+                                          : (isDark
+                                              ? Colors.deepPurple.shade200
+                                              : Colors.deepPurple.shade700),
+                                    ),
+                                  ),
+                                ),
+                              const SizedBox(width: 2),
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: IconButton(
+                                  icon: Icon(
+                                    Icons.close,
+                                    size: 14,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                  onPressed: widget.isDisabled
+                                      ? null
+                                      : widget.onDelete,
+                                  tooltip: 'Удалить',
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-
-                // Trailing: Main amount + delete
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Main amount badge - only border is orange when markup is active
-                    if (!hidePrices)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: amountBgColor,
-                          borderRadius: BorderRadius.circular(5),
-                          border: isMarkupActive
-                              ? Border.all(
-                                  color: Colors.orange.shade300, width: 0.8)
-                              : null,
-                        ),
-                        child: Text(
-                          '${clientAmount.toStringAsFixed(2).replaceAll(RegExp(r"\.?0+$"), "")}$currencySymbol',
-                          style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: amountTextColor),
-                        ),
-                      ),
-                    const SizedBox(width: 4),
-                    // Delete button
-                    SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: IconButton(
-                        icon: Icon(Icons.close,
-                            size: 14, color: Colors.grey.shade400),
-                        padding: EdgeInsets.zero,
-                        onPressed: isDisabled ? null : onDelete,
-                        tooltip: "Удалить",
-                      ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniBadge({
+    required String label,
+    required Color background,
+    required Color foreground,
+    Color? border,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(5),
+        border: border == null ? null : Border.all(color: border, width: 0.7),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 9.5,
+          fontWeight: FontWeight.w600,
+          color: foreground,
+          height: 1.1,
         ),
       ),
     );
