@@ -7,6 +7,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../catalog/presentation/category_list_screen.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../application/app_settings_controller.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -31,12 +32,7 @@ class SettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           _buildSectionHeader('Внешний вид'),
-          Card(
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.indigo.withOpacity(0.1)),
-            ),
+          _HoverSettingsCard(
             child: Column(
               children: [
                 Padding(
@@ -80,6 +76,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const Divider(height: 1),
                 SwitchListTile(
+                  hoverColor: AppDesignTokens.hoverOverlay(context),
                   secondary: const Icon(Icons.waving_hand_outlined),
                   title: const Text('Начальный экран'),
                   subtitle: const Text('Приветствие и быстрый поиск'),
@@ -91,28 +88,19 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           _buildSectionHeader('Инструменты'),
-          Card(
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.indigo.withOpacity(0.1)),
-            ),
+          _HoverSettingsCard(
             child: ListTile(
               leading: const Icon(Icons.folder_open, color: Colors.indigo),
               title: const Text('Справочник'),
               subtitle: const Text('Категории, расценки и шаблоны'),
               trailing: const Icon(Icons.chevron_right),
+              hoverColor: AppDesignTokens.hoverOverlay(context),
               onTap: () => _showReferenceWarning(context, ref),
             ),
           ),
           const SizedBox(height: 24),
           _buildSectionHeader('Аккаунт'),
-          Card(
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.indigo.withOpacity(0.1)),
-            ),
+          _HoverSettingsCard(
             child: Column(
               children: [
                 userAsync.when(
@@ -172,6 +160,7 @@ class SettingsScreen extends ConsumerWidget {
                   leading: const Icon(Icons.lock_reset, color: Colors.indigo),
                   title: const Text('Управление паролем'),
                   subtitle: const Text('Сменить текущий пароль'),
+                  hoverColor: AppDesignTokens.hoverOverlay(context),
                   onTap: () => _showChangePasswordDialog(context, ref),
                 ),
                 const Divider(height: 1),
@@ -182,6 +171,7 @@ class SettingsScreen extends ConsumerWidget {
                     style: TextStyle(color: Colors.red),
                   ),
                   subtitle: const Text('Завершить текущий сеанс'),
+                  hoverColor: AppDesignTokens.hoverOverlay(context),
                   onTap: () async {
                     final confirmed = await showDialog<bool>(
                       context: context,
@@ -675,6 +665,48 @@ class SettingsScreen extends ConsumerWidget {
         errorStyle: const TextStyle(height: 0.8),
       ),
       obscureText: true,
+    );
+  }
+}
+
+class _HoverSettingsCard extends StatefulWidget {
+  final Widget child;
+
+  const _HoverSettingsCard({required this.child});
+
+  @override
+  State<_HoverSettingsCard> createState() => _HoverSettingsCardState();
+}
+
+class _HoverSettingsCardState extends State<_HoverSettingsCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: AppDesignTokens.cardBorder(context, hovered: _isHovered)),
+          boxShadow: [
+            BoxShadow(
+              color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
+              blurRadius: _isHovered ? 10 : 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: widget.child,
+        ),
+      ),
     );
   }
 }

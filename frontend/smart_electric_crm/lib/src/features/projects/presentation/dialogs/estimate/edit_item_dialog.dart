@@ -128,7 +128,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
   Widget build(BuildContext context) {
     final isNewManual = widget.item.id == 0;
     final isWork = widget.item.itemType == 'work';
-    final themeColor = isWork ? Colors.teal : Colors.indigo;
+    final themeColor = isWork ? Colors.green : Colors.indigo;
     final isDark = AppDesignTokens.isDark(context);
 
     return Theme(
@@ -496,8 +496,11 @@ class _EditItemDialogState extends State<EditItemDialog> {
               // Footer
               Padding(
                 padding: const EdgeInsets.all(24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
                     if (!isNewManual)
                       TextButton(
@@ -506,7 +509,6 @@ class _EditItemDialogState extends State<EditItemDialog> {
                             TextButton.styleFrom(foregroundColor: Colors.red),
                         child: const Text("Удалить"),
                       ),
-                    const Spacer(),
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       style: TextButton.styleFrom(
@@ -514,7 +516,6 @@ class _EditItemDialogState extends State<EditItemDialog> {
                               Theme.of(context).colorScheme.onSurface),
                       child: const Text("Отмена"),
                     ),
-                    const SizedBox(width: 8),
                     FilledButton(
                       onPressed: _save,
                       style: FilledButton.styleFrom(

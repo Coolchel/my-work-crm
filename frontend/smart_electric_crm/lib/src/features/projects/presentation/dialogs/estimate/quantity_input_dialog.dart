@@ -104,7 +104,7 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
   @override
   Widget build(BuildContext context) {
     final isWork = widget.itemType == 'work';
-    final themeColor = isWork ? Colors.teal : Colors.indigo;
+    final themeColor = isWork ? Colors.green : Colors.indigo;
     final isDark = AppDesignTokens.isDark(context);
 
     return Theme(

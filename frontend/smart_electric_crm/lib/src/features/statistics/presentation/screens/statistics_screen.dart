@@ -248,47 +248,37 @@ class StatisticsScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Container(
-                      height: 280,
-                      decoration: BoxDecoration(
-                        color: AppDesignTokens.cardBackground(context),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: AppDesignTokens.cardBorder(context)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppDesignTokens.cardShadow(context),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Stack(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                            child: WorkDynamicsChart(
-                              data: stats.workDynamics,
-                              isMonthly: currentPeriod != 'month',
-                              currencyLabel: "BYN",
-                              currencySymbol: '\u0440',
-                              isUsd: false,
-                            ),
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: Tooltip(
-                              message: workDynamicsTooltip,
-                              textAlign: TextAlign.center,
-                              child: Icon(
-                                Icons.help_outline_rounded,
-                                size: 16,
-                                color: Colors.grey.shade400,
+                    _HoverStatsCard(
+                      borderRadius: 16,
+                      child: SizedBox(
+                        height: 280,
+                        child: Stack(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                              child: WorkDynamicsChart(
+                                data: stats.workDynamics,
+                                isMonthly: currentPeriod != 'month',
+                                currencyLabel: "BYN",
+                                currencySymbol: '\u0440',
+                                isUsd: false,
                               ),
                             ),
-                          ),
-                        ],
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Tooltip(
+                                message: workDynamicsTooltip,
+                                textAlign: TextAlign.center,
+                                child: Icon(
+                                  Icons.help_outline_rounded,
+                                  size: 16,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],

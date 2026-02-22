@@ -22,6 +22,7 @@ import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 
 import '../widgets/stages/stage_card.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -47,6 +48,11 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   bool _isApplyingTemplate = false;
   bool _isImportingFromPrecalc = false;
   bool _isApplyingStage3Calculator = false;
+
+  Color _dialogBarrierColor(BuildContext context) =>
+      AppDesignTokens.isDark(context)
+          ? Colors.black.withOpacity(0.62)
+          : Colors.black.withOpacity(0.40);
 
   // Local state for items (for optimistic updates and display)
   List<EstimateItemModel> _items = [];
@@ -446,7 +452,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
 
     final confirm = await showDialog<bool>(
       context: context,
-      barrierColor: Colors.transparent,
+      barrierColor: _dialogBarrierColor(context),
       builder: (context) => ConfirmationDialog(
         title: 'Очистить $sectionName?',
         content: 'Все позиции в разделе $sectionName будут удалены.',
@@ -598,7 +604,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     final themeColor = _currentIndex == 0 ? Colors.green : Colors.blue;
     final confirm = await showDialog<bool>(
         context: context,
-        barrierColor: Colors.transparent,
+        barrierColor: _dialogBarrierColor(context),
         builder: (ctx) => ConfirmationDialog(
               title: "Удалить позицию?",
               content: "Вы уверены, что хотите удалить эту позицию из сметы?",
@@ -690,7 +696,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     if (_materials.isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
-        barrierColor: Colors.transparent,
+        barrierColor: _dialogBarrierColor(context),
         builder: (ctx) => const ConfirmationDialog(
           title: "Импортировать оборудование?",
           content:
@@ -731,7 +737,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     if (_works.isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
-        barrierColor: Colors.transparent,
+        barrierColor: _dialogBarrierColor(context),
         builder: (ctx) => const ConfirmationDialog(
           title: "Рассчитать работы?",
           content:
@@ -780,7 +786,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     if (targetItems.isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
-        barrierColor: Colors.transparent,
+        barrierColor: _dialogBarrierColor(context),
         builder: (ctx) => ConfirmationDialog(
           title: 'Перенос',
           content:
@@ -867,7 +873,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     if (_materials.isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
-        barrierColor: Colors.transparent,
+        barrierColor: _dialogBarrierColor(context),
         builder: (ctx) => const ConfirmationDialog(
           title: 'Перенос',
           content:
@@ -1011,7 +1017,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     final themeColor = type == 'work' ? Colors.green : Colors.blue;
     final result = await showDialog<dynamic>(
       context: context,
-      barrierColor: Colors.transparent,
+      barrierColor: _dialogBarrierColor(context),
       builder: (context) => TextInputDialog(
         title: "Сохранить как шаблон",
         labelText: "Название шаблона",
@@ -1059,7 +1065,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     if (_works.isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
-        barrierColor: Colors.transparent,
+        barrierColor: _dialogBarrierColor(context),
         builder: (ctx) => const ConfirmationDialog(
           title: "Применить шаблон?",
           content:
@@ -1093,7 +1099,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     if (_materials.isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
-        barrierColor: Colors.transparent,
+        barrierColor: _dialogBarrierColor(context),
         builder: (ctx) => const ConfirmationDialog(
           title: "Применить шаблон?",
           content:
