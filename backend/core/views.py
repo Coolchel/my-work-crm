@@ -3,6 +3,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from decimal import Decimal, InvalidOperation
+from django.db import transaction
 from django.db.utils import OperationalError, ProgrammingError
 from .models import (
     Project, Stage, ShieldGroup, LedZone, CatalogCategory, CatalogItem, DirectorySection, DirectoryEntry,
@@ -549,6 +551,130 @@ class StageViewSet(AuthenticatedModelViewSet):
              return Response(result, status=status.HTTP_400_BAD_REQUEST)
              
         return Response(result)
+
+    @action(detail=True, methods=['post'])
+    def import_from_precalc_section(self, request, pk=None):
+        stage = self.get_object()
+        allowed_target_titles = {'stage_1', 'stage_2', 'stage_1_2'}
+
+        if stage.title not in allowed_target_titles:
+            return Response(
+                {'error': 'Import from precalc is allowed only for stage_1, stage_2, stage_1_2.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        item_type = request.data.get('item_type')
+        if item_type not in {'work', 'material'}:
+            return Response(
+                {'error': 'item_type must be "work" or "material".'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        source_stage = Stage.objects.filter(project=stage.project, title='precalc').first()
+        if not source_stage:
+            return Response(
+                {'error': 'Precalc stage not found in this project.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        source_items = list(
+            EstimateItem.objects.filter(stage=source_stage, item_type=item_type).order_by('id')
+        )
+
+        with transaction.atomic():
+            deleted_count, _ = EstimateItem.objects.filter(stage=stage, item_type=item_type).delete()
+
+            created_count = 0
+            for source_item in source_items:
+                EstimateItem.objects.create(
+                    stage=stage,
+                    item_type=source_item.item_type,
+                    name=source_item.name,
+                    unit=source_item.unit,
+                    price_per_unit=source_item.price_per_unit,
+                    currency=source_item.currency,
+                    total_quantity=source_item.total_quantity,
+                    employer_quantity=source_item.employer_quantity,
+                )
+                created_count += 1
+
+        return Response(
+            {
+                'status': 'success',
+                'deleted': deleted_count,
+                'created': created_count,
+                'item_type': item_type,
+            }
+        )
+
+    @action(detail=True, methods=['post'])
+    def apply_stage3_armature(self, request, pk=None):
+        stage = self.get_object()
+
+        if stage.title != 'stage_3':
+            return Response(
+                {'error': 'Stage 3 armature operation is allowed only for stage_3.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not isinstance(request.data, list):
+            return Response(
+                {'error': 'Request body must be a list of rows.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            with transaction.atomic():
+                deleted_count, _ = EstimateItem.objects.filter(
+                    stage=stage, item_type='material'
+                ).delete()
+
+                created_count = 0
+                for index, row in enumerate(request.data, start=1):
+                    if not isinstance(row, dict):
+                        raise ValueError(f'Row #{index} must be an object.')
+
+                    catalog_item_id = row.get('catalog_item')
+                    if not catalog_item_id:
+                        raise ValueError(f'Row #{index}: catalog_item is required.')
+
+                    try:
+                        catalog_item = CatalogItem.objects.get(id=catalog_item_id, item_type='material')
+                    except CatalogItem.DoesNotExist as error:
+                        raise ValueError(f'Row #{index}: material catalog item not found.') from error
+
+                    raw_quantity = row.get('quantity')
+                    try:
+                        quantity = Decimal(str(raw_quantity))
+                    except (InvalidOperation, TypeError) as error:
+                        raise ValueError(f'Row #{index}: quantity must be a number.') from error
+
+                    if quantity <= 0:
+                        raise ValueError(f'Row #{index}: quantity must be greater than 0.')
+
+                    EstimateItem.objects.create(
+                        stage=stage,
+                        catalog_item=catalog_item,
+                        item_type='material',
+                        name=catalog_item.name,
+                        unit=catalog_item.unit,
+                        price_per_unit=catalog_item.default_price,
+                        currency=catalog_item.default_currency,
+                        total_quantity=quantity,
+                        employer_quantity=Decimal('0'),
+                    )
+                    created_count += 1
+        except ValueError as error:
+            return Response({'error': str(error)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(
+            {
+                'status': 'success',
+                'deleted': deleted_count,
+                'created': created_count,
+                'item_type': 'material',
+            }
+        )
 
     @action(detail=True, methods=['get'])
     def get_report(self, request, pk=None):

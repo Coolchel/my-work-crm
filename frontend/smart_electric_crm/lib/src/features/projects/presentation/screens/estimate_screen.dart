@@ -797,13 +797,12 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   Future<void> _importFromPrecalc() async {
     final isWork = _currentIndex == 0;
     final sourceItems = isWork ? _precalcWorkItems : _precalcMaterialItems;
-    final targetItems = isWork ? _works : _materials;
     final sectionName = isWork ? 'работ' : 'материалов';
     final themeColor = isWork ? Colors.green : Colors.blue;
 
     if (sourceItems.isEmpty) return;
 
-    if (targetItems.isNotEmpty) {
+    if ((isWork ? _works : _materials).isNotEmpty) {
       final confirm = await showDialog<bool>(
         context: context,
         barrierColor: _dialogBarrierColor(context),
@@ -821,29 +820,18 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     setState(() => _isImportingFromPrecalc = true);
     try {
       final repo = ref.read(projectRepositoryProvider);
-
-      for (final item in targetItems) {
-        await repo.deleteEstimateItem(item.id);
-      }
-
-      for (final source in sourceItems) {
-        await repo.addEstimateItem({
-          'stage': widget.stage.id,
-          'item_type': source.itemType,
-          'name': source.name,
-          'unit': source.unit,
-          'price_per_unit': source.pricePerUnit ?? 0.0,
-          'currency': source.currency,
-          'total_quantity': source.totalQuantity,
-          'employer_quantity': source.employerQuantity,
-        });
-      }
+      final result = await repo.importFromPrecalcSection(
+        widget.stage.id,
+        itemType: isWork ? 'work' : 'material',
+      );
+      final created = result['created'] ?? 0;
+      final deleted = result['deleted'] ?? 0;
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Позиции $sectionName перенесены из этапа "Предпросчет": ${sourceItems.length}',
+            'Позиции $sectionName перенесены из этапа "Предпросчет": удалено $deleted, создано $created',
           ),
         ),
       );
@@ -908,30 +896,23 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     setState(() => _isApplyingStage3Calculator = true);
     try {
       final repo = ref.read(projectRepositoryProvider);
-
-      for (final item in _materials) {
-        await repo.deleteEstimateItem(item.id);
-      }
-
-      for (final row in rows) {
-        await repo.addEstimateItem({
-          'stage': widget.stage.id,
-          'catalog_item': row.item.id,
-          'item_type': 'material',
-          'name': row.item.name,
-          'unit': row.item.unit,
-          'price_per_unit': row.item.defaultPrice,
-          'currency': row.item.defaultCurrency,
-          'total_quantity': row.quantity,
-          'employer_quantity': 0,
-        });
-      }
+      final payload = rows
+          .map(
+            (row) => {
+              'catalog_item': row.item.id,
+              'quantity': row.quantity,
+            },
+          )
+          .toList();
+      final result = await repo.applyStage3Armature(widget.stage.id, payload);
+      final created = result['created'] ?? 0;
+      final deleted = result['deleted'] ?? 0;
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Позиции материалов перенесены из калькулятора: ${rows.length}',
+            'Позиции материалов перенесены из калькулятора: удалено $deleted, создано $created',
           ),
         ),
       );
