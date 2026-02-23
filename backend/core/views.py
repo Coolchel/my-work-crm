@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, status, filters, mixins
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -636,19 +636,23 @@ class LedShieldTemplateViewSet(AuthenticatedModelViewSet):
         return Response(result)
 
 
-class FinanceSettingsViewSet(AuthenticatedViewSet):
+class FinanceSettingsViewSet(
+    AuthenticatedViewSet,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     ViewSet для глобальных финансовых настроек.
-    Singleton модель - всегда одна запись.
+    Singleton модель - всегда одна запись с id=1.
     """
-    
-    def list(self, request):
-        """Получить финансовые настройки"""
+
+    serializer_class = FinanceSettingsSerializer
+
+    def get_queryset(self):
         finance_settings = FinanceSettings.load()
-        serializer = FinanceSettingsSerializer(finance_settings)
-        return Response(serializer.data)
-    
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return FinanceSettings.objects.filter(pk=finance_settings.pk)
 
 
 class StatisticsViewSet(AuthenticatedViewSet):
