@@ -227,7 +227,7 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         backgroundColor: scheme.surfaceContainerHigh,
         contentTextStyle: TextStyle(color: scheme.onSurface),
-        behavior: SnackBarBehavior.floating,
+        behavior: SnackBarBehavior.fixed,
       ),
       splashColor: highlightOverlayColor,
       highlightColor: highlightOverlayColor,
