@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -9,6 +10,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from core.models import FinanceSettings
 from core.models import Project, ProjectFile
+from core.models import Stage, CatalogCategory, CatalogItem, EstimateItem
 
 
 class ApiAccessControlTests(APITestCase):
@@ -248,3 +250,179 @@ class ProjectFileValidationTests(APITestCase):
 
         self.assertEqual(patch_response.status_code, status.HTTP_200_OK)
         self.assertEqual(patch_response.data['description'], 'updated metadata only')
+
+
+class StageAtomicOperationsTests(APITestCase):
+    def setUp(self):
+        self.user_password = 'StrongPass123!'
+        self.user = get_user_model().objects.create_user(
+            username='stage_atomic_user',
+            email='stage_atomic_user@example.com',
+            password=self.user_password,
+        )
+        self.project = Project.objects.create(
+            address='Atomic project',
+            client_info='Atomic client',
+            source='Atomic source',
+        )
+        self.precalc_stage = Stage.objects.create(project=self.project, title='precalc')
+        self.stage_1 = Stage.objects.create(project=self.project, title='stage_1')
+        self.stage_3 = Stage.objects.create(project=self.project, title='stage_3')
+
+        self.material_category = CatalogCategory.objects.create(
+            name='Materials',
+            slug='materials',
+        )
+        self.work_category = CatalogCategory.objects.create(
+            name='Works',
+            slug='works',
+        )
+        self.material_catalog = CatalogItem.objects.create(
+            name='Armature Material',
+            category=self.material_category,
+            unit='pcs',
+            default_price=Decimal('10.00'),
+            default_currency='USD',
+            item_type='material',
+        )
+        self.work_catalog = CatalogItem.objects.create(
+            name='Work Item',
+            category=self.work_category,
+            unit='pcs',
+            default_price=Decimal('5.00'),
+            default_currency='USD',
+            item_type='work',
+        )
+
+    def _authenticate(self):
+        token_response = self.client.post(
+            '/api/auth/token/',
+            {
+                'username': self.user.username,
+                'password': self.user_password,
+            },
+            format='json',
+        )
+        self.assertEqual(token_response.status_code, status.HTTP_200_OK)
+        access = token_response.data['access']
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
+
+    def test_import_from_precalc_section_success_replaces_target(self):
+        self._authenticate()
+
+        EstimateItem.objects.create(
+            stage=self.precalc_stage,
+            item_type='work',
+            name='Precalc Work 1',
+            unit='pcs',
+            total_quantity=Decimal('2'),
+            price_per_unit=Decimal('20'),
+            currency='USD',
+            employer_quantity=Decimal('1'),
+        )
+        EstimateItem.objects.create(
+            stage=self.precalc_stage,
+            item_type='work',
+            name='Precalc Work 2',
+            unit='pcs',
+            total_quantity=Decimal('3'),
+            price_per_unit=Decimal('30'),
+            currency='USD',
+            employer_quantity=Decimal('0'),
+        )
+        EstimateItem.objects.create(
+            stage=self.stage_1,
+            item_type='work',
+            name='Old Work',
+            unit='pcs',
+            total_quantity=Decimal('1'),
+            price_per_unit=Decimal('99'),
+            currency='USD',
+            employer_quantity=Decimal('0'),
+        )
+
+        response = self.client.post(
+            f'/api/stages/{self.stage_1.id}/import_from_precalc_section/',
+            {'item_type': 'work'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['deleted'], 1)
+        self.assertEqual(response.data['created'], 2)
+
+        names = list(
+            EstimateItem.objects.filter(stage=self.stage_1, item_type='work')
+            .order_by('name')
+            .values_list('name', flat=True)
+        )
+        self.assertEqual(names, ['Precalc Work 1', 'Precalc Work 2'])
+
+    def test_apply_stage3_armature_rollback_on_mid_error(self):
+        self._authenticate()
+
+        EstimateItem.objects.create(
+            stage=self.stage_3,
+            item_type='material',
+            name='Old Material',
+            unit='pcs',
+            total_quantity=Decimal('5'),
+            price_per_unit=Decimal('7'),
+            currency='USD',
+            employer_quantity=Decimal('0'),
+        )
+
+        response = self.client.post(
+            f'/api/stages/{self.stage_3.id}/apply_stage3_armature/',
+            [
+                {'catalog_item': self.material_catalog.id, 'quantity': 2},
+                {'catalog_item': self.material_catalog.id, 'quantity': 'bad-number'},
+            ],
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+
+        stage_material_names = list(
+            EstimateItem.objects.filter(stage=self.stage_3, item_type='material')
+            .order_by('name')
+            .values_list('name', flat=True)
+        )
+        self.assertEqual(stage_material_names, ['Old Material'])
+
+    def test_apply_stage3_armature_restricted_for_non_stage3(self):
+        self._authenticate()
+
+        response = self.client.post(
+            f'/api/stages/{self.stage_1.id}/apply_stage3_armature/',
+            [{'catalog_item': self.material_catalog.id, 'quantity': 1}],
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+
+    def test_apply_stage3_armature_restricted_for_non_material_catalog_item(self):
+        self._authenticate()
+
+        response = self.client.post(
+            f'/api/stages/{self.stage_3.id}/apply_stage3_armature/',
+            [{'catalog_item': self.work_catalog.id, 'quantity': 1}],
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+
+    def test_import_from_precalc_section_restricted_for_non_transfer_stage(self):
+        self._authenticate()
+
+        response = self.client.post(
+            f'/api/stages/{self.stage_3.id}/import_from_precalc_section/',
+            {'item_type': 'material'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)

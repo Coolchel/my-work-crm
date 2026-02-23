@@ -244,6 +244,42 @@ class ProjectRepository {
     }
   }
 
+  Future<Map<String, dynamic>> importFromPrecalcSection(
+    int stageId, {
+    required String itemType,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/stages/$stageId/import_from_precalc_section/',
+        data: {'item_type': itemType},
+      );
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      if (e is DioException) {
+        debugPrint("❌ Import From Precalc Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> applyStage3Armature(
+    int stageId,
+    List<Map<String, dynamic>> rows,
+  ) async {
+    try {
+      final response = await _dio.post(
+        '/stages/$stageId/apply_stage3_armature/',
+        data: rows,
+      );
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      if (e is DioException) {
+        debugPrint("❌ Apply Stage3 Armature Error: ${e.response?.data}");
+      }
+      rethrow;
+    }
+  }
+
   /// Загружает файл проекта.
   Future<ProjectFileModel> uploadFile({
     required int projectId,
