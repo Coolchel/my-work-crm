@@ -337,7 +337,6 @@ class EstimateItem(models.Model):
 
     item_type = models.CharField(max_length=20, choices=TYPE_CHOICES, verbose_name="Тип")
     is_preliminary = models.BooleanField(default=False, verbose_name="Это предпросчет?")
-    is_preliminary = models.BooleanField(default=False, verbose_name="Это предпросчет?")
     # is_extra удалено (теперь через отдельный этап)
     
     name = models.CharField(max_length=255, verbose_name="Наименование")
