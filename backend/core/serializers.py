@@ -11,6 +11,9 @@ from .models import (
 )
 from .text_normalizer import normalize_possible_mojibake
 
+MAX_PROJECT_FILES = 12
+MAX_PROJECT_FILE_SIZE_BYTES = 20 * 1024 * 1024
+
 
 class TextNormalizationSerializerMixin:
     normalized_text_fields: tuple[str, ...] = ()
@@ -35,6 +38,24 @@ class ProjectFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectFile
         fields = ['id', 'project', 'file', 'description', 'category', 'original_name']
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        project = attrs.get('project') or getattr(self.instance, 'project', None)
+        file_obj = attrs.get('file')
+        errors = {}
+
+        if self.instance is None and project and project.files.count() >= MAX_PROJECT_FILES:
+            errors['project'] = [f'Достигнут лимит в {MAX_PROJECT_FILES} файлов для проекта.']
+
+        if file_obj is not None and getattr(file_obj, 'size', 0) > MAX_PROJECT_FILE_SIZE_BYTES:
+            errors['file'] = ['Размер файла превышает 20 МБ.']
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return attrs
 
     def create(self, validated_data):
         file_obj = validated_data.get('file')
