@@ -158,11 +158,14 @@ class _StatCardState extends State<_StatCard> {
         ? const [Color(0xFF171A21), Color(0xFF151920)]
         : const [Color(0xFFF7F9FF), Color(0xFFF1F5FF)];
     final selectedGradient = isDark
-        ? const [Color(0xFF1C2028), Color(0xFF171A21)]
-        : const [
-            Color(0xFFDCE6FF),
-            Color(0xFFEEF3FF),
-          ];
+        ? const [Color(0xFF232831), Color(0xFF1C2028)]
+        : const [Color(0xFFFFFFFF), Color(0xFFF6F8FC)];
+    final selectedBorderColor = isDark
+        ? Colors.white.withOpacity(0.42)
+        : scheme.onSurface.withOpacity(0.20);
+    final selectedShadowColor = isDark
+        ? Colors.white.withOpacity(0.14)
+        : Colors.black.withOpacity(0.07);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -178,6 +181,13 @@ class _StatCardState extends State<_StatCard> {
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
+            if (widget.isSelected)
+              BoxShadow(
+                color: selectedShadowColor,
+                blurRadius: isDark ? 18 : 14,
+                spreadRadius: isDark ? 0.4 : 0,
+                offset: const Offset(0, 0),
+              ),
             BoxShadow(
               color:
                   AppDesignTokens.cardShadow(context, hovered: effectiveHover),
@@ -186,11 +196,13 @@ class _StatCardState extends State<_StatCard> {
             ),
           ],
           border: Border.all(
-            color: AppDesignTokens.cardBorder(
-              context,
-              hovered: effectiveHover || widget.isSelected,
-            ),
-            width: 1,
+            color: widget.isSelected
+                ? selectedBorderColor
+                : AppDesignTokens.cardBorder(
+                    context,
+                    hovered: effectiveHover,
+                  ),
+            width: widget.isSelected ? 1.5 : 1,
           ),
         ),
         child: Material(
@@ -221,7 +233,9 @@ class _StatCardState extends State<_StatCard> {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: widget.isSelected
-                              ? widget.color.withOpacity(isDark ? 0.22 : 0.14)
+                              ? (isDark
+                                  ? Colors.white.withOpacity(0.13)
+                                  : Colors.black.withOpacity(0.06))
                               : widget.color.withOpacity(isDark ? 0.14 : 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),

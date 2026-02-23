@@ -456,6 +456,9 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
     const bg = Colors.indigo;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final popupBackgroundColor = isDark
+        ? AppDesignTokens.surface2(context)
+        : scheme.surfaceContainer;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -487,7 +490,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                   elevation: 4,
                   shadowColor: AppDesignTokens.cardShadow(context),
                   surfaceTintColor: Colors.transparent,
-                  color: AppDesignTokens.surface2(context),
+                  color: popupBackgroundColor,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                   constraints: BoxConstraints(
