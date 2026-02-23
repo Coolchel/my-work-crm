@@ -4,6 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from decimal import Decimal, InvalidOperation
+from django.db.models import Case, Count, DecimalField, ExpressionWrapper, F, Q, Sum, Value, When
+from django.db.models.functions import Coalesce, TruncDate, TruncMonth
 from django.db import transaction
 from django.db.utils import OperationalError, ProgrammingError
 from .models import (
@@ -785,14 +787,27 @@ class StatisticsViewSet(AuthenticatedViewSet):
     """
     ViewSet для получения статистики по проекту.
     """
+    _AGGREGATE_FIELD = DecimalField(max_digits=22, decimal_places=4)
+    _ZERO = Value(Decimal('0.00'), output_field=_AGGREGATE_FIELD)
+
+    def _client_amount_expression(self, prefix=''):
+        quantity = F(f'{prefix}total_quantity')
+        unit_price = F(f'{prefix}price_per_unit')
+        markup = F(f'{prefix}markup_percent')
+
+        return ExpressionWrapper(
+            quantity * unit_price * (Value(Decimal('1.00')) + (markup * Value(Decimal('0.01')))),
+            output_field=self._AGGREGATE_FIELD,
+        )
+
+    @staticmethod
+    def _round_amount(value):
+        return round(float(value or 0), 2)
+
     def list(self, request):
         from django.utils import timezone
-        import datetime
 
-        # 0. Фильтрация по времени (Time Filter)
-        period = request.query_params.get('period', 'all')  # 'month', 'year', 'all'
-        
-        # Определяем диапазон дат
+        period = request.query_params.get('period', 'all')
         start_date = None
         end_date = timezone.now()
 
@@ -800,112 +815,171 @@ class StatisticsViewSet(AuthenticatedViewSet):
             start_date = end_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         elif period == 'year':
             start_date = end_date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-        
-        # Базовый QuerySet для этапов (исключая предпросчет)
-        stages_qs = Stage.objects.exclude(title='precalc')
-        
-        # Фильтруем этапы по дате создания (генерация работ)
+
+        item_filters = ~Q(stage__title='precalc')
+        project_stage_filters = ~Q(stages__title='precalc')
         if start_date:
-            stages_qs = stages_qs.filter(created_at__gte=start_date)
+            item_filters &= Q(stage__created_at__gte=start_date)
+            project_stage_filters &= Q(stages__created_at__gte=start_date)
 
-        # 1. Total Finances (No more "Pipeline" or "Pending")
-        total_usd = 0.0
-        total_byn = 0.0
+        item_amount_expr = self._client_amount_expression()
+        project_item_amount_expr = self._client_amount_expression(prefix='stages__estimate_items__')
 
-        # Получаем этапы, попавшие в выборку
-        for stage in stages_qs:
-            # Считаем суммы для этапа
-            for item in stage.estimate_items.all():
-                if item.currency == 'USD':
-                    total_usd += item.client_amount
-                else:
-                    total_byn += item.client_amount
+        total_amounts = EstimateItem.objects.filter(item_filters).aggregate(
+            usd=Coalesce(
+                Sum(
+                    Case(
+                        When(currency='USD', then=item_amount_expr),
+                        default=self._ZERO,
+                        output_field=self._AGGREGATE_FIELD,
+                    )
+                ),
+                self._ZERO,
+            ),
+            byn=Coalesce(
+                Sum(
+                    Case(
+                        When(currency='BYN', then=item_amount_expr),
+                        default=self._ZERO,
+                        output_field=self._AGGREGATE_FIELD,
+                    )
+                ),
+                self._ZERO,
+            ),
+        )
 
-        # 2. Источники (Sources) & 3. Типы объектов (Object Types)
-        
         projects_qs = Project.objects.all()
         if start_date:
-            # Считаем проект активным, если он был создан в этот период (или его этапы)
-            # Для простоты привяжемся к created_at проекта для источников
             projects_qs = projects_qs.filter(created_at__gte=start_date)
 
-        sources_data = {}
-        types_data = {}
-        type_labels = dict(Project.OBJECT_TYPE_CHOICES)
+        sources_rows = projects_qs.values('source').annotate(
+            count=Count('id', distinct=True),
+            usd=Coalesce(
+                Sum(
+                    Case(
+                        When(
+                            project_stage_filters & Q(stages__estimate_items__currency='USD'),
+                            then=project_item_amount_expr,
+                        ),
+                        default=self._ZERO,
+                        output_field=self._AGGREGATE_FIELD,
+                    )
+                ),
+                self._ZERO,
+            ),
+            byn=Coalesce(
+                Sum(
+                    Case(
+                        When(
+                            project_stage_filters & Q(stages__estimate_items__currency='BYN'),
+                            then=project_item_amount_expr,
+                        ),
+                        default=self._ZERO,
+                        output_field=self._AGGREGATE_FIELD,
+                    )
+                ),
+                self._ZERO,
+            ),
+        )
 
-        for project in projects_qs:
-            # --- Sources ---
-            src = project.source or "Не указан"
-            if src not in sources_data:
-                sources_data[src] = {'count': 0, 'usd': 0.0, 'byn': 0.0}
-            
-            sources_data[src]['count'] += 1
-            
-            # --- Types ---
-            obj_type = project.object_type
-            label = type_labels.get(obj_type, obj_type)
-            if label not in types_data:
-                types_data[label] = {'count': 0, 'usd': 0.0, 'byn': 0.0}
-            types_data[label]['count'] += 1
+        object_type_rows = projects_qs.values('object_type').annotate(
+            count=Count('id', distinct=True),
+            usd=Coalesce(
+                Sum(
+                    Case(
+                        When(
+                            project_stage_filters & Q(stages__estimate_items__currency='USD'),
+                            then=project_item_amount_expr,
+                        ),
+                        default=self._ZERO,
+                        output_field=self._AGGREGATE_FIELD,
+                    )
+                ),
+                self._ZERO,
+            ),
+            byn=Coalesce(
+                Sum(
+                    Case(
+                        When(
+                            project_stage_filters & Q(stages__estimate_items__currency='BYN'),
+                            then=project_item_amount_expr,
+                        ),
+                        default=self._ZERO,
+                        output_field=self._AGGREGATE_FIELD,
+                    )
+                ),
+                self._ZERO,
+            ),
+        )
 
-            # Считаем общую сумму проекта (только по этапам этого проекта, которые попали в период)
-            # ВАЖНО: Мы должны брать этапы, которые УЖЕ отфильтрованы по дате выше
-            project_stages = stages_qs.filter(project=project)
-            
-            for stage in project_stages:
-                for item in stage.estimate_items.all():
-                    if item.currency == 'USD':
-                        sources_data[src]['usd'] += item.client_amount
-                        types_data[label]['usd'] += item.client_amount
-                    else:
-                        sources_data[src]['byn'] += item.client_amount
-                        types_data[label]['byn'] += item.client_amount
-
-        # 4. Динамика работ (Work Dynamics)
-        dynamics_data = {} # "YYYY-MM-DD" -> {usd, byn}
         is_monthly_grouping = period in ['year', 'all']
+        trunc = TruncMonth('stage__created_at') if is_monthly_grouping else TruncDate('stage__created_at')
 
-        for stage in stages_qs:
-            # Определяем ключ даты
-            date_key = ""
-            if is_monthly_grouping:
-                date_key = stage.created_at.strftime("%Y-%m") # Group by Month
-            else:
-                date_key = stage.created_at.strftime("%Y-%m-%d") # Group by Day
+        dynamics_rows = (
+            EstimateItem.objects.filter(item_filters)
+            .annotate(period_date=trunc)
+            .values('period_date')
+            .annotate(
+                usd=Coalesce(
+                    Sum(
+                        Case(
+                            When(currency='USD', then=item_amount_expr),
+                            default=self._ZERO,
+                            output_field=self._AGGREGATE_FIELD,
+                        )
+                    ),
+                    self._ZERO,
+                ),
+                byn=Coalesce(
+                    Sum(
+                        Case(
+                            When(currency='BYN', then=item_amount_expr),
+                            default=self._ZERO,
+                            output_field=self._AGGREGATE_FIELD,
+                        )
+                    ),
+                    self._ZERO,
+                ),
+            )
+            .order_by('period_date')
+        )
 
-            if date_key not in dynamics_data:
-                dynamics_data[date_key] = {'usd': 0.0, 'byn': 0.0}
+        dynamics_list = [
+            {
+                'date': row['period_date'].strftime('%Y-%m' if is_monthly_grouping else '%Y-%m-%d'),
+                'usd': self._round_amount(row['usd']),
+                'byn': self._round_amount(row['byn']),
+            }
+            for row in dynamics_rows
+        ]
 
-            # Суммируем предметы
-            for item in stage.estimate_items.all():
-                if item.currency == 'USD':
-                    dynamics_data[date_key]['usd'] += item.client_amount
-                else:
-                    dynamics_data[date_key]['byn'] += item.client_amount
+        sources_list = [
+            {
+                'name': row['source'] or 'Не указан',
+                'count': row['count'],
+                'usd': self._round_amount(row['usd']),
+                'byn': self._round_amount(row['byn']),
+            }
+            for row in sources_rows
+        ]
 
-        # Преобразуем в список и сортируем
-        dynamics_list = []
-        for k, v in dynamics_data.items():
-            dynamics_list.append({
-                'date': k,
-                'usd': round(v['usd'], 2),
-                'byn': round(v['byn'], 2)
-            })
-        
-        dynamics_list.sort(key=lambda x: x['date'])
+        type_labels = dict(Project.OBJECT_TYPE_CHOICES)
+        object_types_list = [
+            {
+                'name': type_labels.get(row['object_type'], row['object_type']),
+                'count': row['count'],
+                'usd': self._round_amount(row['usd']),
+                'byn': self._round_amount(row['byn']),
+            }
+            for row in object_type_rows
+        ]
 
         return Response({
             'finances': {
-                'usd': round(total_usd, 2),
-                'byn': round(total_byn, 2),
+                'usd': self._round_amount(total_amounts['usd']),
+                'byn': self._round_amount(total_amounts['byn']),
             },
-            'sources': [
-                {'name': k, 'count': v['count'], 'usd': round(v['usd'], 2), 'byn': round(v['byn'], 2)}
-                for k, v in sources_data.items()
-            ],
-            'object_types': [
-                {'name': k, 'count': v['count'], 'usd': round(v['usd'], 2), 'byn': round(v['byn'], 2)}
-                for k, v in types_data.items()
-            ],
-            'work_dynamics': dynamics_list
+            'sources': sources_list,
+            'object_types': object_types_list,
+            'work_dynamics': dynamics_list,
         })
