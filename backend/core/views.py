@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.utils import OperationalError, ProgrammingError
 from .models import (
@@ -151,8 +152,15 @@ def _bootstrap_directory_from_choices():
         'total_entries': DirectoryEntry.objects.count(),
     }
 
+class AuthenticatedModelViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
 
-class ProjectFileViewSet(viewsets.ModelViewSet):
+
+class AuthenticatedViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+
+class ProjectFileViewSet(AuthenticatedModelViewSet):
     queryset = ProjectFile.objects.all()
     serializer_class = ProjectFileSerializer
     filter_backends = [DjangoFilterBackend]
@@ -165,12 +173,12 @@ class ProjectFileViewSet(viewsets.ModelViewSet):
         instance.delete()
 
 
-class CatalogCategoryViewSet(viewsets.ModelViewSet):
+class CatalogCategoryViewSet(AuthenticatedModelViewSet):
     queryset = CatalogCategory.objects.all()
     serializer_class = CatalogCategorySerializer
 
 
-class CatalogItemViewSet(viewsets.ModelViewSet):
+class CatalogItemViewSet(AuthenticatedModelViewSet):
     queryset = CatalogItem.objects.all()
     serializer_class = CatalogItemSerializer
     filter_backends = [DjangoFilterBackend]
@@ -184,7 +192,7 @@ class CatalogItemViewSet(viewsets.ModelViewSet):
         return qs
 
 
-class DirectorySectionViewSet(viewsets.ModelViewSet):
+class DirectorySectionViewSet(AuthenticatedModelViewSet):
     queryset = DirectorySection.objects.prefetch_related('entries').all()
     serializer_class = DirectorySectionSerializer
 
@@ -244,7 +252,7 @@ class DirectorySectionViewSet(viewsets.ModelViewSet):
             raise
 
 
-class DirectoryEntryViewSet(viewsets.ModelViewSet):
+class DirectoryEntryViewSet(AuthenticatedModelViewSet):
     queryset = DirectoryEntry.objects.select_related('section').all()
     serializer_class = DirectoryEntrySerializer
     filter_backends = [DjangoFilterBackend]
@@ -294,7 +302,7 @@ class DirectoryEntryViewSet(viewsets.ModelViewSet):
             return self._handle_directory_db_error(error)
 
 
-class ShieldViewSet(viewsets.ModelViewSet):
+class ShieldViewSet(AuthenticatedModelViewSet):
     queryset = Shield.objects.all()
     serializer_class = ShieldSerializer
     filter_backends = [DjangoFilterBackend]
@@ -323,14 +331,14 @@ class ShieldViewSet(viewsets.ModelViewSet):
 
 
 
-class ShieldGroupViewSet(viewsets.ModelViewSet):
+class ShieldGroupViewSet(AuthenticatedModelViewSet):
     queryset = ShieldGroup.objects.all()
     serializer_class = ShieldGroupSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['shield', 'shield__project']
 
 
-class LedZoneViewSet(viewsets.ModelViewSet):
+class LedZoneViewSet(AuthenticatedModelViewSet):
     queryset = LedZone.objects.all()
     serializer_class = LedZoneSerializer
     filter_backends = [DjangoFilterBackend]
@@ -340,7 +348,7 @@ class LedZoneViewSet(viewsets.ModelViewSet):
 
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjectViewSet(AuthenticatedModelViewSet):
     queryset = Project.objects.all().order_by('-created_at').prefetch_related('files')
     serializer_class = ProjectSerializer
     filter_backends = [filters.SearchFilter]
@@ -465,7 +473,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
 
 
-class EstimateItemViewSet(viewsets.ModelViewSet):
+class EstimateItemViewSet(AuthenticatedModelViewSet):
     queryset = EstimateItem.objects.all()
     serializer_class = EstimateItemSerializer
     filter_backends = [DjangoFilterBackend]
@@ -492,7 +500,7 @@ class EstimateItemViewSet(viewsets.ModelViewSet):
             instance.price_per_unit = instance.catalog_item.default_price
             instance.save()
 
-class StageViewSet(viewsets.ModelViewSet):
+class StageViewSet(AuthenticatedModelViewSet):
     queryset = Stage.objects.all()
     serializer_class = StageSerializer
     filter_backends = [DjangoFilterBackend]
@@ -559,7 +567,7 @@ class StageViewSet(viewsets.ModelViewSet):
 
 from .models import WorkTemplate, MaterialTemplate, PowerShieldTemplate, LedShieldTemplate
 
-class WorkTemplateViewSet(viewsets.ModelViewSet):
+class WorkTemplateViewSet(AuthenticatedModelViewSet):
     queryset = WorkTemplate.objects.all()
     serializer_class = WorkTemplateSerializer
 
@@ -576,7 +584,7 @@ class WorkTemplateViewSet(viewsets.ModelViewSet):
         if result.get("status") == "error": return Response(result, status=400)
         return Response(result)
 
-class MaterialTemplateViewSet(viewsets.ModelViewSet):
+class MaterialTemplateViewSet(AuthenticatedModelViewSet):
     queryset = MaterialTemplate.objects.all()
     serializer_class = MaterialTemplateSerializer
 
@@ -593,7 +601,7 @@ class MaterialTemplateViewSet(viewsets.ModelViewSet):
         if result.get("status") == "error": return Response(result, status=400)
         return Response(result)
 
-class PowerShieldTemplateViewSet(viewsets.ModelViewSet):
+class PowerShieldTemplateViewSet(AuthenticatedModelViewSet):
     queryset = PowerShieldTemplate.objects.all()
     serializer_class = PowerShieldTemplateSerializer  
 
@@ -610,7 +618,7 @@ class PowerShieldTemplateViewSet(viewsets.ModelViewSet):
         if result.get("status") == "error": return Response(result, status=400)
         return Response(result)
 
-class LedShieldTemplateViewSet(viewsets.ModelViewSet):
+class LedShieldTemplateViewSet(AuthenticatedModelViewSet):
     queryset = LedShieldTemplate.objects.all()
     serializer_class = LedShieldTemplateSerializer
 
@@ -628,7 +636,7 @@ class LedShieldTemplateViewSet(viewsets.ModelViewSet):
         return Response(result)
 
 
-class FinanceSettingsViewSet(viewsets.ViewSet):
+class FinanceSettingsViewSet(AuthenticatedViewSet):
     """
     ViewSet для глобальных финансовых настроек.
     Singleton модель - всегда одна запись.
@@ -643,7 +651,7 @@ class FinanceSettingsViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class StatisticsViewSet(viewsets.ViewSet):
+class StatisticsViewSet(AuthenticatedViewSet):
     """
     ViewSet для получения статистики по проекту.
     """
