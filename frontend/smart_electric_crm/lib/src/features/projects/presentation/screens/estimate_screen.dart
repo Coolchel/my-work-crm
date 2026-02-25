@@ -79,6 +79,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   void initState() {
     super.initState();
     _stage = widget.stage;
+    _showPrices = _stage.showPrices;
     _markupPercent = _stage.markupPercent;
 
     // Load items
@@ -97,6 +98,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         setState(() {
           _items = stage.estimateItems;
           _stage = stage;
+          _showPrices = stage.showPrices;
           _markupPercent = stage.markupPercent;
           _precalcWorkItems = precalcItems['work'] ?? const [];
           _precalcMaterialItems = precalcItems['material'] ?? const [];
@@ -191,7 +193,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
             onSelected: (value) {
               switch (value) {
                 case 'toggle_prices':
-                  setState(() => _showPrices = !_showPrices);
+                  unawaited(_setShowPrices(!_showPrices));
                   break;
                 case 'import':
                   if (_currentIndex == 0) {
@@ -363,7 +365,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
             showPrices: _showPrices,
             onUpdate: _updateItemFromTab,
             onDelete: _deleteItemFromTab,
-            onShowPricesChanged: (v) => setState(() => _showPrices = v),
+            onShowPricesChanged: _setShowPrices,
             markupPercent: _markupPercent,
             onMarkupChanged: (val) {
               setState(() => _markupPercent = val);
@@ -935,6 +937,31 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       ref.invalidate(projectListProvider);
     } catch (e) {
       debugPrint("Error saving markup: $e");
+    }
+  }
+
+  Future<void> _setShowPrices(bool value) async {
+    if (_showPrices == value) return;
+
+    final previous = _showPrices;
+    setState(() {
+      _showPrices = value;
+      _stage = _stage.copyWith(showPrices: value);
+    });
+
+    try {
+      final repo = ref.read(projectRepositoryProvider);
+      await repo.updateStage(widget.stage.id, {'show_prices': value});
+      ref.invalidate(projectListProvider);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _showPrices = previous;
+        _stage = _stage.copyWith(showPrices: previous);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ: $e")),
+      );
     }
   }
 
