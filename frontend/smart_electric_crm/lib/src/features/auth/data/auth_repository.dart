@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/api/api_exception.dart';
 import '../../../core/api/base_dio.dart';
 
 part 'auth_repository.g.dart';
@@ -15,6 +16,17 @@ class AuthRepository {
 
   AuthRepository(this._dio, this._prefs);
 
+  Never _throwApiError(
+    Object error,
+    StackTrace stackTrace, {
+    required String fallbackMessage,
+  }) {
+    if (error is DioException) {
+      throw ApiException.fromDio(error, fallbackMessage: fallbackMessage);
+    }
+    Error.throwWithStackTrace(error, stackTrace);
+  }
+
   Future<void> login(String username, String password) async {
     try {
       final response = await _dio.post(
@@ -27,8 +39,8 @@ class AuthRepository {
 
       final data = response.data;
       await _saveTokens(data['access'], data['refresh']);
-    } catch (e) {
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to login');
     }
   }
 
@@ -52,8 +64,8 @@ class AuthRepository {
         ),
       );
       return response.data;
-    } catch (e) {
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to fetch user profile');
     }
   }
 
@@ -70,8 +82,8 @@ class AuthRepository {
           headers: token != null ? {'Authorization': 'Bearer $token'} : null,
         ),
       );
-    } catch (e) {
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to change password');
     }
   }
 
@@ -92,7 +104,12 @@ class AuthRepository {
       if (e.response?.statusCode == 401) {
         return false;
       }
-      rethrow;
+      throw ApiException.fromDio(
+        e,
+        fallbackMessage: 'Failed to verify current password',
+      );
+    } catch (e, st) {
+      Error.throwWithStackTrace(e, st);
     }
   }
 
