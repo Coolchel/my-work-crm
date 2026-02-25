@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/api/api_exception.dart';
 import '../presentation/providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -38,7 +39,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Navigation is handled by auth state in main.dart.
     } catch (e) {
       var message = 'Неверный логин или пароль.';
-      if (e is DioException) {
+      if (e is ApiException) {
+        message = e.message;
+      } else if (e is DioException) {
         final data = e.response?.data;
         if (data is Map && data['detail'] is String) {
           message = data['detail'] as String;
