@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:smart_electric_crm/src/core/api/api_exception.dart';
 import '../models/shield_model.dart';
 import '../models/shield_group_model.dart';
 import '../models/led_zone_model.dart';
@@ -10,6 +11,13 @@ class EngineeringRepository {
   final Dio _dio;
 
   EngineeringRepository({required Dio dio}) : _dio = dio;
+
+  Never _throwApiError(Object error, String fallbackMessage) {
+    if (error is DioException) {
+      throw ApiException.fromDio(error, fallbackMessage: fallbackMessage);
+    }
+    throw ApiException.unknown(error, fallbackMessage: fallbackMessage);
+  }
 
   // --- Shields ---
 
@@ -26,7 +34,7 @@ class EngineeringRepository {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Add Shield Error: ${e.response?.data}");
       }
-      rethrow;
+      _throwApiError(e, 'Failed to add shield');
     }
   }
 
@@ -39,7 +47,7 @@ class EngineeringRepository {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Update Shield Error: ${e.response?.data}");
       }
-      rethrow;
+      _throwApiError(e, 'Failed to update shield');
     }
   }
 
@@ -51,7 +59,7 @@ class EngineeringRepository {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Delete Shield Error: ${e.response?.data}");
       }
-      rethrow;
+      _throwApiError(e, 'Failed to delete shield');
     }
   }
 
@@ -70,7 +78,7 @@ class EngineeringRepository {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Add Shield Group Error: ${e.response?.data}");
       }
-      rethrow;
+      _throwApiError(e, 'Failed to add shield group');
     }
   }
 
@@ -82,7 +90,7 @@ class EngineeringRepository {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Update Shield Group Error: ${e.response?.data}");
       }
-      rethrow;
+      _throwApiError(e, 'Failed to update shield group');
     }
   }
 
@@ -94,7 +102,7 @@ class EngineeringRepository {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Delete Shield Group Error: ${e.response?.data}");
       }
-      rethrow;
+      _throwApiError(e, 'Failed to delete shield group');
     }
   }
 
@@ -113,7 +121,7 @@ class EngineeringRepository {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Add LED Zone Error: ${e.response?.data}");
       }
-      rethrow;
+      _throwApiError(e, 'Failed to add LED zone');
     }
   }
 
@@ -125,7 +133,7 @@ class EngineeringRepository {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Update LED Zone Error: ${e.response?.data}");
       }
-      rethrow;
+      _throwApiError(e, 'Failed to update LED zone');
     }
   }
 
@@ -137,7 +145,7 @@ class EngineeringRepository {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Delete LED Zone Error: ${e.response?.data}");
       }
-      rethrow;
+      _throwApiError(e, 'Failed to delete LED zone');
     }
   }
 
@@ -150,7 +158,7 @@ class EngineeringRepository {
       return data.map((json) => ShieldTemplateModel.fromJson(json)).toList();
     } catch (e) {
       debugPrint("❌ Fetch Shield Templates Error: $e");
-      rethrow;
+      _throwApiError(e, 'Failed to load shield templates');
     }
   }
 
@@ -161,7 +169,7 @@ class EngineeringRepository {
       return data.map((json) => LedTemplateModel.fromJson(json)).toList();
     } catch (e) {
       debugPrint("❌ Fetch LED Templates Error: $e");
-      rethrow;
+      _throwApiError(e, 'Failed to load LED templates');
     }
   }
 
@@ -176,7 +184,7 @@ class EngineeringRepository {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Apply Shield Template Error: ${e.response?.data}");
       }
-      rethrow;
+      _throwApiError(e, 'Failed to apply shield template');
     }
   }
 
@@ -191,7 +199,7 @@ class EngineeringRepository {
       if (e is DioException && e.response != null) {
         debugPrint("❌ Apply LED Template Error: ${e.response?.data}");
       }
-      rethrow;
+      _throwApiError(e, 'Failed to apply LED template');
     }
   }
 }
