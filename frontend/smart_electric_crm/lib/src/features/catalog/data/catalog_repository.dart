@@ -37,7 +37,7 @@ class CatalogRepository {
 
   Future<List<CatalogItem>> fetchItems(int categoryId) async {
     final response = await _client.get('/catalog-items/', queryParameters: {
-      'category_id': categoryId,
+      'category': categoryId,
     });
     final List<dynamic> data = response.data as List<dynamic>;
     return data

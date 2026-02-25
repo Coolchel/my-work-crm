@@ -145,7 +145,7 @@ class EngineeringRepository {
 
   Future<List<ShieldTemplateModel>> fetchShieldTemplates() async {
     try {
-      final response = await _dio.get('/shield-templates/');
+      final response = await _dio.get('/powershield-templates/');
       final List<dynamic> data = response.data;
       return data.map((json) => ShieldTemplateModel.fromJson(json)).toList();
     } catch (e) {
@@ -156,7 +156,7 @@ class EngineeringRepository {
 
   Future<List<LedTemplateModel>> fetchLedTemplates() async {
     try {
-      final response = await _dio.get('/led-templates/');
+      final response = await _dio.get('/led-shield-templates/');
       final List<dynamic> data = response.data;
       return data.map((json) => LedTemplateModel.fromJson(json)).toList();
     } catch (e) {

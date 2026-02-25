@@ -156,3 +156,4 @@
 - Переключение `ThemeMode` (`Light/Dark/System`) с persistence.
 - Вход в Directory из Settings: warning + проверка пароля текущего аккаунта.
 - Ошибка пароля отображается inline, без перехода на Directory.
+- Текущее расхождение по навигации Settings зафиксировано как `NAV-SETTINGS-001` в `docs/DESIGN.md` (статус: `known issue / tech debt`).
