@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:smart_electric_crm/src/core/api/api_exception.dart';
 import '../../data/models/project_model.dart';
 import '../../data/models/project_file_model.dart';
 import '../../data/models/stage_model.dart';
@@ -11,6 +11,16 @@ class ProjectRepository {
   final Dio _dio;
 
   ProjectRepository({required Dio dio}) : _dio = dio;
+  Never _throwApiError(
+    Object error,
+    StackTrace stackTrace, {
+    required String fallbackMessage,
+  }) {
+    if (error is DioException) {
+      throw ApiException.fromDio(error, fallbackMessage: fallbackMessage);
+    }
+    Error.throwWithStackTrace(error, stackTrace);
+  }
 
   /// Получает список всех проектов.
   Future<List<ProjectModel>> fetchProjects({String? search}) async {
@@ -22,9 +32,8 @@ class ProjectRepository {
       );
       final List<dynamic> data = response.data;
       return data.map((json) => ProjectModel.fromJson(json)).toList();
-    } catch (e) {
-      debugPrint("❌ Fetch Projects Error: $e");
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to fetch projects');
     }
   }
 
@@ -33,9 +42,8 @@ class ProjectRepository {
     try {
       final response = await _dio.get('/projects/$id/');
       return ProjectModel.fromJson(response.data);
-    } catch (e) {
-      debugPrint("❌ Fetch Project Error: $e");
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to fetch project');
     }
   }
 
@@ -45,11 +53,8 @@ class ProjectRepository {
     try {
       final response = await _dio.post('/projects/', data: data);
       return ProjectModel.fromJson(response.data);
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Create Project Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to create project');
     }
   }
 
@@ -60,11 +65,8 @@ class ProjectRepository {
         'project': projectId,
         'title': title,
       });
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Add Stage Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to add stage');
     }
   }
 
@@ -73,9 +75,8 @@ class ProjectRepository {
     try {
       final response = await _dio.get('/stages/$stageId/');
       return StageModel.fromJson(response.data);
-    } catch (e) {
-      debugPrint("❌ Fetch Stage Error: $e");
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to fetch stage');
     }
   }
 
@@ -83,11 +84,8 @@ class ProjectRepository {
   Future<void> updateStage(int stageId, Map<String, dynamic> data) async {
     try {
       await _dio.patch('/stages/$stageId/', data: data);
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Update Stage Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to update stage');
     }
   }
 
@@ -96,11 +94,8 @@ class ProjectRepository {
   Future<void> updateStageStatus(String stageId, String status) async {
     try {
       await _dio.patch('/stages/$stageId/', data: {'status': status});
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Update Stage Status Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to update stage status');
     }
   }
 
@@ -108,11 +103,8 @@ class ProjectRepository {
   Future<void> deleteStage(int stageId) async {
     try {
       await _dio.delete('/stages/$stageId/');
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Delete Stage Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to delete stage');
     }
   }
 
@@ -120,11 +112,8 @@ class ProjectRepository {
   Future<void> deleteProject(String id) async {
     try {
       await _dio.delete('/projects/$id/');
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Delete Project Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to delete project');
     }
   }
 
@@ -132,11 +121,8 @@ class ProjectRepository {
   Future<void> updateProject(String id, Map<String, dynamic> data) async {
     try {
       await _dio.patch('/projects/$id/', data: data);
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Update Project Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to update project');
     }
   }
 
@@ -144,11 +130,8 @@ class ProjectRepository {
   Future<void> updateEstimateItem(int itemId, Map<String, dynamic> data) async {
     try {
       await _dio.patch('/estimate-items/$itemId/', data: data);
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Update Estimate Item Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to update estimate item');
     }
   }
 
@@ -161,11 +144,8 @@ class ProjectRepository {
         queryParameters: type != null ? {'type': type} : null,
       );
       return Map<String, String>.from(response.data);
-    } catch (e) {
-      if (e is DioException && e.response != null) {
-        debugPrint("❌ Fetch Report Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to fetch stage report');
     }
   }
 
@@ -173,11 +153,8 @@ class ProjectRepository {
   Future<void> addEstimateItem(Map<String, dynamic> data) async {
     try {
       await _dio.post('/estimate-items/', data: data);
-    } catch (e) {
-      if (e is DioException) {
-        debugPrint("❌ Add Estimate Item Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to add estimate item');
     }
   }
 
@@ -185,11 +162,8 @@ class ProjectRepository {
   Future<void> deleteEstimateItem(int itemId) async {
     try {
       await _dio.delete('/estimate-items/$itemId/');
-    } catch (e) {
-      if (e is DioException) {
-        debugPrint("❌ Delete Estimate Item Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to delete estimate item');
     }
   }
 
@@ -198,11 +172,9 @@ class ProjectRepository {
     try {
       final response = await _dio.post('/stages/$stageId/import_from_shields/');
       return response.data as Map<String, dynamic>;
-    } catch (e) {
-      if (e is DioException) {
-        debugPrint("❌ Import Shields Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st,
+          fallbackMessage: 'Failed to import data from shields');
     }
   }
 
@@ -211,9 +183,8 @@ class ProjectRepository {
     try {
       final response = await _dio.post('/stages/$stageId/calculate_works/');
       return response.data as Map<String, dynamic>;
-    } catch (e) {
-      if (e is DioException) {}
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to calculate works');
     }
   }
 
@@ -227,11 +198,9 @@ class ProjectRepository {
         data: {'item_type': itemType},
       );
       return response.data as Map<String, dynamic>;
-    } catch (e) {
-      if (e is DioException) {
-        debugPrint("❌ Import From Precalc Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st,
+          fallbackMessage: 'Failed to import from precalc section');
     }
   }
 
@@ -245,11 +214,8 @@ class ProjectRepository {
         data: rows,
       );
       return response.data as Map<String, dynamic>;
-    } catch (e) {
-      if (e is DioException) {
-        debugPrint("❌ Apply Stage3 Armature Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to apply stage3 armature');
     }
   }
 
@@ -278,11 +244,8 @@ class ProjectRepository {
 
       final response = await _dio.post('/project-files/', data: formData);
       return ProjectFileModel.fromJson(response.data);
-    } catch (e) {
-      if (e is DioException) {
-        debugPrint("❌ Upload File Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to upload project file');
     }
   }
 
@@ -290,11 +253,8 @@ class ProjectRepository {
   Future<void> deleteProjectFile(int fileId) async {
     try {
       await _dio.delete('/project-files/$fileId/');
-    } catch (e) {
-      if (e is DioException) {
-        debugPrint("❌ Delete File Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to delete project file');
     }
   }
 
@@ -302,11 +262,8 @@ class ProjectRepository {
   Future<void> updateProjectFile(int fileId, Map<String, dynamic> data) async {
     try {
       await _dio.patch('/project-files/$fileId/', data: data);
-    } catch (e) {
-      if (e is DioException) {
-        debugPrint("❌ Update File Error: ${e.response?.data}");
-      }
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(e, st, fallbackMessage: 'Failed to update project file');
     }
   }
 

@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../../core/api/api_exception.dart';
 import '../../../../core/api/dio_client.dart';
-import '../models/unpaid_project_model.dart';
 import '../models/finance_settings_model.dart';
+import '../models/unpaid_project_model.dart';
 
 part 'finance_repository.g.dart';
 
@@ -19,14 +19,28 @@ class FinanceRepository {
 
   FinanceRepository({required Dio dio}) : _dio = dio;
 
+  Never _throwApiError(
+    Object error,
+    StackTrace stackTrace, {
+    required String fallbackMessage,
+  }) {
+    if (error is DioException) {
+      throw ApiException.fromDio(error, fallbackMessage: fallbackMessage);
+    }
+    Error.throwWithStackTrace(error, stackTrace);
+  }
+
   /// Получает список проектов с неоплаченными этапами
   Future<UnpaidProjectsResponse> fetchUnpaidProjects() async {
     try {
       final response = await _dio.get('/projects/unpaid_projects/');
       return UnpaidProjectsResponse.fromJson(response.data);
-    } catch (e) {
-      debugPrint("❌ Fetch Unpaid Projects Error: $e");
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(
+        e,
+        st,
+        fallbackMessage: 'Failed to fetch unpaid projects',
+      );
     }
   }
 
@@ -34,9 +48,12 @@ class FinanceRepository {
   Future<void> markStagePaid(int stageId) async {
     try {
       await _dio.patch('/stages/$stageId/', data: {'is_paid': true});
-    } catch (e) {
-      debugPrint("❌ Mark Stage Paid Error: $e");
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(
+        e,
+        st,
+        fallbackMessage: 'Failed to mark stage as paid',
+      );
     }
   }
 
@@ -47,9 +64,12 @@ class FinanceRepository {
       // API возвращает список с одним элементом, берем первый
       final data = response.data is List ? response.data[0] : response.data;
       return FinanceSettingsModel.fromJson(data);
-    } catch (e) {
-      debugPrint("❌ Get Finance Settings Error: $e");
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(
+        e,
+        st,
+        fallbackMessage: 'Failed to fetch finance settings',
+      );
     }
   }
 
@@ -68,9 +88,12 @@ class FinanceRepository {
       }
       final response = await _dio.patch('/finance/1/', data: data);
       return FinanceSettingsModel.fromJson(response.data);
-    } catch (e) {
-      debugPrint("❌ Update Finance Settings Error: $e");
-      rethrow;
+    } catch (e, st) {
+      _throwApiError(
+        e,
+        st,
+        fallbackMessage: 'Failed to update finance settings',
+      );
     }
   }
 }
