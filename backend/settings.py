@@ -11,7 +11,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from datetime import timedelta
+import os
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,14 +21,48 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+def load_dotenv(dotenv_path: Path) -> None:
+    if not dotenv_path.exists():
+        return
+    for line in dotenv_path.read_text(encoding='utf-8').splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith('#') or '=' not in stripped:
+            continue
+        key, value = stripped.split('=', 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        os.environ.setdefault(key, value)
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^1hl$2l&)*1t54wq%s0+)=-rn+_gr(wr0t@08j22b7g2&#+9y+'
+
+load_dotenv(BASE_DIR / '.env')
+
+
+def env_bool(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+def env_csv(name: str, default: str = '') -> list[str]:
+    raw = os.getenv(name, default)
+    return [item.strip() for item in raw.split(',') if item.strip()]
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env_bool('DJANGO_DEBUG', default=True)
 
-ALLOWED_HOSTS = ['*']
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-local-dev-key-with-minimum-32-byte-length'
+    else:
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is False.')
+
+ALLOWED_HOSTS = env_csv('DJANGO_ALLOWED_HOSTS', default='localhost,127.0.0.1')
+if not ALLOWED_HOSTS and not DEBUG:
+    raise ImproperlyConfigured('DJANGO_ALLOWED_HOSTS must be set when DJANGO_DEBUG is False.')
 
 
 # Application definition
@@ -140,4 +176,10 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = DEBUG and env_bool('DJANGO_CORS_ALLOW_ALL_ORIGINS', default=True)
+CORS_ALLOWED_ORIGINS = env_csv('DJANGO_CORS_ALLOWED_ORIGINS')
+
+if not CORS_ALLOW_ALL_ORIGINS and not CORS_ALLOWED_ORIGINS and not DEBUG:
+    raise ImproperlyConfigured(
+        'DJANGO_CORS_ALLOWED_ORIGINS must be set when DJANGO_DEBUG is False and DJANGO_CORS_ALLOW_ALL_ORIGINS is disabled.'
+    )
