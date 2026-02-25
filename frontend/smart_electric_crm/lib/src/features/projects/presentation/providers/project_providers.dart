@@ -31,37 +31,12 @@ final projectSearchResultsProvider =
   final searchQuery = ref.watch(projectSearchQueryProvider);
 
   // If no search query, return empty list (or handle as needed by UI)
-  final normalizedQuery = searchQuery?.trim().toLowerCase();
+  final normalizedQuery = searchQuery?.trim();
   if (normalizedQuery == null || normalizedQuery.isEmpty) {
     return [];
   }
 
-  final projects = await repository.fetchProjects();
-  return projects.where((project) {
-    final inProjectFields = [
-      project.address,
-      project.clientInfo,
-      project.intercomCode,
-      project.source,
-    ].any((value) => value.toLowerCase().contains(normalizedQuery));
-
-    if (inProjectFields) {
-      return true;
-    }
-
-    return project.stages.any((stage) {
-      final inStageTitle = stage.title.toLowerCase().contains(normalizedQuery);
-      if (inStageTitle) {
-        return true;
-      }
-
-      return stage.estimateItems.any((item) {
-        final itemFields = [item.name, item.unit, item.categoryName ?? ''];
-        return itemFields
-            .any((value) => value.toLowerCase().contains(normalizedQuery));
-      });
-    });
-  }).toList();
+  return repository.fetchProjects(search: normalizedQuery);
 });
 
 /// Провайдер для управления операциями с проектами (добавление, обновление, удаление).
