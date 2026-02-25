@@ -9,6 +9,7 @@ import '../../data/models/stage_model.dart';
 import '../../data/repositories/project_repository.dart';
 import '../providers/project_providers.dart';
 import '../widgets/estimate/estimate_tab.dart';
+import '../widgets/estimate/estimate_app_bar_actions.dart';
 import '../dialogs/estimate/add_item_dialog.dart';
 import '../dialogs/estimate/quantity_input_dialog.dart';
 import '../dialogs/estimate/edit_item_dialog.dart';
@@ -169,28 +170,17 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         subtitle: StageCard.getStageTitleDisplay(widget.stage.title),
         icon: Icons.request_quote_rounded,
         actions: [
-          // PDF Actions Button
-          IconButton(
-            icon: const Icon(Icons.auto_graph_rounded),
-            tooltip: "PDF смета",
-            onPressed: () => _showPdfActionsDialog(context),
-          ),
-          // Text Actions Button
-          IconButton(
-            icon: const Icon(Icons.segment_rounded),
-            tooltip: "Текстовые сметы",
-            onPressed: () => _showTextActionsDialog(context),
-          ),
-          const SizedBox(width: 8),
-          // Overflow Menu
-          PopupMenuButton<String>(
-            tooltip: 'Действия',
-            icon: const Icon(Icons.more_vert),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            elevation: 4,
-            surfaceTintColor: Theme.of(context).colorScheme.surface,
-            onSelected: (value) {
+          EstimateAppBarActions(
+            showPrices: _showPrices,
+            currentIndex: _currentIndex,
+            canImportWorksFromPrecalc: _canImportWorksFromPrecalc,
+            canImportMaterialsFromPrecalc: _canImportMaterialsFromPrecalc,
+            isImportingFromPrecalc: _isImportingFromPrecalc,
+            stageTitle: _stage.title,
+            isApplyingStage3Calculator: _isApplyingStage3Calculator,
+            onShowPdfActions: () => _showPdfActionsDialog(context),
+            onShowTextActions: () => _showTextActionsDialog(context),
+            onMenuSelected: (value) {
               switch (value) {
                 case 'toggle_prices':
                   unawaited(_setShowPrices(!_showPrices));
@@ -224,116 +214,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                   break;
               }
             },
-            itemBuilder: (BuildContext context) {
-              final isWork = _currentIndex == 0;
-              return [
-                if (!isWork) ...[
-                  CheckedPopupMenuItem(
-                    value: 'toggle_prices',
-                    checked: _showPrices,
-                    child: const Text('Показывать цены'),
-                  ),
-                  const PopupMenuDivider(),
-                ],
-                PopupMenuItem(
-                  value: 'import',
-                  child: Row(
-                    children: [
-                      Icon(
-                        isWork ? Icons.auto_awesome : Icons.download_rounded,
-                        color: Colors.grey.shade600,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                          isWork ? "Рассчитать работы" : "Импорт из инженерки"),
-                    ],
-                  ),
-                ),
-                if ((isWork && _canImportWorksFromPrecalc) ||
-                    (!isWork && _canImportMaterialsFromPrecalc)) ...[
-                  PopupMenuItem(
-                    value: 'import_from_precalc',
-                    enabled: !_isImportingFromPrecalc,
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.move_down_rounded,
-                          color: Colors.grey.shade600,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(_isImportingFromPrecalc
-                            ? 'Перенос...'
-                            : 'Перенести из предпросчета'),
-                      ],
-                    ),
-                  ),
-                ],
-                if (!isWork && _stage.title == 'stage_3') ...[
-                  const PopupMenuDivider(),
-                  PopupMenuItem(
-                    value: 'stage3_armature_calculator',
-                    enabled: !_isApplyingStage3Calculator,
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.calculate_rounded,
-                          color: Colors.grey.shade600,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          _isApplyingStage3Calculator
-                              ? 'Обработка...'
-                              : 'Калькулятор арматуры',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'apply_template',
-                  child: Row(
-                    children: [
-                      Icon(Icons.copy_all_rounded,
-                          color: Colors.grey.shade600, size: 20),
-                      const SizedBox(width: 12),
-                      const Text('Применить шаблон...'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'save_template',
-                  child: Row(
-                    children: [
-                      Icon(Icons.save_as,
-                          color: Colors.grey.shade600, size: 20),
-                      const SizedBox(width: 12),
-                      const Text('Сохранить как шаблон...'),
-                    ],
-                  ),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'clear_all',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete_forever,
-                          color: Colors.red.shade300, size: 20),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Очистить смету...', // Destructive
-                        style: TextStyle(color: Colors.red.shade400),
-                      ),
-                    ],
-                  ),
-                ),
-              ];
-            },
           ),
-          const SizedBox(width: 8),
         ],
       ),
       body: IndexedStack(
@@ -960,7 +841,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         _stage = _stage.copyWith(showPrices: previous);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ: $e")),
+        SnackBar(content: Text("Ошибка сохранения: $e")),
       );
     }
   }
