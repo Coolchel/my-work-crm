@@ -1214,29 +1214,41 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                               iconSize: 66,
                               padding: EdgeInsets.symmetric(vertical: 18),
                             )
-                          : GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 6,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 0.96,
-                              ),
-                              itemCount: widget.files.length,
-                              itemBuilder: (context, index) {
-                                return Center(
-                                  child: FractionallySizedBox(
-                                    widthFactor: 0.93,
-                                    heightFactor: 0.93,
-                                    child: _FileCard(
-                                      file: widget.files[index],
-                                      onDelete: () => widget
-                                          .onDelete(widget.files[index].id),
-                                      projectId: widget.projectId,
-                                    ),
+                          : LayoutBuilder(
+                              builder: (context, constraints) {
+                                const spacing = 12.0;
+                                const minTileWidth = 140.0;
+                                final rawCount =
+                                    ((constraints.maxWidth + spacing) /
+                                            (minTileWidth + spacing))
+                                        .floor();
+                                final crossAxisCount = rawCount.clamp(2, 6);
+
+                                return GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: crossAxisCount,
+                                    crossAxisSpacing: spacing,
+                                    mainAxisSpacing: spacing,
+                                    childAspectRatio: 0.96,
                                   ),
+                                  itemCount: widget.files.length,
+                                  itemBuilder: (context, index) {
+                                    return Center(
+                                      child: FractionallySizedBox(
+                                        widthFactor: 0.93,
+                                        heightFactor: 0.93,
+                                        child: _FileCard(
+                                          file: widget.files[index],
+                                          onDelete: () => widget
+                                              .onDelete(widget.files[index].id),
+                                          projectId: widget.projectId,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 );
                               },
                             ),
