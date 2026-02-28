@@ -123,6 +123,7 @@ mixin EstimateDialogHelpers {
     required IconData icon,
     required VoidCallback onTap,
     Color? color,
+    bool enabled = true,
   }) {
     final theme = Theme.of(context);
     final effectiveColor = color ?? theme.colorScheme.primary;
@@ -132,7 +133,7 @@ mixin EstimateDialogHelpers {
       child: SizedBox(
         height: 52,
         child: OutlinedButton(
-          onPressed: onTap,
+          onPressed: enabled ? onTap : null,
           style: OutlinedButton.styleFrom(
             foregroundColor: effectiveColor,
             side: BorderSide(color: effectiveColor.withOpacity(0.25)),
@@ -683,14 +684,31 @@ class EstimateTextActionsDialog extends ConsumerWidget
 
 // --- PDF ACTIONS DIALOG ---
 
-class EstimatePdfActionsDialog extends ConsumerWidget
-    with EstimateDialogHelpers {
+class EstimatePdfActionRequest {
+  final bool isWork;
+  final bool showPrices;
+  final double markup;
+  final String type;
+  final bool share;
+
+  const EstimatePdfActionRequest({
+    required this.isWork,
+    this.showPrices = true,
+    this.markup = 0.0,
+    this.type = 'total',
+    this.share = false,
+  });
+}
+
+class EstimatePdfActionsDialog extends ConsumerStatefulWidget {
   final String projectId;
   final StageModel stage;
   final List<EstimateItemModel> works;
   final List<EstimateItemModel> materials;
   final bool showPrices;
   final double markupPercent;
+  final Future<void> Function(EstimatePdfActionRequest request)?
+      onExecuteAction;
 
   const EstimatePdfActionsDialog({
     super.key,
@@ -700,13 +718,23 @@ class EstimatePdfActionsDialog extends ConsumerWidget
     required this.materials,
     required this.showPrices,
     required this.markupPercent,
+    this.onExecuteAction,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final hasWorks = works.isNotEmpty;
-    final hasMaterials = materials.isNotEmpty;
-    final hasPartnerWorks = works.any((w) => w.employerQuantity > 0);
+  ConsumerState<EstimatePdfActionsDialog> createState() =>
+      _EstimatePdfActionsDialogState();
+}
+
+class _EstimatePdfActionsDialogState
+    extends ConsumerState<EstimatePdfActionsDialog> with EstimateDialogHelpers {
+  bool _isBusy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasWorks = widget.works.isNotEmpty;
+    final hasMaterials = widget.materials.isNotEmpty;
+    final hasPartnerWorks = widget.works.any((w) => w.employerQuantity > 0);
     const themeColor = Colors.blueGrey;
 
     return buildPremiumContainer(
@@ -733,8 +761,14 @@ class EstimatePdfActionsDialog extends ConsumerWidget
                 label: "Заказчик (Работы)",
                 icon: Icons.person_outline,
                 color: Colors.green,
-                onTap: () => _printPdfWithParams(context, ref,
-                    isWork: true, type: 'total', share: false),
+                enabled: !_isBusy,
+                onTap: () => _runPdfAction(
+                  context,
+                  const EstimatePdfActionRequest(
+                    isWork: true,
+                    type: 'total',
+                  ),
+                ),
               ),
             if (hasPartnerWorks)
               buildWideActionBtn(
@@ -742,8 +776,14 @@ class EstimatePdfActionsDialog extends ConsumerWidget
                 label: "Контрагент (Работы)",
                 icon: Icons.handshake_outlined,
                 color: Colors.green,
-                onTap: () => _printPdfWithParams(context, ref,
-                    isWork: true, type: 'employer', share: false),
+                enabled: !_isBusy,
+                onTap: () => _runPdfAction(
+                  context,
+                  const EstimatePdfActionRequest(
+                    isWork: true,
+                    type: 'employer',
+                  ),
+                ),
               ),
             if (hasMaterials)
               buildWideActionBtn(
@@ -751,16 +791,40 @@ class EstimatePdfActionsDialog extends ConsumerWidget
                 label: "Материалы (Текущие настройки)",
                 icon: Icons.inventory_2_outlined,
                 color: Colors.blue.shade700,
-                onTap: () {
-                  _printPdfWithParams(context, ref,
-                      isWork: false, showPrices: true, share: false);
-                },
+                enabled: !_isBusy,
+                onTap: () => _runPdfAction(
+                  context,
+                  const EstimatePdfActionRequest(
+                    isWork: false,
+                    showPrices: true,
+                  ),
+                ),
               ),
 
             // 2. Share PDF (Dropdowns)
             buildSectionHeader("Поделиться PDF", icon: Icons.share_rounded),
             _buildPdfShareSection(
-                context, ref, hasWorks, hasPartnerWorks, hasMaterials),
+                context, hasWorks, hasPartnerWorks, hasMaterials),
+            if (_isBusy)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(24, 12, 24, 0),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "Генерация/шаринг PDF...",
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             const SizedBox(height: 24),
           ],
@@ -769,8 +833,8 @@ class EstimatePdfActionsDialog extends ConsumerWidget
     );
   }
 
-  Widget _buildPdfShareSection(BuildContext context, WidgetRef ref,
-      bool hasWorks, bool hasPartnerWorks, bool hasMaterials) {
+  Widget _buildPdfShareSection(BuildContext context, bool hasWorks,
+      bool hasPartnerWorks, bool hasMaterials) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -780,6 +844,7 @@ class EstimatePdfActionsDialog extends ConsumerWidget
             label: "Работы (Всего)",
             icon: Icons.work_outline,
             color: Colors.green,
+            enabled: !_isBusy,
             items: [
               buildPopupMenuItem(
                 value: 'total',
@@ -798,20 +863,23 @@ class EstimatePdfActionsDialog extends ConsumerWidget
                 ),
               ]
             ],
-            onSelected: (val) {
-              Navigator.pop(context);
-              _printPdfWithParams(context, ref,
-                  isWork: true, type: val, share: true);
-            },
+            onSelected: (val) => _runPdfAction(
+              context,
+              EstimatePdfActionRequest(
+                isWork: true,
+                type: val,
+                share: true,
+              ),
+            ),
           ),
         if (hasMaterials)
           Builder(builder: (context) {
             String label = "Материалы";
-            if (!showPrices) {
+            if (!widget.showPrices) {
               label = "Материалы: Без цен";
-            } else if (markupPercent > 0) {
+            } else if (widget.markupPercent > 0) {
               label =
-                  "Материалы: С наценкой (+${markupPercent.toStringAsFixed(0)}%)";
+                  "Материалы: С наценкой (+${widget.markupPercent.toStringAsFixed(0)}%)";
             } else {
               label = "Материалы: С ценами";
             }
@@ -821,13 +889,14 @@ class EstimatePdfActionsDialog extends ConsumerWidget
               label: label,
               icon: Icons.inventory_2_outlined,
               color: Colors.blue.shade700,
+              enabled: !_isBusy,
               items: [
                 buildPopupMenuItem(
                   value: 'noprice',
                   icon: Icons.list_alt_rounded,
                   text: "Без цен",
                   color: Colors.blue.shade700,
-                  isSelected: !showPrices,
+                  isSelected: !widget.showPrices,
                 ),
                 const PopupMenuDivider(),
                 buildPopupMenuItem(
@@ -835,31 +904,47 @@ class EstimatePdfActionsDialog extends ConsumerWidget
                   icon: Icons.attach_money_rounded,
                   text: "С ценами",
                   color: Colors.blue.shade700,
-                  isSelected: showPrices && markupPercent <= 0,
+                  isSelected: widget.showPrices && widget.markupPercent <= 0,
                 ),
-                if (markupPercent > 0)
+                if (widget.markupPercent > 0)
                   buildPopupMenuItem(
                     value: 'markup',
                     icon: Icons.trending_up_rounded,
-                    text: "С наценкой (+${markupPercent.toStringAsFixed(0)}%)",
+                    text:
+                        "С наценкой (+${widget.markupPercent.toStringAsFixed(0)}%)",
                     color: Colors.blue.shade700,
-                    isSelected: showPrices && markupPercent > 0,
+                    isSelected: widget.showPrices && widget.markupPercent > 0,
                   ),
               ],
               onSelected: (val) {
-                Navigator.pop(context);
                 if (val == 'noprice') {
-                  _printPdfWithParams(context, ref,
-                      isWork: false, showPrices: false, share: true);
+                  _runPdfAction(
+                    context,
+                    const EstimatePdfActionRequest(
+                      isWork: false,
+                      showPrices: false,
+                      share: true,
+                    ),
+                  );
                 } else if (val == 'price') {
-                  _printPdfWithParams(context, ref,
-                      isWork: false, showPrices: true, share: true);
-                } else if (val == 'markup') {
-                  _printPdfWithParams(context, ref,
+                  _runPdfAction(
+                    context,
+                    const EstimatePdfActionRequest(
                       isWork: false,
                       showPrices: true,
-                      markup: markupPercent,
-                      share: true);
+                      share: true,
+                    ),
+                  );
+                } else if (val == 'markup') {
+                  _runPdfAction(
+                    context,
+                    EstimatePdfActionRequest(
+                      isWork: false,
+                      showPrices: true,
+                      markup: widget.markupPercent,
+                      share: true,
+                    ),
+                  );
                 }
               },
             );
@@ -868,36 +953,57 @@ class EstimatePdfActionsDialog extends ConsumerWidget
     );
   }
 
-  Future<void> _printPdfWithParams(
-    BuildContext context,
-    WidgetRef ref, {
-    required bool isWork,
-    bool showPrices = true,
-    double markup = 0,
-    String type = 'total',
-    bool share = false,
-  }) async {
-    final items = isWork ? works : materials;
-    String titleType = isWork ? "Работы" : "Материалы";
-    String titleSuffix = "";
-    if (type == 'employer') titleSuffix = " - ТВОИ";
+  Future<void> _runPdfAction(
+      BuildContext context, EstimatePdfActionRequest request) async {
+    if (_isBusy) return;
+    setState(() => _isBusy = true);
+    try {
+      if (widget.onExecuteAction != null) {
+        await widget.onExecuteAction!(request);
+      } else {
+        await _printPdfWithParams(context, request: request);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Ошибка PDF: $e")));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isBusy = false);
+      }
+    }
+  }
 
-    final project = await ref.read(projectByIdProvider(projectId).future);
+  Future<void> _printPdfWithParams(
+    BuildContext context, {
+    required EstimatePdfActionRequest request,
+  }) async {
+    final items = request.isWork ? widget.works : widget.materials;
+    String titleType = request.isWork ? "Работы" : "Материалы";
+    String titleSuffix = "";
+    if (request.type == 'employer') titleSuffix = " - ТВОИ";
+
+    final project =
+        await ref.read(projectByIdProvider(widget.projectId).future);
     if (!context.mounted) return;
-    final stageTitle = EstimateReportGenerator.formatStageTitle(stage.title);
+    final stageTitle =
+        EstimateReportGenerator.formatStageTitle(widget.stage.title);
     final title = "${project.address} - $titleType - $stageTitle$titleSuffix";
-    final remarks = isWork ? stage.workRemarks : stage.materialRemarks;
+    final remarks = request.isWork
+        ? widget.stage.workRemarks
+        : widget.stage.materialRemarks;
 
     await _printPdf(
       context: context,
       items: items,
       title: title,
-      showPrices: showPrices,
-      isWork: isWork,
-      quantityType: type,
+      showPrices: request.showPrices,
+      isWork: request.isWork,
+      quantityType: request.type,
       remarks: remarks,
-      markupPercent: markup,
-      share: share,
+      markupPercent: request.markup,
+      share: request.share,
     );
   }
 
