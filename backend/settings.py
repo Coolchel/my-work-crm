@@ -34,6 +34,8 @@ def load_dotenv(dotenv_path: Path) -> None:
         os.environ.setdefault(key, value)
 
 
+# Prefer backend/.env (as documented), then fall back to project-root .env.
+load_dotenv(BASE_DIR / 'backend' / '.env')
 load_dotenv(BASE_DIR / '.env')
 
 
