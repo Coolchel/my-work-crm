@@ -7,6 +7,7 @@ import 'src/features/auth/presentation/providers/auth_provider.dart';
 import 'src/features/settings/application/app_settings_controller.dart';
 import 'src/shared/services/temp_file_service.dart';
 import 'src/core/theme/app_theme.dart';
+import 'src/core/network/network_recovery_bootstrap.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -27,6 +28,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   @override
   void initState() {
     super.initState();
+    ref.read(networkRecoveryBootstrapProvider);
     // Check auth status on app start
     // We delay slightly to ensure provider is ready or just call it.
     // Actually calling it directly is fine.

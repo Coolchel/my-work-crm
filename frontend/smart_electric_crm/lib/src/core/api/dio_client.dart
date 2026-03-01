@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../features/auth/data/auth_repository.dart';
 import 'base_dio.dart'; // Import baseDio
 
@@ -11,6 +14,7 @@ part 'dio_client.g.dart';
 Dio dio(Ref ref) {
   final dio = ref.watch(baseDioProvider); // Start with base config
 
+  dio.interceptors.add(SafeGetRetryInterceptor(ref));
   // Add Auth Interceptor
   dio.interceptors.add(AuthInterceptor(ref));
 
@@ -96,5 +100,92 @@ class AuthInterceptor extends Interceptor {
       }
     }
     super.onError(err, handler);
+  }
+}
+
+class SafeGetRetryInterceptor extends Interceptor {
+  SafeGetRetryInterceptor(this.ref);
+
+  final Ref ref;
+  final Connectivity _connectivity = Connectivity();
+
+  static const String _retryCountKey = 'safe_get_retry_count';
+  static const int _maxRetries = 1;
+
+  @override
+  Future<void> onError(
+      DioException err, ErrorInterceptorHandler handler) async {
+    if (!_shouldRetry(err)) {
+      return super.onError(err, handler);
+    }
+
+    final options = err.requestOptions;
+    final retries = (options.extra[_retryCountKey] as int?) ?? 0;
+    if (retries >= _maxRetries) {
+      return super.onError(err, handler);
+    }
+
+    options.extra[_retryCountKey] = retries + 1;
+
+    try {
+      final hasConnection = await _waitForConnection();
+      if (!hasConnection) {
+        return super.onError(err, handler);
+      }
+
+      // Small delay to let socket stack stabilize after reconnect.
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+
+      final retryDio = ref.read(baseDioProvider);
+      final response = await retryDio.fetch(options);
+      return handler.resolve(response);
+    } catch (_) {
+      return super.onError(err, handler);
+    }
+  }
+
+  bool _shouldRetry(DioException err) {
+    final method = err.requestOptions.method.toUpperCase();
+    if (method != 'GET') {
+      return false;
+    }
+
+    if (err.requestOptions.path.contains('/auth/')) {
+      return false;
+    }
+
+    return err.type == DioExceptionType.connectionError ||
+        err.type == DioExceptionType.connectionTimeout ||
+        err.type == DioExceptionType.receiveTimeout ||
+        err.type == DioExceptionType.sendTimeout;
+  }
+
+  Future<bool> _waitForConnection() async {
+    final current = await _connectivity.checkConnectivity();
+    if (_hasConnection(current)) {
+      return true;
+    }
+
+    try {
+      await _connectivity.onConnectivityChanged
+          .firstWhere(_hasConnection)
+          .timeout(const Duration(seconds: 20));
+      return true;
+    } on TimeoutException {
+      return false;
+    }
+  }
+
+  bool _hasConnection(dynamic value) {
+    if (value is ConnectivityResult) {
+      return value != ConnectivityResult.none;
+    }
+    if (value is List<ConnectivityResult>) {
+      return value.any((item) => item != ConnectivityResult.none);
+    }
+    if (value is Iterable<ConnectivityResult>) {
+      return value.any((item) => item != ConnectivityResult.none);
+    }
+    return false;
   }
 }
