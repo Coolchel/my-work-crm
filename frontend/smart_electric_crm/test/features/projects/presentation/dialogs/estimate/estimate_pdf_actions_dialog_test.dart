@@ -108,4 +108,33 @@ void main() {
     await tester.pump();
     expect(callCount, 2);
   });
+
+  testWidgets('dispatches share action from popup menu', (tester) async {
+    EstimatePdfActionRequest? captured;
+
+    await tester.pumpWidget(
+      buildTestWidget(
+        onExecuteAction: (request) async {
+          captured = request;
+        },
+      ),
+    );
+
+    final popupButtons = find.byWidgetPredicate(
+      (widget) => widget is PopupMenuButton<String>,
+    );
+
+    await tester.tap(popupButtons.first);
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.check_circle_rounded), findsNothing);
+
+    final popupItems = find.byType(PopupMenuItem<String>);
+    await tester.tap(popupItems.first);
+    await tester.pumpAndSettle();
+
+    expect(captured, isNotNull);
+    expect(captured!.share, isTrue);
+    expect(captured!.isWork, isTrue);
+  });
 }
