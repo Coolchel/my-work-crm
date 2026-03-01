@@ -24,7 +24,8 @@ class _FailingAuthNotifier extends Auth {
 }
 
 void main() {
-  testWidgets('LoginScreen shows friendly message for 401 invalid credentials',
+  testWidgets(
+      'LoginScreen shows only inline friendly message for invalid credentials',
       (tester) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -50,7 +51,8 @@ void main() {
     expect(
       find.text(
           'Неверный логин или пароль. Проверьте данные и попробуйте снова.'),
-      findsWidgets,
+      findsOneWidget,
     );
+    expect(find.byType(SnackBar), findsNothing);
   });
 }

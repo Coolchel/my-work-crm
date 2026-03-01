@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../projects/presentation/providers/project_providers.dart';
+import '../../../../core/theme/app_design_tokens.dart';
 import '../widgets/new_project_card.dart';
 import '../widgets/quick_stats_row.dart';
 import '../widgets/recent_projects_list.dart';
@@ -87,6 +88,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final selectedStat = ref.watch(dashboardFilterProvider);
     final searchQuery = ref.watch(projectSearchQueryProvider);
     final isSearchActive = searchQuery != null && searchQuery.isNotEmpty;
+    final hasProjectsLoadError = ref.watch(projectListProvider).maybeWhen(
+          error: (_, __) => true,
+          orElse: () => false,
+        );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _recalculateOverlayMaxHeight();
@@ -142,6 +147,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     padding: EdgeInsets.symmetric(horizontal: 16),
                     child: NewProjectCard(),
                   ),
+                if (!isSearchActive && hasProjectsLoadError)
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: _WelcomeNetworkNotice(),
+                  ),
                 const SizedBox(height: 24),
                 if (!isSearchActive)
                   const Padding(
@@ -170,6 +180,55 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WelcomeNetworkNotice extends StatelessWidget {
+  const _WelcomeNetworkNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppDesignTokens.isDark(context);
+    final borderColor = isDark
+        ? Colors.deepOrangeAccent.withOpacity(0.35)
+        : Colors.deepOrange.withOpacity(0.28);
+    final bgGradient = isDark
+        ? const [Color(0xFF2D1F1A), Color(0xFF241A17)]
+        : [Colors.orange.shade50, Colors.deepOrange.shade50];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: bgGradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.wifi_off_rounded,
+            size: 20,
+            color: isDark ? Colors.orange.shade200 : Colors.deepOrange.shade400,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Нет подключения к интернету. Некоторые блоки временно недоступны.',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ),
         ],
       ),
     );

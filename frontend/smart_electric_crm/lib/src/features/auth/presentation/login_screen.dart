@@ -49,12 +49,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() {
           _errorMessage = message;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
       }
     } finally {
       if (mounted) {

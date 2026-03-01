@@ -118,7 +118,7 @@ class QuickStatsRow extends ConsumerWidget {
           child: CircularProgressIndicator(),
         ),
       ),
-      error: (err, stack) => const Text('Ошибка загрузки'),
+      error: (err, stack) => const SizedBox.shrink(),
     );
   }
 }

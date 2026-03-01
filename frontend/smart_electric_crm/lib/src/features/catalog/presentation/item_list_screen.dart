@@ -1,7 +1,7 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
+import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class ItemListScreen extends ConsumerWidget {
@@ -274,18 +274,14 @@ class _CreateItemDialogState extends ConsumerState<_CreateItemDialog> {
               ref.invalidate(fetchCategoryItemsProvider(widget.categoryId));
 
               if (context.mounted) Navigator.of(context).pop();
-            } catch (e) {
+            } catch (e, st) {
               if (context.mounted) {
-                var errorMessage = 'Ошибка: $e';
-                if (e is DioException && e.response?.data != null) {
-                  errorMessage = 'Ошибка сервера: ${e.response?.data}';
-                }
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(errorMessage),
-                    backgroundColor: Colors.red,
-                  ),
+                debugPrint('Create catalog item failed: $e\n$st');
+                await ErrorFeedback.show(
+                  context,
+                  e,
+                  fallbackMessage:
+                      'Не удалось создать товар. Попробуйте снова.',
                 );
               }
             }
