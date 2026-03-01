@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 
 import '../../providers/project_providers.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
@@ -59,10 +60,13 @@ class _AddStageDialogState extends ConsumerState<AddStageDialog> {
           const SnackBar(content: Text('Этап успешно добавлен')),
         );
       }
-    } catch (e) {
+    } catch (e, st) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+        debugPrint('AddStageDialog._addStage failed: $e\n$st');
+        await ErrorFeedback.show(
+          context,
+          e,
+          fallbackMessage: 'Не удалось добавить этап. Попробуйте снова.',
         );
       }
     } finally {

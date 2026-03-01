@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../../../../engineering/data/models/shield_group_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
@@ -384,10 +385,16 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                   ref.invalidate(
                                       projectByIdProvider(widget.projectId));
                                   if (context.mounted) Navigator.pop(context);
-                                } catch (e) {
+                                } catch (e, st) {
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Ошибка: $e')));
+                                    debugPrint(
+                                        'ShieldGroupDialog save failed: $e\n$st');
+                                    await ErrorFeedback.show(
+                                      context,
+                                      e,
+                                      fallbackMessage:
+                                          'Не удалось сохранить группу.',
+                                    );
                                   }
                                 } finally {
                                   if (mounted) {
