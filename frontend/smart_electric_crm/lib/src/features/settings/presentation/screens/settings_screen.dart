@@ -22,6 +22,7 @@ class SettingsScreen extends ConsumerWidget {
     final settings = ref.watch(appSettingsProvider);
     final settingsNotifier = ref.read(appSettingsProvider.notifier);
     final userAsync = ref.watch(userProfileProvider);
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
 
     return Scaffold(
       appBar: CompactSectionAppBar(
@@ -58,7 +59,9 @@ class SettingsScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       SizedBox(
                         width: double.infinity,
-                        child: SegmentedButton<ThemeMode>(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: SegmentedButton<ThemeMode>(
                           segments: const [
                             ButtonSegment(
                               value: ThemeMode.light,
@@ -80,6 +83,7 @@ class SettingsScreen extends ConsumerWidget {
                           onSelectionChanged: (selection) {
                             settingsNotifier.setThemeMode(selection.first);
                           },
+                          ),
                         ),
                       ),
                     ],
@@ -87,6 +91,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const Divider(height: 1),
                 SwitchListTile(
+                  isThreeLine: isMobile,
                   hoverColor: AppDesignTokens.hoverOverlay(context),
                   secondary: const Icon(Icons.waving_hand_outlined),
                   title: const Text('Начальный экран'),
@@ -232,8 +237,12 @@ class SettingsScreen extends ConsumerWidget {
                               Padding(
                                 padding:
                                     const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
+                                child: Wrap(
+                                  alignment: WrapAlignment.end,
+                                  crossAxisAlignment:
+                                      WrapCrossAlignment.center,
+                                  spacing: 8,
+                                  runSpacing: 8,
                                   children: [
                                     TextButton(
                                       onPressed: () =>
@@ -361,8 +370,11 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       TextButton(
                         onPressed:
@@ -571,8 +583,11 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         TextButton(
                           onPressed:

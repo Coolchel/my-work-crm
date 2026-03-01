@@ -27,6 +27,7 @@ class StatisticsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
     final statsAsync = ref.watch(statisticsDataProvider);
@@ -61,8 +62,12 @@ class StatisticsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Переключатель периода
-                Center(
-                  child: SegmentedButton<String>(
+                Align(
+                  alignment:
+                      isMobile ? Alignment.centerLeft : Alignment.center,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SegmentedButton<String>(
                     segments: const [
                       ButtonSegment<String>(
                         value: 'month',
@@ -139,6 +144,7 @@ class StatisticsScreen extends ConsumerWidget {
                         return null;
                       }),
                     ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -154,8 +160,14 @@ class StatisticsScreen extends ConsumerWidget {
                 _buildFinancialSummary(context, stats.finances),
                 const SizedBox(height: 24),
 
-                IntrinsicHeight(
-                  child: Row(
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: isMobile ? 720 : 0,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Expanded(
@@ -201,6 +213,8 @@ class StatisticsScreen extends ConsumerWidget {
                         ),
                       ),
                     ],
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),

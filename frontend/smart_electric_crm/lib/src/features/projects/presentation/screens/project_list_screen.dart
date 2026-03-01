@@ -653,6 +653,7 @@ class _ProjectCardState extends State<_ProjectCard> {
 
     final isEdited =
         updatedAt != null && updatedAt.difference(createdAt).abs().inHours >= 2;
+    final isCompact = MediaQuery.sizeOf(context).width < 380;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -776,109 +777,164 @@ class _ProjectCardState extends State<_ProjectCard> {
                           const SizedBox(height: 12),
 
                           // Info: Type + Stages (with icons)
-                          Row(
-                            children: [
-                              // Type icon + label
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.indigo.withOpacity(0.08),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  _getObjectTypeIcon(project.objectType),
-                                  size: 18,
-                                  color: Colors.indigo,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Тип',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade500,
-                                      fontWeight: FontWeight.w500,
+                          isCompact
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Wrap(
+                                      spacing: 20,
+                                      runSpacing: 10,
+                                      children: [
+                                        _buildInfoItem(
+                                          icon: _getObjectTypeIcon(
+                                              project.objectType),
+                                          label: '\u0422\u0438\u043f',
+                                          value: _getObjectTypeDisplay(
+                                              project.objectType),
+                                        ),
+                                        _buildInfoItem(
+                                          icon: Icons.layers_outlined,
+                                          label:
+                                              '\u042d\u0442\u0430\u043f\u043e\u0432',
+                                          value: '${project.stages.length}',
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  Text(
-                                    _getObjectTypeDisplay(project.objectType),
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey.shade800,
+                                    const SizedBox(height: 8),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '\u0421\u043e\u0437\u0434\u0430\u043d: ${_formatDate(createdAt)}',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.grey.shade400,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        if (isEdited)
+                                          Text(
+                                            '\u0418\u0437\u043c\u0435\u043d\u0435\u043d: ${_formatDate(updatedAt)}',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.grey.shade400,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          )
+                                        else
+                                          const SizedBox(height: 14),
+                                      ],
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 24),
-                              // Stages icon + count
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.indigo.withOpacity(0.08),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.layers_outlined,
-                                  size: 18,
-                                  color: Colors.indigo,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Этапов',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade500,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${project.stages.length}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey.shade800,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Spacer(),
-                              // Dates (always 2 rows for alignment)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  // Row 1: "Создан"
-                                  Text(
-                                    'Создан: ${_formatDate(createdAt)}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey.shade400,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  // Row 2: "Изменен" or empty placeholder
-                                  if (isEdited)
-                                    Text(
-                                      'Изменен: ${_formatDate(updatedAt)}',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey.shade400,
-                                        fontWeight: FontWeight.w500,
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    // Type icon + label
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.indigo.withOpacity(0.08),
+                                        shape: BoxShape.circle,
                                       ),
-                                    )
-                                  else
-                                    const SizedBox(height: 14),
-                                ],
-                              ),
-                            ],
-                          ),
+                                      child: Icon(
+                                        _getObjectTypeIcon(project.objectType),
+                                        size: 18,
+                                        color: Colors.indigo,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Тип',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey.shade500,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          _getObjectTypeDisplay(
+                                              project.objectType),
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey.shade800,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(width: 24),
+                                    // Stages icon + count
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.indigo.withOpacity(0.08),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.layers_outlined,
+                                        size: 18,
+                                        color: Colors.indigo,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Этапов',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey.shade500,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${project.stages.length}',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey.shade800,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const Spacer(),
+                                    // Dates (always 2 rows for alignment)
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        // Row 1: "Создан"
+                                        Text(
+                                          'Создан: ${_formatDate(createdAt)}',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: Colors.grey.shade400,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        // Row 2: "Изменен" or empty placeholder
+                                        if (isEdited)
+                                          Text(
+                                            'Изменен: ${_formatDate(updatedAt)}',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.grey.shade400,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          )
+                                        else
+                                          const SizedBox(height: 14),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                         ],
                       ),
                     ),
@@ -889,6 +945,52 @@ class _ProjectCardState extends State<_ProjectCard> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoItem({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.indigo.withOpacity(0.08),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            size: 18,
+            color: Colors.indigo,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade800,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

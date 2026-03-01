@@ -65,6 +65,7 @@ class _StageCardState extends State<StageCard> {
     final stageColor = _getStageColor(widget.stage.title);
     final createdAt = widget.stage.createdAt;
     final updatedAt = widget.stage.updatedAt;
+    final isCompact = MediaQuery.sizeOf(context).width < 380;
 
     // Check if updated date is different from created date (threshold 10 seconds to avoid drift)
     final isEdited = createdAt != null &&
@@ -117,114 +118,251 @@ class _StageCardState extends State<StageCard> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           // Header with Title and Delete Button
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: Column(
+                          isCompact
+                              ? Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      StageCard.getStageTitleDisplay(
-                                          widget.stage.title),
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: -0.3,
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                StageCard.getStageTitleDisplay(
+                                                    widget.stage.title),
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: -0.3,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Delete Button (Cross)
+                                        SizedBox(
+                                          width: 28,
+                                          height: 28,
+                                          child: IconButton(
+                                            icon: Icon(Icons.close,
+                                                size: 18,
+                                                color: Colors.grey.shade400),
+                                            padding: EdgeInsets.zero,
+                                            onPressed: widget.onDelete,
+                                            tooltip:
+                                                "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u044d\u0442\u0430\u043f",
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (widget.stage.isPaid) ...[
+                                      const SizedBox(height: 8),
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.green.withOpacity(0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                            border: Border.all(
+                                                color: Colors.green
+                                                    .withOpacity(0.2)),
+                                          ),
+                                          child: const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.check_circle_rounded,
+                                                  size: 10,
+                                                  color: Colors.green),
+                                              SizedBox(width: 3),
+                                              Text(
+                                                '\u041e\u041f\u041b\u0410\u0427\u0415\u041d\u041e',
+                                                style: TextStyle(
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.green,
+                                                  letterSpacing: 0.3,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                )
+                              : Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            StageCard.getStageTitleDisplay(
+                                                widget.stage.title),
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: -0.3,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (widget.stage.isPaid) ...[
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                          border: Border.all(
+                                              color: Colors.green
+                                                  .withOpacity(0.2)),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.check_circle_rounded,
+                                                size: 10, color: Colors.green),
+                                            SizedBox(width: 3),
+                                            Text(
+                                              'ОПЛАЧЕНО',
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.green,
+                                                letterSpacing: 0.3,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
+                                    // Delete Button (Cross)
+                                    SizedBox(
+                                      width: 28,
+                                      height: 28,
+                                      child: IconButton(
+                                        icon: Icon(Icons.close,
+                                            size: 18,
+                                            color: Colors.grey.shade400),
+                                        padding: EdgeInsets.zero,
+                                        onPressed: widget.onDelete,
+                                        tooltip: "Удалить этап",
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                              if (widget.stage.isPaid) ...[
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(
-                                        color: Colors.green.withOpacity(0.2)),
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.check_circle_rounded,
-                                          size: 10, color: Colors.green),
-                                      SizedBox(width: 3),
-                                      Text(
-                                        'ОПЛАЧЕНО',
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.green,
-                                          letterSpacing: 0.3,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                              ],
-                              // Delete Button (Cross)
-                              SizedBox(
-                                width: 28,
-                                height: 28,
-                                child: IconButton(
-                                  icon: Icon(Icons.close,
-                                      size: 18, color: Colors.grey.shade400),
-                                  padding: EdgeInsets.zero,
-                                  onPressed: widget.onDelete,
-                                  tooltip: "Удалить этап",
-                                ),
-                              ),
-                            ],
-                          ),
 
                           const SizedBox(height: 16),
 
                           // Stats Rows
-                          Row(
-                            children: [
-                              _buildStatItem(
-                                icon: Icons.handyman_outlined,
-                                label: 'Работы',
-                                value:
-                                    '${widget.stage.totalAmountUsd.toStringAsFixed(0)} \$',
-                                color: Colors.green,
-                              ),
-                              const SizedBox(width: 24),
-                              _buildStatItem(
-                                icon: Icons.inventory_2_outlined,
-                                label: 'Материалы',
-                                value:
-                                    '${widget.stage.totalAmountMaterialsUsd.toStringAsFixed(0)} \$',
-                                color: Colors.blue,
-                              ),
-                              const Spacer(),
-                              if (createdAt != null)
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
+                          isCompact
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Создан: ${_formatDate(createdAt)}',
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.grey.shade400,
-                                          fontWeight: FontWeight.w500),
+                                    Wrap(
+                                      spacing: 20,
+                                      runSpacing: 10,
+                                      children: [
+                                        _buildStatItem(
+                                          icon: Icons.handyman_outlined,
+                                          label:
+                                              '\u0420\u0430\u0431\u043e\u0442\u044b',
+                                          value:
+                                              '${widget.stage.totalAmountUsd.toStringAsFixed(0)} \$',
+                                          color: Colors.green,
+                                        ),
+                                        _buildStatItem(
+                                          icon: Icons.inventory_2_outlined,
+                                          label:
+                                              '\u041c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u044b',
+                                          value:
+                                              '${widget.stage.totalAmountMaterialsUsd.toStringAsFixed(0)} \$',
+                                          color: Colors.blue,
+                                        ),
+                                      ],
                                     ),
-                                    if (isEdited)
-                                      Text(
-                                        'Изменен: ${_formatDate(updatedAt)}',
-                                        style: TextStyle(
-                                            fontSize: 10,
-                                            color: Colors.grey.shade400,
-                                            fontWeight: FontWeight.w500),
+                                    if (createdAt != null) ...[
+                                      const SizedBox(height: 8),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '\u0421\u043e\u0437\u0434\u0430\u043d: ${_formatDate(createdAt)}',
+                                            style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.grey.shade400,
+                                                fontWeight: FontWeight.w500),
+                                          ),
+                                          if (isEdited)
+                                            Text(
+                                              '\u0418\u0437\u043c\u0435\u043d\u0435\u043d: ${_formatDate(updatedAt)}',
+                                              style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.grey.shade400,
+                                                  fontWeight: FontWeight.w500),
+                                            ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    _buildStatItem(
+                                      icon: Icons.handyman_outlined,
+                                      label: 'Работы',
+                                      value:
+                                          '${widget.stage.totalAmountUsd.toStringAsFixed(0)} \$',
+                                      color: Colors.green,
+                                    ),
+                                    const SizedBox(width: 24),
+                                    _buildStatItem(
+                                      icon: Icons.inventory_2_outlined,
+                                      label: 'Материалы',
+                                      value:
+                                          '${widget.stage.totalAmountMaterialsUsd.toStringAsFixed(0)} \$',
+                                      color: Colors.blue,
+                                    ),
+                                    const Spacer(),
+                                    if (createdAt != null)
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            'Создан: ${_formatDate(createdAt)}',
+                                            style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.grey.shade400,
+                                                fontWeight: FontWeight.w500),
+                                          ),
+                                          if (isEdited)
+                                            Text(
+                                              'Изменен: ${_formatDate(updatedAt)}',
+                                              style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.grey.shade400,
+                                                  fontWeight: FontWeight.w500),
+                                            ),
+                                        ],
                                       ),
                                   ],
                                 ),
-                            ],
-                          ),
                         ],
                       ),
                     ),

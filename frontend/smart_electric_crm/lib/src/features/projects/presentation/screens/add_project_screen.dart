@@ -167,239 +167,258 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
             Theme.of(context).colorScheme.copyWith(primary: themeColor),
       ),
       child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         elevation: 0,
         backgroundColor: Colors.transparent,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 450),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: isDark
-                    ? Colors.black.withOpacity(0.34)
-                    : Colors.black.withOpacity(0.12),
-                blurRadius: isDark ? 12 : 20,
-                offset: const Offset(0, 6),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) => ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 450,
+                maxHeight: constraints.maxHeight,
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Container(
                 decoration: BoxDecoration(
-                  color: themeColor.withOpacity(0.12),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Center(
-                      child: Text(
-                        _isEditing ? 'Редактировать объект' : 'Новый объект',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: themeColor.withOpacity(0.8),
-                        ),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Tooltip(
-                        message: 'Закрыть',
-                        child: IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.close, color: themeColor),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          iconSize: 20,
-                        ),
-                      ),
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark
+                          ? Colors.black.withOpacity(0.34)
+                          : Colors.black.withOpacity(0.12),
+                      blurRadius: isDark ? 12 : 20,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
-              ),
-
-              // Content
-              if (_isLoading)
-                const Padding(
-                  padding: EdgeInsets.all(48),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: themeColor.withOpacity(0.12),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(24),
+                          topRight: Radius.circular(24),
+                        ),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
                         children: [
-                          // 1. Address
-                          _buildTextField(
-                            controller: _addressController,
-                            label: 'Адрес объекта',
-                            hint: 'ул. Примерная, д. 1, кв. 1',
-                            validator: (v) => (v == null || v.isEmpty)
-                                ? 'Введите адрес'
-                                : null,
-                          ),
-                          const SizedBox(height: 16),
-
-                          // 2. Intercom code
-                          _buildTextField(
-                            controller: _intercomController,
-                            label: 'Код домофона',
-                            hint: '123',
-                          ),
-                          const SizedBox(height: 16),
-
-                          // 3. Client
-                          _buildTextField(
-                            controller: _clientInfoController,
-                            label: 'Заказчик',
-                            hint: 'Имя, телефон...',
-                          ),
-                          const SizedBox(height: 16),
-
-                          // 4. Object type
-                          _buildFieldLabel('Тип объекта'),
-                          _buildPopupBtn(
-                            _objectTypes[_objectType] ?? _objectType,
-                            _objectTypes.entries
-                                .map((e) => PopupMenuItem(
-                                      value: e.key,
-                                      height: 40,
-                                      padding: EdgeInsets.zero,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              _objectTypeIcons[e.key] ??
-                                                  Icons.domain,
-                                              color: Colors.indigo.shade400,
-                                              size: 20,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Text(e.value,
-                                                style: const TextStyle(
-                                                    fontSize: 13)),
-                                          ],
-                                        ),
-                                      ),
-                                    ))
-                                .toList(),
-                            (v) => setState(() => _objectType = v),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // 5. Source
-                          _buildFieldLabel('Источник'),
-                          _buildPopupBtn(
-                            _source,
-                            _sourceItems
-                                .map((s) => PopupMenuItem(
-                                      value: s,
-                                      height: 40,
-                                      padding: EdgeInsets.zero,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              _sourceIcons[s] ?? Icons.person,
-                                              color: Colors.indigo.shade400,
-                                              size: 20,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Text(s,
-                                                style: const TextStyle(
-                                                    fontSize: 13)),
-                                          ],
-                                        ),
-                                      ),
-                                    ))
-                                .toList(),
-                            (v) => setState(() => _source = v),
-                          ),
-
-                          // Stages selection (creation only) - toggle chips
-                          if (!_isEditing) ...[
-                            const SizedBox(height: 20),
-                            _buildFieldLabel('Начальные этапы'),
-                            const SizedBox(height: 4),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: _stageLabels.entries.map((entry) {
-                                final isSelected =
-                                    _selectedStages[entry.key] ?? false;
-                                return _StageToggleChip(
-                                  label: entry.value,
-                                  icon: _stageIcons[entry.key] ??
-                                      Icons.layers_outlined,
-                                  isSelected: isSelected,
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedStages[entry.key] = !isSelected;
-                                    });
-                                  },
-                                );
-                              }).toList(),
+                          Center(
+                            child: Text(
+                              _isEditing
+                                  ? 'Редактировать объект'
+                                  : 'Новый объект',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: themeColor.withOpacity(0.8),
+                              ),
                             ),
-                          ],
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Tooltip(
+                              message: 'Закрыть',
+                              child: IconButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                icon:
+                                    const Icon(Icons.close, color: themeColor),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                iconSize: 20,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ),
-                ),
 
-              // Footer
-              if (!_isLoading)
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: TextButton.styleFrom(
-                            foregroundColor:
-                                Theme.of(context).colorScheme.onSurface),
-                        child: const Text('Отмена'),
-                      ),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: _submitForm,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: themeColor,
-                          minimumSize: const Size(120, 44),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+                    // Content
+                    if (_isLoading)
+                      const Padding(
+                        padding: EdgeInsets.all(48),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else
+                      Flexible(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(24),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // 1. Address
+                                _buildTextField(
+                                  controller: _addressController,
+                                  label: 'Адрес объекта',
+                                  hint: 'ул. Примерная, д. 1, кв. 1',
+                                  validator: (v) => (v == null || v.isEmpty)
+                                      ? 'Введите адрес'
+                                      : null,
+                                ),
+                                const SizedBox(height: 16),
+
+                                // 2. Intercom code
+                                _buildTextField(
+                                  controller: _intercomController,
+                                  label: 'Код домофона',
+                                  hint: '123',
+                                ),
+                                const SizedBox(height: 16),
+
+                                // 3. Client
+                                _buildTextField(
+                                  controller: _clientInfoController,
+                                  label: 'Заказчик',
+                                  hint: 'Имя, телефон...',
+                                ),
+                                const SizedBox(height: 16),
+
+                                // 4. Object type
+                                _buildFieldLabel('Тип объекта'),
+                                _buildPopupBtn(
+                                  _objectTypes[_objectType] ?? _objectType,
+                                  _objectTypes.entries
+                                      .map((e) => PopupMenuItem(
+                                            value: e.key,
+                                            height: 40,
+                                            padding: EdgeInsets.zero,
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 16),
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    _objectTypeIcons[e.key] ??
+                                                        Icons.domain,
+                                                    color:
+                                                        Colors.indigo.shade400,
+                                                    size: 20,
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Text(e.value,
+                                                      style: const TextStyle(
+                                                          fontSize: 13)),
+                                                ],
+                                              ),
+                                            ),
+                                          ))
+                                      .toList(),
+                                  (v) => setState(() => _objectType = v),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // 5. Source
+                                _buildFieldLabel('Источник'),
+                                _buildPopupBtn(
+                                  _source,
+                                  _sourceItems
+                                      .map((s) => PopupMenuItem(
+                                            value: s,
+                                            height: 40,
+                                            padding: EdgeInsets.zero,
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 16),
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    _sourceIcons[s] ??
+                                                        Icons.person,
+                                                    color:
+                                                        Colors.indigo.shade400,
+                                                    size: 20,
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Text(s,
+                                                      style: const TextStyle(
+                                                          fontSize: 13)),
+                                                ],
+                                              ),
+                                            ),
+                                          ))
+                                      .toList(),
+                                  (v) => setState(() => _source = v),
+                                ),
+
+                                // Stages selection (creation only) - toggle chips
+                                if (!_isEditing) ...[
+                                  const SizedBox(height: 20),
+                                  _buildFieldLabel('Начальные этапы'),
+                                  const SizedBox(height: 4),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: _stageLabels.entries.map((entry) {
+                                      final isSelected =
+                                          _selectedStages[entry.key] ?? false;
+                                      return _StageToggleChip(
+                                        label: entry.value,
+                                        icon: _stageIcons[entry.key] ??
+                                            Icons.layers_outlined,
+                                        isSelected: isSelected,
+                                        onTap: () {
+                                          setState(() {
+                                            _selectedStages[entry.key] =
+                                                !isSelected;
+                                          });
+                                        },
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         ),
-                        child: Text(_isEditing ? 'Сохранить' : 'Создать'),
                       ),
-                    ],
-                  ),
+
+                    // Footer
+                    if (!_isLoading)
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: TextButton.styleFrom(
+                                  foregroundColor:
+                                      Theme.of(context).colorScheme.onSurface),
+                              child: const Text('Отмена'),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton(
+                              onPressed: _submitForm,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: themeColor,
+                                minimumSize: const Size(120, 44),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                              ),
+                              child: Text(_isEditing ? 'Сохранить' : 'Создать'),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
-            ],
+              ),
+            ),
           ),
         ),
       ),

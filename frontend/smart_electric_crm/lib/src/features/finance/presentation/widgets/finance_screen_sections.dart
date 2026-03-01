@@ -389,57 +389,23 @@ extension _FinanceScreenSections on _FinanceScreenState {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      _buildAmountDisplay(
-                          stage.ourAmountUsd, stage.ourAmountByn,
-                          fontSize: 12),
-                      if (hasExternalAmount) ...[
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            'из ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w500,
-                            ),
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        alignment: WrapAlignment.end,
+                        children: [
+                          _buildStageAmountSummary(stage, hasExternalAmount),
+                          _PayStageButton(
+                            onPressed: () =>
+                                _markStagePaid(stage.id, stage.titleDisplay),
                           ),
-                        ),
-                        const SizedBox(height: 3),
-                        Container(
-                          width: 52,
-                          height: 3,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(2),
-                            border: Border.all(
-                                color: Colors.grey[300]!, width: 0.5),
-                          ),
-                          child: Stack(
-                            children: [
-                              FractionallySizedBox(
-                                alignment: Alignment.centerLeft,
-                                widthFactor: _calculateOurShareFactor(stage),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: _FinanceScreenState._financeAccent
-                                        .withOpacity(0.8),
-                                    borderRadius: BorderRadius.circular(2),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(width: 8),
-                  _PayStageButton(
-                    onPressed: () =>
-                        _markStagePaid(stage.id, stage.titleDisplay),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -447,6 +413,55 @@ extension _FinanceScreenSections on _FinanceScreenState {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildStageAmountSummary(
+      UnpaidStageModel stage, bool hasExternalAmount) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        _buildAmountDisplay(stage.ourAmountUsd, stage.ourAmountByn,
+            fontSize: 12),
+        if (hasExternalAmount) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              'из ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Container(
+            width: 52,
+            height: 3,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(2),
+              border: Border.all(color: Colors.grey[300]!, width: 0.5),
+            ),
+            child: Stack(
+              children: [
+                FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: _calculateOurShareFactor(stage),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: _FinanceScreenState._financeAccent.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -783,8 +798,7 @@ class _PayStageButtonState extends State<_PayStageButton> {
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        width: 112,
-        height: 30,
+        constraints: const BoxConstraints(minHeight: 30),
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(999),

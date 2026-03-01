@@ -1098,6 +1098,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCompactHeader = MediaQuery.sizeOf(context).width < 360;
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -1138,65 +1139,88 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                     mouseCursor: SystemMouseCursors.click,
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(19, 14, 14, 14),
-                      child: Row(
+                      child: Column(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: widget.color.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(widget.icon,
-                                color: widget.color, size: 18),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark
-                                        ? scheme.onSurface
-                                        : Colors.grey.shade900,
-                                    letterSpacing: -0.2,
-                                  ),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: widget.color.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _isExpanded
-                                      ? 'Нажмите, чтобы свернуть'
-                                      : 'Нажмите, чтобы развернуть',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: isDark
-                                        ? scheme.onSurfaceVariant
-                                        : Colors.grey.shade500,
-                                  ),
+                                child: Icon(widget.icon,
+                                    color: widget.color, size: 18),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      widget.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: isDark
+                                            ? scheme.onSurface
+                                            : Colors.grey.shade900,
+                                        letterSpacing: -0.2,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _isExpanded
+                                          ? 'Нажмите, чтобы свернуть'
+                                          : 'Нажмите, чтобы развернуть',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: isDark
+                                            ? scheme.onSurfaceVariant
+                                            : Colors.grey.shade500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (!isCompactHeader) ...[
+                                _buildFilesCountPill(widget.files.length),
+                                const SizedBox(width: 8),
+                                _buildHeaderActionButton(
+                                  icon: Icons.add_rounded,
+                                  tooltip: 'Загрузить файлы',
+                                  onTap: widget.onUpload,
+                                  isPrimary: true,
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              _buildHeaderExpandToggle(
+                                tooltip:
+                                    _isExpanded ? 'Свернуть' : 'Развернуть',
+                                onTap: () =>
+                                    setState(() => _isExpanded = !_isExpanded),
+                              ),
+                            ],
+                          ),
+                          if (isCompactHeader) ...[
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _buildFilesCountPill(widget.files.length),
+                                _buildHeaderActionButton(
+                                  icon: Icons.add_rounded,
+                                  tooltip: 'Загрузить файлы',
+                                  onTap: widget.onUpload,
+                                  isPrimary: true,
                                 ),
                               ],
                             ),
-                          ),
-                          _buildFilesCountPill(widget.files.length),
-                          const SizedBox(width: 8),
-                          _buildHeaderActionButton(
-                            icon: Icons.add_rounded,
-                            tooltip: 'Загрузить файлы',
-                            onTap: widget.onUpload,
-                            isPrimary: true,
-                          ),
-                          const SizedBox(width: 6),
-                          _buildHeaderExpandToggle(
-                            tooltip: _isExpanded ? 'Свернуть' : 'Развернуть',
-                            onTap: () =>
-                                setState(() => _isExpanded = !_isExpanded),
-                          ),
+                          ],
                         ],
                       ),
                     ),
@@ -1222,7 +1246,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                                     ((constraints.maxWidth + spacing) /
                                             (minTileWidth + spacing))
                                         .floor();
-                                final crossAxisCount = rawCount.clamp(2, 6);
+                                final crossAxisCount = rawCount.clamp(1, 6);
 
                                 return GridView.builder(
                                   shrinkWrap: true,
