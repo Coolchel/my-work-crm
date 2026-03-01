@@ -31,320 +31,334 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
         highlightColor: themeColor.withOpacity(isDark ? 0.18 : 0.08),
       ),
       child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         elevation: 0,
         backgroundColor: Colors.transparent,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 450),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: isDark
-                    ? Colors.black.withOpacity(0.34)
-                    : Colors.black.withOpacity(0.12),
-                blurRadius: isDark ? 12 : 20,
-                offset: const Offset(0, 6),
-              )
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) => ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 450,
+                maxHeight: constraints.maxHeight,
+              ),
+              child: Container(
                 decoration: BoxDecoration(
-                  color: themeColor.withOpacity(0.12),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Center(
-                      child: Text(
-                        "Добавить щит",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: themeColor.withOpacity(0.8),
-                        ),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Tooltip(
-                        message: "Закрыть",
-                        child: IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.close, color: themeColor),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                          iconSize: 20,
-                        ),
-                      ),
-                    ),
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDark
+                          ? Colors.black.withOpacity(0.34)
+                          : Colors.black.withOpacity(0.12),
+                      blurRadius: isDark ? 12 : 20,
+                      offset: const Offset(0, 6),
+                    )
                   ],
                 ),
-              ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(24),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    TextField(
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: "Название щита",
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                        hintText: "Щит квартирный",
-                        hintStyle: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant
-                              .withOpacity(0.75),
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: themeColor.withOpacity(0.12),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(24),
+                          topRight: Radius.circular(24),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: themeColor.withOpacity(0.2)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: themeColor.withOpacity(0.2)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              const BorderSide(color: themeColor, width: 2),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Center(
+                            child: Text(
+                              "Добавить щит",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: themeColor.withOpacity(0.8),
+                              ),
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Tooltip(
+                              message: "Закрыть",
+                              child: IconButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                icon:
+                                    const Icon(Icons.close, color: themeColor),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                iconSize: 20,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              controller: _nameController,
+                              decoration: InputDecoration(
+                                labelText: "Название щита",
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always,
+                                hintText: "Щит квартирный",
+                                hintStyle: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant
+                                      .withOpacity(0.75),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                      color: themeColor.withOpacity(0.2)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                      color: themeColor.withOpacity(0.2)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                      color: themeColor, width: 2),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Type Dropdown
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Text(
+                                    "Тип",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                                _buildPopupBtn(
+                                  _getTypeLabel(_type),
+                                  [
+                                    PopupMenuItem(
+                                      value: 'power',
+                                      height: 40,
+                                      padding: EdgeInsets.zero,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.bolt,
+                                                color: Colors.indigo.shade400,
+                                                size: 20),
+                                            const SizedBox(width: 12),
+                                            const Text('Силовой',
+                                                style: TextStyle(fontSize: 13)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const PopupMenuDivider(),
+                                    PopupMenuItem(
+                                      value: 'multimedia',
+                                      height: 40,
+                                      padding: EdgeInsets.zero,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.router,
+                                                color: Colors.indigo.shade400,
+                                                size: 20),
+                                            const SizedBox(width: 12),
+                                            const Text('Слаботочный',
+                                                style: TextStyle(fontSize: 13)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const PopupMenuDivider(),
+                                    PopupMenuItem(
+                                      value: 'led',
+                                      height: 40,
+                                      padding: EdgeInsets.zero,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.lightbulb,
+                                                color: Colors.indigo.shade400,
+                                                size: 20),
+                                            const SizedBox(width: 12),
+                                            const Text('LED',
+                                                style: TextStyle(fontSize: 13)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  (value) => setState(() => _type = value),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Mounting Dropdown
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Text(
+                                    "Монтаж",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                                _buildPopupBtn(
+                                  _getMountingLabel(_mounting),
+                                  [
+                                    PopupMenuItem(
+                                      value: 'internal',
+                                      height: 40,
+                                      padding: EdgeInsets.zero,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.door_front_door,
+                                                color: Colors.indigo.shade400,
+                                                size: 20),
+                                            const SizedBox(width: 12),
+                                            const Text('Внутренний',
+                                                style: TextStyle(fontSize: 13)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const PopupMenuDivider(),
+                                    PopupMenuItem(
+                                      value: 'external',
+                                      height: 40,
+                                      padding: EdgeInsets.zero,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.apartment,
+                                                color: Colors.indigo.shade400,
+                                                size: 20),
+                                            const SizedBox(width: 12),
+                                            const Text('Наружный',
+                                                style: TextStyle(fontSize: 13)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  (value) => setState(() => _mounting = value),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    // Type Dropdown
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Text(
-                            "Тип",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                        _buildPopupBtn(
-                          _getTypeLabel(_type),
-                          [
-                            PopupMenuItem(
-                              value: 'power',
-                              height: 40,
-                              padding: EdgeInsets.zero,
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.bolt,
-                                        color: Colors.indigo.shade400,
-                                        size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('Силовой',
-                                        style: TextStyle(fontSize: 13)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                            PopupMenuItem(
-                              value: 'multimedia',
-                              height: 40,
-                              padding: EdgeInsets.zero,
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.router,
-                                        color: Colors.indigo.shade400,
-                                        size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('Слаботочный',
-                                        style: TextStyle(fontSize: 13)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                            PopupMenuItem(
-                              value: 'led',
-                              height: 40,
-                              padding: EdgeInsets.zero,
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.lightbulb,
-                                        color: Colors.indigo.shade400,
-                                        size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('LED',
-                                        style: TextStyle(fontSize: 13)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                          (value) => setState(() => _type = value),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Mounting Dropdown
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Text(
-                            "Монтаж",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                        _buildPopupBtn(
-                          _getMountingLabel(_mounting),
-                          [
-                            PopupMenuItem(
-                              value: 'internal',
-                              height: 40,
-                              padding: EdgeInsets.zero,
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.door_front_door,
-                                        color: Colors.indigo.shade400,
-                                        size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('Внутренний',
-                                        style: TextStyle(fontSize: 13)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                            PopupMenuItem(
-                              value: 'external',
-                              height: 40,
-                              padding: EdgeInsets.zero,
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.apartment,
-                                        color: Colors.indigo.shade400,
-                                        size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('Наружный',
-                                        style: TextStyle(fontSize: 13)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                          (value) => setState(() => _mounting = value),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
 
-              // Footer
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: TextButton.styleFrom(
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onSurface),
-                      child: const Text("Отмена"),
-                    ),
-                    const SizedBox(width: 8),
-                    Consumer(builder: (context, ref, _) {
-                      return FilledButton(
-                        onPressed: () async {
-                          // Use default name if field is empty
-                          final shieldName = _nameController.text.isEmpty
-                              ? 'Щит квартирный'
-                              : _nameController.text;
-                          try {
-                            await ref
-                                .read(engineeringRepositoryProvider)
-                                .addShield(widget.projectId, {
-                              'name': shieldName,
-                              'shield_type': _type,
-                              'mounting': _mounting,
-                            });
-                            ref.invalidate(projectListProvider);
-                            ref.invalidate(
-                                projectByIdProvider(widget.projectId));
-                            if (context.mounted) Navigator.pop(context);
-                          } catch (e, st) {
-                            if (context.mounted) {
-                              debugPrint(
-                                  'AddShieldDialog save failed: $e\n$st');
-                              await ErrorFeedback.show(
-                                context,
-                                e,
-                                fallbackMessage:
-                                    'Не удалось добавить щит. Попробуйте снова.',
-                              );
-                            }
-                          }
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: themeColor,
-                          minimumSize: const Size(120, 44),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+                    // Footer
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            style: TextButton.styleFrom(
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.onSurface),
+                            child: const Text("Отмена"),
                           ),
-                        ),
-                        child: const Text('Добавить'),
-                      );
-                    }),
+                          const SizedBox(width: 8),
+                          Consumer(builder: (context, ref, _) {
+                            return FilledButton(
+                              onPressed: () async {
+                                // Use default name if field is empty
+                                final shieldName = _nameController.text.isEmpty
+                                    ? 'Щит квартирный'
+                                    : _nameController.text;
+                                try {
+                                  await ref
+                                      .read(engineeringRepositoryProvider)
+                                      .addShield(widget.projectId, {
+                                    'name': shieldName,
+                                    'shield_type': _type,
+                                    'mounting': _mounting,
+                                  });
+                                  ref.invalidate(projectListProvider);
+                                  ref.invalidate(
+                                      projectByIdProvider(widget.projectId));
+                                  if (context.mounted) Navigator.pop(context);
+                                } catch (e, st) {
+                                  if (context.mounted) {
+                                    debugPrint(
+                                        'AddShieldDialog save failed: $e\n$st');
+                                    await ErrorFeedback.show(
+                                      context,
+                                      e,
+                                      fallbackMessage:
+                                          'Не удалось добавить щит. Попробуйте снова.',
+                                    );
+                                  }
+                                }
+                              },
+                              style: FilledButton.styleFrom(
+                                backgroundColor: themeColor,
+                                minimumSize: const Size(120, 44),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                              ),
+                              child: const Text('Добавить'),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

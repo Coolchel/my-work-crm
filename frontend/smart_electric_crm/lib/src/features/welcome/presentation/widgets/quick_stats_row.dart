@@ -63,8 +63,17 @@ class QuickStatsRow extends ConsumerWidget {
           }
         }
 
-        return IntrinsicHeight(
-          child: Row(
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 600;
+            final minRowWidth = isMobile ? 900.0 : constraints.maxWidth;
+
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: minRowWidth),
+                child: IntrinsicHeight(
+                  child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
@@ -108,8 +117,12 @@ class QuickStatsRow extends ConsumerWidget {
                   tooltip: 'Оплаченные этапы\nв текущем месяце',
                 ),
               ),
-            ],
-          ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
       loading: () => const Center(

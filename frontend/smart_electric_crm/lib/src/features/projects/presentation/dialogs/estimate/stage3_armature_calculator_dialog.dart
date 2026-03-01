@@ -287,136 +287,147 @@ class _Stage3ArmatureCalculatorDialogState
         .toList();
 
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       elevation: 0,
       backgroundColor: Colors.transparent,
-      child: Container(
-        width: 760,
-        constraints: const BoxConstraints(maxHeight: 760),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? Colors.black.withOpacity(0.34)
-                  : Colors.blue.withOpacity(0.15),
-              blurRadius: isDark ? 12 : 20,
-              offset: const Offset(0, 6),
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) => ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 760,
+              maxHeight: constraints.maxHeight,
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            child: Container(
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppDesignTokens.surface3(context)
-                    : Colors.blue.withOpacity(0.1),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.calculate_rounded,
-                    color: isDark ? scheme.onSurface : Colors.blue,
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.black.withOpacity(0.34)
+                        : Colors.blue.withOpacity(0.15),
+                    blurRadius: isDark ? 12 : 20,
+                    offset: const Offset(0, 6),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Калькулятор арматуры (Этап 3)',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? scheme.onSurface : Colors.blue,
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppDesignTokens.surface3(context)
+                          : Colors.blue.withOpacity(0.1),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
                       ),
                     ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calculate_rounded,
+                          color: isDark ? scheme.onSurface : Colors.blue,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Калькулятор арматуры (Этап 3)',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? scheme.onSurface : Colors.blue,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.close),
+                          tooltip: 'Закрыть',
+                        ),
+                      ],
+                    ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                    tooltip: 'Закрыть',
+                  if (missingItems.isNotEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isDark
+                              ? AppDesignTokens.softBorder(context)
+                              : Colors.orange.withOpacity(0.35),
+                        ),
+                      ),
+                      child: Text(
+                        'Не найдены в каталоге: ${missingItems.join(', ')}',
+                        style: const TextStyle(fontSize: 12.5),
+                      ),
+                    ),
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _targetPositions.length,
+                      itemBuilder: (context, index) {
+                        final position = _targetPositions[index];
+                        final disabled = _isMissingCatalogItem(position);
+                        return _buildRow(position, disabled);
+                      },
+                    ),
+                  ),
+                  if (_inlineError != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          _inlineError!,
+                          style: TextStyle(
+                            color: Colors.red.shade600,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                            color: AppDesignTokens.softBorder(context)),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Отмена'),
+                        ),
+                        const Spacer(),
+                        ElevatedButton.icon(
+                          onPressed: _submit,
+                          icon: const Icon(Icons.playlist_add_check_rounded),
+                          label: const Text('Перенести в смету'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: scheme.onPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            if (missingItems.isNotEmpty)
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: isDark
-                        ? AppDesignTokens.softBorder(context)
-                        : Colors.orange.withOpacity(0.35),
-                  ),
-                ),
-                child: Text(
-                  'Не найдены в каталоге: ${missingItems.join(', ')}',
-                  style: const TextStyle(fontSize: 12.5),
-                ),
-              ),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _targetPositions.length,
-                itemBuilder: (context, index) {
-                  final position = _targetPositions[index];
-                  final disabled = _isMissingCatalogItem(position);
-                  return _buildRow(position, disabled);
-                },
-              ),
-            ),
-            if (_inlineError != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    _inlineError!,
-                    style: TextStyle(
-                      color: Colors.red.shade600,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: AppDesignTokens.softBorder(context)),
-                ),
-              ),
-              child: Row(
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Отмена'),
-                  ),
-                  const Spacer(),
-                  ElevatedButton.icon(
-                    onPressed: _submit,
-                    icon: const Icon(Icons.playlist_add_check_rounded),
-                    label: const Text('Перенести в смету'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: scheme.onPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

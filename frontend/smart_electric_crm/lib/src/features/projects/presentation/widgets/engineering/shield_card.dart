@@ -24,7 +24,6 @@ class ShieldCard extends ConsumerStatefulWidget {
   @override
   ConsumerState<ShieldCard> createState() => _ShieldCardState();
 }
-
 class _ShieldCardState extends ConsumerState<ShieldCard>
     with TickerProviderStateMixin {
   late AnimationController _expandController;
@@ -98,6 +97,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     final shield = widget.shield;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final isCompactMobile = MediaQuery.of(context).size.width < 560;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -207,7 +207,11 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                           ),
                                         ),
                                         const SizedBox(height: 2),
-                                        Row(
+                                        Wrap(
+                                          spacing: 6,
+                                          runSpacing: 2,
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
                                           children: [
                                             Text(
                                               _getTypeName(shield.shieldType)
@@ -272,7 +276,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Mounting Toggle & Recommended Size
-                              _buildTopInfo(context, themeColor),
+                              _buildTopInfo(context, themeColor, isCompactMobile),
 
                               const SizedBox(height: 16),
 
@@ -323,7 +327,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     );
   }
 
-  Widget _buildTopInfo(BuildContext context, Color themeColor) {
+  Widget _buildTopInfo(
+      BuildContext context, Color themeColor, bool isCompactMobile) {
     final shield = widget.shield;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
@@ -378,11 +383,14 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                 ),
               ),
               // Right: Mounting Toggle
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+              Flexible(
+                child: Align(
+                  alignment: Alignment.topRight,
+                  child: Wrap(
+                    spacing: isCompactMobile ? 8 : 12,
+                    runSpacing: isCompactMobile ? 6 : 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    alignment: WrapAlignment.end,
                     children: [
                       Text(
                         'МОНТАЖ:',
@@ -393,12 +401,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                           color: scheme.onSurfaceVariant,
                         ),
                       ),
-                      // Icon removed
+                      _buildMountingSegmented(themeColor),
                     ],
                   ),
-                  const SizedBox(width: 12),
-                  _buildMountingSegmented(themeColor),
-                ],
+                ),
               ),
             ],
           ),
@@ -406,11 +412,12 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
           Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
           const SizedBox(height: 16),
           // Bottom Row: Size & Actions
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (shield.suggestedSize != null)
                 Container(
+                  width: double.infinity,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
@@ -425,12 +432,13 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                       ),
                     ],
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Wrap(
+                    spacing: 10,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Icon(Icons.straighten_rounded,
                           size: 16, color: Colors.grey.shade400),
-                      const SizedBox(width: 10),
                       RichText(
                         text: TextSpan(
                           style: TextStyle(
@@ -452,10 +460,11 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     ],
                   ),
                 ),
-              if (shield.suggestedSize == null) const Spacer(),
+              if (shield.suggestedSize != null) const SizedBox(height: 10),
               // Actions Row
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   // Template Button (only for Power/LED)
                   if (shield.shieldType == 'power' ||
@@ -476,7 +485,6 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                         child: const Icon(Icons.copy_all_rounded, size: 18),
                       ),
                     ),
-                    const SizedBox(width: 8),
                   ],
                   // Notes Button (with pulsing animation when has notes)
                   Tooltip(
@@ -538,7 +546,6 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                       },
                     ),
                   ),
-                  const SizedBox(width: 8),
                   // Edit Button
                   Tooltip(
                     message: 'Редактировать щит',
@@ -556,7 +563,6 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                       child: const Icon(Icons.edit_outlined, size: 18),
                     ),
                   ),
-                  const SizedBox(width: 8),
                   // Delete Button
                   Tooltip(
                     message: 'Удалить щит',
@@ -890,3 +896,4 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     }
   }
 }
+
