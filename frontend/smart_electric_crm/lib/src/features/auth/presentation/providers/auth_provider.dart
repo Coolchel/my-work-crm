@@ -52,7 +52,6 @@ class Auth extends _$Auth {
   }
 
   Future<void> login(String username, String password) async {
-    state = AuthStatus.loading;
     try {
       final repo = await ref.read(authRepositoryProvider.future);
       await repo.login(username, password);

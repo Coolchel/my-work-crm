@@ -62,5 +62,32 @@ void main() {
       expect(result.statusCode, 500);
       expect(result.raw, error);
     });
+
+    test('maps network error to friendly message', () {
+      final requestOptions = RequestOptions(path: '/test');
+      final error = DioException(
+        requestOptions: requestOptions,
+        type: DioExceptionType.connectionError,
+        message: 'Failed host lookup: test.local',
+      );
+
+      final result =
+          ApiException.fromDio(error, fallbackMessage: 'Failed to fetch data');
+
+      expect(
+        result.message,
+        'Нет подключения к интернету. Проверьте сеть и повторите попытку.',
+      );
+    });
+
+    test('toString returns user message without technical details', () {
+      const exception = ApiException(
+        message: 'Понятная ошибка',
+        raw: 'raw',
+        statusCode: 500,
+      );
+
+      expect(exception.toString(), 'Понятная ошибка');
+    });
   });
 }

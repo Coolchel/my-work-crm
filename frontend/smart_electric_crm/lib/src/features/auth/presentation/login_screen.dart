@@ -1,7 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:smart_electric_crm/src/core/api/api_exception.dart';
+import 'package:smart_electric_crm/src/core/errors/user_friendly_error_mapper.dart';
 import '../presentation/providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -16,6 +15,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -29,6 +29,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
@@ -37,24 +38,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             _passwordController.text,
           );
       // Navigation is handled by auth state in main.dart.
-    } catch (e) {
-      var message = 'Неверный логин или пароль.';
-      if (e is ApiException) {
-        message = e.message;
-      } else if (e is DioException) {
-        final data = e.response?.data;
-        if (data is Map && data['detail'] is String) {
-          message = data['detail'] as String;
-        } else if (e.response?.statusCode != 401 && e.message != null) {
-          message = e.message!;
-        }
-      }
+    } catch (e, st) {
+      final message = UserFriendlyErrorMapper.map(
+        e,
+        fallbackMessage: 'Не удалось войти. Попробуйте снова.',
+      );
+      debugPrint('Login failed: $e\n$st');
 
       if (mounted) {
+        setState(() {
+          _errorMessage = message;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(message),
-            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -120,6 +118,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         },
                         onFieldSubmitted: (_) => _login(),
                       ),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .errorContainer
+                                .withOpacity(0.6),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onErrorContainer,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 32),
                       SizedBox(
                         width: double.infinity,

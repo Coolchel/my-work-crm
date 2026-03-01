@@ -16,7 +16,7 @@ class _FailingAuthNotifier extends Auth {
   Future<void> login(String username, String password) async {
     state = AuthStatus.error;
     throw const ApiException(
-      message: 'Неверные учетные данные',
+      message: 'No active account found with the given credentials',
       statusCode: 401,
       raw: 'test',
     );
@@ -24,7 +24,7 @@ class _FailingAuthNotifier extends Auth {
 }
 
 void main() {
-  testWidgets('LoginScreen shows ApiException.message in SnackBar',
+  testWidgets('LoginScreen shows friendly message for 401 invalid credentials',
       (tester) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -47,6 +47,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('Неверные учетные данные'), findsOneWidget);
+    expect(
+      find.text(
+          'Неверный логин или пароль. Проверьте данные и попробуйте снова.'),
+      findsWidgets,
+    );
   });
 }
