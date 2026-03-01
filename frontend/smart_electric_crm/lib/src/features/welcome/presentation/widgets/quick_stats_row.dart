@@ -66,60 +66,59 @@ class QuickStatsRow extends ConsumerWidget {
         return LayoutBuilder(
           builder: (context, constraints) {
             final isMobile = constraints.maxWidth < 600;
-            final minRowWidth = isMobile ? 900.0 : constraints.maxWidth;
+            final spacing = isMobile ? 8.0 : 12.0;
 
-            return SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minWidth: minRowWidth),
-                child: IntrinsicHeight(
-                  child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _StatCard(
-                  title: 'Предпросчеты',
-                  value: preCalcCount.toString(),
-                  icon: Icons.calculate_outlined,
-                  color: Colors.blue,
-                  onTap: () => onStatSelected
-                      ?.call(selectedStat == 'pre_calc' ? null : 'pre_calc'),
-                  isSelected: selectedStat == 'pre_calc',
-                  tooltip:
-                      'Объекты с новыми этапами\n"Предпросчет"\nв текущем месяце',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatCard(
-                  title: 'Текущие',
-                  value: activeObjectsCount.toString(),
-                  icon: Icons.engineering,
-                  color: Colors.orange,
-                  onTap: () => onStatSelected?.call(
-                    selectedStat == 'active_objects' ? null : 'active_objects',
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _StatCard(
+                      title: 'Предпросчеты',
+                      value: preCalcCount.toString(),
+                      icon: Icons.calculate_outlined,
+                      color: Colors.blue,
+                      onTap: () => onStatSelected?.call(
+                          selectedStat == 'pre_calc' ? null : 'pre_calc'),
+                      isSelected: selectedStat == 'pre_calc',
+                      compact: isMobile,
+                      tooltip:
+                          'Объекты с новыми этапами\n"Предпросчет"\nв текущем месяце',
+                    ),
                   ),
-                  isSelected: selectedStat == 'active_objects',
-                  tooltip:
-                      'Объекты с новыми этапами\n(кроме "Предпросчет")\nза текущий месяц',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatCard(
-                  title: 'Оплачено',
-                  value: paidCount.toString(),
-                  icon: Icons.check_circle_outline,
-                  color: Colors.green,
-                  onTap: () => onStatSelected
-                      ?.call(selectedStat == 'paid' ? null : 'paid'),
-                  isSelected: selectedStat == 'paid',
-                  tooltip: 'Оплаченные этапы\nв текущем месяце',
-                ),
-              ),
-                    ],
+                  SizedBox(width: spacing),
+                  Expanded(
+                    child: _StatCard(
+                      title: 'Текущие',
+                      value: activeObjectsCount.toString(),
+                      icon: Icons.engineering,
+                      color: Colors.orange,
+                      onTap: () => onStatSelected?.call(
+                        selectedStat == 'active_objects'
+                            ? null
+                            : 'active_objects',
+                      ),
+                      isSelected: selectedStat == 'active_objects',
+                      compact: isMobile,
+                      tooltip:
+                          'Объекты с новыми этапами\n(кроме "Предпросчет")\nза текущий месяц',
+                    ),
                   ),
-                ),
+                  SizedBox(width: spacing),
+                  Expanded(
+                    child: _StatCard(
+                      title: 'Оплачено',
+                      value: paidCount.toString(),
+                      icon: Icons.check_circle_outline,
+                      color: Colors.green,
+                      onTap: () => onStatSelected
+                          ?.call(selectedStat == 'paid' ? null : 'paid'),
+                      isSelected: selectedStat == 'paid',
+                      compact: isMobile,
+                      tooltip: 'Оплаченные этапы\nв текущем месяце',
+                    ),
+                  ),
+                ],
               ),
             );
           },
@@ -143,6 +142,7 @@ class _StatCard extends StatefulWidget {
   final MaterialColor color;
   final VoidCallback? onTap;
   final bool isSelected;
+  final bool compact;
   final String? tooltip;
 
   const _StatCard({
@@ -152,6 +152,7 @@ class _StatCard extends StatefulWidget {
     required this.color,
     this.onTap,
     this.isSelected = false,
+    this.compact = false,
     this.tooltip,
   });
 
@@ -167,6 +168,7 @@ class _StatCardState extends State<_StatCard> {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
     final effectiveHover = _isHovered;
+    final compact = widget.compact;
     final baseGradient = isDark
         ? const [Color(0xFF171A21), Color(0xFF151920)]
         : const [Color(0xFFF7F9FF), Color(0xFFF1F5FF)];
@@ -233,7 +235,7 @@ class _StatCardState extends State<_StatCard> {
               return null;
             }),
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(compact ? 10 : 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -243,25 +245,39 @@ class _StatCardState extends State<_StatCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: EdgeInsets.all(compact ? 8 : 10),
                         decoration: BoxDecoration(
                           color: widget.isSelected
                               ? (isDark
                                   ? Colors.white.withOpacity(0.13)
                                   : Colors.black.withOpacity(0.06))
                               : widget.color.withOpacity(isDark ? 0.14 : 0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius:
+                              BorderRadius.circular(compact ? 10 : 12),
                         ),
-                        child: Icon(widget.icon, color: widget.color, size: 22),
+                        child: Icon(
+                          widget.icon,
+                          color: widget.color,
+                          size: compact ? 18 : 22,
+                        ),
                       ),
                       if (widget.tooltip != null)
                         Tooltip(
                           message: widget.tooltip!,
                           textAlign: TextAlign.center,
-                          child: Icon(
-                            Icons.help_outline,
-                            size: 18,
-                            color: scheme.onSurfaceVariant.withOpacity(0.75),
+                          child: Container(
+                            padding: EdgeInsets.all(compact ? 3 : 4),
+                            decoration: BoxDecoration(
+                              color: scheme.onSurfaceVariant.withOpacity(
+                                isDark ? 0.22 : 0.12,
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.help_outline_rounded,
+                              size: compact ? 13 : 15,
+                              color: scheme.onSurfaceVariant.withOpacity(0.8),
+                            ),
                           ),
                         ),
                       if (widget.tooltip == null &&
@@ -284,7 +300,7 @@ class _StatCardState extends State<_StatCard> {
                       Text(
                         widget.value,
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: compact ? 21 : 24,
                           fontWeight: FontWeight.w800,
                           color: scheme.onSurface,
                           height: 1.0,
@@ -294,7 +310,7 @@ class _StatCardState extends State<_StatCard> {
                       Text(
                         widget.title,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: compact ? 11 : 12,
                           color: scheme.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
                           letterSpacing: -0.2,

@@ -273,49 +273,45 @@ class _StageCardState extends State<StageCard> {
                               ? Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Wrap(
-                                      spacing: 20,
-                                      runSpacing: 10,
+                                    Row(
                                       children: [
-                                        _buildStatItem(
-                                          icon: Icons.handyman_outlined,
-                                          label:
-                                              '\u0420\u0430\u0431\u043e\u0442\u044b',
-                                          value:
-                                              '${widget.stage.totalAmountUsd.toStringAsFixed(0)} \$',
-                                          color: Colors.green,
+                                        Expanded(
+                                          child: _buildStatItem(
+                                            icon: Icons.handyman_outlined,
+                                            label:
+                                                '\u0420\u0430\u0431\u043e\u0442\u044b',
+                                            value:
+                                                '${widget.stage.totalAmountUsd.toStringAsFixed(0)} \$',
+                                            color: Colors.green,
+                                            compact: true,
+                                          ),
                                         ),
-                                        _buildStatItem(
-                                          icon: Icons.inventory_2_outlined,
-                                          label:
-                                              '\u041c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u044b',
-                                          value:
-                                              '${widget.stage.totalAmountMaterialsUsd.toStringAsFixed(0)} \$',
-                                          color: Colors.blue,
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: _buildStatItem(
+                                            icon: Icons.inventory_2_outlined,
+                                            label:
+                                                '\u041c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u044b',
+                                            value:
+                                                '${widget.stage.totalAmountMaterialsUsd.toStringAsFixed(0)} \$',
+                                            color: Colors.blue,
+                                            compact: true,
+                                          ),
                                         ),
                                       ],
                                     ),
                                     if (createdAt != null) ...[
                                       const SizedBox(height: 8),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                      Row(
                                         children: [
-                                          Text(
-                                            '\u0421\u043e\u0437\u0434\u0430\u043d: ${_formatDate(createdAt)}',
-                                            style: TextStyle(
-                                                fontSize: 10,
-                                                color: Colors.grey.shade400,
-                                                fontWeight: FontWeight.w500),
+                                          const Spacer(),
+                                          _buildDateColumn(
+                                            createdLabel:
+                                                '\u0421\u043e\u0437\u0434\u0430\u043d: ${_formatDate(createdAt)}',
+                                            updatedLabel: isEdited
+                                                ? '\u0418\u0437\u043c\u0435\u043d\u0435\u043d: ${_formatDate(updatedAt)}'
+                                                : null,
                                           ),
-                                          if (isEdited)
-                                            Text(
-                                              '\u0418\u0437\u043c\u0435\u043d\u0435\u043d: ${_formatDate(updatedAt)}',
-                                              style: TextStyle(
-                                                  fontSize: 10,
-                                                  color: Colors.grey.shade400,
-                                                  fontWeight: FontWeight.w500),
-                                            ),
                                         ],
                                       ),
                                     ],
@@ -340,26 +336,12 @@ class _StageCardState extends State<StageCard> {
                                     ),
                                     const Spacer(),
                                     if (createdAt != null)
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          Text(
+                                      _buildDateColumn(
+                                        createdLabel:
                                             'Создан: ${_formatDate(createdAt)}',
-                                            style: TextStyle(
-                                                fontSize: 10,
-                                                color: Colors.grey.shade400,
-                                                fontWeight: FontWeight.w500),
-                                          ),
-                                          if (isEdited)
-                                            Text(
-                                              'Изменен: ${_formatDate(updatedAt)}',
-                                              style: TextStyle(
-                                                  fontSize: 10,
-                                                  color: Colors.grey.shade400,
-                                                  fontWeight: FontWeight.w500),
-                                            ),
-                                        ],
+                                        updatedLabel: isEdited
+                                            ? 'Изменен: ${_formatDate(updatedAt)}'
+                                            : null,
                                       ),
                                   ],
                                 ),
@@ -381,25 +363,32 @@ class _StageCardState extends State<StageCard> {
     required String label,
     required String value,
     required Color color,
+    bool compact = false,
   }) {
+    final iconPadding = compact ? 6.0 : 8.0;
+    final iconSize = compact ? 16.0 : 18.0;
+    final labelSize = compact ? 10.0 : 11.0;
+    final valueSize = compact ? 13.0 : 14.0;
+    final spacing = compact ? 8.0 : 12.0;
+
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(iconPadding),
           decoration: BoxDecoration(
             color: color.withOpacity(0.08),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, size: 18, color: color),
+          child: Icon(icon, size: iconSize, color: color),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: spacing),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: labelSize,
                 color: Colors.grey.shade500,
                 fontWeight: FontWeight.w500,
               ),
@@ -407,7 +396,7 @@ class _StageCardState extends State<StageCard> {
             Text(
               value,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: valueSize,
                 fontWeight: FontWeight.w600,
                 color: Colors.grey.shade800,
               ),
@@ -415,6 +404,41 @@ class _StageCardState extends State<StageCard> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildDateColumn({
+    required String createdLabel,
+    String? updatedLabel,
+  }) {
+    final hasUpdated = updatedLabel != null;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment:
+            hasUpdated ? MainAxisAlignment.start : MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            createdLabel,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey.shade400,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (hasUpdated)
+            Text(
+              updatedLabel,
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.grey.shade400,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

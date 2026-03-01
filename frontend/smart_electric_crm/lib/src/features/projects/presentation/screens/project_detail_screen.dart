@@ -34,31 +34,10 @@ class ProjectDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final projectListAsync = ref.watch(projectListProvider);
+    final projectAsync = ref.watch(projectByIdProvider(projectId));
 
-    return projectListAsync.when(
-      data: (projects) {
-        try {
-          final project = projects.firstWhere(
-            (p) => p.id.toString() == projectId,
-          );
-          return _ProjectDetailContent(project: project);
-        } catch (_) {
-          return Scaffold(
-            appBar: CompactSectionAppBar(
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new),
-                tooltip: 'Назад',
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              title: 'Объект',
-              subtitle: 'Детали',
-              icon: Icons.apartment_rounded,
-            ),
-            body: const Center(child: Text('Объект не найден')),
-          );
-        }
-      },
+    return projectAsync.when(
+      data: (project) => _ProjectDetailContent(project: project),
       loading: () => Scaffold(
         appBar: CompactSectionAppBar(
           leading: IconButton(
@@ -665,6 +644,45 @@ class _FileCardState extends ConsumerState<_FileCard> {
     return Colors.blue;
   }
 
+  String _safeFileName(String rawName, {String fallback = 'file'}) {
+    final trimmed = rawName.trim();
+    final candidate = trimmed.isEmpty ? fallback : trimmed;
+    final sanitized = candidate
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+        .replaceAll(RegExp(r'[\u0000-\u001F]'), '_')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    final withoutTrailingDots = sanitized.replaceAll(RegExp(r'[. ]+$'), '');
+    return withoutTrailingDots.isEmpty ? fallback : withoutTrailingDots;
+  }
+
+  String _fileNameFromUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      if (uri.pathSegments.isNotEmpty) {
+        return Uri.decodeComponent(uri.pathSegments.last);
+      }
+    } catch (_) {
+      // Keep fallback below.
+    }
+    return url.split('/').last;
+  }
+
+  Future<File> _createDownloadedTempFile(String url,
+      {String? preferredName}) async {
+    final response = await http.get(Uri.parse(url));
+    final tempDir = await getTemporaryDirectory();
+    final fallbackName = _fileNameFromUrl(url);
+    final safeName = _safeFileName(
+      preferredName ?? fallbackName,
+      fallback: _safeFileName(fallbackName, fallback: 'file'),
+    );
+    final localFile = File('${tempDir.path}/$safeName');
+    await localFile.writeAsBytes(response.bodyBytes);
+    TempFileService().track(localFile);
+    return localFile;
+  }
+
   @override
   Widget build(BuildContext context) {
     final fileUrl = widget.file.file;
@@ -913,19 +931,25 @@ class _FileCardState extends ConsumerState<_FileCard> {
 
   Future<void> _saveAsFile(BuildContext context, String url) async {
     try {
-      // 1. Сначала скачиваем во временную папку
-      final response = await http.get(Uri.parse(url));
-      final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/$displayName');
-      await tempFile.writeAsBytes(response.bodyBytes);
+      final tempFile =
+          await _createDownloadedTempFile(url, preferredName: displayName);
+      final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+      if (isMobile) {
+        await Share.shareXFiles([XFile(tempFile.path)], text: displayName);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content:
+                  Text('File downloaded. Choose destination from share menu.'),
+            ),
+          );
+        }
+        return;
+      }
 
-      // Регистрируем временный файл для очистки
-      TempFileService().track(tempFile);
-
-      // 2. Открываем диалог сохранения (Desktop)
-      String? outputFile = await FilePicker.platform.saveFile(
-        dialogTitle: 'Сохранить файл как...',
-        fileName: displayName,
+      final outputFile = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save file as...',
+        fileName: _safeFileName(displayName, fallback: 'file'),
       );
 
       if (outputFile != null) {
@@ -948,15 +972,8 @@ class _FileCardState extends ConsumerState<_FileCard> {
 
   Future<void> _downloadAndOpenFile(String url) async {
     try {
-      final response = await http.get(Uri.parse(url));
-      final documentDirectory = await getTemporaryDirectory();
       final localFile =
-          File('${documentDirectory.path}/${url.split('/').last}');
-      await localFile.writeAsBytes(response.bodyBytes);
-
-      // Регистрируем временный файл для очистки
-      TempFileService().track(localFile);
-
+          await _createDownloadedTempFile(url, preferredName: displayName);
       await OpenFilex.open(localFile.path);
     } catch (e) {
       debugPrint("Open file error: $e");
@@ -965,15 +982,8 @@ class _FileCardState extends ConsumerState<_FileCard> {
 
   Future<void> _shareFile(String url) async {
     try {
-      final response = await http.get(Uri.parse(url));
-      final documentDirectory = await getTemporaryDirectory();
       final localFile =
-          File('${documentDirectory.path}/${url.split('/').last}');
-      await localFile.writeAsBytes(response.bodyBytes);
-
-      // Регистрируем временный файл для очистки
-      TempFileService().track(localFile);
-
+          await _createDownloadedTempFile(url, preferredName: displayName);
       await Share.shareXFiles([XFile(localFile.path)]);
     } catch (e) {
       debugPrint("Share file error: $e");
@@ -1410,3 +1420,4 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
     );
   }
 }
+

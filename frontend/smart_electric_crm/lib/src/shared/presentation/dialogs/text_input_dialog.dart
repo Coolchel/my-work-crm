@@ -60,7 +60,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
           builder: (context, constraints) => ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: 450,
-              maxHeight: constraints.maxHeight,
+              maxHeight: constraints.maxHeight * 0.84,
             ),
             child: Container(
               decoration: BoxDecoration(
@@ -76,7 +76,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
                 ],
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.max,
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Header
@@ -124,29 +124,52 @@ class _TextInputDialogState extends State<TextInputDialog> {
                   ),
 
                   // Content
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          children: [
-                            _buildTextField(
-                              controller: _textController,
-                              label: widget.labelText,
-                              autoFocus: true,
-                            ),
-                            if (widget.descriptionLabelText != null) ...[
-                              const SizedBox(height: 16),
+                  Flexible(
+                    child: Scrollbar(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
                               _buildTextField(
-                                controller: _descController,
-                                label: widget.descriptionLabelText!,
-                                maxLines: 3,
+                                controller: _textController,
+                                label: widget.labelText,
+                                autoFocus: true,
                               ),
+                              if (widget.descriptionLabelText != null) ...[
+                                const SizedBox(height: 16),
+                                _buildTextField(
+                                  controller: _descController,
+                                  label: widget.descriptionLabelText!,
+                                  maxLines: 3,
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.swipe_up_alt_rounded,
+                          size: 15,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Scroll to see all fields',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 

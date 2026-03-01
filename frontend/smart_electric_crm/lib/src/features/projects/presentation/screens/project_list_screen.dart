@@ -704,16 +704,15 @@ class _ProjectCardState extends State<_ProjectCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Header: Intercom label + Action Buttons
-                          Row(
+                          // Header: address + action buttons (aligned on one line)
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Address (top, bold)
-                                    Text(
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Text(
                                       project.address,
                                       style: TextStyle(
                                         fontSize: 16,
@@ -724,53 +723,55 @@ class _ProjectCardState extends State<_ProjectCard> {
                                         letterSpacing: -0.3,
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
-                                    // Intercom code (below)
-                                    if (project.intercomCode.isNotEmpty)
-                                      Text(
-                                        'домофон: ${project.intercomCode}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.grey.shade500,
-                                          letterSpacing: 0.3,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              // Action Buttons
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _ActionButton(
-                                    icon: Icons.edit_outlined,
-                                    tooltip: 'Редактировать объект',
-                                    color: Colors.grey.shade400,
-                                    hoverColor: Colors.indigo,
-                                    onTap: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) =>
-                                            AddProjectDialog(project: project),
-                                      );
-                                    },
                                   ),
-                                  const SizedBox(width: 2),
-                                  Consumer(
-                                    builder: (context, ref, child) {
-                                      return _ActionButton(
-                                        icon: Icons.close,
-                                        tooltip: 'Удалить объект',
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _ActionButton(
+                                        icon: Icons.edit_outlined,
+                                        tooltip:
+                                            '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
                                         color: Colors.grey.shade400,
-                                        hoverColor: Colors.grey.shade600,
-                                        onTap: () =>
-                                            deleteProject(context, ref),
-                                      );
-                                    },
+                                        hoverColor: Colors.indigo,
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) =>
+                                                AddProjectDialog(
+                                                    project: project),
+                                          );
+                                        },
+                                      ),
+                                      const SizedBox(width: 2),
+                                      Consumer(
+                                        builder: (context, ref, child) {
+                                          return _ActionButton(
+                                            icon: Icons.close,
+                                            tooltip:
+                                                '\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
+                                            color: Colors.grey.shade400,
+                                            hoverColor: Colors.grey.shade600,
+                                            onTap: () =>
+                                                deleteProject(context, ref),
+                                          );
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
+                              if (project.intercomCode.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  '\u0434\u043e\u043c\u043e\u0444\u043e\u043d: ${project.intercomCode}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey.shade500,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
 
@@ -801,29 +802,16 @@ class _ProjectCardState extends State<_ProjectCard> {
                                       ],
                                     ),
                                     const SizedBox(height: 8),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                    Row(
                                       children: [
-                                        Text(
-                                          '\u0421\u043e\u0437\u0434\u0430\u043d: ${_formatDate(createdAt)}',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            color: Colors.grey.shade400,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                        const Spacer(),
+                                        _buildDateColumn(
+                                          createdLabel:
+                                              '\u0421\u043e\u0437\u0434\u0430\u043d: ${_formatDate(createdAt)}',
+                                          updatedLabel: isEdited
+                                              ? '\u0418\u0437\u043c\u0435\u043d\u0435\u043d: ${_formatDate(updatedAt)}'
+                                              : null,
                                         ),
-                                        if (isEdited)
-                                          Text(
-                                            '\u0418\u0437\u043c\u0435\u043d\u0435\u043d: ${_formatDate(updatedAt)}',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: Colors.grey.shade400,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          )
-                                        else
-                                          const SizedBox(height: 14),
                                       ],
                                     ),
                                   ],
@@ -905,33 +893,12 @@ class _ProjectCardState extends State<_ProjectCard> {
                                       ],
                                     ),
                                     const Spacer(),
-                                    // Dates (always 2 rows for alignment)
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        // Row 1: "Создан"
-                                        Text(
-                                          'Создан: ${_formatDate(createdAt)}',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            color: Colors.grey.shade400,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        // Row 2: "Изменен" or empty placeholder
-                                        if (isEdited)
-                                          Text(
-                                            'Изменен: ${_formatDate(updatedAt)}',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              color: Colors.grey.shade400,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          )
-                                        else
-                                          const SizedBox(height: 14),
-                                      ],
+                                    _buildDateColumn(
+                                      createdLabel:
+                                          '\u0421\u043e\u0437\u0434\u0430\u043d: ${_formatDate(createdAt)}',
+                                      updatedLabel: isEdited
+                                          ? '\u0418\u0437\u043c\u0435\u043d\u0435\u043d: ${_formatDate(updatedAt)}'
+                                          : null,
                                     ),
                                   ],
                                 ),
@@ -991,6 +958,41 @@ class _ProjectCardState extends State<_ProjectCard> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildDateColumn({
+    required String createdLabel,
+    String? updatedLabel,
+  }) {
+    final hasUpdated = updatedLabel != null;
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment:
+            hasUpdated ? MainAxisAlignment.start : MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            createdLabel,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey.shade400,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (hasUpdated)
+            Text(
+              updatedLabel,
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.grey.shade400,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+        ],
+      ),
     );
   }
 

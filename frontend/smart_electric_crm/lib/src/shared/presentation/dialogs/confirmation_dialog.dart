@@ -34,7 +34,7 @@ class ConfirmationDialog extends StatelessWidget {
           builder: (context, constraints) => ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: 400,
-              maxHeight: constraints.maxHeight,
+              maxHeight: constraints.maxHeight * 0.84,
             ),
             child: Container(
               decoration: BoxDecoration(
@@ -50,7 +50,7 @@ class ConfirmationDialog extends StatelessWidget {
                 ],
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.max,
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Header
@@ -98,18 +98,41 @@ class ConfirmationDialog extends StatelessWidget {
                   ),
 
                   // Content
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        content,
-                        style: TextStyle(
-                          fontSize: 15,
-                          height: 1.4,
-                          color: scheme.onSurface,
+                  Flexible(
+                    child: Scrollbar(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(
+                          content,
+                          style: TextStyle(
+                            fontSize: 15,
+                            height: 1.4,
+                            color: scheme.onSurface,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
                       ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.swipe_up_alt_rounded,
+                          size: 15,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Scroll for full content',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 

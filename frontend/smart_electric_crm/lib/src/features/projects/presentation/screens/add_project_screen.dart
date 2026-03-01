@@ -176,7 +176,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
             builder: (context, constraints) => ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: 450,
-                maxHeight: constraints.maxHeight,
+                maxHeight: constraints.maxHeight * 0.86,
               ),
               child: Container(
                 decoration: BoxDecoration(
@@ -193,7 +193,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                   ],
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.max,
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Header
@@ -248,139 +248,168 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                       )
                     else
                       Flexible(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(24),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // 1. Address
-                                _buildTextField(
-                                  controller: _addressController,
-                                  label: 'Адрес объекта',
-                                  hint: 'ул. Примерная, д. 1, кв. 1',
-                                  validator: (v) => (v == null || v.isEmpty)
-                                      ? 'Введите адрес'
-                                      : null,
-                                ),
-                                const SizedBox(height: 16),
-
-                                // 2. Intercom code
-                                _buildTextField(
-                                  controller: _intercomController,
-                                  label: 'Код домофона',
-                                  hint: '123',
-                                ),
-                                const SizedBox(height: 16),
-
-                                // 3. Client
-                                _buildTextField(
-                                  controller: _clientInfoController,
-                                  label: 'Заказчик',
-                                  hint: 'Имя, телефон...',
-                                ),
-                                const SizedBox(height: 16),
-
-                                // 4. Object type
-                                _buildFieldLabel('Тип объекта'),
-                                _buildPopupBtn(
-                                  _objectTypes[_objectType] ?? _objectType,
-                                  _objectTypes.entries
-                                      .map((e) => PopupMenuItem(
-                                            value: e.key,
-                                            height: 40,
-                                            padding: EdgeInsets.zero,
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 16),
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    _objectTypeIcons[e.key] ??
-                                                        Icons.domain,
-                                                    color:
-                                                        Colors.indigo.shade400,
-                                                    size: 20,
-                                                  ),
-                                                  const SizedBox(width: 12),
-                                                  Text(e.value,
-                                                      style: const TextStyle(
-                                                          fontSize: 13)),
-                                                ],
-                                              ),
-                                            ),
-                                          ))
-                                      .toList(),
-                                  (v) => setState(() => _objectType = v),
-                                ),
-                                const SizedBox(height: 16),
-
-                                // 5. Source
-                                _buildFieldLabel('Источник'),
-                                _buildPopupBtn(
-                                  _source,
-                                  _sourceItems
-                                      .map((s) => PopupMenuItem(
-                                            value: s,
-                                            height: 40,
-                                            padding: EdgeInsets.zero,
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 16),
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    _sourceIcons[s] ??
-                                                        Icons.person,
-                                                    color:
-                                                        Colors.indigo.shade400,
-                                                    size: 20,
-                                                  ),
-                                                  const SizedBox(width: 12),
-                                                  Text(s,
-                                                      style: const TextStyle(
-                                                          fontSize: 13)),
-                                                ],
-                                              ),
-                                            ),
-                                          ))
-                                      .toList(),
-                                  (v) => setState(() => _source = v),
-                                ),
-
-                                // Stages selection (creation only) - toggle chips
-                                if (!_isEditing) ...[
-                                  const SizedBox(height: 20),
-                                  _buildFieldLabel('Начальные этапы'),
-                                  const SizedBox(height: 4),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: _stageLabels.entries.map((entry) {
-                                      final isSelected =
-                                          _selectedStages[entry.key] ?? false;
-                                      return _StageToggleChip(
-                                        label: entry.value,
-                                        icon: _stageIcons[entry.key] ??
-                                            Icons.layers_outlined,
-                                        isSelected: isSelected,
-                                        onTap: () {
-                                          setState(() {
-                                            _selectedStages[entry.key] =
-                                                !isSelected;
-                                          });
-                                        },
-                                      );
-                                    }).toList(),
+                        child: Scrollbar(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(24),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // 1. Address
+                                  _buildTextField(
+                                    controller: _addressController,
+                                    label: 'Адрес объекта',
+                                    hint: 'ул. Примерная, д. 1, кв. 1',
+                                    validator: (v) => (v == null || v.isEmpty)
+                                        ? 'Введите адрес'
+                                        : null,
                                   ),
+                                  const SizedBox(height: 16),
+
+                                  // 2. Intercom code
+                                  _buildTextField(
+                                    controller: _intercomController,
+                                    label: 'Код домофона',
+                                    hint: '123',
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // 3. Client
+                                  _buildTextField(
+                                    controller: _clientInfoController,
+                                    label: 'Заказчик',
+                                    hint: 'Имя, телефон...',
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // 4. Object type
+                                  _buildFieldLabel('Тип объекта'),
+                                  _buildPopupBtn(
+                                    _objectTypes[_objectType] ?? _objectType,
+                                    _objectTypes.entries
+                                        .map((e) => PopupMenuItem(
+                                              value: e.key,
+                                              height: 40,
+                                              padding: EdgeInsets.zero,
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 16),
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      _objectTypeIcons[e.key] ??
+                                                          Icons.domain,
+                                                      color: Colors
+                                                          .indigo.shade400,
+                                                      size: 20,
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Text(e.value,
+                                                        style: const TextStyle(
+                                                            fontSize: 13)),
+                                                  ],
+                                                ),
+                                              ),
+                                            ))
+                                        .toList(),
+                                    (v) => setState(() => _objectType = v),
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // 5. Source
+                                  _buildFieldLabel('Источник'),
+                                  _buildPopupBtn(
+                                    _source,
+                                    _sourceItems
+                                        .map((s) => PopupMenuItem(
+                                              value: s,
+                                              height: 40,
+                                              padding: EdgeInsets.zero,
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 16),
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      _sourceIcons[s] ??
+                                                          Icons.person,
+                                                      color: Colors
+                                                          .indigo.shade400,
+                                                      size: 20,
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Text(s,
+                                                        style: const TextStyle(
+                                                            fontSize: 13)),
+                                                  ],
+                                                ),
+                                              ),
+                                            ))
+                                        .toList(),
+                                    (v) => setState(() => _source = v),
+                                  ),
+
+                                  // Stages selection (creation only) - toggle chips
+                                  if (!_isEditing) ...[
+                                    const SizedBox(height: 20),
+                                    _buildFieldLabel('Начальные этапы'),
+                                    const SizedBox(height: 4),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children:
+                                          _stageLabels.entries.map((entry) {
+                                        final isSelected =
+                                            _selectedStages[entry.key] ?? false;
+                                        return _StageToggleChip(
+                                          label: entry.value,
+                                          icon: _stageIcons[entry.key] ??
+                                              Icons.layers_outlined,
+                                          isSelected: isSelected,
+                                          onTap: () {
+                                            setState(() {
+                                              _selectedStages[entry.key] =
+                                                  !isSelected;
+                                            });
+                                          },
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                           ),
+                        ),
+                      ),
+                    if (!_isLoading)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.swipe_up_alt_rounded,
+                              size: 15,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Scroll for more options',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 

@@ -1,7 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'stage_model.dart';
 import 'project_file_model.dart';
-import 'package:smart_electric_crm/src/features/engineering/data/models/shield_model.dart';
+import '../../../engineering/data/models/shield_model.dart';
 
 part 'project_model.g.dart';
 

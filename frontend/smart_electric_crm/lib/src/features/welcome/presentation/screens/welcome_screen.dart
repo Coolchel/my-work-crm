@@ -69,12 +69,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final anchorTopLeft =
         anchorBox.localToGlobal(Offset.zero, ancestor: rootBox);
     final overlayTop = anchorTopLeft.dy + _overlayOffsetY;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final availableHeight =
-        rootBox.size.height - overlayTop - _overlayBottomGap;
-    final nextHeight = availableHeight.clamp(
-      _overlayMinHeight,
-      _overlayMaxHeightCap,
-    );
+        rootBox.size.height - overlayTop - _overlayBottomGap - bottomInset;
+    final nextHeight = availableHeight
+        .clamp(
+          _overlayMinHeight,
+          _overlayMaxHeightCap,
+        )
+        .toDouble();
 
     if ((nextHeight - _searchOverlayMaxHeight).abs() >= 1) {
       setState(() {
@@ -83,11 +86,51 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     }
   }
 
+  void _scrollSearchFieldToTop() {
+    if (!_scrollController.hasClients || !mounted) {
+      return;
+    }
+    final anchorContext = _searchAnchorKey.currentContext;
+    final rootBox = context.findRenderObject() as RenderBox?;
+    final anchorBox = anchorContext?.findRenderObject() as RenderBox?;
+    if (rootBox == null || anchorBox == null) {
+      return;
+    }
+
+    final anchorTopLeft =
+        anchorBox.localToGlobal(Offset.zero, ancestor: rootBox);
+    const targetTop = 12.0;
+    final delta = anchorTopLeft.dy - targetTop;
+    if (delta.abs() < 1) {
+      return;
+    }
+
+    final nextOffset = (_scrollController.offset + delta).clamp(
+      _scrollController.position.minScrollExtent,
+      _scrollController.position.maxScrollExtent,
+    );
+    if ((nextOffset - _scrollController.offset).abs() < 1) {
+      return;
+    }
+
+    _scrollController.animateTo(
+      nextOffset,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+    );
+    Future<void>.delayed(const Duration(milliseconds: 280), () {
+      if (mounted) {
+        _recalculateOverlayMaxHeight();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedStat = ref.watch(dashboardFilterProvider);
     final searchQuery = ref.watch(projectSearchQueryProvider);
     final isSearchActive = searchQuery != null && searchQuery.isNotEmpty;
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
     final hasProjectsLoadError = ref.watch(projectListProvider).maybeWhen(
           error: (_, __) => true,
           orElse: () => false,
@@ -99,6 +142,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     });
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
@@ -125,6 +169,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         const SizedBox(height: 24),
                         TapRegion(
                           groupId: _searchTapGroupId,
+                          onTapInside: (_) {
+                            if (isMobile) {
+                              _scrollSearchFieldToTop();
+                            }
+                          },
                           onTapOutside: (_) {
                             ref
                                 .read(projectSearchQueryProvider.notifier)
@@ -221,7 +270,7 @@ class _WelcomeNetworkNotice extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Нет подключения к интернету. Некоторые блоки временно недоступны.',
+              '\u041d\u0435\u0442 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f \u043a \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442\u0443. \u041d\u0435\u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0431\u043b\u043e\u043a\u0438 \u0432\u0440\u0435\u043c\u0435\u043d\u043d\u043e \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u044b.',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
