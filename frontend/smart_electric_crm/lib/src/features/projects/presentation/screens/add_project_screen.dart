@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../providers/project_providers.dart';
 import '../../data/models/project_model.dart';
 
@@ -140,10 +141,15 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
           Navigator.pop(context);
         }
       }
-    } catch (e) {
+    } catch (e, st) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+        debugPrint('AddProjectDialog._submitForm failed: $e\n$st');
+        await ErrorFeedback.show(
+          context,
+          e,
+          fallbackMessage: _isEditing
+              ? 'Не удалось сохранить объект. Попробуйте снова.'
+              : 'Не удалось создать объект. Попробуйте снова.',
         );
         setState(() => _isLoading = false);
       }
@@ -456,9 +462,8 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
     const bg = Colors.indigo;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
-    final popupBackgroundColor = isDark
-        ? AppDesignTokens.surface2(context)
-        : scheme.surfaceContainer;
+    final popupBackgroundColor =
+        isDark ? AppDesignTokens.surface2(context) : scheme.surfaceContainer;
 
     return LayoutBuilder(
       builder: (context, constraints) {

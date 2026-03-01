@@ -144,8 +144,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => ConfirmationDialog(
-        title: 'Р—Р°РєСЂС‹С‚СЊ СЌС‚Р°Рї?',
-        content: 'РћС‚РјРµС‚РёС‚СЊ "$stageTitle" РєР°Рє РѕРїР»Р°С‡РµРЅРЅС‹Р№?',
+        title: 'Закрыть этап?',
+        content: 'Отметить "$stageTitle" как оплаченный?',
         confirmText: 'Закрыть',
         themeColor: Colors.green,
       ),

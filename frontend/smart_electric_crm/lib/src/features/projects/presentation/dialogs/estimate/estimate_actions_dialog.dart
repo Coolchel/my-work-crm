@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import 'package:printing/printing.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 
 import '../../../data/models/estimate_item_model.dart';
 import '../../../data/models/stage_model.dart';
@@ -1013,10 +1014,14 @@ class _EstimatePdfActionsDialogState
       } else {
         await _printPdfWithParams(context, request: request);
       }
-    } catch (e) {
+    } catch (e, st) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Ошибка PDF: $e")));
+        debugPrint('EstimatePdfActionsDialog._runPdfAction failed: $e\n$st');
+        await ErrorFeedback.show(
+          context,
+          e,
+          fallbackMessage: 'Не удалось выполнить операцию с PDF.',
+        );
       }
     } finally {
       if (mounted) {
@@ -1094,24 +1099,29 @@ class _EstimatePdfActionsDialogState
         );
         if (!didShare) {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Не удалось открыть системное меню шаринга PDF"),
-              ),
+            await ErrorFeedback.showMessage(
+              context,
+              "Не удалось открыть системное меню шаринга PDF.",
             );
           }
         }
       } else {
         final result = await OpenFilex.open(file.path);
         if (result.type != ResultType.done && context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text("Не удалось открыть файл: ${result.message}")));
+          await ErrorFeedback.showMessage(
+            context,
+            "Не удалось открыть файл: ${result.message}",
+          );
         }
       }
-    } catch (e) {
+    } catch (e, st) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Ошибка PDF: $e")));
+        debugPrint('EstimatePdfActionsDialog._printPdf failed: $e\n$st');
+        await ErrorFeedback.show(
+          context,
+          e,
+          fallbackMessage: 'Не удалось сформировать PDF.',
+        );
       }
     }
   }
