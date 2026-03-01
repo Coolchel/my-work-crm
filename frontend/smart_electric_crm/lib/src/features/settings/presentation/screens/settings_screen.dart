@@ -23,6 +23,32 @@ class SettingsScreen extends ConsumerWidget {
     final settingsNotifier = ref.read(appSettingsProvider.notifier);
     final userAsync = ref.watch(userProfileProvider);
     final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final isNarrow = MediaQuery.sizeOf(context).width < 430;
+    final themeSegments = <ButtonSegment<ThemeMode>>[
+      ButtonSegment(
+        value: ThemeMode.light,
+        label: Text(
+          isNarrow
+              ? '\u0421\u0432\u0435\u0442'
+              : '\u0421\u0432\u0435\u0442\u043b\u0430\u044f',
+        ),
+        icon: isNarrow ? null : const Icon(Icons.light_mode_outlined),
+      ),
+      ButtonSegment(
+        value: ThemeMode.dark,
+        label: Text(
+          isNarrow
+              ? '\u0422\u0435\u043c\u043d'
+              : '\u0422\u0435\u043c\u043d\u0430\u044f',
+        ),
+        icon: isNarrow ? null : const Icon(Icons.dark_mode_outlined),
+      ),
+      ButtonSegment(
+        value: ThemeMode.system,
+        label: const Text('\u0410\u0432\u0442\u043e'),
+        icon: isNarrow ? null : const Icon(Icons.settings_brightness_outlined),
+      ),
+    ];
 
     return Scaffold(
       appBar: CompactSectionAppBar(
@@ -59,31 +85,25 @@ class SettingsScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       SizedBox(
                         width: double.infinity,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: SegmentedButton<ThemeMode>(
-                          segments: const [
-                            ButtonSegment(
-                              value: ThemeMode.light,
-                              label: Text('Светлая'),
-                              icon: Icon(Icons.light_mode_outlined),
+                        child: SegmentedButton<ThemeMode>(
+                          segments: themeSegments,
+                          showSelectedIcon: !isNarrow,
+                          style: ButtonStyle(
+                            visualDensity: isMobile
+                                ? VisualDensity.compact
+                                : VisualDensity.standard,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            padding: MaterialStateProperty.all(
+                              EdgeInsets.symmetric(
+                                horizontal: isNarrow ? 8 : 12,
+                                vertical: isNarrow ? 8 : 10,
+                              ),
                             ),
-                            ButtonSegment(
-                              value: ThemeMode.dark,
-                              label: Text('Темная'),
-                              icon: Icon(Icons.dark_mode_outlined),
-                            ),
-                            ButtonSegment(
-                              value: ThemeMode.system,
-                              label: Text('Авто'),
-                              icon: Icon(Icons.settings_brightness_outlined),
-                            ),
-                          ],
+                          ),
                           selected: {settings.themeMode},
                           onSelectionChanged: (selection) {
                             settingsNotifier.setThemeMode(selection.first);
                           },
-                          ),
                         ),
                       ),
                     ],
@@ -92,6 +112,8 @@ class SettingsScreen extends ConsumerWidget {
                 const Divider(height: 1),
                 SwitchListTile(
                   isThreeLine: isMobile,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
                   hoverColor: AppDesignTokens.hoverOverlay(context),
                   secondary: const Icon(Icons.waving_hand_outlined),
                   title: const Text('Начальный экран'),
@@ -239,8 +261,7 @@ class SettingsScreen extends ConsumerWidget {
                                     const EdgeInsets.fromLTRB(24, 0, 24, 24),
                                 child: Wrap(
                                   alignment: WrapAlignment.end,
-                                  crossAxisAlignment:
-                                      WrapCrossAlignment.center,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
                                   spacing: 8,
                                   runSpacing: 8,
                                   children: [

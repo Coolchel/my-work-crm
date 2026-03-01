@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -27,7 +29,9 @@ class StatisticsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final viewport = MediaQuery.sizeOf(context);
+    final isMobile = viewport.width < 600;
+    final useVerticalPieCharts = viewport.width < 980;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
     final statsAsync = ref.watch(statisticsDataProvider);
@@ -42,6 +46,28 @@ class StatisticsScreen extends ConsumerWidget {
         '\u041f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u0442 \u0437\u0430\u0440\u0430\u0431\u043e\u0442\u043e\u043a\n'
         '\u043f\u043e \u0441\u0434\u0435\u043b\u0430\u043d\u043d\u044b\u043c \u043e\u0431\u044a\u0435\u043a\u0442\u0430\u043c.\n'
         '\u041d\u0435 \u0441\u0432\u044f\u0437\u0430\u043d\u043e \u0441 \u043e\u043f\u043b\u0430\u0442\u043e\u0439.';
+    final periodSegments = <ButtonSegment<String>>[
+      ButtonSegment<String>(
+        value: 'month',
+        label: Text(
+            isMobile ? '\u041c\u0435\u0441' : '\u041c\u0435\u0441\u044f\u0446'),
+        icon: isMobile ? null : const Icon(Icons.calendar_view_month),
+      ),
+      ButtonSegment<String>(
+        value: 'year',
+        label: const Text('\u0413\u043e\u0434'),
+        icon: isMobile ? null : const Icon(Icons.calendar_today),
+      ),
+      ButtonSegment<String>(
+        value: 'all',
+        label: Text(
+          isMobile
+              ? '\u0412\u0441\u0435'
+              : '\u0412\u0441\u0435 \u0432\u0440\u0435\u043c\u044f',
+        ),
+        icon: isMobile ? null : const Icon(Icons.history),
+      ),
+    ];
 
     return Scaffold(
       appBar: const CompactSectionAppBar(
@@ -63,87 +89,79 @@ class StatisticsScreen extends ConsumerWidget {
               children: [
                 // Переключатель периода
                 Align(
-                  alignment:
-                      isMobile ? Alignment.centerLeft : Alignment.center,
+                  alignment: isMobile ? Alignment.centerLeft : Alignment.center,
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment<String>(
-                        value: 'month',
-                        label: Text('Месяц'),
-                        icon: Icon(Icons.calendar_view_month),
-                      ),
-                      ButtonSegment<String>(
-                        value: 'year',
-                        label: Text('Год'),
-                        icon: Icon(Icons.calendar_today),
-                      ),
-                      ButtonSegment<String>(
-                        value: 'all',
-                        label: Text('Все время'),
-                        icon: Icon(Icons.history),
-                      ),
-                    ],
-                    selected: {currentPeriod},
-                    onSelectionChanged: (Set<String> newSelection) {
-                      ref
-                          .read(statisticsFilterProvider.notifier)
-                          .setPeriod(newSelection.first);
-                    },
-                    style: ButtonStyle(
-                      visualDensity: VisualDensity.compact,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      side: MaterialStateProperty.resolveWith<BorderSide>(
-                        (states) {
-                          if (states.contains(MaterialState.selected)) {
+                      segments: periodSegments,
+                      selected: {currentPeriod},
+                      showSelectedIcon: !isMobile,
+                      onSelectionChanged: (Set<String> newSelection) {
+                        ref
+                            .read(statisticsFilterProvider.notifier)
+                            .setPeriod(newSelection.first);
+                      },
+                      style: ButtonStyle(
+                        visualDensity: isMobile
+                            ? VisualDensity.compact
+                            : VisualDensity.standard,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: MaterialStateProperty.all(
+                          EdgeInsets.symmetric(
+                            horizontal: isMobile ? 8 : 12,
+                            vertical: isMobile ? 8 : 10,
+                          ),
+                        ),
+                        side: MaterialStateProperty.resolveWith<BorderSide>(
+                          (states) {
+                            if (states.contains(MaterialState.selected)) {
+                              return BorderSide(
+                                color: isDark
+                                    ? scheme.primary.withOpacity(0.66)
+                                    : statisticsAccent.withOpacity(0.85),
+                              );
+                            }
                             return BorderSide(
-                              color: isDark
-                                  ? scheme.primary.withOpacity(0.66)
-                                  : statisticsAccent.withOpacity(0.85),
+                              color: AppDesignTokens.cardBorder(context),
                             );
+                          },
+                        ),
+                        backgroundColor:
+                            MaterialStateProperty.resolveWith<Color>((states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return isDark
+                                ? scheme.primary.withOpacity(0.28)
+                                : statisticsAccent.withOpacity(0.9);
                           }
-                          return BorderSide(
-                            color: AppDesignTokens.cardBorder(context),
-                          );
-                        },
-                      ),
-                      backgroundColor:
-                          MaterialStateProperty.resolveWith<Color>((states) {
-                        if (states.contains(MaterialState.selected)) {
                           return isDark
-                              ? scheme.primary.withOpacity(0.28)
-                              : statisticsAccent.withOpacity(0.9);
-                        }
-                        return isDark
-                            ? scheme.surfaceContainerHigh
-                            : scheme.surface;
-                      }),
-                      foregroundColor:
-                          MaterialStateProperty.resolveWith<Color>((states) {
-                        if (states.contains(MaterialState.selected)) {
-                          return Colors.white;
-                        }
-                        return scheme.onSurface;
-                      }),
-                      iconColor:
-                          MaterialStateProperty.resolveWith<Color>((states) {
-                        if (states.contains(MaterialState.selected)) {
-                          return Colors.white;
-                        }
-                        return isDark ? scheme.onSurfaceVariant : Colors.grey;
-                      }),
-                      overlayColor:
-                          MaterialStateProperty.resolveWith<Color?>((states) {
-                        if (states.contains(MaterialState.hovered)) {
-                          return AppDesignTokens.hoverOverlay(context);
-                        }
-                        if (states.contains(MaterialState.pressed)) {
-                          return AppDesignTokens.pressedOverlay(context);
-                        }
-                        return null;
-                      }),
-                    ),
+                              ? scheme.surfaceContainerHigh
+                              : scheme.surface;
+                        }),
+                        foregroundColor:
+                            MaterialStateProperty.resolveWith<Color>((states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return Colors.white;
+                          }
+                          return scheme.onSurface;
+                        }),
+                        iconColor:
+                            MaterialStateProperty.resolveWith<Color>((states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return Colors.white;
+                          }
+                          return isDark ? scheme.onSurfaceVariant : Colors.grey;
+                        }),
+                        overlayColor:
+                            MaterialStateProperty.resolveWith<Color?>((states) {
+                          if (states.contains(MaterialState.hovered)) {
+                            return AppDesignTokens.hoverOverlay(context);
+                          }
+                          if (states.contains(MaterialState.pressed)) {
+                            return AppDesignTokens.pressedOverlay(context);
+                          }
+                          return null;
+                        }),
+                      ),
                     ),
                   ),
                 ),
@@ -160,63 +178,81 @@ class StatisticsScreen extends ConsumerWidget {
                 _buildFinancialSummary(context, stats.finances),
                 const SizedBox(height: 24),
 
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minWidth: isMobile ? 720 : 0,
-                    ),
-                    child: IntrinsicHeight(
-                      child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildHeader(
-                              context,
-                              'Откуда объекты',
-                              stripeColor: headerStripeColor,
-                            ),
-                            const SizedBox(height: 12),
-                            Expanded(
-                                child: _buildPieChartCard(
-                              context,
-                              stats.sources
-                                  .map((e) => _ChartData(e.name, e.usd))
-                                  .toList(),
-                            )),
-                          ],
+                if (useVerticalPieCharts) ...[
+                  _buildHeader(
+                    context,
+                    'Откуда объекты',
+                    stripeColor: headerStripeColor,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildPieChartCard(
+                    context,
+                    stats.sources
+                        .map((e) => _ChartData(e.name, e.usd))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildHeader(
+                    context,
+                    'Типы объектов',
+                    stripeColor: headerStripeColor,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildPieChartCard(
+                    context,
+                    stats.objectTypes
+                        .map((e) => _ChartData(e.name, e.usd))
+                        .toList(),
+                    paletteOffset: 2,
+                  ),
+                ] else
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildHeader(
+                                context,
+                                'Откуда объекты',
+                                stripeColor: headerStripeColor,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildPieChartCard(
+                                context,
+                                stats.sources
+                                    .map((e) => _ChartData(e.name, e.usd))
+                                    .toList(),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildHeader(
-                              context,
-                              'Типы объектов',
-                              stripeColor: headerStripeColor,
-                            ),
-                            const SizedBox(height: 12),
-                            Expanded(
-                                child: _buildPieChartCard(
-                              context,
-                              stats.objectTypes
-                                  .map((e) => _ChartData(e.name, e.usd))
-                                  .toList(),
-                              paletteOffset: 2,
-                            )),
-                          ],
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildHeader(
+                                context,
+                                'Типы объектов',
+                                stripeColor: headerStripeColor,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildPieChartCard(
+                                context,
+                                stats.objectTypes
+                                    .map((e) => _ChartData(e.name, e.usd))
+                                    .toList(),
+                                paletteOffset: 2,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                      ),
+                      ],
                     ),
                   ),
-                ),
                 const SizedBox(height: 24),
 
                 _buildHeader(
@@ -229,69 +265,109 @@ class StatisticsScreen extends ConsumerWidget {
                   children: [
                     _HoverStatsCard(
                       borderRadius: 16,
-                      child: SizedBox(
-                        height: 280,
-                        child: Stack(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                              child: WorkDynamicsChart(
-                                data: stats.workDynamics,
-                                isMonthly: currentPeriod != 'month',
-                                currencyLabel: "USD",
-                                currencySymbol: "\$",
-                                isUsd: true,
-                              ),
-                            ),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Tooltip(
-                                message: workDynamicsTooltip,
-                                textAlign: TextAlign.center,
-                                child: Icon(
-                                  Icons.help_outline_rounded,
-                                  size: 16,
-                                  color: Colors.grey.shade400,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final widthPerPoint =
+                              currentPeriod == 'month' ? 44.0 : 64.0;
+                          final contentWidth = isMobile
+                              ? math.max(
+                                  constraints.maxWidth,
+                                  stats.workDynamics.length * widthPerPoint,
+                                )
+                              : constraints.maxWidth;
+
+                          return SizedBox(
+                            height: isMobile ? 300 : 280,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SizedBox(
+                                width: contentWidth,
+                                child: Stack(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          12, 12, 12, 8),
+                                      child: WorkDynamicsChart(
+                                        data: stats.workDynamics,
+                                        isMonthly: currentPeriod != 'month',
+                                        currencyLabel: "USD",
+                                        currencySymbol: "\$",
+                                        isUsd: true,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 8,
+                                      right: 8,
+                                      child: Tooltip(
+                                        message: workDynamicsTooltip,
+                                        textAlign: TextAlign.center,
+                                        child: Icon(
+                                          Icons.help_outline_rounded,
+                                          size: 16,
+                                          color: Colors.grey.shade400,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: 16),
                     _HoverStatsCard(
                       borderRadius: 16,
-                      child: SizedBox(
-                        height: 280,
-                        child: Stack(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                              child: WorkDynamicsChart(
-                                data: stats.workDynamics,
-                                isMonthly: currentPeriod != 'month',
-                                currencyLabel: "BYN",
-                                currencySymbol: '\u0440',
-                                isUsd: false,
-                              ),
-                            ),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Tooltip(
-                                message: workDynamicsTooltip,
-                                textAlign: TextAlign.center,
-                                child: Icon(
-                                  Icons.help_outline_rounded,
-                                  size: 16,
-                                  color: Colors.grey.shade400,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final widthPerPoint =
+                              currentPeriod == 'month' ? 44.0 : 64.0;
+                          final contentWidth = isMobile
+                              ? math.max(
+                                  constraints.maxWidth,
+                                  stats.workDynamics.length * widthPerPoint,
+                                )
+                              : constraints.maxWidth;
+
+                          return SizedBox(
+                            height: isMobile ? 300 : 280,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SizedBox(
+                                width: contentWidth,
+                                child: Stack(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          12, 12, 12, 8),
+                                      child: WorkDynamicsChart(
+                                        data: stats.workDynamics,
+                                        isMonthly: currentPeriod != 'month',
+                                        currencyLabel: "BYN",
+                                        currencySymbol: '\u0440',
+                                        isUsd: false,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 8,
+                                      right: 8,
+                                      child: Tooltip(
+                                        message: workDynamicsTooltip,
+                                        textAlign: TextAlign.center,
+                                        child: Icon(
+                                          Icons.help_outline_rounded,
+                                          size: 16,
+                                          color: Colors.grey.shade400,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                     ),
                   ],

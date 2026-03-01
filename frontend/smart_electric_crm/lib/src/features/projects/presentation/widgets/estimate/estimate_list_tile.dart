@@ -151,8 +151,7 @@ class _EstimateListTileState extends State<EstimateListTile> {
                                     fontSize: 12.5,
                                     height: 1.2,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  softWrap: true,
                                 ),
                                 const SizedBox(height: 2),
                                 Wrap(

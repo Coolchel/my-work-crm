@@ -125,13 +125,14 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Accent stripe on the left
-                Container(
-                  width: 5,
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 5,
+                child: Container(
                   decoration: BoxDecoration(
                     color: themeColor,
                     borderRadius: const BorderRadius.only(
@@ -140,8 +141,11 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     ),
                   ),
                 ),
-                // Main content
-                Expanded(
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 5),
+                child: SizedBox(
+                  width: double.infinity,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -319,8 +323,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

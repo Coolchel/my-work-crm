@@ -10,7 +10,6 @@ extension _FinanceScreenSections on _FinanceScreenState {
             ? Theme.of(context).colorScheme.surfaceContainerHigh
             : Colors.grey.shade50)
         : AppDesignTokens.cardBackground(context, hovered: shouldHighlight);
-    final hasSource = project.source != null && project.source!.isNotEmpty;
     final isWideHeader = MediaQuery.of(context).size.width >= 1100;
 
     return MouseRegion(
@@ -95,36 +94,10 @@ extension _FinanceScreenSections on _FinanceScreenState {
                                           CrossAxisAlignment.center,
                                       children: [
                                         Expanded(
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
-                                                  children: [
-                                                    Flexible(
-                                                      child: Text(
-                                                        project.address,
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                          fontSize: 13.5,
-                                                          letterSpacing: -0.2,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    if (hasSource) ...[
-                                                      const SizedBox(width: 4),
-                                                      _buildSourceSuperscript(
-                                                          project.source!),
-                                                    ],
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
+                                          child: _buildProjectAddressLine(
+                                            address: project.address,
+                                            source: project.source,
+                                            singleLine: true,
                                           ),
                                         ),
                                         const SizedBox(width: 6),
@@ -164,20 +137,12 @@ extension _FinanceScreenSections on _FinanceScreenState {
                                               CrossAxisAlignment.center,
                                           children: [
                                             Expanded(
-                                              child: Text(
-                                                project.address,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: 13.5,
-                                                  letterSpacing: -0.2,
-                                                ),
+                                              child: _buildProjectAddressLine(
+                                                address: project.address,
+                                                source: project.source,
+                                                singleLine: false,
                                               ),
                                             ),
-                                            if (hasSource) ...[
-                                              const SizedBox(width: 4),
-                                              _buildSourceSuperscript(
-                                                  project.source!),
-                                            ],
                                           ],
                                         ),
                                         const SizedBox(height: 3),
@@ -452,7 +417,8 @@ extension _FinanceScreenSections on _FinanceScreenState {
                   widthFactor: _calculateOurShareFactor(stage),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: _FinanceScreenState._financeAccent.withOpacity(0.8),
+                      color:
+                          _FinanceScreenState._financeAccent.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -494,6 +460,36 @@ extension _FinanceScreenSections on _FinanceScreenState {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildProjectAddressLine({
+    required String address,
+    required String? source,
+    required bool singleLine,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Flexible(
+          fit: FlexFit.loose,
+          child: Text(
+            address,
+            maxLines: singleLine ? 1 : null,
+            overflow: singleLine ? TextOverflow.ellipsis : TextOverflow.visible,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13.5,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ),
+        if (source != null && source.isNotEmpty) ...[
+          const SizedBox(width: 4),
+          _buildSourceSuperscript(source),
+        ],
+      ],
     );
   }
 

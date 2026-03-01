@@ -175,7 +175,9 @@ class _Stage3ArmatureCalculatorDialogState
     extends State<Stage3ArmatureCalculatorDialog> {
   final Map<String, int> _quantities = {};
   final Map<String, TextEditingController> _controllers = {};
+  final ScrollController _listScrollController = ScrollController();
   String? _inlineError;
+  bool _showScrollHint = false;
 
   late final Map<String, CatalogItem> _catalogByMappingKey;
   late final Map<String, CatalogItem> _catalogByName;
@@ -197,14 +199,32 @@ class _Stage3ArmatureCalculatorDialogState
       _quantities[position.mappingKey] = 0;
       _controllers[position.mappingKey] = TextEditingController(text: '0');
     }
+    _listScrollController.addListener(_updateScrollHint);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateScrollHint());
   }
 
   @override
   void dispose() {
+    _listScrollController.removeListener(_updateScrollHint);
+    _listScrollController.dispose();
     for (final controller in _controllers.values) {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  void _updateScrollHint() {
+    if (!_listScrollController.hasClients || !mounted) {
+      return;
+    }
+    final position = _listScrollController.position;
+    final hasMoreContent = position.maxScrollExtent > 0 &&
+        position.pixels < (position.maxScrollExtent - 2);
+    if (_showScrollHint != hasMoreContent) {
+      setState(() {
+        _showScrollHint = hasMoreContent;
+      });
+    }
   }
 
   CatalogItem? _resolveCatalogItem(_ArmaturePosition position) {
@@ -296,7 +316,7 @@ class _Stage3ArmatureCalculatorDialogState
           builder: (context, constraints) => ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: 760,
-              maxHeight: constraints.maxHeight,
+              maxHeight: constraints.maxHeight * 0.9,
             ),
             child: Container(
               decoration: BoxDecoration(
@@ -372,16 +392,42 @@ class _Stage3ArmatureCalculatorDialogState
                       ),
                     ),
                   Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _targetPositions.length,
-                      itemBuilder: (context, index) {
-                        final position = _targetPositions[index];
-                        final disabled = _isMissingCatalogItem(position);
-                        return _buildRow(position, disabled);
-                      },
+                    child: Scrollbar(
+                      controller: _listScrollController,
+                      child: ListView.builder(
+                        controller: _listScrollController,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _targetPositions.length,
+                        itemBuilder: (context, index) {
+                          final position = _targetPositions[index];
+                          final disabled = _isMissingCatalogItem(position);
+                          return _buildRow(position, disabled);
+                        },
+                      ),
                     ),
                   ),
+                  if (_showScrollHint)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.swipe_up_alt_rounded,
+                            size: 15,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Scroll down for more',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   if (_inlineError != null)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -411,7 +457,6 @@ class _Stage3ArmatureCalculatorDialogState
                           onPressed: () => Navigator.of(context).pop(),
                           child: const Text('Отмена'),
                         ),
-                        const Spacer(),
                         ElevatedButton.icon(
                           onPressed: _submit,
                           icon: const Icon(Icons.playlist_add_check_rounded),
@@ -448,44 +493,12 @@ class _Stage3ArmatureCalculatorDialogState
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppDesignTokens.softBorder(context)),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: disabled
-                  ? (isDark
-                      ? scheme.surfaceContainerHigh
-                      : Colors.grey.shade200)
-                  : position.iconColor.withOpacity(0.14),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              position.icon,
-              size: 18,
-              color: disabled ? Colors.grey.shade500 : position.iconColor,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              position.label,
-              style: TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: disabled ? Colors.grey.shade500 : scheme.onSurface,
-              ),
-            ),
-          ),
-          _quickBtn(position, 1, disabled),
-          const SizedBox(width: 6),
-          _quickBtn(position, 2, disabled),
-          const SizedBox(width: 6),
-          _quickBtn(position, 3, disabled),
-          const SizedBox(width: 10),
-          SizedBox(
-            width: 86,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isNarrow = constraints.maxWidth < 520;
+
+          final quantityField = SizedBox(
+            width: isNarrow ? 96 : 86,
             child: TextField(
               controller: textController,
               enabled: !disabled,
@@ -494,7 +507,7 @@ class _Stage3ArmatureCalculatorDialogState
               textAlign: TextAlign.center,
               decoration: InputDecoration(
                 isDense: true,
-                labelText: 'Итого',
+                labelText: 'Total',
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
                 border: OutlineInputBorder(
@@ -503,18 +516,125 @@ class _Stage3ArmatureCalculatorDialogState
               ),
               onChanged: (value) => _setManualValue(position, value),
             ),
-          ),
-        ],
+          );
+
+          if (isNarrow) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: disabled
+                            ? (isDark
+                                ? scheme.surfaceContainerHigh
+                                : Colors.grey.shade200)
+                            : position.iconColor.withOpacity(0.14),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        position.icon,
+                        size: 18,
+                        color: disabled
+                            ? Colors.grey.shade500
+                            : position.iconColor,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        position.label,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: disabled
+                              ? Colors.grey.shade500
+                              : scheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  alignment: WrapAlignment.end,
+                  children: [
+                    _quickBtn(position, 1, disabled, compact: true),
+                    _quickBtn(position, 2, disabled, compact: true),
+                    _quickBtn(position, 3, disabled, compact: true),
+                    quantityField,
+                  ],
+                ),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: disabled
+                      ? (isDark
+                          ? scheme.surfaceContainerHigh
+                          : Colors.grey.shade200)
+                      : position.iconColor.withOpacity(0.14),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  position.icon,
+                  size: 18,
+                  color: disabled ? Colors.grey.shade500 : position.iconColor,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  position.label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: disabled ? Colors.grey.shade500 : scheme.onSurface,
+                  ),
+                ),
+              ),
+              _quickBtn(position, 1, disabled),
+              const SizedBox(width: 6),
+              _quickBtn(position, 2, disabled),
+              const SizedBox(width: 6),
+              _quickBtn(position, 3, disabled),
+              const SizedBox(width: 10),
+              quantityField,
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _quickBtn(_ArmaturePosition position, int delta, bool disabled) {
+  Widget _quickBtn(_ArmaturePosition position, int delta, bool disabled,
+      {bool compact = false}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return OutlinedButton(
       onPressed: disabled ? null : () => _increment(position, delta),
       style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        minimumSize: Size(compact ? 42 : 46, compact ? 34 : 36),
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 8 : 10,
+          vertical: compact ? 6 : 8,
+        ),
         visualDensity: VisualDensity.compact,
         side: BorderSide(
           color: isDark
