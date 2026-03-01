@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
+import 'package:printing/printing.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 
 import '../../../data/models/estimate_item_model.dart';
@@ -16,6 +18,19 @@ import '../../../services/pdf_service.dart';
 // --- SHARED HELPERS & MIXINS ---
 
 mixin EstimateDialogHelpers {
+  bool get _isTouchPlatform {
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+      case TargetPlatform.iOS:
+      case TargetPlatform.fuchsia:
+        return true;
+      case TargetPlatform.linux:
+      case TargetPlatform.macOS:
+      case TargetPlatform.windows:
+        return false;
+    }
+  }
+
   /// Builds the main dialog container with premium styling
   Widget buildPremiumContainer({
     required BuildContext context,
@@ -143,7 +158,9 @@ mixin EstimateDialogHelpers {
             backgroundColor: effectiveColor.withOpacity(0.03),
             padding: const EdgeInsets.symmetric(horizontal: 16),
             alignment: Alignment.centerLeft,
-            splashFactory: InkSparkle.splashFactory,
+            splashFactory: _isTouchPlatform
+                ? InkRipple.splashFactory
+                : InkSparkle.splashFactory,
           ),
           child: Row(
             children: [
@@ -191,6 +208,39 @@ mixin EstimateDialogHelpers {
         ? Colors.white.withOpacity(0.06)
         : Colors.black.withOpacity(0.03);
 
+    final triggerContent = Container(
+      height: 52,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Icon(icon, color: contentColor, size: 22),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: contentColor,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: contentColor.withOpacity(0.7),
+            size: 24,
+          ),
+        ],
+      ),
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
       child: Theme(
@@ -213,48 +263,22 @@ mixin EstimateDialogHelpers {
           elevation: 3,
           shadowColor: Colors.black.withOpacity(0.2),
           splashRadius: 24,
-          position: PopupMenuPosition.over,
-          constraints:
-              const BoxConstraints(minWidth: 280), // Reasonable min width
+          position: _isTouchPlatform
+              ? PopupMenuPosition.under
+              : PopupMenuPosition.over,
+          constraints: _isTouchPlatform
+              ? const BoxConstraints(minWidth: 220)
+              : const BoxConstraints(minWidth: 280), // Reasonable min width
           child: Opacity(
             opacity: enabled ? 1.0 : 0.6,
-            child: _HoverableMenuTrigger(
-              enabled: enabled,
-              hoverColor: triggerHoverColor,
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                height: 52,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: theme.colorScheme.outlineVariant),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Icon(icon, color: contentColor, size: 22),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: contentColor,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: contentColor.withOpacity(0.7),
-                      size: 24,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            child: _isTouchPlatform
+                ? triggerContent
+                : _HoverableMenuTrigger(
+                    enabled: enabled,
+                    hoverColor: triggerHoverColor,
+                    borderRadius: BorderRadius.circular(14),
+                    child: triggerContent,
+                  ),
           ),
         ),
       ),
@@ -267,17 +291,61 @@ mixin EstimateDialogHelpers {
     required IconData icon,
     required String text,
     required Color color,
-    bool isSelected = false,
   }) {
     return PopupMenuItem<String>(
       value: value,
       height: 48,
       padding: EdgeInsets.zero,
-      child: _HoverablePopupMenuItemContent(
-        icon: icon,
-        text: text,
-        color: color,
-        isSelected: isSelected,
+      child: _isTouchPlatform
+          ? _StaticPopupMenuItemContent(
+              icon: icon,
+              text: text,
+              color: color,
+            )
+          : _HoverablePopupMenuItemContent(
+              icon: icon,
+              text: text,
+              color: color,
+            ),
+    );
+  }
+}
+
+class _StaticPopupMenuItemContent extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color color;
+
+  const _StaticPopupMenuItemContent({
+    required this.icon,
+    required this.text,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 40),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: color,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -328,13 +396,11 @@ class _HoverablePopupMenuItemContent extends StatefulWidget {
   final IconData icon;
   final String text;
   final Color color;
-  final bool isSelected;
 
   const _HoverablePopupMenuItemContent({
     required this.icon,
     required this.text,
     required this.color,
-    required this.isSelected,
   });
 
   @override
@@ -349,9 +415,7 @@ class _HoverablePopupMenuItemContentState
   @override
   Widget build(BuildContext context) {
     final isDark = AppDesignTokens.isDark(context);
-    final baseColor = widget.isSelected
-        ? widget.color.withOpacity(isDark ? 0.14 : 0.08)
-        : Colors.transparent;
+    const baseColor = Colors.transparent;
     final hoverColor = widget.color.withOpacity(isDark ? 0.22 : 0.12);
 
     return MouseRegion(
@@ -360,7 +424,7 @@ class _HoverablePopupMenuItemContentState
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 120),
-        height: double.infinity,
+        constraints: const BoxConstraints(minHeight: 40),
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: _isHovered ? hoverColor : baseColor,
@@ -376,15 +440,10 @@ class _HoverablePopupMenuItemContentState
                 style: TextStyle(
                   color: widget.color,
                   fontSize: 14,
-                  fontWeight:
-                      widget.isSelected ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
-            if (widget.isSelected) ...[
-              const SizedBox(width: 8),
-              Icon(Icons.check_circle_rounded, color: widget.color, size: 18),
-            ],
           ],
         ),
       ),
@@ -523,7 +582,6 @@ class EstimateTextActionsDialog extends ConsumerWidget
                 icon: Icons.person_rounded,
                 text: "Для Заказчика",
                 color: Colors.green,
-                isSelected: true, // Default view assumption
               ),
               if (hasPartnerWorks) ...[
                 const PopupMenuDivider(),
@@ -571,8 +629,6 @@ class EstimateTextActionsDialog extends ConsumerWidget
                   icon: Icons.list_alt_rounded,
                   text: "Без цен",
                   color: Colors.blue.shade700,
-                  isSelected:
-                      !showPrices, // Show checkmark if matches current setting
                 ),
                 const PopupMenuDivider(),
                 buildPopupMenuItem(
@@ -580,7 +636,6 @@ class EstimateTextActionsDialog extends ConsumerWidget
                   icon: Icons.attach_money_rounded,
                   text: "С ценами",
                   color: Colors.blue.shade700,
-                  isSelected: showPrices && markupPercent <= 0,
                 ),
                 if (markupPercent > 0)
                   buildPopupMenuItem(
@@ -588,7 +643,6 @@ class EstimateTextActionsDialog extends ConsumerWidget
                     icon: Icons.trending_up_rounded,
                     text: "С наценкой (+${markupPercent.toStringAsFixed(0)}%)",
                     color: Colors.blue.shade700,
-                    isSelected: showPrices && markupPercent > 0,
                   ),
               ],
               onSelected: (val) async {
@@ -851,7 +905,6 @@ class _EstimatePdfActionsDialogState
                 icon: Icons.person_rounded,
                 text: "Для Заказчика",
                 color: Colors.green,
-                isSelected: true,
               ),
               if (hasPartnerWorks) ...[
                 const PopupMenuDivider(),
@@ -896,7 +949,6 @@ class _EstimatePdfActionsDialogState
                   icon: Icons.list_alt_rounded,
                   text: "Без цен",
                   color: Colors.blue.shade700,
-                  isSelected: !widget.showPrices,
                 ),
                 const PopupMenuDivider(),
                 buildPopupMenuItem(
@@ -904,7 +956,6 @@ class _EstimatePdfActionsDialogState
                   icon: Icons.attach_money_rounded,
                   text: "С ценами",
                   color: Colors.blue.shade700,
-                  isSelected: widget.showPrices && widget.markupPercent <= 0,
                 ),
                 if (widget.markupPercent > 0)
                   buildPopupMenuItem(
@@ -913,7 +964,6 @@ class _EstimatePdfActionsDialogState
                     text:
                         "С наценкой (+${widget.markupPercent.toStringAsFixed(0)}%)",
                     color: Colors.blue.shade700,
-                    isSelected: widget.showPrices && widget.markupPercent > 0,
                   ),
               ],
               onSelected: (val) {
@@ -1036,7 +1086,21 @@ class _EstimatePdfActionsDialogState
       await file.writeAsBytes(bytes);
 
       if (share) {
-        await Share.shareXFiles([XFile(file.path)], text: title);
+        final didShare = await Printing.sharePdf(
+          bytes: bytes,
+          filename: '$filename.pdf',
+          subject: title,
+          body: title,
+        );
+        if (!didShare) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Не удалось открыть системное меню шаринга PDF"),
+              ),
+            );
+          }
+        }
       } else {
         final result = await OpenFilex.open(file.path);
         if (result.type != ResultType.done && context.mounted) {
