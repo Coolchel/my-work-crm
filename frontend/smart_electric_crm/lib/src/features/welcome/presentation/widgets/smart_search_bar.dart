@@ -5,7 +5,16 @@ import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 
 class SmartSearchBar extends ConsumerStatefulWidget {
-  const SmartSearchBar({super.key});
+  final ValueChanged<bool>? onFocusChanged;
+  final ValueChanged<String>? onQueryChanged;
+  final VoidCallback? onCleared;
+
+  const SmartSearchBar({
+    super.key,
+    this.onFocusChanged,
+    this.onQueryChanged,
+    this.onCleared,
+  });
 
   @override
   ConsumerState<SmartSearchBar> createState() => _SmartSearchBarState();
@@ -35,6 +44,7 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
     if (mounted) {
       setState(() => _isFocused = _searchFocusNode.hasFocus);
     }
+    widget.onFocusChanged?.call(_searchFocusNode.hasFocus);
 
     if (_searchFocusNode.hasFocus && _searchController.text.isNotEmpty) {
       final normalized = _searchController.text.trim();
@@ -95,6 +105,8 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
                       _searchController.clear();
                       ref.read(projectSearchQueryProvider.notifier).state =
                           null;
+                      widget.onQueryChanged?.call('');
+                      widget.onCleared?.call();
                       FocusScope.of(context).unfocus();
                     },
                   )
@@ -113,6 +125,7 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
             final normalized = value.trim();
             ref.read(projectSearchQueryProvider.notifier).state =
                 normalized.isEmpty ? null : normalized;
+            widget.onQueryChanged?.call(value);
           },
         ),
       ),

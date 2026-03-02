@@ -722,41 +722,50 @@ class _ProjectCardState extends State<_ProjectCard> {
                                             .onSurface,
                                         letterSpacing: -0.3,
                                       ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      _ActionButton(
-                                        icon: Icons.edit_outlined,
-                                        tooltip:
-                                            '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
-                                        color: Colors.grey.shade400,
-                                        hoverColor: Colors.indigo,
-                                        onTap: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) =>
-                                                AddProjectDialog(
-                                                    project: project),
-                                          );
-                                        },
-                                      ),
-                                      const SizedBox(width: 2),
-                                      Consumer(
-                                        builder: (context, ref, child) {
-                                          return _ActionButton(
-                                            icon: Icons.close,
+                                  Align(
+                                    alignment: Alignment.topCenter,
+                                    child: Transform.translate(
+                                      offset: const Offset(0, -2),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          _ActionButton(
+                                            icon: Icons.edit_outlined,
                                             tooltip:
-                                                '\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
+                                                '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
                                             color: Colors.grey.shade400,
-                                            hoverColor: Colors.grey.shade600,
-                                            onTap: () =>
-                                                deleteProject(context, ref),
-                                          );
-                                        },
+                                            hoverColor: Colors.indigo,
+                                            onTap: () {
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) =>
+                                                    AddProjectDialog(
+                                                        project: project),
+                                              );
+                                            },
+                                          ),
+                                          const SizedBox(width: 2),
+                                          Consumer(
+                                            builder: (context, ref, child) {
+                                              return _ActionButton(
+                                                icon: Icons.close,
+                                                tooltip:
+                                                    '\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
+                                                color: Colors.grey.shade400,
+                                                hoverColor:
+                                                    Colors.grey.shade600,
+                                                onTap: () =>
+                                                    deleteProject(context, ref),
+                                              );
+                                            },
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ],
                               ),

@@ -65,13 +65,19 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
 
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 6,
           children: [
-            _buildLegendItem(widget.currencyLabel, mainColor),
+            _buildLegendItem(
+              '${widget.currencyLabel} (${widget.currencySymbol})',
+              mainColor,
+            ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(
@@ -230,22 +236,40 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
 
   Widget _buildLegendItem(String label, Color color) {
     final scheme = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withOpacity(
+          isDark ? 0.55 : 0.75,
         ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: scheme.onSurfaceVariant,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: scheme.outlineVariant.withOpacity(isDark ? 0.45 : 0.75),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 11,
+            height: 11,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-        ),
-      ],
+          const SizedBox(width: 7),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface,
+              letterSpacing: -0.1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -291,9 +315,10 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
         child: Text(
           label,
           style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 10,
-              color: Colors.grey[600]),
+            fontWeight: FontWeight.w600,
+            fontSize: 10,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );
@@ -307,9 +332,15 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
       text = value.toInt().toString();
     }
 
-    return Text(text,
-        style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-        textAlign: TextAlign.left);
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w500,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+      textAlign: TextAlign.left,
+    );
   }
 
   double _calculateInterval(int length) {
