@@ -31,6 +31,8 @@ class StatisticsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final viewport = MediaQuery.sizeOf(context);
     final isMobile = viewport.width < 600;
+    final orientation = MediaQuery.orientationOf(context);
+    final isPhonePortrait = isMobile && orientation == Orientation.portrait;
     final useVerticalPieCharts = viewport.width < 980;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
@@ -39,6 +41,11 @@ class StatisticsScreen extends ConsumerWidget {
     final statisticsAccent =
         Theme.of(context).floatingActionButtonTheme.backgroundColor ??
             Colors.indigo;
+    final periodSwitcherWidth =
+        (isMobile ? viewport.width - 32 : viewport.width * 0.58)
+            .clamp(280.0, 560.0)
+            .toDouble();
+    final periodSegmentWidth = periodSwitcherWidth / 3;
     final headerStripeColor =
         isDark ? scheme.primary.withOpacity(0.76) : statisticsAccent;
     const workDynamicsTooltip =
@@ -89,9 +96,9 @@ class StatisticsScreen extends ConsumerWidget {
               children: [
                 // Переключатель периода
                 Align(
-                  alignment: isMobile ? Alignment.centerLeft : Alignment.center,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
+                  alignment: Alignment.center,
+                  child: SizedBox(
+                    width: periodSwitcherWidth,
                     child: SegmentedButton<String>(
                       segments: periodSegments,
                       selected: {currentPeriod},
@@ -105,6 +112,9 @@ class StatisticsScreen extends ConsumerWidget {
                         visualDensity: isMobile
                             ? VisualDensity.compact
                             : VisualDensity.standard,
+                        minimumSize: MaterialStateProperty.all(
+                          Size(periodSegmentWidth, isMobile ? 40 : 46),
+                        ),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         padding: MaterialStateProperty.all(
                           EdgeInsets.symmetric(
@@ -261,121 +271,195 @@ class StatisticsScreen extends ConsumerWidget {
                   stripeColor: headerStripeColor,
                 ),
                 const SizedBox(height: 12),
-                Column(
-                  children: [
-                    _HoverStatsCard(
-                      borderRadius: 16,
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final widthPerPoint =
-                              currentPeriod == 'month' ? 44.0 : 64.0;
-                          final contentWidth = isMobile
-                              ? math.max(
-                                  constraints.maxWidth,
-                                  stats.workDynamics.length * widthPerPoint,
-                                )
-                              : constraints.maxWidth;
+                if (isPhonePortrait)
+                  _buildRotateDeviceNotice(context)
+                else
+                  Column(
+                    children: [
+                      _HoverStatsCard(
+                        borderRadius: 16,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final widthPerPoint =
+                                currentPeriod == 'month' ? 44.0 : 64.0;
+                            final contentWidth = isMobile
+                                ? math.max(
+                                    constraints.maxWidth,
+                                    stats.workDynamics.length * widthPerPoint,
+                                  )
+                                : constraints.maxWidth;
 
-                          return SizedBox(
-                            height: isMobile ? 300 : 280,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: SizedBox(
-                                width: contentWidth,
-                                child: Stack(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          12, 12, 12, 8),
-                                      child: WorkDynamicsChart(
-                                        data: stats.workDynamics,
-                                        isMonthly: currentPeriod != 'month',
-                                        currencyLabel: "USD",
-                                        currencySymbol: "\$",
-                                        isUsd: true,
-                                      ),
-                                    ),
-                                    Positioned(
-                                      top: 8,
-                                      right: 8,
-                                      child: Tooltip(
-                                        message: workDynamicsTooltip,
-                                        textAlign: TextAlign.center,
-                                        child: Icon(
-                                          Icons.help_outline_rounded,
-                                          size: 16,
-                                          color: Colors.grey.shade400,
+                            return SizedBox(
+                              height: isMobile ? 300 : 280,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: SizedBox(
+                                  width: contentWidth,
+                                  child: Stack(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            12, 12, 12, 8),
+                                        child: WorkDynamicsChart(
+                                          data: stats.workDynamics,
+                                          isMonthly: currentPeriod != 'month',
+                                          currencyLabel: "USD",
+                                          currencySymbol: "\$",
+                                          isUsd: true,
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _HoverStatsCard(
-                      borderRadius: 16,
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final widthPerPoint =
-                              currentPeriod == 'month' ? 44.0 : 64.0;
-                          final contentWidth = isMobile
-                              ? math.max(
-                                  constraints.maxWidth,
-                                  stats.workDynamics.length * widthPerPoint,
-                                )
-                              : constraints.maxWidth;
-
-                          return SizedBox(
-                            height: isMobile ? 300 : 280,
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: SizedBox(
-                                width: contentWidth,
-                                child: Stack(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                          12, 12, 12, 8),
-                                      child: WorkDynamicsChart(
-                                        data: stats.workDynamics,
-                                        isMonthly: currentPeriod != 'month',
-                                        currencyLabel: "BYN",
-                                        currencySymbol: '\u0440',
-                                        isUsd: false,
-                                      ),
-                                    ),
-                                    Positioned(
-                                      top: 8,
-                                      right: 8,
-                                      child: Tooltip(
-                                        message: workDynamicsTooltip,
-                                        textAlign: TextAlign.center,
-                                        child: Icon(
-                                          Icons.help_outline_rounded,
-                                          size: 16,
-                                          color: Colors.grey.shade400,
+                                      Positioned(
+                                        top: 8,
+                                        right: 8,
+                                        child: Tooltip(
+                                          message: workDynamicsTooltip,
+                                          textAlign: TextAlign.center,
+                                          child: Icon(
+                                            Icons.help_outline_rounded,
+                                            size: 16,
+                                            color: Colors.grey.shade400,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(height: 16),
+                      _HoverStatsCard(
+                        borderRadius: 16,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final widthPerPoint =
+                                currentPeriod == 'month' ? 44.0 : 64.0;
+                            final contentWidth = isMobile
+                                ? math.max(
+                                    constraints.maxWidth,
+                                    stats.workDynamics.length * widthPerPoint,
+                                  )
+                                : constraints.maxWidth;
+
+                            return SizedBox(
+                              height: isMobile ? 300 : 280,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: SizedBox(
+                                  width: contentWidth,
+                                  child: Stack(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            12, 12, 12, 8),
+                                        child: WorkDynamicsChart(
+                                          data: stats.workDynamics,
+                                          isMonthly: currentPeriod != 'month',
+                                          currencyLabel: "BYN",
+                                          currencySymbol: '\u0440',
+                                          isUsd: false,
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 8,
+                                        right: 8,
+                                        child: Tooltip(
+                                          message: workDynamicsTooltip,
+                                          textAlign: TextAlign.center,
+                                          child: Icon(
+                                            Icons.help_outline_rounded,
+                                            size: 16,
+                                            color: Colors.grey.shade400,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 const SizedBox(height: 24),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRotateDeviceNotice(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
+
+    return _HoverStatsCard(
+      borderRadius: 16,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: SizedBox(
+        width: double.infinity,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Positioned(
+              right: 12,
+              top: 0,
+              child: Icon(
+                Icons.screen_rotation_rounded,
+                size: 120,
+                color: scheme.onSurfaceVariant.withOpacity(
+                  isDark ? 0.16 : 0.12,
+                ),
+              ),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHighest.withOpacity(
+                      isDark ? 0.52 : 0.8,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    Icons.screen_rotation_alt_rounded,
+                    color: scheme.onSurfaceVariant.withOpacity(0.88),
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '\u041f\u043e\u0432\u0435\u0440\u043d\u0438\u0442\u0435 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e \u0433\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u0430\u043b\u044c\u043d\u043e \u0434\u043b\u044f \u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u0430 \u0433\u0440\u0430\u0444\u0438\u043a\u043e\u0432',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1.35,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '\u0412 \u0433\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u0430\u043b\u044c\u043d\u043e\u0439 \u043e\u0440\u0438\u0435\u043d\u0442\u0430\u0446\u0438\u0438 \u0433\u0440\u0430\u0444\u0438\u043a\u0438 \u0431\u0443\u0434\u0443\u0442 \u0447\u0438\u0442\u0430\u0442\u044c\u0441\u044f \u043b\u0443\u0447\u0448\u0435.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.35,
+                    fontWeight: FontWeight.w500,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

@@ -34,6 +34,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   static const double _overlayMaxHeightCap = 360;
 
   double _searchOverlayMaxHeight = 320;
+  bool _isSearchLifted = false;
 
   @override
   void initState() {
@@ -125,6 +126,30 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     });
   }
 
+  void _activateSearchLift({
+    required bool isMobile,
+    bool forceScroll = true,
+  }) {
+    if (!_isSearchLifted && mounted) {
+      setState(() {
+        _isSearchLifted = true;
+      });
+    }
+    if (isMobile && forceScroll) {
+      _scrollSearchFieldToTop();
+    }
+  }
+
+  void _clearSearchAndResetLift() {
+    if (_isSearchLifted && mounted) {
+      setState(() {
+        _isSearchLifted = false;
+      });
+    }
+    ref.read(projectSearchQueryProvider.notifier).state = null;
+    FocusScope.of(context).unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedStat = ref.watch(dashboardFilterProvider);
@@ -170,20 +195,29 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         TapRegion(
                           groupId: _searchTapGroupId,
                           onTapInside: (_) {
-                            if (isMobile) {
-                              _scrollSearchFieldToTop();
-                            }
+                            _activateSearchLift(isMobile: isMobile);
                           },
                           onTapOutside: (_) {
-                            ref
-                                .read(projectSearchQueryProvider.notifier)
-                                .state = null;
-                            FocusScope.of(context).unfocus();
+                            _clearSearchAndResetLift();
                           },
                           child: CompositedTransformTarget(
                             key: _searchAnchorKey,
                             link: _layerLink,
-                            child: const SmartSearchBar(),
+                            child: SmartSearchBar(
+                              onFocusChanged: (hasFocus) {
+                                if (hasFocus) {
+                                  _activateSearchLift(isMobile: isMobile);
+                                }
+                              },
+                              onQueryChanged: (value) {
+                                if (value.trim().isNotEmpty) {
+                                  _activateSearchLift(isMobile: isMobile);
+                                } else if (_isSearchLifted && isMobile) {
+                                  _scrollSearchFieldToTop();
+                                }
+                              },
+                              onCleared: _clearSearchAndResetLift,
+                            ),
                           ),
                         ),
                       ],

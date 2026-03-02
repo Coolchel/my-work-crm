@@ -15,7 +15,7 @@ class SearchResultsOverlay extends ConsumerWidget {
     this.maxHeight = 400,
   });
 
-  static const int _maxVisibleItems = 4;
+  static const int _maxVisibleItemsCap = 8;
   static const double _resultTileExtent = 58;
   static const double _separatorSpacing = 8;
   static const double _viewportEdgeInset = 10;
@@ -66,7 +66,15 @@ class SearchResultsOverlay extends ConsumerWidget {
                 );
               }
 
-              final visibleItems = math.min(projects.length, _maxVisibleItems);
+              const approximateItemHeight = _resultTileExtent +
+                  (_itemOuterVerticalMargin * 2) +
+                  _separatorSpacing;
+              final calculatedVisibleItems =
+                  ((maxHeight - _listVerticalPadding) / approximateItemHeight)
+                      .floor()
+                      .clamp(1, _maxVisibleItemsCap);
+              final visibleItems =
+                  math.min(projects.length, calculatedVisibleItems);
               final visibleSeparators = math.max(visibleItems - 1, 0);
               final desiredListHeight = (visibleItems * _resultTileExtent) +
                   (visibleItems * (_itemOuterVerticalMargin * 2)) +
