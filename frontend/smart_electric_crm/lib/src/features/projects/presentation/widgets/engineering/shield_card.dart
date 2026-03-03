@@ -468,21 +468,118 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                 ),
               if (shield.suggestedSize != null) const SizedBox(height: 10),
               // Actions Row
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.center,
-                runAlignment: WrapAlignment.center,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  // Template Button (only for Power/LED)
-                  if (shield.shieldType == 'power' ||
-                      shield.shieldType == 'led') ...[
+              SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.center,
+                  runAlignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    // Template Button (only for Power/LED)
+                    if (shield.shieldType == 'power' ||
+                        shield.shieldType == 'led') ...[
+                      Tooltip(
+                        message: 'Шаблоны',
+                        child: OutlinedButton(
+                          onPressed: () =>
+                              _showTemplateDialog(context, ref, shield),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.grey.shade600,
+                            side:
+                                BorderSide(color: Colors.grey.withOpacity(0.3)),
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(36, 36),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: const Icon(Icons.copy_all_rounded, size: 18),
+                        ),
+                      ),
+                    ],
+                    // Notes Button (with pulsing animation when has notes)
                     Tooltip(
-                      message: 'Шаблоны',
+                      message: shield.notes.isEmpty
+                          ? 'Добавить заметку'
+                          : 'Редактировать заметку',
+                      child: AnimatedBuilder(
+                        animation: _pulseAnimation,
+                        builder: (context, child) {
+                          final hasNotes = shield.notes.isNotEmpty;
+                          return Transform.scale(
+                            scale: hasNotes ? _pulseAnimation.value : 1.0,
+                            child: OutlinedButton(
+                              onPressed: () =>
+                                  _showNotesDialog(context, ref, shield),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: hasNotes
+                                    ? themeColor.withOpacity(0.8)
+                                    : Colors.grey.shade600,
+                                side: BorderSide(
+                                  color: hasNotes
+                                      ? themeColor.withOpacity(0.4)
+                                      : Colors.grey.withOpacity(0.3),
+                                ),
+                                backgroundColor: hasNotes
+                                    ? themeColor.withOpacity(0.05)
+                                    : Colors.transparent,
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(36, 36),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  const Icon(Icons.note_alt_outlined, size: 18),
+                                  if (hasNotes)
+                                    Positioned(
+                                      right: -2,
+                                      top: -2,
+                                      child: Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: themeColor,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .surface,
+                                              width: 1.5),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    // Edit Button
+                    Tooltip(
+                      message: 'Редактировать щит',
                       child: OutlinedButton(
                         onPressed: () =>
-                            _showTemplateDialog(context, ref, shield),
+                            _showEditShieldDialog(context, ref, shield),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.grey.shade700,
+                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          padding: EdgeInsets.zero, // Icon only
+                          minimumSize: const Size(36, 36), // Square 36x36
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Icon(Icons.edit_outlined, size: 18),
+                      ),
+                    ),
+                    // Delete Button
+                    Tooltip(
+                      message: 'Удалить щит',
+                      child: OutlinedButton(
+                        onPressed: () => _deleteShield(context, ref),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.grey.shade600,
                           side: BorderSide(color: Colors.grey.withOpacity(0.3)),
@@ -491,104 +588,11 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: const Icon(Icons.copy_all_rounded, size: 18),
+                        child: const Icon(Icons.close_rounded, size: 18),
                       ),
                     ),
                   ],
-                  // Notes Button (with pulsing animation when has notes)
-                  Tooltip(
-                    message: shield.notes.isEmpty
-                        ? 'Добавить заметку'
-                        : 'Редактировать заметку',
-                    child: AnimatedBuilder(
-                      animation: _pulseAnimation,
-                      builder: (context, child) {
-                        final hasNotes = shield.notes.isNotEmpty;
-                        return Transform.scale(
-                          scale: hasNotes ? _pulseAnimation.value : 1.0,
-                          child: OutlinedButton(
-                            onPressed: () =>
-                                _showNotesDialog(context, ref, shield),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: hasNotes
-                                  ? themeColor.withOpacity(0.8)
-                                  : Colors.grey.shade600,
-                              side: BorderSide(
-                                color: hasNotes
-                                    ? themeColor.withOpacity(0.4)
-                                    : Colors.grey.withOpacity(0.3),
-                              ),
-                              backgroundColor: hasNotes
-                                  ? themeColor.withOpacity(0.05)
-                                  : Colors.transparent,
-                              padding: EdgeInsets.zero,
-                              minimumSize: const Size(36, 36),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                            ),
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                const Icon(Icons.note_alt_outlined, size: 18),
-                                if (hasNotes)
-                                  Positioned(
-                                    right: -2,
-                                    top: -2,
-                                    child: Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: themeColor,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .surface,
-                                            width: 1.5),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  // Edit Button
-                  Tooltip(
-                    message: 'Редактировать щит',
-                    child: OutlinedButton(
-                      onPressed: () =>
-                          _showEditShieldDialog(context, ref, shield),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey.shade700,
-                        side: BorderSide(color: Colors.grey.withOpacity(0.3)),
-                        padding: EdgeInsets.zero, // Icon only
-                        minimumSize: const Size(36, 36), // Square 36x36
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                      child: const Icon(Icons.edit_outlined, size: 18),
-                    ),
-                  ),
-                  // Delete Button
-                  Tooltip(
-                    message: 'Удалить щит',
-                    child: OutlinedButton(
-                      onPressed: () => _deleteShield(context, ref),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey.shade600,
-                        side: BorderSide(color: Colors.grey.withOpacity(0.3)),
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(36, 36),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                      child: const Icon(Icons.close_rounded, size: 18),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),

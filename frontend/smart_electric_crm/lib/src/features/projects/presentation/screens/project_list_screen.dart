@@ -726,10 +726,12 @@ class _ProjectCardState extends State<_ProjectCard> {
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 1),
+                                  Align(
+                                    alignment: Alignment.topCenter,
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         _ActionButton(
                                           icon: Icons.edit_outlined,
@@ -1060,7 +1062,9 @@ class _ActionButtonState extends State<_ActionButton> {
           onTap: widget.onTap,
           borderRadius: BorderRadius.circular(20),
           child: Container(
-            padding: const EdgeInsets.all(8),
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               color: _isHovered
                   ? widget.hoverColor.withOpacity(0.1)
@@ -1069,7 +1073,7 @@ class _ActionButtonState extends State<_ActionButton> {
             ),
             child: Icon(
               widget.icon,
-              size: 20,
+              size: 18,
               color: _isHovered ? widget.hoverColor : widget.color,
             ),
           ),

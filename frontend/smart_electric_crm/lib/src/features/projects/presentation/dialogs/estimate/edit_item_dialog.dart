@@ -17,6 +17,7 @@ class EditItemDialog extends StatefulWidget {
 }
 
 class _EditItemDialogState extends State<EditItemDialog> {
+  final ScrollController _scrollController = ScrollController();
   late TextEditingController _totalQtyCtrl;
   late TextEditingController _empQtyCtrl;
   late TextEditingController _myQtyCtrl;
@@ -125,6 +126,18 @@ class _EditItemDialogState extends State<EditItemDialog> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    _totalQtyCtrl.dispose();
+    _empQtyCtrl.dispose();
+    _myQtyCtrl.dispose();
+    _priceCtrl.dispose();
+    _nameCtrl.dispose();
+    _unitCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isNewManual = widget.item.id == 0;
     final isWork = widget.item.itemType == 'work';
@@ -220,21 +233,79 @@ class _EditItemDialogState extends State<EditItemDialog> {
 
               // Content
               Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isNewManual || widget.item.name.isEmpty) ...[
-                        TextField(
-                          controller: _nameCtrl,
-                          decoration: InputDecoration(
-                            labelText: "Название",
-                            floatingLabelBehavior: FloatingLabelBehavior.always,
-                            hintText: isWork ? "Штроба" : "Кабель",
-                            hintStyle: TextStyle(
-                              color: Colors.grey.withOpacity(0.35),
+                child: Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: true,
+                  trackVisibility: true,
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isNewManual || widget.item.name.isEmpty) ...[
+                          TextField(
+                            controller: _nameCtrl,
+                            decoration: InputDecoration(
+                              labelText: "Название",
+                              floatingLabelBehavior:
+                                  FloatingLabelBehavior.always,
+                              hintText: isWork ? "Штроба" : "Кабель",
+                              hintStyle: TextStyle(
+                                color: Colors.grey.withOpacity(0.35),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                    color: themeColor.withOpacity(0.2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                    color: themeColor.withOpacity(0.2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(color: themeColor, width: 2),
+                              ),
                             ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _unitCtrl,
+                            decoration: InputDecoration(
+                              labelText: "Ед. изм.",
+                              floatingLabelBehavior:
+                                  FloatingLabelBehavior.always,
+                              hintText: "шт",
+                              hintStyle: TextStyle(
+                                color: Colors.grey.withOpacity(0.35),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                    color: themeColor.withOpacity(0.2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                    color: themeColor.withOpacity(0.2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(color: themeColor, width: 2),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        TextField(
+                          controller: _totalQtyCtrl,
+                          decoration: InputDecoration(
+                            labelText: "Общий объем",
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
@@ -250,245 +321,198 @@ class _EditItemDialogState extends State<EditItemDialog> {
                               borderSide:
                                   BorderSide(color: themeColor, width: 2),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _unitCtrl,
-                          decoration: InputDecoration(
-                            labelText: "Ед. изм.",
-                            floatingLabelBehavior: FloatingLabelBehavior.always,
-                            hintText: "шт",
-                            hintStyle: TextStyle(
-                              color: Colors.grey.withOpacity(0.35),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                  color: themeColor.withOpacity(0.2)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                  color: themeColor.withOpacity(0.2)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  BorderSide(color: themeColor, width: 2),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      TextField(
-                        controller: _totalQtyCtrl,
-                        decoration: InputDecoration(
-                          labelText: "Общий объем",
-                          floatingLabelBehavior: FloatingLabelBehavior.always,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: themeColor.withOpacity(0.2)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: themeColor.withOpacity(0.2)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: themeColor, width: 2),
-                          ),
-                          suffixIcon: isWork
-                              ? IconButton(
-                                  icon: Icon(Icons.person_add_alt,
-                                      color: _showEmployer
-                                          ? themeColor
-                                          : Colors.grey),
-                                  onPressed: () {
-                                    setState(() {
-                                      _showEmployer = !_showEmployer;
-                                      if (!_showEmployer) {
-                                        _empQtyCtrl.text = '0';
-                                        _calculate('emp');
-                                      } else {
-                                        if (_empQtyCtrl.text.isEmpty ||
-                                            _empQtyCtrl.text == '0.0') {
+                            suffixIcon: isWork
+                                ? IconButton(
+                                    icon: Icon(Icons.person_add_alt,
+                                        color: _showEmployer
+                                            ? themeColor
+                                            : Colors.grey),
+                                    onPressed: () {
+                                      setState(() {
+                                        _showEmployer = !_showEmployer;
+                                        if (!_showEmployer) {
                                           _empQtyCtrl.text = '0';
+                                          _calculate('emp');
+                                        } else {
+                                          if (_empQtyCtrl.text.isEmpty ||
+                                              _empQtyCtrl.text == '0.0') {
+                                            _empQtyCtrl.text = '0';
+                                          }
                                         }
-                                      }
-                                    });
-                                  },
-                                  tooltip: "Показать калькулятор",
-                                )
-                              : null,
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        inputFormatters: [DecimalInputFormatter()],
-                      ),
-                      if (widget.item.itemType == 'work' && _showEmployer) ...[
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _myQtyCtrl,
-                                decoration: InputDecoration(
-                                  labelText: "Мы",
-                                  floatingLabelBehavior:
-                                      FloatingLabelBehavior.always,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                        color: themeColor.withOpacity(0.2)),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                        color: themeColor.withOpacity(0.2)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide:
-                                        BorderSide(color: themeColor, width: 2),
-                                  ),
-                                ),
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                        decimal: true),
-                                inputFormatters: [DecimalInputFormatter()],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextField(
-                                controller: _empQtyCtrl,
-                                decoration: InputDecoration(
-                                  labelText: "Контрагент",
-                                  floatingLabelBehavior:
-                                      FloatingLabelBehavior.always,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                        color: themeColor.withOpacity(0.2)),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                        color: themeColor.withOpacity(0.2)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide:
-                                        BorderSide(color: themeColor, width: 2),
-                                  ),
-                                ),
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                        decimal: true),
-                                inputFormatters: [DecimalInputFormatter()],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ] else if (_showEmployer) ...[
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _empQtyCtrl,
-                          decoration: InputDecoration(
-                            labelText: "Контрагент",
-                            floatingLabelBehavior: FloatingLabelBehavior.always,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                  color: themeColor.withOpacity(0.2)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                  color: themeColor.withOpacity(0.2)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  BorderSide(color: themeColor, width: 2),
-                            ),
+                                      });
+                                    },
+                                    tooltip: "Показать калькулятор",
+                                  )
+                                : null,
                           ),
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true),
                           inputFormatters: [DecimalInputFormatter()],
                         ),
-                      ],
-                      if (!widget.hidePrices) ...[
-                        const SizedBox(height: 16),
-                        Row(children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _priceCtrl,
-                              decoration: InputDecoration(
-                                labelText: "Цена",
-                                floatingLabelBehavior:
-                                    FloatingLabelBehavior.always,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                      color: themeColor.withOpacity(0.2)),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                      color: themeColor.withOpacity(0.2)),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide:
-                                      BorderSide(color: themeColor, width: 2),
+                        if (widget.item.itemType == 'work' &&
+                            _showEmployer) ...[
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _myQtyCtrl,
+                                  decoration: InputDecoration(
+                                    labelText: "Мы",
+                                    floatingLabelBehavior:
+                                        FloatingLabelBehavior.always,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                          color: themeColor.withOpacity(0.2)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                          color: themeColor.withOpacity(0.2)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                          color: themeColor, width: 2),
+                                    ),
+                                  ),
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
+                                  inputFormatters: [DecimalInputFormatter()],
                                 ),
                               ),
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                      decimal: true),
-                              inputFormatters: [DecimalInputFormatter()],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextField(
+                                  controller: _empQtyCtrl,
+                                  decoration: InputDecoration(
+                                    labelText: "Контрагент",
+                                    floatingLabelBehavior:
+                                        FloatingLabelBehavior.always,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                          color: themeColor.withOpacity(0.2)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                          color: themeColor.withOpacity(0.2)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                          color: themeColor, width: 2),
+                                    ),
+                                  ),
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
+                                  inputFormatters: [DecimalInputFormatter()],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else if (_showEmployer) ...[
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _empQtyCtrl,
+                            decoration: InputDecoration(
+                              labelText: "Контрагент",
+                              floatingLabelBehavior:
+                                  FloatingLabelBehavior.always,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                    color: themeColor.withOpacity(0.2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                    color: themeColor.withOpacity(0.2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide:
+                                    BorderSide(color: themeColor, width: 2),
+                              ),
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
+                            inputFormatters: [DecimalInputFormatter()],
+                          ),
+                        ],
+                        if (!widget.hidePrices) ...[
+                          const SizedBox(height: 16),
+                          Row(children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _priceCtrl,
+                                decoration: InputDecoration(
+                                  labelText: "Цена",
+                                  floatingLabelBehavior:
+                                      FloatingLabelBehavior.always,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                        color: themeColor.withOpacity(0.2)),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                        color: themeColor.withOpacity(0.2)),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide:
+                                        BorderSide(color: themeColor, width: 2),
+                                  ),
+                                ),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                        decimal: true),
+                                inputFormatters: [DecimalInputFormatter()],
+                              ),
+                            ),
+                          ]),
+                          const SizedBox(height: 16),
+                          SegmentedButton<String>(
+                            segments: const [
+                              ButtonSegment(value: 'USD', label: Text('USD')),
+                              ButtonSegment(value: 'BYN', label: Text('BYN')),
+                            ],
+                            selected: {_currency},
+                            onSelectionChanged: (val) =>
+                                setState(() => _currency = val.first),
+                            style: ButtonStyle(
+                              visualDensity: VisualDensity.compact,
+                              backgroundColor:
+                                  WidgetStateProperty.resolveWith((states) {
+                                if (states.contains(WidgetState.selected)) {
+                                  return themeColor.withOpacity(0.15);
+                                }
+                                return null;
+                              }),
                             ),
                           ),
-                        ]),
-                        const SizedBox(height: 16),
-                        SegmentedButton<String>(
-                          segments: const [
-                            ButtonSegment(value: 'USD', label: Text('USD')),
-                            ButtonSegment(value: 'BYN', label: Text('BYN')),
-                          ],
-                          selected: {_currency},
-                          onSelectionChanged: (val) =>
-                              setState(() => _currency = val.first),
-                          style: ButtonStyle(
-                            visualDensity: VisualDensity.compact,
-                            backgroundColor:
-                                WidgetStateProperty.resolveWith((states) {
-                              if (states.contains(WidgetState.selected)) {
-                                return themeColor.withOpacity(0.15);
-                              }
-                              return null;
-                            }),
-                          ),
-                        ),
-                      ],
-                      if (_validationError != null) ...[
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _validationError!,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                              fontSize: 12,
+                        ],
+                        if (_validationError != null) ...[
+                          const SizedBox(height: 12),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _validationError!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),

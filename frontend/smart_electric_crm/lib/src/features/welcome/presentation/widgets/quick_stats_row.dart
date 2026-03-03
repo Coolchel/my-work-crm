@@ -267,11 +267,15 @@ class _StatCardState extends State<_StatCard> {
                           textAlign: TextAlign.center,
                           child: Padding(
                             padding: EdgeInsets.only(top: compact ? 2 : 1),
-                            child: Icon(
-                              Icons.help_outline_rounded,
-                              size: compact ? 14 : 15,
-                              color: scheme.onSurfaceVariant.withOpacity(
-                                isDark ? 0.46 : 0.52,
+                            child: Text(
+                              '?',
+                              style: TextStyle(
+                                fontSize: compact ? 14 : 15,
+                                fontWeight: FontWeight.w700,
+                                color: scheme.onSurfaceVariant.withOpacity(
+                                  isDark ? 0.46 : 0.52,
+                                ),
+                                height: 1,
                               ),
                             ),
                           ),

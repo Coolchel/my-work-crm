@@ -484,83 +484,89 @@ class EstimateTextActionsDialog extends ConsumerWidget
     return buildPremiumContainer(
       context: context,
       themeColor: themeColor,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header
-            buildPremiumHeader(
-              context: context,
-              title: "Текстовые сметы",
-              icon: Icons.description_outlined,
-              themeColor: themeColor,
-            ),
-
-            // 1. View / Preview
-            buildSectionHeader("Просмотр", icon: Icons.remove_red_eye_rounded),
-            buildWideActionBtn(
-              context,
-              label: "Открыть предпросмотр",
-              icon: Icons.fullscreen_rounded,
-              color: Colors.grey.shade800,
-              onTap: (hasWorks || hasMaterials)
-                  ? () {
-                      Navigator.pop(context);
-                      _showReport(context, ref);
-                    }
-                  : () {},
-            ),
-
-            // 2. Copy Text (Direct Actions)
-            if (hasWorks || hasMaterials)
-              buildSectionHeader("Копировать текст", icon: Icons.copy_rounded),
-            if (hasWorks)
-              buildWideActionBtn(
-                context,
-                label: "Заказчик (Работы)",
-                icon: Icons.person_outline,
-                color: Colors.green,
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _processAction(context, ref,
-                      isWork: true, type: 'total', share: false);
-                },
-              ),
-            if (hasPartnerWorks)
-              buildWideActionBtn(
-                context,
-                label: "Контрагент (Работы)",
-                icon: Icons.handshake_outlined,
-                color: Colors.green,
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _processAction(context, ref,
-                      isWork: true, type: 'employer', share: false);
-                },
-              ),
-            if (hasMaterials)
-              buildWideActionBtn(
-                context,
-                label: "Материалы (Текущие настройки)",
-                icon: Icons.inventory_2_outlined,
-                color: Colors.blue.shade700,
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _processAction(context, ref,
-                      isWork: false, type: 'total', share: false);
-                },
+      child: Scrollbar(
+        thumbVisibility: true,
+        trackVisibility: true,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header
+              buildPremiumHeader(
+                context: context,
+                title: "Текстовые сметы",
+                icon: Icons.description_outlined,
+                themeColor: themeColor,
               ),
 
-            // 3. Share Text (Dropdowns)
-            if (hasWorks || hasMaterials)
-              buildSectionHeader("Поделиться текстом",
-                  icon: Icons.share_rounded),
-            _buildShareSection(
-                context, ref, hasWorks, hasPartnerWorks, hasMaterials),
+              // 1. View / Preview
+              buildSectionHeader("Просмотр",
+                  icon: Icons.remove_red_eye_rounded),
+              buildWideActionBtn(
+                context,
+                label: "Открыть предпросмотр",
+                icon: Icons.fullscreen_rounded,
+                color: Colors.grey.shade800,
+                onTap: (hasWorks || hasMaterials)
+                    ? () {
+                        Navigator.pop(context);
+                        _showReport(context, ref);
+                      }
+                    : () {},
+              ),
 
-            const SizedBox(height: 24),
-          ],
+              // 2. Copy Text (Direct Actions)
+              if (hasWorks || hasMaterials)
+                buildSectionHeader("Копировать текст",
+                    icon: Icons.copy_rounded),
+              if (hasWorks)
+                buildWideActionBtn(
+                  context,
+                  label: "Заказчик (Работы)",
+                  icon: Icons.person_outline,
+                  color: Colors.green,
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _processAction(context, ref,
+                        isWork: true, type: 'total', share: false);
+                  },
+                ),
+              if (hasPartnerWorks)
+                buildWideActionBtn(
+                  context,
+                  label: "Контрагент (Работы)",
+                  icon: Icons.handshake_outlined,
+                  color: Colors.green,
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _processAction(context, ref,
+                        isWork: true, type: 'employer', share: false);
+                  },
+                ),
+              if (hasMaterials)
+                buildWideActionBtn(
+                  context,
+                  label: "Материалы (Текущие настройки)",
+                  icon: Icons.inventory_2_outlined,
+                  color: Colors.blue.shade700,
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _processAction(context, ref,
+                        isWork: false, type: 'total', share: false);
+                  },
+                ),
+
+              // 3. Share Text (Dropdowns)
+              if (hasWorks || hasMaterials)
+                buildSectionHeader("Поделиться текстом",
+                    icon: Icons.share_rounded),
+              _buildShareSection(
+                  context, ref, hasWorks, hasPartnerWorks, hasMaterials),
+
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
@@ -795,94 +801,98 @@ class _EstimatePdfActionsDialogState
     return buildPremiumContainer(
       context: context,
       themeColor: themeColor,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header
-            buildPremiumHeader(
-              context: context,
-              title: "PDF сметы",
-              icon: Icons.picture_as_pdf_outlined,
-              themeColor: themeColor,
-            ),
-
-            // 1. Export PDF (Direct Actions)
-            buildSectionHeader("Экспорт в PDF", icon: Icons.save_alt_rounded),
-            if (hasWorks)
-              buildWideActionBtn(
-                context,
-                label: "Заказчик (Работы)",
-                icon: Icons.person_outline,
-                color: Colors.green,
-                enabled: !_isBusy,
-                onTap: () => _runPdfAction(
-                  context,
-                  const EstimatePdfActionRequest(
-                    isWork: true,
-                    type: 'total',
-                  ),
-                ),
-              ),
-            if (hasPartnerWorks)
-              buildWideActionBtn(
-                context,
-                label: "Контрагент (Работы)",
-                icon: Icons.handshake_outlined,
-                color: Colors.green,
-                enabled: !_isBusy,
-                onTap: () => _runPdfAction(
-                  context,
-                  const EstimatePdfActionRequest(
-                    isWork: true,
-                    type: 'employer',
-                  ),
-                ),
-              ),
-            if (hasMaterials)
-              buildWideActionBtn(
-                context,
-                label: "Материалы (Текущие настройки)",
-                icon: Icons.inventory_2_outlined,
-                color: Colors.blue.shade700,
-                enabled: !_isBusy,
-                onTap: () => _runPdfAction(
-                  context,
-                  const EstimatePdfActionRequest(
-                    isWork: false,
-                    showPrices: true,
-                  ),
-                ),
+      child: Scrollbar(
+        thumbVisibility: true,
+        trackVisibility: true,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header
+              buildPremiumHeader(
+                context: context,
+                title: "PDF сметы",
+                icon: Icons.picture_as_pdf_outlined,
+                themeColor: themeColor,
               ),
 
-            // 2. Share PDF (Dropdowns)
-            buildSectionHeader("Поделиться PDF", icon: Icons.share_rounded),
-            _buildPdfShareSection(
-                context, hasWorks, hasPartnerWorks, hasMaterials),
-            if (_isBusy)
-              const Padding(
-                padding: EdgeInsets.fromLTRB(24, 12, 24, 0),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+              // 1. Export PDF (Direct Actions)
+              buildSectionHeader("Экспорт в PDF", icon: Icons.save_alt_rounded),
+              if (hasWorks)
+                buildWideActionBtn(
+                  context,
+                  label: "Заказчик (Работы)",
+                  icon: Icons.person_outline,
+                  color: Colors.green,
+                  enabled: !_isBusy,
+                  onTap: () => _runPdfAction(
+                    context,
+                    const EstimatePdfActionRequest(
+                      isWork: true,
+                      type: 'total',
                     ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        "Генерация/шаринг PDF...",
-                        style: TextStyle(fontSize: 13),
+                  ),
+                ),
+              if (hasPartnerWorks)
+                buildWideActionBtn(
+                  context,
+                  label: "Контрагент (Работы)",
+                  icon: Icons.handshake_outlined,
+                  color: Colors.green,
+                  enabled: !_isBusy,
+                  onTap: () => _runPdfAction(
+                    context,
+                    const EstimatePdfActionRequest(
+                      isWork: true,
+                      type: 'employer',
+                    ),
+                  ),
+                ),
+              if (hasMaterials)
+                buildWideActionBtn(
+                  context,
+                  label: "Материалы (Текущие настройки)",
+                  icon: Icons.inventory_2_outlined,
+                  color: Colors.blue.shade700,
+                  enabled: !_isBusy,
+                  onTap: () => _runPdfAction(
+                    context,
+                    const EstimatePdfActionRequest(
+                      isWork: false,
+                      showPrices: true,
+                    ),
+                  ),
+                ),
+
+              // 2. Share PDF (Dropdowns)
+              buildSectionHeader("Поделиться PDF", icon: Icons.share_rounded),
+              _buildPdfShareSection(
+                  context, hasWorks, hasPartnerWorks, hasMaterials),
+              if (_isBusy)
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(24, 12, 24, 0),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                    ),
-                  ],
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          "Генерация/шаринг PDF...",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
@@ -1153,6 +1163,7 @@ class ReportPreviewDialog extends StatefulWidget {
 
 class _ReportPreviewDialogState extends State<ReportPreviewDialog>
     with EstimateDialogHelpers {
+  final ScrollController _previewScrollController = ScrollController();
   late String _viewMode;
 
   List<String> get _availableModes {
@@ -1178,6 +1189,12 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
     super.initState();
     final modes = _availableModes;
     _viewMode = modes.isNotEmpty ? modes.first : 'none';
+  }
+
+  @override
+  void dispose() {
+    _previewScrollController.dispose();
+    super.dispose();
   }
 
   String get _currentText {
@@ -1313,11 +1330,17 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
                       color: AppDesignTokens.softBorder(context),
                     ),
                   ),
-                  child: SingleChildScrollView(
-                    child: SelectableText(
-                      _currentText,
-                      style: const TextStyle(
-                          fontFamily: 'RobotoMono', fontSize: 13),
+                  child: Scrollbar(
+                    controller: _previewScrollController,
+                    thumbVisibility: true,
+                    trackVisibility: true,
+                    child: SingleChildScrollView(
+                      controller: _previewScrollController,
+                      child: SelectableText(
+                        _currentText,
+                        style: const TextStyle(
+                            fontFamily: 'RobotoMono', fontSize: 13),
+                      ),
                     ),
                   ),
                 ),
