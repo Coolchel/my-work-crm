@@ -433,31 +433,28 @@ extension _FinanceScreenSections on _FinanceScreenState {
 
   Widget _buildSourceSuperscript(String text) {
     final isDark = AppDesignTokens.isDark(context);
-    return Transform.translate(
-      offset: const Offset(0, -5),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 130),
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-        decoration: BoxDecoration(
-          color: isDark
-              ? Theme.of(context).colorScheme.surfaceContainerHighest
-              : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: AppDesignTokens.cardBorder(context),
-            width: 0.8,
-          ),
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 130),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Theme.of(context).colorScheme.surfaceContainerHighest
+            : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: AppDesignTokens.cardBorder(context),
+          width: 0.8,
         ),
-        child: Text(
-          text,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
-            height: 1.0,
-          ),
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          color: Colors.grey.shade700,
+          height: 1.0,
         ),
       ),
     );
@@ -470,7 +467,7 @@ extension _FinanceScreenSections on _FinanceScreenState {
   }) {
     return Row(
       mainAxisSize: MainAxisSize.max,
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Flexible(
           fit: FlexFit.loose,
@@ -487,7 +484,10 @@ extension _FinanceScreenSections on _FinanceScreenState {
         ),
         if (source != null && source.isNotEmpty) ...[
           const SizedBox(width: 4),
-          _buildSourceSuperscript(source),
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: _buildSourceSuperscript(source),
+          ),
         ],
       ],
     );

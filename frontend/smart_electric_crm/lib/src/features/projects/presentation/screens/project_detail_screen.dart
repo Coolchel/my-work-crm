@@ -933,22 +933,38 @@ class _FileCardState extends ConsumerState<_FileCard> {
     try {
       final tempFile =
           await _createDownloadedTempFile(url, preferredName: displayName);
-      final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-      if (isMobile) {
-        await Share.shareXFiles([XFile(tempFile.path)], text: displayName);
+      final isAndroid = !kIsWeb && Platform.isAndroid;
+      if (isAndroid) {
+        final outputDir = await FilePicker.platform.getDirectoryPath(
+          dialogTitle: 'Выберите папку для сохранения',
+        );
+
+        if (outputDir == null) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Сохранение отменено')),
+            );
+          }
+          return;
+        }
+
+        final fileName = _safeFileName(displayName, fallback: 'file');
+        final outputFile = File('$outputDir/$fileName');
+        if (await outputFile.exists()) {
+          await outputFile.delete();
+        }
+        await tempFile.copy(outputFile.path);
+
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content:
-                  Text('File downloaded. Choose destination from share menu.'),
-            ),
+            SnackBar(content: Text('Файл сохранен: ${outputFile.path}')),
           );
         }
         return;
       }
 
       final outputFile = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save file as...',
+        dialogTitle: 'Сохранить файл как...',
         fileName: _safeFileName(displayName, fallback: 'file'),
       );
 
@@ -959,6 +975,10 @@ class _FileCardState extends ConsumerState<_FileCard> {
             SnackBar(content: Text('Файл сохранен: $outputFile')),
           );
         }
+      } else if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Сохранение отменено')),
+        );
       }
     } catch (e) {
       debugPrint("Save file error: $e");
@@ -1420,4 +1440,3 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
     );
   }
 }
-

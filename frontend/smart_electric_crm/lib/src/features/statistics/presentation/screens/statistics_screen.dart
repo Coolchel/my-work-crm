@@ -33,6 +33,7 @@ class StatisticsScreen extends ConsumerWidget {
     final isMobile = viewport.width < 600;
     final orientation = MediaQuery.orientationOf(context);
     final isPhonePortrait = isMobile && orientation == Orientation.portrait;
+    final isPhoneLandscape = isMobile && orientation == Orientation.landscape;
     final useVerticalPieCharts = viewport.width < 980;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
@@ -56,8 +57,7 @@ class StatisticsScreen extends ConsumerWidget {
     final periodSegments = <ButtonSegment<String>>[
       ButtonSegment<String>(
         value: 'month',
-        label: Text(
-            isMobile ? '\u041c\u0435\u0441' : '\u041c\u0435\u0441\u044f\u0446'),
+        label: const Text('\u041c\u0435\u0441\u044f\u0446'),
         icon: isMobile ? null : const Icon(Icons.calendar_view_month),
       ),
       ButtonSegment<String>(
@@ -77,10 +77,11 @@ class StatisticsScreen extends ConsumerWidget {
     ];
 
     return Scaffold(
-      appBar: const CompactSectionAppBar(
+      appBar: CompactSectionAppBar(
         title: 'Статистика',
         icon: Icons.bar_chart_rounded,
         gradientColors: AppDesignTokens.subtleSectionGradient,
+        bottomGap: isPhoneLandscape ? 10 : 30,
       ),
       body: statsAsync.when(
         skipLoadingOnReload: true,
@@ -403,61 +404,45 @@ class StatisticsScreen extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: SizedBox(
         width: double.infinity,
-        child: Stack(
-          alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Positioned(
-              right: 12,
-              top: 0,
-              child: Icon(
-                Icons.screen_rotation_rounded,
-                size: 120,
-                color: scheme.onSurfaceVariant.withOpacity(
-                  isDark ? 0.16 : 0.12,
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withOpacity(
+                  isDark ? 0.52 : 0.8,
                 ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                Icons.screen_rotation_alt_rounded,
+                color: scheme.onSurfaceVariant.withOpacity(0.88),
+                size: 30,
               ),
             ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest.withOpacity(
-                      isDark ? 0.52 : 0.8,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    Icons.screen_rotation_alt_rounded,
-                    color: scheme.onSurfaceVariant.withOpacity(0.88),
-                    size: 30,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '\u041f\u043e\u0432\u0435\u0440\u043d\u0438\u0442\u0435 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e \u0433\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u0430\u043b\u044c\u043d\u043e \u0434\u043b\u044f \u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u0430 \u0433\u0440\u0430\u0444\u0438\u043a\u043e\u0432',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    height: 1.35,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '\u0412 \u0433\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u0430\u043b\u044c\u043d\u043e\u0439 \u043e\u0440\u0438\u0435\u043d\u0442\u0430\u0446\u0438\u0438 \u0433\u0440\u0430\u0444\u0438\u043a\u0438 \u0431\u0443\u0434\u0443\u0442 \u0447\u0438\u0442\u0430\u0442\u044c\u0441\u044f \u043b\u0443\u0447\u0448\u0435.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.35,
-                    fontWeight: FontWeight.w500,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 12),
+            Text(
+              '\u041f\u043e\u0432\u0435\u0440\u043d\u0438\u0442\u0435 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e \u0433\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u0430\u043b\u044c\u043d\u043e \u0434\u043b\u044f \u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u0430 \u0433\u0440\u0430\u0444\u0438\u043a\u043e\u0432',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.35,
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '\u0412 \u0433\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u0430\u043b\u044c\u043d\u043e\u0439 \u043e\u0440\u0438\u0435\u043d\u0442\u0430\u0446\u0438\u0438 \u0433\u0440\u0430\u0444\u0438\u043a\u0438 \u0431\u0443\u0434\u0443\u0442 \u0447\u0438\u0442\u0430\u0442\u044c\u0441\u044f \u043b\u0443\u0447\u0448\u0435.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.35,
+                fontWeight: FontWeight.w500,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

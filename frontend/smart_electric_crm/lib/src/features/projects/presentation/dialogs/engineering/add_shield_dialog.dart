@@ -15,8 +15,16 @@ class AddShieldDialog extends StatefulWidget {
 
 class _AddShieldDialogState extends State<AddShieldDialog> {
   final _nameController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   String _type = 'power';
   String _mounting = 'internal';
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +113,11 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                     // Content
                     Flexible(
                       child: Scrollbar(
+                        controller: _scrollController,
+                        thumbVisibility: true,
+                        trackVisibility: true,
                         child: SingleChildScrollView(
+                          controller: _scrollController,
                           padding: const EdgeInsets.all(24),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -301,31 +313,6 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                         ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.swipe_up_alt_rounded,
-                            size: 15,
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Scroll for more options',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
                     // Footer
                     Padding(
                       padding: const EdgeInsets.all(24),

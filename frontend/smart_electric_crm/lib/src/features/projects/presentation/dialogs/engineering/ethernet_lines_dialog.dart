@@ -120,130 +120,139 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
 
               // Content
               Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(
-                      left: 24, right: 24, top: 24, bottom: 16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Quick selection buttons
-                      Text(
-                        "Быстрый выбор:",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700,
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  trackVisibility: true,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(
+                        left: 24, right: 24, top: 24, bottom: 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Quick selection buttons
+                        Text(
+                          "Быстрый выбор:",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade700,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Column(
-                        children: [
-                          // First row: 1, 2, 4
-                          Row(
-                            children: [1, 2, 4].map((value) {
-                              return Expanded(
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 4),
-                                  child: SizedBox(
-                                    height: 36,
-                                    child: OutlinedButton(
-                                      onPressed: () => _selectQuickValue(value),
-                                      style: OutlinedButton.styleFrom(
-                                        padding: EdgeInsets.zero,
-                                        side: BorderSide(
-                                            color: themeColor.withOpacity(0.3)),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
+                        const SizedBox(height: 8),
+                        Column(
+                          children: [
+                            // First row: 1, 2, 4
+                            Row(
+                              children: [1, 2, 4].map((value) {
+                                return Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 4),
+                                    child: SizedBox(
+                                      height: 36,
+                                      child: OutlinedButton(
+                                        onPressed: () =>
+                                            _selectQuickValue(value),
+                                        style: OutlinedButton.styleFrom(
+                                          padding: EdgeInsets.zero,
+                                          side: BorderSide(
+                                              color:
+                                                  themeColor.withOpacity(0.3)),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
                                         ),
-                                      ),
-                                      child: Text(
-                                        '$value',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: themeColor.withOpacity(0.8),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 8),
-                          // Second row: 6, 8, 10
-                          Row(
-                            children: [6, 8, 10].map((value) {
-                              return Expanded(
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 4),
-                                  child: SizedBox(
-                                    height: 36,
-                                    child: OutlinedButton(
-                                      onPressed: () => _selectQuickValue(value),
-                                      style: OutlinedButton.styleFrom(
-                                        padding: EdgeInsets.zero,
-                                        side: BorderSide(
-                                            color: themeColor.withOpacity(0.3)),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        '$value',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: themeColor.withOpacity(0.8),
+                                        child: Text(
+                                          '$value',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                            color: themeColor.withOpacity(0.8),
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
+                                );
+                              }).toList(),
+                            ),
+                            const SizedBox(height: 8),
+                            // Second row: 6, 8, 10
+                            Row(
+                              children: [6, 8, 10].map((value) {
+                                return Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 4),
+                                    child: SizedBox(
+                                      height: 36,
+                                      child: OutlinedButton(
+                                        onPressed: () =>
+                                            _selectQuickValue(value),
+                                        style: OutlinedButton.styleFrom(
+                                          padding: EdgeInsets.zero,
+                                          side: BorderSide(
+                                              color:
+                                                  themeColor.withOpacity(0.3)),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '$value',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                            color: themeColor.withOpacity(0.8),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
 
-                      // Input field
-                      TextField(
-                        controller: _linesController,
-                        autofocus: true,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        decoration: InputDecoration(
-                          labelText: "Количество линий UTP-5e",
-                          floatingLabelBehavior: FloatingLabelBehavior.always,
-                          hintText: "Например: 12",
-                          hintStyle: TextStyle(
-                            color: Colors.grey.withOpacity(0.35),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: themeColor.withOpacity(0.2)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: themeColor.withOpacity(0.2)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: themeColor, width: 2),
+                        // Input field
+                        TextField(
+                          controller: _linesController,
+                          autofocus: true,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          decoration: InputDecoration(
+                            labelText: "Количество линий UTP-5e",
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                            hintText: "Например: 12",
+                            hintStyle: TextStyle(
+                              color: Colors.grey.withOpacity(0.35),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                  color: themeColor.withOpacity(0.2)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                  color: themeColor.withOpacity(0.2)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: themeColor, width: 2),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

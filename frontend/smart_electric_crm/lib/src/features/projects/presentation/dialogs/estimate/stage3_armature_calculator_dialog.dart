@@ -177,7 +177,6 @@ class _Stage3ArmatureCalculatorDialogState
   final Map<String, TextEditingController> _controllers = {};
   final ScrollController _listScrollController = ScrollController();
   String? _inlineError;
-  bool _showScrollHint = false;
 
   late final Map<String, CatalogItem> _catalogByMappingKey;
   late final Map<String, CatalogItem> _catalogByName;
@@ -199,32 +198,15 @@ class _Stage3ArmatureCalculatorDialogState
       _quantities[position.mappingKey] = 0;
       _controllers[position.mappingKey] = TextEditingController(text: '0');
     }
-    _listScrollController.addListener(_updateScrollHint);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _updateScrollHint());
   }
 
   @override
   void dispose() {
-    _listScrollController.removeListener(_updateScrollHint);
     _listScrollController.dispose();
     for (final controller in _controllers.values) {
       controller.dispose();
     }
     super.dispose();
-  }
-
-  void _updateScrollHint() {
-    if (!_listScrollController.hasClients || !mounted) {
-      return;
-    }
-    final position = _listScrollController.position;
-    final hasMoreContent = position.maxScrollExtent > 0 &&
-        position.pixels < (position.maxScrollExtent - 2);
-    if (_showScrollHint != hasMoreContent) {
-      setState(() {
-        _showScrollHint = hasMoreContent;
-      });
-    }
   }
 
   CatalogItem? _resolveCatalogItem(_ArmaturePosition position) {
@@ -394,6 +376,8 @@ class _Stage3ArmatureCalculatorDialogState
                   Expanded(
                     child: Scrollbar(
                       controller: _listScrollController,
+                      thumbVisibility: true,
+                      trackVisibility: true,
                       child: ListView.builder(
                         controller: _listScrollController,
                         padding: const EdgeInsets.all(16),
@@ -406,28 +390,6 @@ class _Stage3ArmatureCalculatorDialogState
                       ),
                     ),
                   ),
-                  if (_showScrollHint)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.swipe_up_alt_rounded,
-                            size: 15,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Scroll down for more',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   if (_inlineError != null)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -507,7 +469,7 @@ class _Stage3ArmatureCalculatorDialogState
               textAlign: TextAlign.center,
               decoration: InputDecoration(
                 isDense: true,
-                labelText: 'Total',
+                labelText: 'Всего',
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
                 border: OutlineInputBorder(

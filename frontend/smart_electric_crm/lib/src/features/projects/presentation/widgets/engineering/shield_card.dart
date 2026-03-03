@@ -24,6 +24,7 @@ class ShieldCard extends ConsumerStatefulWidget {
   @override
   ConsumerState<ShieldCard> createState() => _ShieldCardState();
 }
+
 class _ShieldCardState extends ConsumerState<ShieldCard>
     with TickerProviderStateMixin {
   late AnimationController _expandController;
@@ -280,7 +281,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Mounting Toggle & Recommended Size
-                              _buildTopInfo(context, themeColor, isCompactMobile),
+                              _buildTopInfo(
+                                  context, themeColor, isCompactMobile),
 
                               const SizedBox(height: 16),
 
@@ -469,6 +471,9 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
+                alignment: WrapAlignment.center,
+                runAlignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   // Template Button (only for Power/LED)
                   if (shield.shieldType == 'power' ||
@@ -900,4 +905,3 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     }
   }
 }
-

@@ -29,6 +29,7 @@ class TextInputDialog extends StatefulWidget {
 class _TextInputDialogState extends State<TextInputDialog> {
   late TextEditingController _textController;
   late TextEditingController _descController;
+  final ScrollController _scrollController = ScrollController();
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -42,6 +43,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
   void dispose() {
     _textController.dispose();
     _descController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -126,7 +128,11 @@ class _TextInputDialogState extends State<TextInputDialog> {
                   // Content
                   Flexible(
                     child: Scrollbar(
+                      controller: _scrollController,
+                      thumbVisibility: true,
+                      trackVisibility: true,
                       child: SingleChildScrollView(
+                        controller: _scrollController,
                         padding: const EdgeInsets.all(24),
                         child: Form(
                           key: _formKey,
@@ -151,28 +157,6 @@ class _TextInputDialogState extends State<TextInputDialog> {
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.swipe_up_alt_rounded,
-                          size: 15,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Scroll to see all fields',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
                   // Footer
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),

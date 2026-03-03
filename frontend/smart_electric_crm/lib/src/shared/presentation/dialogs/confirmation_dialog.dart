@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class ConfirmationDialog extends StatelessWidget {
+class ConfirmationDialog extends StatefulWidget {
   final String title;
   final String content;
   final String confirmText;
@@ -19,10 +19,24 @@ class ConfirmationDialog extends StatelessWidget {
   });
 
   @override
+  State<ConfirmationDialog> createState() => _ConfirmationDialogState();
+}
+
+class _ConfirmationDialogState extends State<ConfirmationDialog> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final effectiveColor = isDestructive ? Colors.red : themeColor;
+    final effectiveColor =
+        widget.isDestructive ? Colors.red : widget.themeColor;
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -72,7 +86,7 @@ class ConfirmationDialog extends StatelessWidget {
                       alignment: Alignment.center,
                       children: [
                         Text(
-                          title,
+                          widget.title,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -100,10 +114,14 @@ class ConfirmationDialog extends StatelessWidget {
                   // Content
                   Flexible(
                     child: Scrollbar(
+                      controller: _scrollController,
+                      thumbVisibility: true,
+                      trackVisibility: true,
                       child: SingleChildScrollView(
+                        controller: _scrollController,
                         padding: const EdgeInsets.all(24),
                         child: Text(
-                          content,
+                          widget.content,
                           style: TextStyle(
                             fontSize: 15,
                             height: 1.4,
@@ -114,35 +132,13 @@ class ConfirmationDialog extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.swipe_up_alt_rounded,
-                          size: 15,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Scroll for full content',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
                   // Footer
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        if (cancelText.isNotEmpty) ...[
+                        if (widget.cancelText.isNotEmpty) ...[
                           Expanded(
                             child: TextButton(
                               onPressed: () => Navigator.pop(context, false),
@@ -151,7 +147,7 @@ class ConfirmationDialog extends StatelessWidget {
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 12),
                               ),
-                              child: Text(cancelText),
+                              child: Text(widget.cancelText),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -176,7 +172,7 @@ class ConfirmationDialog extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              child: Text(confirmText),
+                              child: Text(widget.confirmText),
                             ),
                           ),
                         ] else
@@ -201,7 +197,7 @@ class ConfirmationDialog extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            child: Text(confirmText),
+                            child: Text(widget.confirmText),
                           ),
                       ],
                     ),
