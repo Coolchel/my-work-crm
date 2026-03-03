@@ -121,36 +121,40 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
 
               // Content
               Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: TextField(
-                    controller: _notesController,
-                    autofocus: true,
-                    maxLines: 6,
-                    minLines: 4,
-                    decoration: InputDecoration(
-                      hintText: "Введите заметку для этого щита...",
-                      hintStyle: TextStyle(
-                        color: scheme.onSurfaceVariant.withOpacity(0.8),
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  trackVisibility: true,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: TextField(
+                      controller: _notesController,
+                      autofocus: true,
+                      maxLines: 6,
+                      minLines: 4,
+                      decoration: InputDecoration(
+                        hintText: "Введите заметку для этого щита...",
+                        hintStyle: TextStyle(
+                          color: scheme.onSurfaceVariant.withOpacity(0.8),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              BorderSide(color: themeColor.withOpacity(0.2)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              BorderSide(color: themeColor.withOpacity(0.2)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: themeColor, width: 1),
+                        ),
+                        filled: true,
+                        fillColor: isDark
+                            ? scheme.surfaceContainerHigh
+                            : Colors.grey.shade50,
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            BorderSide(color: themeColor.withOpacity(0.2)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            BorderSide(color: themeColor.withOpacity(0.2)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: themeColor, width: 1),
-                      ),
-                      filled: true,
-                      fillColor: isDark
-                          ? scheme.surfaceContainerHigh
-                          : Colors.grey.shade50,
                     ),
                   ),
                 ),

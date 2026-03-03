@@ -156,6 +156,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final searchQuery = ref.watch(projectSearchQueryProvider);
     final isSearchActive = searchQuery != null && searchQuery.isNotEmpty;
     final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final searchSectionOffsetY =
+        isMobile ? (_isSearchLifted ? -44.0 : -20.0) : -20.0;
     final hasProjectsLoadError = ref.watch(projectListProvider).maybeWhen(
           error: (_, __) => true,
           orElse: () => false,
@@ -179,7 +181,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   onSettingsPressed: widget.onSettingsPressed,
                 ),
                 Transform.translate(
-                  offset: const Offset(0, -20),
+                  offset: Offset(0, searchSectionOffsetY),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(

@@ -123,64 +123,70 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
 
               // Content
               Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(
-                      left: 24, right: 24, top: 24, bottom: 16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: _transformerController,
-                        decoration: InputDecoration(
-                          labelText: "Трансформатор / Блок питания",
-                          floatingLabelBehavior: FloatingLabelBehavior.always,
-                          hintText: "Например: 12V 60W",
-                          hintStyle: TextStyle(
-                            color: Colors.grey.withOpacity(0.35),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: themeColor.withOpacity(0.2)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: themeColor.withOpacity(0.2)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: themeColor, width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _zoneController,
-                        decoration: InputDecoration(
-                          labelText: "Зона подсветки / Лента",
-                          floatingLabelBehavior: FloatingLabelBehavior.always,
-                          hintText: "Например: Потолок",
-                          hintStyle: TextStyle(
-                            color: Colors.grey.withOpacity(0.35),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: themeColor.withOpacity(0.2)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: themeColor.withOpacity(0.2)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: themeColor, width: 2),
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  trackVisibility: true,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(
+                        left: 24, right: 24, top: 24, bottom: 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          controller: _transformerController,
+                          decoration: InputDecoration(
+                            labelText: "Трансформатор / Блок питания",
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                            hintText: "Например: 12V 60W",
+                            hintStyle: TextStyle(
+                              color: Colors.grey.withOpacity(0.35),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                  color: themeColor.withOpacity(0.2)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                  color: themeColor.withOpacity(0.2)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: themeColor, width: 2),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _zoneController,
+                          decoration: InputDecoration(
+                            labelText: "Зона подсветки / Лента",
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                            hintText: "Например: Потолок",
+                            hintStyle: TextStyle(
+                              color: Colors.grey.withOpacity(0.35),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                  color: themeColor.withOpacity(0.2)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                  color: themeColor.withOpacity(0.2)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: themeColor, width: 2),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

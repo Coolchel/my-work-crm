@@ -23,30 +23,18 @@ class SettingsScreen extends ConsumerWidget {
     final settingsNotifier = ref.read(appSettingsProvider.notifier);
     final userAsync = ref.watch(userProfileProvider);
     final isMobile = MediaQuery.sizeOf(context).width < 600;
-    final isNarrow = MediaQuery.sizeOf(context).width < 430;
     final themeSegments = <ButtonSegment<ThemeMode>>[
-      ButtonSegment(
+      const ButtonSegment(
         value: ThemeMode.light,
-        label: Text(
-          isNarrow
-              ? '\u0421\u0432\u0435\u0442'
-              : '\u0421\u0432\u0435\u0442\u043b\u0430\u044f',
-        ),
-        icon: isNarrow ? null : const Icon(Icons.light_mode_outlined),
+        icon: Icon(Icons.light_mode_outlined),
       ),
-      ButtonSegment(
+      const ButtonSegment(
         value: ThemeMode.dark,
-        label: Text(
-          isNarrow
-              ? '\u0422\u0435\u043c\u043d'
-              : '\u0422\u0435\u043c\u043d\u0430\u044f',
-        ),
-        icon: isNarrow ? null : const Icon(Icons.dark_mode_outlined),
+        icon: Icon(Icons.dark_mode_outlined),
       ),
-      ButtonSegment(
+      const ButtonSegment(
         value: ThemeMode.system,
-        label: const Text('\u0410\u0432\u0442\u043e'),
-        icon: isNarrow ? null : const Icon(Icons.settings_brightness_outlined),
+        icon: Icon(Icons.settings_brightness_outlined),
       ),
     ];
 
@@ -87,7 +75,7 @@ class SettingsScreen extends ConsumerWidget {
                         width: double.infinity,
                         child: SegmentedButton<ThemeMode>(
                           segments: themeSegments,
-                          showSelectedIcon: !isNarrow,
+                          showSelectedIcon: false,
                           style: ButtonStyle(
                             visualDensity: isMobile
                                 ? VisualDensity.compact
@@ -95,8 +83,8 @@ class SettingsScreen extends ConsumerWidget {
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             padding: MaterialStateProperty.all(
                               EdgeInsets.symmetric(
-                                horizontal: isNarrow ? 8 : 12,
-                                vertical: isNarrow ? 8 : 10,
+                                horizontal: 12,
+                                vertical: isMobile ? 8 : 10,
                               ),
                             ),
                           ),
@@ -110,21 +98,7 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ),
                 const Divider(height: 1),
-                SwitchListTile(
-                  isThreeLine: isMobile,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                  hoverColor: AppDesignTokens.hoverOverlay(context),
-                  secondary: const Icon(Icons.waving_hand_outlined),
-                  title: const Text('Начальный экран'),
-                  subtitle: const Text(
-                    'Приветствие и быстрый поиск. '
-                    'Если экран выключен, вкладка настроек появится внизу, '
-                    'а кнопка «Главная» в глубоких разделах скрывается.',
-                  ),
-                  value: settings.showWelcome,
-                  onChanged: (value) => settingsNotifier.setShowWelcome(value),
-                ),
+                _buildStartScreenSection(context, settings, settingsNotifier),
               ],
             ),
           ),
@@ -304,6 +278,50 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStartScreenSection(
+    BuildContext context,
+    AppSettingsState settings,
+    AppSettingsNotifier settingsNotifier,
+  ) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+          child: Row(
+            children: [
+              const Icon(Icons.waving_hand_outlined),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  '\u041d\u0430\u0447\u0430\u043b\u044c\u043d\u044b\u0439 \u044d\u043a\u0440\u0430\u043d',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              Switch(
+                value: settings.showWelcome,
+                onChanged: (value) => settingsNotifier.setShowWelcome(value),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+          child: Text(
+            '\u041f\u0440\u0438\u0432\u0435\u0442\u0441\u0442\u0432\u0438\u0435 \u0438 \u0431\u044b\u0441\u0442\u0440\u044b\u0439 \u043f\u043e\u0438\u0441\u043a. '
+            '\u0415\u0441\u043b\u0438 \u044d\u043a\u0440\u0430\u043d \u0432\u044b\u043a\u043b\u044e\u0447\u0435\u043d, \u0432\u043a\u043b\u0430\u0434\u043a\u0430 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043a \u043f\u043e\u044f\u0432\u0438\u0442\u0441\u044f \u0432\u043d\u0438\u0437\u0443, '
+            '\u0430 \u043a\u043d\u043e\u043f\u043a\u0430 \u00ab\u0413\u043b\u0430\u0432\u043d\u0430\u044f\u00bb \u0432 \u0433\u043b\u0443\u0431\u043e\u043a\u0438\u0445 \u0440\u0430\u0437\u0434\u0435\u043b\u0430\u0445 \u0441\u043a\u0440\u044b\u0432\u0430\u0435\u0442\u0441\u044f.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              height: 1.35,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

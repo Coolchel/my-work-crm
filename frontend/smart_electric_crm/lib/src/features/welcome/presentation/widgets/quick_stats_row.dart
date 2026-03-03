@@ -265,26 +265,13 @@ class _StatCardState extends State<_StatCard> {
                         Tooltip(
                           message: widget.tooltip!,
                           textAlign: TextAlign.center,
-                          child: Container(
-                            padding: EdgeInsets.all(compact ? 2.5 : 3.0),
-                            decoration: BoxDecoration(
-                              color: (isDark
-                                      ? scheme.surfaceContainerHighest
-                                      : scheme.surfaceContainerLow)
-                                  .withOpacity(isDark ? 0.34 : 0.8),
-                              border: Border.all(
-                                color: scheme.outlineVariant.withOpacity(
-                                  isDark ? 0.4 : 0.55,
-                                ),
-                                width: 0.7,
-                              ),
-                              shape: BoxShape.circle,
-                            ),
+                          child: Padding(
+                            padding: EdgeInsets.only(top: compact ? 2 : 1),
                             child: Icon(
                               Icons.help_outline_rounded,
-                              size: compact ? 11 : 12,
+                              size: compact ? 14 : 15,
                               color: scheme.onSurfaceVariant.withOpacity(
-                                isDark ? 0.65 : 0.6,
+                                isDark ? 0.46 : 0.52,
                               ),
                             ),
                           ),
