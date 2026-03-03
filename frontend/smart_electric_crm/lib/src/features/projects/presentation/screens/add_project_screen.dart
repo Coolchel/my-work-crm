@@ -18,6 +18,7 @@ class AddProjectDialog extends ConsumerStatefulWidget {
 
 class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
   final _formKey = GlobalKey<FormState>();
+  final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
 
   final _addressController = TextEditingController();
@@ -93,6 +94,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _addressController.dispose();
     _intercomController.dispose();
     _clientInfoController.dispose();
@@ -249,7 +251,11 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                     else
                       Flexible(
                         child: Scrollbar(
+                          controller: _scrollController,
+                          thumbVisibility: true,
+                          trackVisibility: true,
                           child: SingleChildScrollView(
+                            controller: _scrollController,
                             padding: const EdgeInsets.all(24),
                             child: Form(
                               key: _formKey,
@@ -386,33 +392,6 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                           ),
                         ),
                       ),
-                    if (!_isLoading)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.swipe_up_alt_rounded,
-                              size: 15,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Scroll for more options',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
                     // Footer
                     if (!_isLoading)
                       Padding(

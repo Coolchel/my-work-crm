@@ -32,13 +32,13 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
   bool _isSaving = false;
 
   final Map<String, String> _deviceTypes = {
-    'circuit_breaker': 'Автомат',
-    'diff_breaker': 'Диф.автомат',
-    'rcd': 'УЗО',
-    'relay': 'Реле напряжения',
-    'contactor': 'Контактор',
-    'load_switch': 'Выключатель нагрузки',
-    'other': 'Другое',
+    'circuit_breaker': 'РђРІС‚РѕРјР°С‚',
+    'diff_breaker': 'Р”РёС„.Р°РІС‚РѕРјР°С‚',
+    'rcd': 'РЈР—Рћ',
+    'relay': 'Р РµР»Рµ РЅР°РїСЂСЏР¶РµРЅРёСЏ',
+    'contactor': 'РљРѕРЅС‚Р°РєС‚РѕСЂ',
+    'load_switch': 'Р’С‹РєР»СЋС‡Р°С‚РµР»СЊ РЅР°РіСЂСѓР·РєРё',
+    'other': 'Р”СЂСѓРіРѕРµ',
   };
 
   @override
@@ -116,7 +116,9 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                   children: [
                     Center(
                       child: Text(
-                        isEdit ? "Редактировать группу" : "Добавить группу",
+                        isEdit
+                            ? "Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ РіСЂСѓРїРїСѓ"
+                            : "Р”РѕР±Р°РІРёС‚СЊ РіСЂСѓРїРїСѓ",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -157,7 +159,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Text(
-                                "Тип устройства",
+                                "РўРёРї СѓСЃС‚СЂРѕР№СЃС‚РІР°",
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
@@ -169,34 +171,36 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                             ),
                             _buildPopupBtn(
                               _deviceTypes[_selectedDeviceType] ??
-                                  'Диф.автомат',
-                              _deviceTypes.entries
-                                  .map((e) => PopupMenuItem<String>(
-                                        value: e.key,
-                                        height: 40,
-                                        padding: EdgeInsets.zero,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          alignment: Alignment.centerLeft,
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                _getDeviceIcon(e.key),
-                                                size: 18,
-                                                color:
-                                                    _getDeviceTypeColor(e.key)
-                                                        .withOpacity(0.7),
-                                              ),
-                                              const SizedBox(width: 10),
-                                              Text(e.value,
-                                                  style: const TextStyle(
-                                                      fontSize: 13)),
-                                            ],
+                                  'Р”РёС„.Р°РІС‚РѕРјР°С‚',
+                              _withMenuDividers(
+                                _deviceTypes.entries
+                                    .map((e) => PopupMenuItem<String>(
+                                          value: e.key,
+                                          height: 40,
+                                          padding: EdgeInsets.zero,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16),
+                                            alignment: Alignment.centerLeft,
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  _getDeviceIcon(e.key),
+                                                  size: 18,
+                                                  color:
+                                                      _getDeviceTypeColor(e.key)
+                                                          .withOpacity(0.7),
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Text(e.value,
+                                                    style: const TextStyle(
+                                                        fontSize: 13)),
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                      ))
-                                  .toList(),
+                                        ))
+                                    .toList(),
+                              ),
                               (value) =>
                                   setState(() => _selectedDeviceType = value),
                             ),
@@ -213,7 +217,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 8),
                                     child: Text(
-                                      "Номинал",
+                                      "РќРѕРјРёРЅР°Р»",
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
@@ -225,41 +229,46 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                   ),
                                   _buildPopupBtn(
                                     _selectedRating,
-                                    [
-                                      '6A',
-                                      '10A',
-                                      '16A',
-                                      '20A',
-                                      '25A',
-                                      '32A',
-                                      '40A',
-                                      '50A',
-                                      '63A',
-                                      '80A'
-                                    ]
-                                        .map((choice) => PopupMenuItem<String>(
-                                              value: choice,
-                                              height: 40,
-                                              padding: EdgeInsets.zero,
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 16),
-                                                child: Row(
-                                                  children: [
-                                                    Icon(Icons.flash_on,
-                                                        color: Colors
-                                                            .orange.shade600,
-                                                        size: 18),
-                                                    const SizedBox(width: 8),
-                                                    Text(choice,
-                                                        style: const TextStyle(
-                                                            fontSize: 13)),
-                                                  ],
+                                    _withMenuDividers(
+                                      [
+                                        '6A',
+                                        '10A',
+                                        '16A',
+                                        '20A',
+                                        '25A',
+                                        '32A',
+                                        '40A',
+                                        '50A',
+                                        '63A',
+                                        '80A'
+                                      ]
+                                          .map((choice) =>
+                                              PopupMenuItem<String>(
+                                                value: choice,
+                                                height: 40,
+                                                padding: EdgeInsets.zero,
+                                                child: Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 16),
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Icons.flash_on,
+                                                          color: Colors
+                                                              .orange.shade600,
+                                                          size: 18),
+                                                      const SizedBox(width: 8),
+                                                      Text(choice,
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize:
+                                                                      13)),
+                                                    ],
+                                                  ),
                                                 ),
-                                              ),
-                                            ))
-                                        .toList(),
+                                              ))
+                                          .toList(),
+                                    ),
                                     (value) =>
                                         setState(() => _selectedRating = value),
                                   ),
@@ -274,7 +283,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 8),
                                     child: Text(
-                                      "Полюса",
+                                      "РџРѕР»СЋСЃР°",
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
@@ -286,30 +295,35 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                   ),
                                   _buildPopupBtn(
                                     _selectedPoles,
-                                    ['1P', '2P', '3P', '4P']
-                                        .map((choice) => PopupMenuItem<String>(
-                                              value: choice,
-                                              height: 40,
-                                              padding: EdgeInsets.zero,
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 16),
-                                                child: Row(
-                                                  children: [
-                                                    Icon(Icons.electric_bolt,
-                                                        color: Colors
-                                                            .blue.shade600,
-                                                        size: 18),
-                                                    const SizedBox(width: 8),
-                                                    Text(choice,
-                                                        style: const TextStyle(
-                                                            fontSize: 13)),
-                                                  ],
+                                    _withMenuDividers(
+                                      ['1P', '2P', '3P', '4P']
+                                          .map((choice) =>
+                                              PopupMenuItem<String>(
+                                                value: choice,
+                                                height: 40,
+                                                padding: EdgeInsets.zero,
+                                                child: Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 16),
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Icons.electric_bolt,
+                                                          color: Colors
+                                                              .blue.shade600,
+                                                          size: 18),
+                                                      const SizedBox(width: 8),
+                                                      Text(choice,
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize:
+                                                                      13)),
+                                                    ],
+                                                  ),
                                                 ),
-                                              ),
-                                            ))
-                                        .toList(),
+                                              ))
+                                          .toList(),
+                                    ),
                                     (value) =>
                                         setState(() => _selectedPoles = value),
                                   ),
@@ -322,9 +336,9 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                         TextField(
                           controller: _zoneController,
                           decoration: InputDecoration(
-                            labelText: "Зона / Потребитель",
+                            labelText: "Р—РѕРЅР° / РџРѕС‚СЂРµР±РёС‚РµР»СЊ",
                             floatingLabelBehavior: FloatingLabelBehavior.always,
-                            hintText: "Например: Кухня",
+                            hintText: "РќР°РїСЂРёРјРµСЂ: РљСѓС…РЅСЏ",
                             hintStyle: TextStyle(
                               color: Theme.of(context)
                                   .colorScheme
@@ -365,7 +379,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                       style: TextButton.styleFrom(
                           foregroundColor:
                               Theme.of(context).colorScheme.onSurface),
-                      child: const Text("Отмена"),
+                      child: const Text("РћС‚РјРµРЅР°"),
                     ),
                     const SizedBox(width: 8),
                     Consumer(builder: (context, ref, _) {
@@ -404,7 +418,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                       context,
                                       e,
                                       fallbackMessage:
-                                          'Не удалось сохранить группу.',
+                                          'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РіСЂСѓРїРїСѓ.',
                                     );
                                   }
                                 } finally {
@@ -428,7 +442,9 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2, color: Colors.white))
-                            : Text(isEdit ? 'Сохранить' : 'Добавить'),
+                            : Text(isEdit
+                                ? 'РЎРѕС…СЂР°РЅРёС‚СЊ'
+                                : 'Р”РѕР±Р°РІРёС‚СЊ'),
                       );
                     }),
                   ],
@@ -439,6 +455,18 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
         ),
       ),
     );
+  }
+
+  List<PopupMenuEntry<String>> _withMenuDividers(
+      List<PopupMenuEntry<String>> entries) {
+    final result = <PopupMenuEntry<String>>[];
+    for (var i = 0; i < entries.length; i++) {
+      result.add(entries[i]);
+      if (i < entries.length - 1) {
+        result.add(const PopupMenuDivider(height: 1));
+      }
+    }
+    return result;
   }
 
   Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,

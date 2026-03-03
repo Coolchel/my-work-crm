@@ -34,7 +34,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   static const double _overlayMaxHeightCap = 360;
 
   double _searchOverlayMaxHeight = 320;
-  bool _isSearchLifted = false;
 
   @override
   void initState() {
@@ -100,7 +99,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
     final anchorTopLeft =
         anchorBox.localToGlobal(Offset.zero, ancestor: rootBox);
-    const targetTop = 12.0;
+    final targetTop = MediaQuery.paddingOf(context).top + 12.0;
     final delta = anchorTopLeft.dy - targetTop;
     if (delta.abs() < 1) {
       return;
@@ -130,22 +129,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     required bool isMobile,
     bool forceScroll = true,
   }) {
-    if (!_isSearchLifted && mounted) {
-      setState(() {
-        _isSearchLifted = true;
-      });
-    }
     if (isMobile && forceScroll) {
       _scrollSearchFieldToTop();
     }
   }
 
   void _clearSearchAndResetLift() {
-    if (_isSearchLifted && mounted) {
-      setState(() {
-        _isSearchLifted = false;
-      });
-    }
     ref.read(projectSearchQueryProvider.notifier).state = null;
     FocusScope.of(context).unfocus();
   }
@@ -156,8 +145,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final searchQuery = ref.watch(projectSearchQueryProvider);
     final isSearchActive = searchQuery != null && searchQuery.isNotEmpty;
     final isMobile = MediaQuery.sizeOf(context).width < 600;
-    final searchSectionOffsetY =
-        isMobile ? (_isSearchLifted ? -44.0 : -20.0) : -20.0;
+    const searchSectionOffsetY = -20.0;
     final hasProjectsLoadError = ref.watch(projectListProvider).maybeWhen(
           error: (_, __) => true,
           orElse: () => false,
@@ -181,7 +169,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   onSettingsPressed: widget.onSettingsPressed,
                 ),
                 Transform.translate(
-                  offset: Offset(0, searchSectionOffsetY),
+                  offset: const Offset(0, searchSectionOffsetY),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Column(
@@ -214,7 +202,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               onQueryChanged: (value) {
                                 if (value.trim().isNotEmpty) {
                                   _activateSearchLift(isMobile: isMobile);
-                                } else if (_isSearchLifted && isMobile) {
+                                } else if (isMobile) {
                                   _scrollSearchFieldToTop();
                                 }
                               },

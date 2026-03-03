@@ -34,14 +34,14 @@ class SettingsScreen extends ConsumerWidget {
       ),
       const ButtonSegment(
         value: ThemeMode.system,
-        icon: Icon(Icons.settings_brightness_outlined),
+        label: Text('Авто'),
       ),
     ];
 
     return Scaffold(
       appBar: CompactSectionAppBar(
         leading: IconButton(
-          tooltip: 'Назад',
+          tooltip: 'РќР°Р·Р°Рґ',
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             if (onBackPressed != null) {
@@ -51,71 +51,71 @@ class SettingsScreen extends ConsumerWidget {
             Navigator.of(context).maybePop();
           },
         ),
-        title: 'Настройки',
+        title: 'РќР°СЃС‚СЂРѕР№РєРё',
         icon: Icons.settings_rounded,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildSectionHeader('Внешний вид'),
+          _buildSectionHeader('Р’РЅРµС€РЅРёР№ РІРёРґ'),
           _HoverSettingsCard(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Тема приложения',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: SegmentedButton<ThemeMode>(
-                          segments: themeSegments,
-                          showSelectedIcon: false,
-                          style: ButtonStyle(
-                            visualDensity: isMobile
-                                ? VisualDensity.compact
-                                : VisualDensity.standard,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            padding: MaterialStateProperty.all(
-                              EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: isMobile ? 8 : 10,
-                              ),
-                            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'РўРµРјР° РїСЂРёР»РѕР¶РµРЅРёСЏ',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<ThemeMode>(
+                      segments: themeSegments,
+                      showSelectedIcon: false,
+                      style: ButtonStyle(
+                        visualDensity: isMobile
+                            ? VisualDensity.compact
+                            : VisualDensity.standard,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: MaterialStateProperty.all(
+                          EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: isMobile ? 8 : 10,
                           ),
-                          selected: {settings.themeMode},
-                          onSelectionChanged: (selection) {
-                            settingsNotifier.setThemeMode(selection.first);
-                          },
                         ),
                       ),
-                    ],
+                      selected: {settings.themeMode},
+                      onSelectionChanged: (selection) {
+                        settingsNotifier.setThemeMode(selection.first);
+                      },
+                    ),
                   ),
-                ),
-                const Divider(height: 1),
-                _buildStartScreenSection(context, settings, settingsNotifier),
-              ],
+                ],
+              ),
             ),
           ),
+          const SizedBox(height: 12),
+          _HoverSettingsCard(
+            child:
+                _buildStartScreenSection(context, settings, settingsNotifier),
+          ),
           const SizedBox(height: 24),
-          _buildSectionHeader('Инструменты'),
+          _buildSectionHeader('РРЅСЃС‚СЂСѓРјРµРЅС‚С‹'),
           _HoverSettingsCard(
             child: ListTile(
               leading: const Icon(Icons.folder_open, color: Colors.indigo),
-              title: const Text('Справочник'),
-              subtitle: const Text('Категории, расценки и шаблоны'),
+              title: const Text('РЎРїСЂР°РІРѕС‡РЅРёРє'),
+              subtitle: const Text(
+                  'РљР°С‚РµРіРѕСЂРёРё, СЂР°СЃС†РµРЅРєРё Рё С€Р°Р±Р»РѕРЅС‹'),
               trailing: const Icon(Icons.chevron_right),
               hoverColor: AppDesignTokens.hoverOverlay(context),
               onTap: () => _showReferenceWarning(context, ref),
             ),
           ),
           const SizedBox(height: 24),
-          _buildSectionHeader('Аккаунт'),
+          _buildSectionHeader('РђРєРєР°СѓРЅС‚'),
           _HoverSettingsCard(
             child: Column(
               children: [
@@ -141,7 +141,7 @@ class SettingsScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                user['username'] ?? 'Пользователь',
+                                user['username'] ?? 'РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ',
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -167,15 +167,16 @@ class SettingsScreen extends ConsumerWidget {
                     child: Center(child: CircularProgressIndicator()),
                   ),
                   error: (e, _) => ListTile(
-                    title: const Text('Ошибка профиля'),
+                    title: const Text('РћС€РёР±РєР° РїСЂРѕС„РёР»СЏ'),
                     subtitle: Text(e.toString()),
                   ),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.lock_reset, color: Colors.indigo),
-                  title: const Text('Управление паролем'),
-                  subtitle: const Text('Сменить текущий пароль'),
+                  title: const Text('РЈРїСЂР°РІР»РµРЅРёРµ РїР°СЂРѕР»РµРј'),
+                  subtitle:
+                      const Text('РЎРјРµРЅРёС‚СЊ С‚РµРєСѓС‰РёР№ РїР°СЂРѕР»СЊ'),
                   hoverColor: AppDesignTokens.hoverOverlay(context),
                   onTap: () => _showChangePasswordDialog(context, ref),
                 ),
@@ -183,10 +184,11 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.logout, color: Colors.red),
                   title: const Text(
-                    'Выйти из системы',
+                    'Р’С‹Р№С‚Рё РёР· СЃРёСЃС‚РµРјС‹',
                     style: TextStyle(color: Colors.red),
                   ),
-                  subtitle: const Text('Завершить текущий сеанс'),
+                  subtitle: const Text(
+                      'Р—Р°РІРµСЂС€РёС‚СЊ С‚РµРєСѓС‰РёР№ СЃРµР°РЅСЃ'),
                   hoverColor: AppDesignTokens.hoverOverlay(context),
                   onTap: () async {
                     final confirmed = await showDialog<bool>(
@@ -213,7 +215,7 @@ class SettingsScreen extends ConsumerWidget {
                                     Icon(Icons.logout, color: Colors.red),
                                     SizedBox(width: 12),
                                     Text(
-                                      'Выход',
+                                      'Р’С‹С…РѕРґ',
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -226,7 +228,7 @@ class SettingsScreen extends ConsumerWidget {
                               const Padding(
                                 padding: EdgeInsets.all(24),
                                 child: Text(
-                                  'Вы действительно хотите выйти из системы?',
+                                  'Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РІС‹Р№С‚Рё РёР· СЃРёСЃС‚РµРјС‹?',
                                   style: TextStyle(fontSize: 15),
                                 ),
                               ),
@@ -242,7 +244,7 @@ class SettingsScreen extends ConsumerWidget {
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.pop(context, false),
-                                      child: const Text('Отмена'),
+                                      child: const Text('РћС‚РјРµРЅР°'),
                                     ),
                                     const SizedBox(width: 8),
                                     ElevatedButton(
@@ -258,7 +260,7 @@ class SettingsScreen extends ConsumerWidget {
                                       ),
                                       onPressed: () =>
                                           Navigator.pop(context, true),
-                                      child: const Text('Выйти'),
+                                      child: const Text('Р’С‹Р№С‚Рё'),
                                     ),
                                   ],
                                 ),
@@ -289,7 +291,7 @@ class SettingsScreen extends ConsumerWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
           child: Row(
             children: [
               const Icon(Icons.waving_hand_outlined),
@@ -307,7 +309,6 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
         ),
-        const Divider(height: 1),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
           child: Text(
@@ -370,7 +371,7 @@ class SettingsScreen extends ConsumerWidget {
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Опасная зона',
+                          'РћРїР°СЃРЅР°СЏ Р·РѕРЅР°',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -384,7 +385,7 @@ class SettingsScreen extends ConsumerWidget {
                 const Padding(
                   padding: EdgeInsets.fromLTRB(24, 24, 24, 12),
                   child: Text(
-                    'Вы входите в раздел редактирования справочника. Любые изменения здесь повлияют на расчеты во всех проектах. Будьте осторожны!',
+                    'Р’С‹ РІС…РѕРґРёС‚Рµ РІ СЂР°Р·РґРµР» СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ СЃРїСЂР°РІРѕС‡РЅРёРєР°. Р›СЋР±С‹Рµ РёР·РјРµРЅРµРЅРёСЏ Р·РґРµСЃСЊ РїРѕРІР»РёСЏСЋС‚ РЅР° СЂР°СЃС‡РµС‚С‹ РІРѕ РІСЃРµС… РїСЂРѕРµРєС‚Р°С…. Р‘СѓРґСЊС‚Рµ РѕСЃС‚РѕСЂРѕР¶РЅС‹!',
                     style: TextStyle(fontSize: 15, height: 1.4),
                   ),
                 ),
@@ -395,7 +396,8 @@ class SettingsScreen extends ConsumerWidget {
                     enabled: !isLoading,
                     obscureText: true,
                     decoration: InputDecoration(
-                      labelText: 'Пароль текущего аккаунта',
+                      labelText:
+                          'РџР°СЂРѕР»СЊ С‚РµРєСѓС‰РµРіРѕ Р°РєРєР°СѓРЅС‚Р°',
                       errorText: passwordError,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -418,7 +420,7 @@ class SettingsScreen extends ConsumerWidget {
                       TextButton(
                         onPressed:
                             isLoading ? null : () => Navigator.pop(context),
-                        child: const Text('Отмена'),
+                        child: const Text('РћС‚РјРµРЅР°'),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton(
@@ -437,7 +439,7 @@ class SettingsScreen extends ConsumerWidget {
                                 if (password.trim().isEmpty) {
                                   setDialogState(() {
                                     passwordError =
-                                        'Введите пароль для подтверждения';
+                                        'Р’РІРµРґРёС‚Рµ РїР°СЂРѕР»СЊ РґР»СЏ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ';
                                   });
                                   return;
                                 }
@@ -457,7 +459,7 @@ class SettingsScreen extends ConsumerWidget {
 
                                   if (username.isEmpty) {
                                     throw Exception(
-                                        'Не удалось получить пользователя');
+                                        'РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ');
                                   }
 
                                   final isValid =
@@ -469,7 +471,8 @@ class SettingsScreen extends ConsumerWidget {
                                   if (!isValid) {
                                     setDialogState(() {
                                       isLoading = false;
-                                      passwordError = 'Неверный пароль';
+                                      passwordError =
+                                          'РќРµРІРµСЂРЅС‹Р№ РїР°СЂРѕР»СЊ';
                                     });
                                     return;
                                   }
@@ -486,7 +489,7 @@ class SettingsScreen extends ConsumerWidget {
                                   setDialogState(() {
                                     isLoading = false;
                                     passwordError =
-                                        'Ошибка проверки. Попробуйте еще раз.';
+                                        'РћС€РёР±РєР° РїСЂРѕРІРµСЂРєРё. РџРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·.';
                                   });
                                 }
                               },
@@ -499,7 +502,7 @@ class SettingsScreen extends ConsumerWidget {
                                   color: Theme.of(context).colorScheme.surface,
                                 ),
                               )
-                            : const Text('Я понимаю'),
+                            : const Text('РЇ РїРѕРЅРёРјР°СЋ'),
                       ),
                     ],
                   ),
@@ -545,7 +548,7 @@ class SettingsScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Смена пароля',
+                          'РЎРјРµРЅР° РїР°СЂРѕР»СЏ',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -569,19 +572,19 @@ class SettingsScreen extends ConsumerWidget {
                       children: [
                         _buildDialogField(
                           oldPasswordController,
-                          'Текущий пароль',
+                          'РўРµРєСѓС‰РёР№ РїР°СЂРѕР»СЊ',
                           isEnabled: !isLoading,
                         ),
                         const SizedBox(height: 16),
                         _buildDialogField(
                           newPasswordController,
-                          'Новый пароль',
+                          'РќРѕРІС‹Р№ РїР°СЂРѕР»СЊ',
                           isEnabled: !isLoading,
                         ),
                         const SizedBox(height: 16),
                         _buildDialogField(
                           confirmPasswordController,
-                          'Подтверждение',
+                          'РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ',
                           isEnabled: !isLoading,
                           errorText: confirmError,
                         ),
@@ -631,7 +634,7 @@ class SettingsScreen extends ConsumerWidget {
                         TextButton(
                           onPressed:
                               isLoading ? null : () => Navigator.pop(context),
-                          child: const Text('Отмена'),
+                          child: const Text('РћС‚РјРµРЅР°'),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
@@ -650,7 +653,8 @@ class SettingsScreen extends ConsumerWidget {
                                   if (newPasswordController.text !=
                                       confirmPasswordController.text) {
                                     setDialogState(() {
-                                      confirmError = 'Пароли не совпадают';
+                                      confirmError =
+                                          'РџР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚';
                                     });
                                     return;
                                   }
@@ -673,8 +677,8 @@ class SettingsScreen extends ConsumerWidget {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         const SnackBar(
-                                          content:
-                                              Text('Пароль успешно изменен'),
+                                          content: Text(
+                                              'РџР°СЂРѕР»СЊ СѓСЃРїРµС€РЅРѕ РёР·РјРµРЅРµРЅ'),
                                         ),
                                       );
                                     }
@@ -684,10 +688,10 @@ class SettingsScreen extends ConsumerWidget {
                                       if (e is DioException &&
                                           e.response?.statusCode == 400) {
                                         errorMessage =
-                                            'Неверный старый пароль или недопустимый новый пароль';
+                                            'РќРµРІРµСЂРЅС‹Р№ СЃС‚Р°СЂС‹Р№ РїР°СЂРѕР»СЊ РёР»Рё РЅРµРґРѕРїСѓСЃС‚РёРјС‹Р№ РЅРѕРІС‹Р№ РїР°СЂРѕР»СЊ';
                                       } else {
                                         errorMessage =
-                                            'Ошибка: ${e.toString()}';
+                                            'РћС€РёР±РєР°: ${e.toString()}';
                                       }
                                     });
                                   }
@@ -702,7 +706,7 @@ class SettingsScreen extends ConsumerWidget {
                                         Theme.of(context).colorScheme.surface,
                                   ),
                                 )
-                              : const Text('Сохранить'),
+                              : const Text('РЎРѕС…СЂР°РЅРёС‚СЊ'),
                         ),
                       ],
                     ),
