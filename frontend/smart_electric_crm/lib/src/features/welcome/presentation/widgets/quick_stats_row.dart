@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/help_tooltip_icon.dart';
 
 import '../../../projects/presentation/providers/project_providers.dart';
 
@@ -262,21 +263,13 @@ class _StatCardState extends State<_StatCard> {
                         ),
                       ),
                       if (widget.tooltip != null)
-                        Tooltip(
-                          message: widget.tooltip!,
-                          textAlign: TextAlign.center,
+                        Padding(
+                          padding: EdgeInsets.only(top: compact ? 1 : 0),
                           child: Padding(
-                            padding: EdgeInsets.only(top: compact ? 2 : 1),
-                            child: Text(
-                              '?',
-                              style: TextStyle(
-                                fontSize: compact ? 14 : 15,
-                                fontWeight: FontWeight.w700,
-                                color: scheme.onSurfaceVariant.withOpacity(
-                                  isDark ? 0.46 : 0.52,
-                                ),
-                                height: 1,
-                              ),
+                            padding: const EdgeInsets.only(left: 2),
+                            child: HelpTooltipIcon(
+                              message: widget.tooltip!,
+                              size: compact ? 13.5 : 15,
                             ),
                           ),
                         ),
