@@ -26,14 +26,18 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   final LayerLink _layerLink = LayerLink();
   final Object _searchTapGroupId = Object();
   final GlobalKey _searchAnchorKey = GlobalKey();
+  final GlobalKey _searchPlaceholderKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
 
   static const double _overlayOffsetY = 60;
   static const double _overlayBottomGap = 12;
   static const double _overlayMinHeight = 120;
   static const double _overlayMaxHeightCap = 360;
+  // Approximate height of SmartSearchBar (TextField + vertical padding)
+  static const double _searchBarHeight = 56.0;
 
   double _searchOverlayMaxHeight = 320;
+  bool _isSearchFocused = false;
 
   @override
   void initState() {
@@ -86,21 +90,21 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     }
   }
 
-  void _scrollSearchFieldToTop() {
+  void _scrollPlaceholderToTop() {
     if (!_scrollController.hasClients || !mounted) {
       return;
     }
-    final anchorContext = _searchAnchorKey.currentContext;
+    final placeholderContext = _searchPlaceholderKey.currentContext;
     final rootBox = context.findRenderObject() as RenderBox?;
-    final anchorBox = anchorContext?.findRenderObject() as RenderBox?;
-    if (rootBox == null || anchorBox == null) {
+    final placeholderBox = placeholderContext?.findRenderObject() as RenderBox?;
+    if (rootBox == null || placeholderBox == null) {
       return;
     }
 
-    final anchorTopLeft =
-        anchorBox.localToGlobal(Offset.zero, ancestor: rootBox);
+    final placeholderTopLeft =
+        placeholderBox.localToGlobal(Offset.zero, ancestor: rootBox);
     final targetTop = MediaQuery.paddingOf(context).top + 12.0;
-    final delta = anchorTopLeft.dy - targetTop;
+    final delta = placeholderTopLeft.dy - targetTop;
     if (delta.abs() < 1) {
       return;
     }
@@ -129,14 +133,56 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     required bool isMobile,
     bool forceScroll = true,
   }) {
+    if (!_isSearchFocused) {
+      setState(() => _isSearchFocused = true);
+    }
     if (isMobile && forceScroll) {
-      _scrollSearchFieldToTop();
+      // Scroll so the placeholder (now in place of the bar) stays visible,
+      // which also tells the user where the bar "was" before it lifted.
+      _scrollPlaceholderToTop();
     }
   }
 
   void _clearSearchAndResetLift() {
     ref.read(projectSearchQueryProvider.notifier).state = null;
     FocusScope.of(context).unfocus();
+    if (_isSearchFocused) {
+      setState(() => _isSearchFocused = false);
+    }
+  }
+
+  /// Builds the SmartSearchBar wrapped in TapRegion + CompositedTransformTarget.
+  /// Called for both the fixed header slot and the in-scroll slot.
+  Widget _buildSearchBar({required bool isMobile}) {
+    return TapRegion(
+      groupId: _searchTapGroupId,
+      onTapInside: (_) => _activateSearchLift(isMobile: isMobile),
+      onTapOutside: (_) => _clearSearchAndResetLift(),
+      child: CompositedTransformTarget(
+        key: _searchAnchorKey,
+        link: _layerLink,
+        child: SmartSearchBar(
+          onFocusChanged: (hasFocus) {
+            if (hasFocus) {
+              _activateSearchLift(isMobile: isMobile);
+            } else {
+              final q = ref.read(projectSearchQueryProvider);
+              if (q == null || q.isEmpty) {
+                setState(() => _isSearchFocused = false);
+              }
+            }
+          },
+          onQueryChanged: (value) {
+            if (value.trim().isNotEmpty) {
+              _activateSearchLift(isMobile: isMobile);
+            } else if (isMobile) {
+              _scrollPlaceholderToTop();
+            }
+          },
+          onCleared: _clearSearchAndResetLift,
+        ),
+      ),
+    );
   }
 
   @override
@@ -150,6 +196,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           error: (_, __) => true,
           orElse: () => false,
         );
+
+    // True when the search bar should be "lifted" to the fixed header slot
+    final isSearchLifted = _isSearchFocused || isSearchActive;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _recalculateOverlayMaxHeight();
@@ -159,100 +209,105 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Stack(
+      body: Column(
         children: [
-          SingleChildScrollView(
-            controller: _scrollController,
-            child: Column(
+          // ── Fixed search bar (pinned above the scroll, shown when lifted) ───
+          if (isSearchLifted)
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                MediaQuery.paddingOf(context).top + 8,
+                20,
+                10,
+              ),
+              child: _buildSearchBar(isMobile: isMobile),
+            ),
+
+          // ── Scrollable body ──────────────────────────────────────────────────
+          Expanded(
+            child: Stack(
               children: [
-                WelcomeHeader(
-                  onSettingsPressed: widget.onSettingsPressed,
-                ),
-                Transform.translate(
-                  offset: const Offset(0, searchSectionOffsetY),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        QuickStatsRow(
-                          selectedStat: selectedStat,
-                          onStatSelected: (stat) {
-                            ref.read(dashboardFilterProvider.notifier).state =
-                                stat;
-                          },
-                        ),
-                        const SizedBox(height: 24),
-                        TapRegion(
-                          groupId: _searchTapGroupId,
-                          onTapInside: (_) {
-                            _activateSearchLift(isMobile: isMobile);
-                          },
-                          onTapOutside: (_) {
-                            _clearSearchAndResetLift();
-                          },
-                          child: CompositedTransformTarget(
-                            key: _searchAnchorKey,
-                            link: _layerLink,
-                            child: SmartSearchBar(
-                              onFocusChanged: (hasFocus) {
-                                if (hasFocus) {
-                                  _activateSearchLift(isMobile: isMobile);
-                                }
-                              },
-                              onQueryChanged: (value) {
-                                if (value.trim().isNotEmpty) {
-                                  _activateSearchLift(isMobile: isMobile);
-                                } else if (isMobile) {
-                                  _scrollSearchFieldToTop();
-                                }
-                              },
-                              onCleared: _clearSearchAndResetLift,
-                            ),
+                SingleChildScrollView(
+                  controller: _scrollController,
+                  child: Column(
+                    children: [
+                      WelcomeHeader(
+                        onSettingsPressed: widget.onSettingsPressed,
+                      ),
+                      Transform.translate(
+                        offset: const Offset(0, searchSectionOffsetY),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            children: [
+                              QuickStatsRow(
+                                selectedStat: selectedStat,
+                                onStatSelected: (stat) {
+                                  ref
+                                      .read(dashboardFilterProvider.notifier)
+                                      .state = stat;
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                              // When lifted: invisible placeholder of the same
+                              // height so the scroll content doesn't jump.
+                              // When not lifted: the actual search bar.
+                              if (isSearchLifted)
+                                SizedBox(
+                                  key: _searchPlaceholderKey,
+                                  height: _searchBarHeight,
+                                  width: double.infinity,
+                                )
+                              else
+                                _buildSearchBar(isMobile: isMobile),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (!isSearchActive)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: NewProjectCard(),
+                        ),
+                      if (!isSearchActive && hasProjectsLoadError)
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                          child: _WelcomeNetworkNotice(),
+                        ),
+                      const SizedBox(height: 24),
+                      if (!isSearchActive)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: RecentProjectsList(),
+                        ),
+                      const SizedBox(height: 100),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                if (!isSearchActive)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: NewProjectCard(),
+
+                // ── Search results overlay ─────────────────────────────────────
+                if (isSearchActive)
+                  CompositedTransformFollower(
+                    link: _layerLink,
+                    showWhenUnlinked: false,
+                    offset: const Offset(0, _overlayOffsetY),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width - 40,
+                        child: TapRegion(
+                          groupId: _searchTapGroupId,
+                          child: SearchResultsOverlay(
+                            maxHeight: _searchOverlayMaxHeight,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                if (!isSearchActive && hasProjectsLoadError)
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: _WelcomeNetworkNotice(),
-                  ),
-                const SizedBox(height: 24),
-                if (!isSearchActive)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: RecentProjectsList(),
-                  ),
-                const SizedBox(height: 100),
               ],
             ),
           ),
-          if (isSearchActive)
-            CompositedTransformFollower(
-              link: _layerLink,
-              showWhenUnlinked: false,
-              offset: const Offset(0, 60),
-              child: Align(
-                alignment: Alignment.topLeft,
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width - 40,
-                  child: TapRegion(
-                    groupId: _searchTapGroupId,
-                    child: SearchResultsOverlay(
-                      maxHeight: _searchOverlayMaxHeight,
-                    ),
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -294,7 +349,7 @@ class _WelcomeNetworkNotice extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              '\u041d\u0435\u0442 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f \u043a \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442\u0443. \u041d\u0435\u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0431\u043b\u043e\u043a\u0438 \u0432\u0440\u0435\u043c\u0435\u043d\u043d\u043e \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u044b.',
+              'Нет подключения к интернету. Некоторые блоки временно недоступны.',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,

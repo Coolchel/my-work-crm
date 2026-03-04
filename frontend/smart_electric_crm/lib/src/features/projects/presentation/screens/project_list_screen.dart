@@ -33,8 +33,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   String _searchQuery = '';
 
   late AnimationController _searchAnimController;
-  late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
+  final _searchFocusNode = FocusNode();
 
   static const _objectTypes = {
     'new_building': 'Новостройка',
@@ -53,13 +53,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, -1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _searchAnimController,
-      curve: Curves.easeOutCubic,
-    ));
     _fadeAnimation = CurvedAnimation(
       parent: _searchAnimController,
       curve: Curves.easeOut,
@@ -70,12 +63,15 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   void dispose() {
     _searchController.dispose();
     _searchAnimController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
   void _toggleSearch() {
     if (_searchAnimController.isDismissed) {
-      _searchAnimController.forward();
+      _searchAnimController.forward().then((_) {
+        _searchFocusNode.requestFocus();
+      });
     } else {
       _closeSearch();
     }
@@ -182,19 +178,90 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
           const SizedBox(width: 8),
         ],
       ),
-      body: Stack(
+      body: Column(
         children: [
-          // Layer 1: Content
-          AnimatedBuilder(
-            animation: _searchAnimController,
-            builder: (context, child) {
-              return Padding(
-                padding: EdgeInsets.only(
-                    top: _searchAnimController.value *
-                        84.0), // _searchPanelHeight
-                child: child!,
-              );
-            },
+          // ── Pinned search panel (animated height) ──────────────────────────
+          ClipRect(
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: AnimatedBuilder(
+                animation: _searchAnimController,
+                builder: (context, _) {
+                  final isOpen = _searchAnimController.value > 0;
+                  if (!isOpen) {
+                    return const SizedBox(width: double.infinity, height: 0);
+                  }
+                  return FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: Container(
+                      width: double.infinity,
+                      color: Theme.of(context).colorScheme.surface,
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                      child: TextField(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
+                        autofocus: false,
+                        textAlignVertical: TextAlignVertical.center,
+                        style: const TextStyle(fontSize: 16),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          hintText: 'Поиск по адресу...',
+                          hintStyle: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 15,
+                          ),
+                          prefixIcon: Icon(Icons.search,
+                              color: Colors.grey.shade600, size: 22),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.close, size: 20),
+                                  color: Colors.grey.shade500,
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: scheme.surfaceContainerHighest.withOpacity(
+                            isDark ? 0.40 : 0.56,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: scheme.outlineVariant
+                                  .withOpacity(isDark ? 0.34 : 0.26),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: scheme.outlineVariant
+                                  .withOpacity(isDark ? 0.34 : 0.26),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                BorderSide(color: scheme.primary, width: 1.5),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                        ),
+                        onChanged: (val) => setState(() => _searchQuery = val),
+                        onSubmitted: (_) => _closeSearch(),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+
+          // ── Scrollable list (fills remaining space) ────────────────────────
+          Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
                 return ref.refresh(projectListProvider.future);
@@ -260,90 +327,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                       ),
                     ],
                   ),
-                ),
-              ),
-            ),
-          ),
-
-          // Layer 2: Barrier (Animated)
-          AnimatedBuilder(
-            animation: _searchAnimController,
-            builder: (context, child) {
-              return _searchAnimController.value > 0
-                  ? Positioned.fill(
-                      child: GestureDetector(
-                        onTap: _closeSearch,
-                        behavior: HitTestBehavior.translucent,
-                        child: Container(
-                          color: Colors
-                              .transparent, // Completely transparent barrier
-                        ),
-                      ),
-                    )
-                  : const SizedBox.shrink();
-            },
-          ),
-
-          // Layer 3: Search Panel (Slide + Fade)
-          SlideTransition(
-            position: _slideAnimation,
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
-                child: TextField(
-                  controller: _searchController,
-                  autofocus: true, // Auto-focus when panel opens (effectively)
-                  textAlignVertical: TextAlignVertical.center,
-                  style: const TextStyle(fontSize: 16),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    hintText: 'Поиск по адресу...',
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 15,
-                    ),
-                    prefixIcon: Icon(Icons.search,
-                        color: Colors.grey.shade600, size: 22),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.close, size: 20),
-                            color: Colors.grey.shade500,
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                              // Don't close, just clear
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: scheme.surfaceContainerHighest.withOpacity(
-                      isDark ? 0.40 : 0.56,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: scheme.outlineVariant
-                            .withOpacity(isDark ? 0.34 : 0.26),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: scheme.outlineVariant
-                            .withOpacity(isDark ? 0.34 : 0.26),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: scheme.primary, width: 1.5),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                  ),
-                  onChanged: (val) => setState(() => _searchQuery = val),
-                  onSubmitted: (_) => _closeSearch(),
                 ),
               ),
             ),
