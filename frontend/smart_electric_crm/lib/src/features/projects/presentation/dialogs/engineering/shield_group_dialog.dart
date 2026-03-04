@@ -32,13 +32,13 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
   bool _isSaving = false;
 
   final Map<String, String> _deviceTypes = {
-    'circuit_breaker': 'РђРІС‚РѕРјР°С‚',
-    'diff_breaker': 'Р”РёС„.Р°РІС‚РѕРјР°С‚',
+    'circuit_breaker': 'Автомат',
+    'diff_breaker': 'Диф.автомат',
     'rcd': 'РЈР—Рћ',
-    'relay': 'Р РµР»Рµ РЅР°РїСЂСЏР¶РµРЅРёСЏ',
-    'contactor': 'РљРѕРЅС‚Р°РєС‚РѕСЂ',
-    'load_switch': 'Р’С‹РєР»СЋС‡Р°С‚РµР»СЊ РЅР°РіСЂСѓР·РєРё',
-    'other': 'Р”СЂСѓРіРѕРµ',
+    'relay': 'Реле напряжения',
+    'contactor': 'Контактор',
+    'load_switch': 'Выключатель нагрузки',
+    'other': 'Другое',
   };
 
   @override
@@ -117,8 +117,8 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                     Center(
                       child: Text(
                         isEdit
-                            ? "Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ РіСЂСѓРїРїСѓ"
-                            : "Р”РѕР±Р°РІРёС‚СЊ РіСЂСѓРїРїСѓ",
+                            ? "Редактировать группу"
+                            : "Добавить группу",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -159,7 +159,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Text(
-                                "РўРёРї СѓСЃС‚СЂРѕР№СЃС‚РІР°",
+                                "Тип устройства",
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
@@ -171,7 +171,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                             ),
                             _buildPopupBtn(
                               _deviceTypes[_selectedDeviceType] ??
-                                  'Р”РёС„.Р°РІС‚РѕРјР°С‚',
+                                  'Диф.автомат',
                               _withMenuDividers(
                                 _deviceTypes.entries
                                     .map((e) => PopupMenuItem<String>(
@@ -217,7 +217,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 8),
                                     child: Text(
-                                      "РќРѕРјРёРЅР°Р»",
+                                      "Номинал",
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
@@ -283,7 +283,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                   Padding(
                                     padding: const EdgeInsets.only(bottom: 8),
                                     child: Text(
-                                      "РџРѕР»СЋСЃР°",
+                                      "Полюса",
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
@@ -336,9 +336,9 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                         TextField(
                           controller: _zoneController,
                           decoration: InputDecoration(
-                            labelText: "Р—РѕРЅР° / РџРѕС‚СЂРµР±РёС‚РµР»СЊ",
+                            labelText: "Зона / Потребитель",
                             floatingLabelBehavior: FloatingLabelBehavior.always,
-                            hintText: "РќР°РїСЂРёРјРµСЂ: РљСѓС…РЅСЏ",
+                            hintText: "Например: Кухня",
                             hintStyle: TextStyle(
                               color: Theme.of(context)
                                   .colorScheme
@@ -379,7 +379,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                       style: TextButton.styleFrom(
                           foregroundColor:
                               Theme.of(context).colorScheme.onSurface),
-                      child: const Text("РћС‚РјРµРЅР°"),
+                      child: const Text("Отмена"),
                     ),
                     const SizedBox(width: 8),
                     Consumer(builder: (context, ref, _) {
@@ -418,7 +418,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                       context,
                                       e,
                                       fallbackMessage:
-                                          'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РіСЂСѓРїРїСѓ.',
+                                          'Не удалось сохранить группу.',
                                     );
                                   }
                                 } finally {
@@ -443,8 +443,8 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2, color: Colors.white))
                             : Text(isEdit
-                                ? 'РЎРѕС…СЂР°РЅРёС‚СЊ'
-                                : 'Р”РѕР±Р°РІРёС‚СЊ'),
+                                ? 'Сохранить'
+                                : 'Добавить'),
                       );
                     }),
                   ],
