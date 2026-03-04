@@ -7,6 +7,7 @@ import '../../data/models/statistics_model.dart';
 import '../../data/repositories/statistics_repository.dart';
 import '../widgets/work_dynamics_chart.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
+import '../../../../shared/presentation/widgets/help_tooltip_icon.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
@@ -309,17 +310,12 @@ class StatisticsScreen extends ConsumerWidget {
                                           isUsd: true,
                                         ),
                                       ),
-                                      Positioned(
+                                      const Positioned(
                                         top: 8,
                                         right: 8,
-                                        child: Tooltip(
+                                        child: HelpTooltipIcon(
                                           message: workDynamicsTooltip,
-                                          textAlign: TextAlign.center,
-                                          child: Icon(
-                                            Icons.help_outline_rounded,
-                                            size: 16,
-                                            color: Colors.grey.shade400,
-                                          ),
+                                          size: 16,
                                         ),
                                       ),
                                     ],
@@ -363,17 +359,12 @@ class StatisticsScreen extends ConsumerWidget {
                                           isUsd: false,
                                         ),
                                       ),
-                                      Positioned(
+                                      const Positioned(
                                         top: 8,
                                         right: 8,
-                                        child: Tooltip(
+                                        child: HelpTooltipIcon(
                                           message: workDynamicsTooltip,
-                                          textAlign: TextAlign.center,
-                                          child: Icon(
-                                            Icons.help_outline_rounded,
-                                            size: 16,
-                                            color: Colors.grey.shade400,
-                                          ),
+                                          size: 16,
                                         ),
                                       ),
                                     ],
