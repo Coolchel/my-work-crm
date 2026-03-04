@@ -42,11 +42,11 @@ class ProjectDetailScreen extends ConsumerWidget {
         appBar: CompactSectionAppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new),
-            tooltip: 'РќР°Р·Р°Рґ',
+            tooltip: 'Назад',
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: 'РћР±СЉРµРєС‚',
-          subtitle: 'Р—Р°РіСЂСѓР·РєР°',
+          title: 'Объект',
+          subtitle: 'Загрузка',
           icon: Icons.apartment_rounded,
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -55,14 +55,14 @@ class ProjectDetailScreen extends ConsumerWidget {
         appBar: CompactSectionAppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new),
-            tooltip: 'РќР°Р·Р°Рґ',
+            tooltip: 'Назад',
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: 'РћР±СЉРµРєС‚',
-          subtitle: 'РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё',
+          title: 'Объект',
+          subtitle: 'Ошибка загрузки',
           icon: Icons.apartment_rounded,
         ),
-        body: Center(child: Text('РћС€РёР±РєР°: $error')),
+        body: Center(child: Text('Ошибка: $error')),
       ),
     );
   }
@@ -81,9 +81,9 @@ class _ProjectDetailContent extends ConsumerStatefulWidget {
 class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
   int _currentIndex = 0;
   static const List<String> _tabTitles = [
-    'Р­С‚Р°РїС‹',
-    'Р©РёС‚С‹',
-    'Р¤Р°Р№Р»С‹'
+    'Этапы',
+    'Щиты',
+    'Файлы'
   ];
   static const List<IconData> _tabIcons = [
     Icons.layers_rounded,
@@ -106,7 +106,7 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
       appBar: CompactSectionAppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
-          tooltip: 'РќР°Р·Р°Рґ',
+          tooltip: 'Назад',
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: _tabTitles[_currentIndex],
@@ -179,10 +179,10 @@ class _StagesTab extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => ConfirmationDialog(
-        title: 'РЈРґР°Р»РµРЅРёРµ СЌС‚Р°РїР°',
+        title: 'Удаление этапа',
         content:
-            'Р’С‹ СѓРІРµСЂРµРЅС‹, С‡С‚Рѕ С…РѕС‚РёС‚Рµ СѓРґР°Р»РёС‚СЊ СЌС‚Р°Рї "${StageCard.getStageTitleDisplay(stage.title)}"? Р’СЃРµ СЃРјРµС‚С‹ РІРЅСѓС‚СЂРё Р±СѓРґСѓС‚ СѓРґР°Р»РµРЅС‹.',
-        confirmText: 'РЈРґР°Р»РёС‚СЊ',
+            'Вы уверены, что хотите удалить этап "${StageCard.getStageTitleDisplay(stage.title)}"? Все сметы внутри будут удалены.',
+        confirmText: 'Удалить',
         isDestructive: true,
       ),
     );
@@ -195,7 +195,7 @@ class _StagesTab extends ConsumerWidget {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('РћС€РёР±РєР° СѓРґР°Р»РµРЅРёСЏ: $e')),
+            SnackBar(content: Text('Ошибка удаления: $e')),
           );
         }
       }
@@ -206,7 +206,7 @@ class _StagesTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       floatingActionButton: Tooltip(
-        message: 'Р”РѕР±Р°РІРёС‚СЊ СЌС‚Р°Рї',
+        message: 'Добавить этап',
         preferBelow: false,
         verticalOffset: 32,
         child: FloatingActionButton(
@@ -225,7 +225,7 @@ class _StagesTab extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(left: 4, bottom: 8),
               child: Text(
-                'РћР± РѕР±СЉРµРєС‚Рµ',
+                'Об объекте',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: Theme.of(context).colorScheme.onSurface,
@@ -262,24 +262,24 @@ class _StagesTab extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Р—Р°РєР°Р·С‡РёРє
+                        // Заказчик
                         DetailInfoRow(
                           icon: Icons.person_outline,
-                          label: 'Р—РђРљРђР—Р§РРљ',
+                          label: 'ЗАКАЗЧИК',
                           value: project.clientInfo.isNotEmpty
                               ? project.clientInfo
-                              : 'вЂ”',
+                              : '—',
                           color: Colors.blue.shade600,
                           selectable: true,
                         ),
                         const SizedBox(height: 16),
-                        // РСЃС‚РѕС‡РЅРёРє
+                        // Источник
                         DetailInfoRow(
                           icon: Icons.info_outline,
-                          label: 'РРЎРўРћР§РќРРљ',
+                          label: 'ИСТОЧНИК',
                           value: project.source.isNotEmpty
                               ? project.source
-                              : 'вЂ”',
+                              : '—',
                           color: Colors.teal.shade700,
                           selectable: false,
                         ),
@@ -294,7 +294,7 @@ class _StagesTab extends ConsumerWidget {
             Row(
               children: [
                 Text(
-                  'Р­С‚Р°РїС‹ СЂР°Р±РѕС‚',
+                  'Этапы работ',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: Theme.of(context).colorScheme.onSurface,
@@ -307,9 +307,9 @@ class _StagesTab extends ConsumerWidget {
             if (project.stages.isEmpty)
               const FriendlyEmptyState(
                 icon: Icons.layers_clear_rounded,
-                title: 'Р­С‚Р°РїС‹ РµС‰Рµ РЅРµ СЃРѕР·РґР°РЅС‹',
+                title: 'Этапы еще не созданы',
                 subtitle:
-                    'Р”РѕР±Р°РІСЊС‚Рµ РїРµСЂРІС‹Р№ СЌС‚Р°Рї, С‡С‚РѕР±С‹ РїСЂРѕРґРѕР»Р¶РёС‚СЊ СЂР°Р±РѕС‚Сѓ РїРѕ РѕР±СЉРµРєС‚Сѓ.',
+                    'Добавьте первый этап, чтобы продолжить работу по объекту.',
                 accentColor: Colors.indigo,
                 padding: EdgeInsets.symmetric(vertical: 8),
               ),
@@ -371,7 +371,7 @@ class _FilesTab extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
             children: [
               _FileCategorySection(
-                title: "РџСЂРѕРµРєС‚С‹ Рё СЃС…РµРјС‹",
+                title: "Проекты и схемы",
                 icon: Icons.architecture_rounded,
                 color: Colors.blueGrey,
                 category: "PROJECT",
@@ -383,7 +383,7 @@ class _FilesTab extends ConsumerWidget {
                 projectId: project.id.toString(),
               ),
               _FileCategorySection(
-                title: "Р РµР°Р»РёР·Р°С†РёСЏ (Р­С‚Р°РїС‹ 1-2)",
+                title: "Реализация (Этапы 1-2)",
                 icon: Icons.construction_rounded,
                 color: Colors.blue,
                 category: "WORK",
@@ -394,7 +394,7 @@ class _FilesTab extends ConsumerWidget {
                 projectId: project.id.toString(),
               ),
               _FileCategorySection(
-                title: "Р¤РёРЅРёС€РЅС‹Рµ С„РѕС‚Рѕ",
+                title: "Финишные фото",
                 icon: Icons.auto_awesome_rounded,
                 color: Colors.green,
                 category: "FINISH",
@@ -413,7 +413,7 @@ class _FilesTab extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Text(
-              "Р›РёРјРёС‚ Р·Р°РіСЂСѓР·РєРё: РґРѕ 12 С„Р°Р№Р»РѕРІ РЅР° РїСЂРѕРµРєС‚, РґРѕ 20 РњР‘ РєР°Р¶РґС‹Р№",
+              "Лимит загрузки: до 12 файлов на проект, до 20 МБ каждый",
               style: TextStyle(
                 color: Colors.grey.shade500,
                 fontSize: 12,
@@ -427,17 +427,17 @@ class _FilesTab extends ConsumerWidget {
 
   Future<void> _pickAndUploadFiles(
       BuildContext context, WidgetRef ref, String category) async {
-    // 1. РџСЂРѕРІРµСЂРєР° Р»РёРјРёС‚Р° РєРѕР»РёС‡РµСЃС‚РІР° С„Р°Р№Р»РѕРІ (РњР°РєСЃ 12 РЅР° РїСЂРѕРµРєС‚)
+    // 1. Проверка лимита количества файлов (Макс 12 на проект)
     if (project.files.length >= 12) {
       if (context.mounted) {
         showDialog(
           context: context,
           builder: (context) => const ConfirmationDialog(
-            title: 'Р›РёРјРёС‚ С„Р°Р№Р»РѕРІ',
+            title: 'Лимит файлов',
             content:
-                'Р”РѕСЃС‚РёРіРЅСѓС‚ Р»РёРјРёС‚ РІ 12 С„Р°Р№Р»РѕРІ РЅР° РїСЂРѕРµРєС‚. РЈРґР°Р»РёС‚Рµ СЃС‚Р°СЂС‹Рµ С„Р°Р№Р»С‹, С‡С‚РѕР±С‹ Р·Р°РіСЂСѓР·РёС‚СЊ РЅРѕРІС‹Рµ.',
-            confirmText: 'Р—Р°РєСЂС‹С‚СЊ',
-            cancelText: '', // РЎРєСЂС‹РІР°РµРј РєРЅРѕРїРєСѓ РѕС‚РјРµРЅС‹
+                'Достигнут лимит в 12 файлов на проект. Удалите старые файлы, чтобы загрузить новые.',
+            confirmText: 'Закрыть',
+            cancelText: '', // Скрываем кнопку отмены
             isDestructive: false,
             themeColor: Colors.indigo,
           ),
@@ -448,7 +448,7 @@ class _FilesTab extends ConsumerWidget {
 
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-    // 2. Р’С‹Р±РѕСЂ С„Р°Р№Р»РѕРІ СЃ С„РёР»СЊС‚СЂР°С†РёРµР№ РїРѕ СЂР°СЃС€РёСЂРµРЅРёСЋ
+    // 2. Выбор файлов с фильтрацией по расширению
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: true,
       type: FileType.custom,
@@ -471,16 +471,16 @@ class _FilesTab extends ConsumerWidget {
     );
 
     if (result != null && result.files.isNotEmpty) {
-      // РџСЂРѕРІРµСЂРєР°: РЅРµ РїСЂРµРІС‹СЃРёС‚ Р»Рё РґРѕР±Р°РІР»РµРЅРёРµ РЅРѕРІС‹С… С„Р°Р№Р»РѕРІ РѕР±С‰РёР№ Р»РёРјРёС‚
+      // Проверка: не превысит ли добавление новых файлов общий лимит
       if (project.files.length + result.files.length > 12) {
         if (context.mounted) {
           showDialog(
             context: context,
             builder: (context) => ConfirmationDialog(
-              title: 'РЎР»РёС€РєРѕРј РјРЅРѕРіРѕ С„Р°Р№Р»РѕРІ',
+              title: 'Слишком много файлов',
               content:
-                  'Р’С‹ РІС‹Р±СЂР°Р»Рё ${result.files.length} С„Р°Р№Р»РѕРІ РґР»СЏ Р·Р°РіСЂСѓР·РєРё. Р’ С‚РµРєСѓС‰РёР№ РїСЂРѕРµРєС‚ РјРѕР¶РЅРѕ Р·Р°РіСЂСѓР·РёС‚СЊ РµС‰Рµ РЅРµ Р±РѕР»РµРµ ${12 - project.files.length} С„Р°Р№Р»РѕРІ.',
-              confirmText: 'Р—Р°РєСЂС‹С‚СЊ',
+                  'Вы выбрали ${result.files.length} файлов для загрузки. В текущий проект можно загрузить еще не более ${12 - project.files.length} файлов.',
+              confirmText: 'Закрыть',
               cancelText: '',
               isDestructive: false,
               themeColor: Colors.indigo,
@@ -498,23 +498,23 @@ class _FilesTab extends ConsumerWidget {
       scaffoldMessenger.showSnackBar(
         SnackBar(
             content: Text(
-                'РќР°С‡РёРЅР°СЋ Р·Р°РіСЂСѓР·РєСѓ ${result.files.length} С„Р°Р№Р»РѕРІ...')),
+                'Начинаю загрузку ${result.files.length} файлов...')),
       );
 
       for (final pickedFile in result.files) {
         if (pickedFile.path == null) {
           uploadErrors.add(
-              '${pickedFile.name}: РЅРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ РїСѓС‚СЊ Рє С„Р°Р№Р»Сѓ');
+              '${pickedFile.name}: не удалось получить путь к файлу');
           continue;
         }
-        // 3. РџСЂРѕРІРµСЂРєР° СЂР°Р·РјРµСЂР° С„Р°Р№Р»Р° (РњР°РєСЃ 20 РњР‘)
+        // 3. Проверка размера файла (Макс 20 МБ)
         final file = File(pickedFile.path!);
         final sizeInBytes = await file.length();
         final sizeInMb = sizeInBytes / (1024 * 1024);
 
         if (sizeInMb > 20) {
           sizeErrors.add(
-            '${pickedFile.name} (${sizeInMb.toStringAsFixed(1)} РњР‘)',
+            '${pickedFile.name} (${sizeInMb.toStringAsFixed(1)} МБ)',
           );
           continue;
         }
@@ -533,15 +533,15 @@ class _FilesTab extends ConsumerWidget {
         }
       }
 
-      // 4. РС‚РѕРіРѕРІС‹Р№ РѕС‚С‡РµС‚
+      // 4. Итоговый отчет
       if (sizeErrors.isNotEmpty && context.mounted) {
         showDialog(
           context: context,
           builder: (context) => ConfirmationDialog(
-            title: 'РќРµРєРѕС‚РѕСЂС‹Рµ С„Р°Р№Р»С‹ РЅРµ Р·Р°РіСЂСѓР¶РµРЅС‹',
+            title: 'Некоторые файлы не загружены',
             content:
-                'РЎР»РµРґСѓСЋС‰РёРµ С„Р°Р№Р»С‹ РїСЂРµРІС‹С€Р°СЋС‚ Р»РёРјРёС‚ РІ 20 РњР‘:\n\n${sizeErrors.join('\n')}',
-            confirmText: 'Р—Р°РєСЂС‹С‚СЊ',
+                'Следующие файлы превышают лимит в 20 МБ:\n\n${sizeErrors.join('\n')}',
+            confirmText: 'Закрыть',
             cancelText: '',
             isDestructive: false,
             themeColor: Colors.indigo,
@@ -553,9 +553,9 @@ class _FilesTab extends ConsumerWidget {
         showDialog(
           context: context,
           builder: (context) => ConfirmationDialog(
-            title: 'Р§Р°СЃС‚СЊ С„Р°Р№Р»РѕРІ РЅРµ Р·Р°РіСЂСѓР¶РµРЅР°',
+            title: 'Часть файлов не загружена',
             content: uploadErrors.join('\n'),
-            confirmText: 'Р—Р°РєСЂС‹С‚СЊ',
+            confirmText: 'Закрыть',
             cancelText: '',
             isDestructive: false,
             themeColor: Colors.indigo,
@@ -567,7 +567,7 @@ class _FilesTab extends ConsumerWidget {
         scaffoldMessenger.showSnackBar(
           SnackBar(
               content: Text(
-                  'РЈСЃРїРµС€РЅРѕ Р·Р°РіСЂСѓР¶РµРЅРѕ: $successCount РёР· ${result.files.length}')),
+                  'Успешно загружено: $successCount из ${result.files.length}')),
         );
       }
     }
@@ -579,11 +579,11 @@ class _FilesTab extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => const ConfirmationDialog(
-        title: 'РЈРґР°Р»РёС‚СЊ С„Р°Р№Р»?',
+        title: 'Удалить файл?',
         content:
-            'Р­С‚Рѕ РґРµР№СЃС‚РІРёРµ РЅРµР»СЊР·СЏ РѕС‚РјРµРЅРёС‚СЊ. Р¤Р°Р№Р» Р±СѓРґРµС‚ С„РёР·РёС‡РµСЃРєРё СѓРґР°Р»РµРЅ СЃ СЃРµСЂРІРµСЂР°.',
-        confirmText: 'РЈРґР°Р»РёС‚СЊ',
-        cancelText: 'РћС‚РјРµРЅР°',
+            'Это действие нельзя отменить. Файл будет физически удален с сервера.',
+        confirmText: 'Удалить',
+        cancelText: 'Отмена',
         isDestructive: true,
       ),
     );
@@ -595,7 +595,7 @@ class _FilesTab extends ConsumerWidget {
           );
       if (context.mounted) {
         scaffoldMessenger.showSnackBar(
-          const SnackBar(content: Text('Р¤Р°Р№Р» СѓРґР°Р»РµРЅ')),
+          const SnackBar(content: Text('Файл удален')),
         );
       }
     }
@@ -817,7 +817,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
                   ),
                 ],
               ),
-              // РљРЅРѕРїРєРё СѓРїСЂР°РІР»РµРЅРёСЏ (РїРѕСЏРІР»СЏСЋС‚СЃСЏ РїСЂРё РЅР°РІРµРґРµРЅРёРё)
+              // Кнопки управления (появляются при наведении)
               Positioned(
                 top: 6,
                 right: 6,
@@ -845,25 +845,25 @@ class _FileCardState extends ConsumerState<_FileCard> {
                       children: [
                         _ActionButton(
                           icon: Icons.edit_rounded,
-                          tooltip: "РџРµСЂРµРёРјРµРЅРѕРІР°С‚СЊ",
+                          tooltip: "Переименовать",
                           onTap: () => _renameFile(context),
                         ),
                         const SizedBox(width: 4),
                         _ActionButton(
                           icon: Icons.download_rounded,
-                          tooltip: "РЎРѕС…СЂР°РЅРёС‚СЊ РєР°Рє...",
+                          tooltip: "Сохранить как...",
                           onTap: () => _saveAsFile(context, fileUrl),
                         ),
                         const SizedBox(width: 4),
                         _ActionButton(
                           icon: Icons.share_rounded,
-                          tooltip: "РџРѕРґРµР»РёС‚СЊСЃСЏ",
+                          tooltip: "Поделиться",
                           onTap: () => _shareFile(fileUrl),
                         ),
                         const SizedBox(width: 4),
                         _ActionButton(
                           icon: Icons.close_rounded,
-                          tooltip: "РЈРґР°Р»РёС‚СЊ",
+                          tooltip: "Удалить",
                           onTap: widget.onDelete,
                         ),
                       ],
@@ -902,10 +902,10 @@ class _FileCardState extends ConsumerState<_FileCard> {
     final result = await showDialog<dynamic>(
       context: context,
       builder: (context) => TextInputDialog(
-        title: 'РџРµСЂРµРёРјРµРЅРѕРІР°С‚СЊ С„Р°Р№Р»',
-        labelText: 'РќРѕРІРѕРµ РёРјСЏ',
+        title: 'Переименовать файл',
+        labelText: 'Новое имя',
         initialValue: nameWithoutExtension,
-        confirmText: 'РЎРѕС…СЂР°РЅРёС‚СЊ',
+        confirmText: 'Сохранить',
         themeColor: Colors.indigo,
       ),
     );
@@ -921,7 +921,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                    content: Text('Р¤Р°Р№Р» РїРµСЂРµРёРјРµРЅРѕРІР°РЅ')),
+                    content: Text('Файл переименован')),
               );
             }
           } catch (e) {
@@ -929,7 +929,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                     content:
-                        Text('РћС€РёР±РєР° РїРµСЂРµРёРјРµРЅРѕРІР°РЅРёСЏ: $e')),
+                        Text('Ошибка переименования: $e')),
               );
             }
           }
@@ -944,7 +944,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
           await _createDownloadedTempFile(url, preferredName: displayName);
 
       final outputFile = await FilePicker.platform.saveFile(
-        dialogTitle: 'РЎРѕС…СЂР°РЅРёС‚СЊ С„Р°Р№Р» РєР°Рє...',
+        dialogTitle: 'Сохранить файл как...',
         fileName: _safeFileName(displayName, fallback: 'file'),
       );
 
@@ -952,20 +952,20 @@ class _FileCardState extends ConsumerState<_FileCard> {
         await tempFile.copy(outputFile);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Р¤Р°Р№Р» СЃРѕС…СЂР°РЅРµРЅ: $outputFile')),
+            SnackBar(content: Text('Файл сохранен: $outputFile')),
           );
         }
       } else if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('РЎРѕС…СЂР°РЅРµРЅРёРµ РѕС‚РјРµРЅРµРЅРѕ')),
+              content: Text('Сохранение отменено')),
         );
       }
     } catch (e) {
       debugPrint("Save file error: $e");
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ: $e')),
+          SnackBar(content: Text('Ошибка сохранения: $e')),
         );
       }
     }
@@ -1092,8 +1092,8 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
   @override
   void initState() {
     super.initState();
-    // РџСЂР°РІРёР»Рѕ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ:
-    // 0 С„Р°Р№Р»РѕРІ -> Р·Р°РєСЂС‹С‚Рѕ, 1..6 -> РѕС‚РєСЂС‹С‚Рѕ, 7+ -> Р·Р°РєСЂС‹С‚Рѕ.
+    // Правило по умолчанию:
+    // 0 файлов -> закрыто, 1..6 -> открыто, 7+ -> закрыто.
     _isExpanded = _shouldAutoExpandByCount(widget.files.length);
   }
 
@@ -1184,8 +1184,8 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                                     const SizedBox(height: 2),
                                     Text(
                                       _isExpanded
-                                          ? 'РќР°Р¶РјРёС‚Рµ, С‡С‚РѕР±С‹ СЃРІРµСЂРЅСѓС‚СЊ'
-                                          : 'РќР°Р¶РјРёС‚Рµ, С‡С‚РѕР±С‹ СЂР°Р·РІРµСЂРЅСѓС‚СЊ',
+                                          ? 'Нажмите, чтобы свернуть'
+                                          : 'Нажмите, чтобы развернуть',
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w500,
@@ -1202,7 +1202,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                                 const SizedBox(width: 8),
                                 _buildHeaderActionButton(
                                   icon: Icons.add_rounded,
-                                  tooltip: 'Р—Р°РіСЂСѓР·РёС‚СЊ С„Р°Р№Р»С‹',
+                                  tooltip: 'Загрузить файлы',
                                   onTap: widget.onUpload,
                                   isPrimary: true,
                                 ),
@@ -1210,8 +1210,8 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                               ],
                               _buildHeaderExpandToggle(
                                 tooltip: _isExpanded
-                                    ? 'РЎРІРµСЂРЅСѓС‚СЊ'
-                                    : 'Р Р°Р·РІРµСЂРЅСѓС‚СЊ',
+                                    ? 'Свернуть'
+                                    : 'Развернуть',
                                 onTap: () =>
                                     setState(() => _isExpanded = !_isExpanded),
                               ),
@@ -1226,7 +1226,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                                 _buildFilesCountPill(widget.files.length),
                                 _buildHeaderActionButton(
                                   icon: Icons.add_rounded,
-                                  tooltip: 'Р—Р°РіСЂСѓР·РёС‚СЊ С„Р°Р№Р»С‹',
+                                  tooltip: 'Загрузить файлы',
                                   onTap: widget.onUpload,
                                   isPrimary: true,
                                 ),
@@ -1244,9 +1244,9 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                           ? const FriendlyEmptyState(
                               icon: Icons.folder_open_rounded,
                               title:
-                                  'РќРµС‚ Р·Р°РіСЂСѓР¶РµРЅРЅС‹С… С„Р°Р№Р»РѕРІ',
+                                  'Нет загруженных файлов',
                               subtitle:
-                                  'Р—Р°РіСЂСѓР·РёС‚Рµ С„Р°Р№Р»С‹ СЌС‚РѕРіРѕ С‚РёРїР°, С‡С‚РѕР±С‹ РѕРЅРё РїРѕСЏРІРёР»РёСЃСЊ РІ СЃРїРёСЃРєРµ.',
+                                  'Загрузите файлы этого типа, чтобы они появились в списке.',
                               accentColor: Colors.blueGrey,
                               iconSize: 66,
                               padding: EdgeInsets.symmetric(vertical: 18),
