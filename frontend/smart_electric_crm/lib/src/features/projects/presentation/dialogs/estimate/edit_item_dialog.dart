@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/utils/decimal_input_formatter.dart';
@@ -233,10 +234,8 @@ class _EditItemDialogState extends State<EditItemDialog> {
 
               // Content
               Flexible(
-                child: Scrollbar(
+                child: AppDialogScrollbar(
                   controller: _scrollController,
-                  thumbVisibility: true,
-                  trackVisibility: true,
                   child: SingleChildScrollView(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(24),

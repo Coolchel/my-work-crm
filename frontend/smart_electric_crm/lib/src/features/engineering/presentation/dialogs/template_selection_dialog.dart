@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../shared/presentation/widgets/friendly_empty_state.dart';
 
@@ -109,14 +110,17 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 22),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(12),
-                      itemCount: templates.length,
-                      separatorBuilder: (ctx, i) => const SizedBox(height: 6),
-                      itemBuilder: (context, index) {
-                        final template = templates[index];
-                        return _buildTemplateCard(context, template);
-                      },
+                  : AppDialogScrollbar.builder(
+                      builder: (scrollController) => ListView.separated(
+                        controller: scrollController,
+                        padding: const EdgeInsets.all(12),
+                        itemCount: templates.length,
+                        separatorBuilder: (ctx, i) => const SizedBox(height: 6),
+                        itemBuilder: (context, index) {
+                          final template = templates[index];
+                          return _buildTemplateCard(context, template);
+                        },
+                      ),
                     ),
             ),
 

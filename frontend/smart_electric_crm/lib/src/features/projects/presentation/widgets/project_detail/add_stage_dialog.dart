@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 
 import '../../providers/project_providers.dart';
@@ -165,41 +166,44 @@ class _AddStageDialogState extends ConsumerState<AddStageDialog> {
             else
               Container(
                 constraints: const BoxConstraints(maxHeight: 400),
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  shrinkWrap: true,
-                  itemCount: stages.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 10),
-                  itemBuilder: (context, index) {
-                    final entry = stages.entries.elementAt(index);
-                    final stageKey = entry.key;
-                    Color itemColor;
-                    switch (stageKey) {
-                      case 'precalc':
-                        itemColor = Colors.blueGrey;
-                        break;
-                      case 'stage_1':
-                      case 'stage_1_2':
-                      case 'stage_2':
-                        itemColor = Colors.blue;
-                        break;
-                      case 'stage_3':
-                        itemColor = Colors.green;
-                        break;
-                      case 'extra':
-                        itemColor = Colors.purple;
-                        break;
-                      default:
-                        itemColor = Colors.amber;
-                    }
+                child: AppDialogScrollbar.builder(
+                  builder: (scrollController) => ListView.separated(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(16),
+                    shrinkWrap: true,
+                    itemCount: stages.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final entry = stages.entries.elementAt(index);
+                      final stageKey = entry.key;
+                      Color itemColor;
+                      switch (stageKey) {
+                        case 'precalc':
+                          itemColor = Colors.blueGrey;
+                          break;
+                        case 'stage_1':
+                        case 'stage_1_2':
+                        case 'stage_2':
+                          itemColor = Colors.blue;
+                          break;
+                        case 'stage_3':
+                          itemColor = Colors.green;
+                          break;
+                        case 'extra':
+                          itemColor = Colors.purple;
+                          break;
+                        default:
+                          itemColor = Colors.amber;
+                      }
 
-                    return _StageChoiceTile(
-                      title: entry.value,
-                      color: itemColor,
-                      onTap: () => _addStage(entry.key),
-                    );
-                  },
+                      return _StageChoiceTile(
+                        title: entry.value,
+                        color: itemColor,
+                        onTap: () => _addStage(entry.key),
+                      );
+                    },
+                  ),
                 ),
               ),
             const SizedBox(height: 8),

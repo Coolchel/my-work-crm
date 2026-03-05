@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import 'package:printing/printing.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 
 import '../../../data/models/estimate_item_model.dart';
@@ -484,10 +485,9 @@ class EstimateTextActionsDialog extends ConsumerWidget
     return buildPremiumContainer(
       context: context,
       themeColor: themeColor,
-      child: Scrollbar(
-        thumbVisibility: true,
-        trackVisibility: true,
-        child: SingleChildScrollView(
+      child: AppDialogScrollbar.builder(
+        builder: (scrollController) => SingleChildScrollView(
+          controller: scrollController,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -801,10 +801,9 @@ class _EstimatePdfActionsDialogState
     return buildPremiumContainer(
       context: context,
       themeColor: themeColor,
-      child: Scrollbar(
-        thumbVisibility: true,
-        trackVisibility: true,
-        child: SingleChildScrollView(
+      child: AppDialogScrollbar.builder(
+        builder: (scrollController) => SingleChildScrollView(
+          controller: scrollController,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1330,10 +1329,8 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
                       color: AppDesignTokens.softBorder(context),
                     ),
                   ),
-                  child: Scrollbar(
+                  child: AppDialogScrollbar(
                     controller: _previewScrollController,
-                    thumbVisibility: true,
-                    trackVisibility: true,
                     child: SingleChildScrollView(
                       controller: _previewScrollController,
                       child: SelectableText(
