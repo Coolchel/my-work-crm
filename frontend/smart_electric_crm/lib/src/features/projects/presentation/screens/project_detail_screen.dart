@@ -24,6 +24,7 @@ import '../../../../shared/services/temp_file_service.dart';
 import '../widgets/stages/stage_card.dart';
 import '../widgets/project_detail/add_stage_dialog.dart';
 import '../widgets/project_detail/detail_info_row.dart';
+import '../../services/project_file_save_service.dart';
 
 import '../../data/models/stage_model.dart';
 
@@ -80,11 +81,7 @@ class _ProjectDetailContent extends ConsumerStatefulWidget {
 
 class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
   int _currentIndex = 0;
-  static const List<String> _tabTitles = [
-    'Этапы',
-    'Щиты',
-    'Файлы'
-  ];
+  static const List<String> _tabTitles = ['Этапы', 'Щиты', 'Файлы'];
   static const List<IconData> _tabIcons = [
     Icons.layers_rounded,
     Icons.settings_input_component_rounded,
@@ -277,9 +274,8 @@ class _StagesTab extends ConsumerWidget {
                         DetailInfoRow(
                           icon: Icons.info_outline,
                           label: 'ИСТОЧНИК',
-                          value: project.source.isNotEmpty
-                              ? project.source
-                              : '—',
+                          value:
+                              project.source.isNotEmpty ? project.source : '—',
                           color: Colors.teal.shade700,
                           selectable: false,
                         ),
@@ -497,14 +493,13 @@ class _FilesTab extends ConsumerWidget {
 
       scaffoldMessenger.showSnackBar(
         SnackBar(
-            content: Text(
-                'Начинаю загрузку ${result.files.length} файлов...')),
+            content: Text('Начинаю загрузку ${result.files.length} файлов...')),
       );
 
       for (final pickedFile in result.files) {
         if (pickedFile.path == null) {
-          uploadErrors.add(
-              '${pickedFile.name}: не удалось получить путь к файлу');
+          uploadErrors
+              .add('${pickedFile.name}: не удалось получить путь к файлу');
           continue;
         }
         // 3. Проверка размера файла (Макс 20 МБ)
@@ -620,6 +615,7 @@ class _FileCard extends ConsumerStatefulWidget {
 class _FileCardState extends ConsumerState<_FileCard> {
   bool _isHovered = false;
   bool _areTouchActionsVisible = false;
+  final ProjectFileSaveService _fileSaveService = ProjectFileSaveService();
 
   bool get isImage {
     final ext = widget.file.file.toLowerCase();
@@ -650,18 +646,6 @@ class _FileCardState extends ConsumerState<_FileCard> {
     return Colors.blue;
   }
 
-  String _safeFileName(String rawName, {String fallback = 'file'}) {
-    final trimmed = rawName.trim();
-    final candidate = trimmed.isEmpty ? fallback : trimmed;
-    final sanitized = candidate
-        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
-        .replaceAll(RegExp(r'[\u0000-\u001F]'), '_')
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
-    final withoutTrailingDots = sanitized.replaceAll(RegExp(r'[. ]+$'), '');
-    return withoutTrailingDots.isEmpty ? fallback : withoutTrailingDots;
-  }
-
   String _fileNameFromUrl(String url) {
     try {
       final uri = Uri.parse(url);
@@ -676,12 +660,19 @@ class _FileCardState extends ConsumerState<_FileCard> {
 
   Future<File> _createDownloadedTempFile(String url,
       {String? preferredName}) async {
-    final response = await http.get(Uri.parse(url));
+    final uri = Uri.parse(url);
+    final response = await http.get(uri);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw HttpException('Не удалось загрузить файл.', uri: uri);
+    }
     final tempDir = await getTemporaryDirectory();
     final fallbackName = _fileNameFromUrl(url);
-    final safeName = _safeFileName(
+    final safeName = ProjectFileSaveService.sanitizeFileName(
       preferredName ?? fallbackName,
-      fallback: _safeFileName(fallbackName, fallback: 'file'),
+      fallback: ProjectFileSaveService.sanitizeFileName(
+        fallbackName,
+        fallback: 'file',
+      ),
     );
     final localFile = File('${tempDir.path}/$safeName');
     await localFile.writeAsBytes(response.bodyBytes);
@@ -920,16 +911,13 @@ class _FileCardState extends ConsumerState<_FileCard> {
                 .renameFile(widget.file.id, newName, widget.projectId);
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Файл переименован')),
+                const SnackBar(content: Text('Файл переименован')),
               );
             }
           } catch (e) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content:
-                        Text('Ошибка переименования: $e')),
+                SnackBar(content: Text('Ошибка переименования: $e')),
               );
             }
           }
@@ -939,36 +927,16 @@ class _FileCardState extends ConsumerState<_FileCard> {
   }
 
   Future<void> _saveAsFile(BuildContext context, String url) async {
-    try {
-      final tempFile =
-          await _createDownloadedTempFile(url, preferredName: displayName);
-
-      final outputFile = await FilePicker.platform.saveFile(
-        dialogTitle: 'Сохранить файл как...',
-        fileName: _safeFileName(displayName, fallback: 'file'),
-      );
-
-      if (outputFile != null) {
-        await tempFile.copy(outputFile);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Файл сохранен: $outputFile')),
-          );
-        }
-      } else if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Сохранение отменено')),
-        );
-      }
-    } catch (e) {
-      debugPrint("Save file error: $e");
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка сохранения: $e')),
-        );
-      }
+    final result = await _fileSaveService.saveRemoteFile(
+      url: url,
+      displayName: displayName,
+    );
+    if (!context.mounted) {
+      return;
     }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(result.message)),
+    );
   }
 
   Future<void> _downloadAndOpenFile(String url) async {
@@ -1209,9 +1177,8 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                                 const SizedBox(width: 6),
                               ],
                               _buildHeaderExpandToggle(
-                                tooltip: _isExpanded
-                                    ? 'Свернуть'
-                                    : 'Развернуть',
+                                tooltip:
+                                    _isExpanded ? 'Свернуть' : 'Развернуть',
                                 onTap: () =>
                                     setState(() => _isExpanded = !_isExpanded),
                               ),
@@ -1243,8 +1210,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                       child: widget.files.isEmpty
                           ? const FriendlyEmptyState(
                               icon: Icons.folder_open_rounded,
-                              title:
-                                  'Нет загруженных файлов',
+                              title: 'Нет загруженных файлов',
                               subtitle:
                                   'Загрузите файлы этого типа, чтобы они появились в списке.',
                               accentColor: Colors.blueGrey,
