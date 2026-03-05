@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/app_dialog_scrollbar.dart';
+
 class TextInputDialog extends StatefulWidget {
   final String title;
   final String labelText;
@@ -127,10 +129,8 @@ class _TextInputDialogState extends State<TextInputDialog> {
 
                   // Content
                   Flexible(
-                    child: Scrollbar(
+                    child: AppDialogScrollbar(
                       controller: _scrollController,
-                      thumbVisibility: true,
-                      trackVisibility: true,
                       child: SingleChildScrollView(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(24),

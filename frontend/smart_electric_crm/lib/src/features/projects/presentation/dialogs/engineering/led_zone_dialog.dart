@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
@@ -123,10 +124,9 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
 
               // Content
               Flexible(
-                child: Scrollbar(
-                  thumbVisibility: true,
-                  trackVisibility: true,
-                  child: SingleChildScrollView(
+                child: AppDialogScrollbar.builder(
+                  builder: (scrollController) => SingleChildScrollView(
+                    controller: scrollController,
                     padding: const EdgeInsets.only(
                         left: 24, right: 24, top: 24, bottom: 16),
                     child: Column(

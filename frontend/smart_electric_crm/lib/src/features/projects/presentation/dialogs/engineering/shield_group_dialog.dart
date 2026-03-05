@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../../../../engineering/data/models/shield_group_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
@@ -116,9 +117,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                   children: [
                     Center(
                       child: Text(
-                        isEdit
-                            ? "Редактировать группу"
-                            : "Добавить группу",
+                        isEdit ? "Редактировать группу" : "Добавить группу",
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -142,10 +141,8 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
 
               // Content
               Flexible(
-                child: Scrollbar(
+                child: AppDialogScrollbar(
                   controller: _scrollController,
-                  thumbVisibility: true,
-                  trackVisibility: true,
                   child: SingleChildScrollView(
                     controller: _scrollController,
                     padding: const EdgeInsets.all(24),
@@ -442,9 +439,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2, color: Colors.white))
-                            : Text(isEdit
-                                ? 'Сохранить'
-                                : 'Добавить'),
+                            : Text(isEdit ? 'Сохранить' : 'Добавить'),
                       );
                     }),
                   ],

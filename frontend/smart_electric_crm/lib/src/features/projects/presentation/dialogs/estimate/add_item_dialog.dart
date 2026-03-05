@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 /// Dialog for searching and adding catalog items to an estimate
@@ -213,14 +214,17 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 18),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(12),
-                      itemCount: _results.length,
-                      separatorBuilder: (ctx, i) => const SizedBox(height: 6),
-                      itemBuilder: (ctx, i) {
-                        final item = _results[i];
-                        return _buildItemCard(item, themeColor);
-                      },
+                  : AppDialogScrollbar.builder(
+                      builder: (scrollController) => ListView.separated(
+                        controller: scrollController,
+                        padding: const EdgeInsets.all(12),
+                        itemCount: _results.length,
+                        separatorBuilder: (ctx, i) => const SizedBox(height: 6),
+                        itemBuilder: (ctx, i) {
+                          final item = _results[i];
+                          return _buildItemCard(item, themeColor);
+                        },
+                      ),
                     ),
             ),
 

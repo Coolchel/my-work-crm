@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
 
@@ -25,30 +26,33 @@ class ApplyTemplateDialog extends ConsumerWidget {
       content: templatesAsync.when(
         data: (templates) => SizedBox(
             width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: templates.length,
-              itemBuilder: (context, index) {
-                // Dynamic cast hack for brevity
-                final t = templates[index] as dynamic;
-                return ListTile(
-                  title: Text(t.name),
-                  subtitle: Text(t.description),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    if (type == 'shield') {
-                      await ref
-                          .read(engineeringRepositoryProvider)
-                          .applyShieldTemplate(shieldId, t.id);
-                    } else {
-                      await ref
-                          .read(engineeringRepositoryProvider)
-                          .applyLedTemplate(shieldId, t.id);
-                    }
-                    ref.invalidate(projectListProvider);
-                  },
-                );
-              },
+            child: AppDialogScrollbar.builder(
+              builder: (scrollController) => ListView.builder(
+                controller: scrollController,
+                shrinkWrap: true,
+                itemCount: templates.length,
+                itemBuilder: (context, index) {
+                  // Dynamic cast hack for brevity
+                  final t = templates[index] as dynamic;
+                  return ListTile(
+                    title: Text(t.name),
+                    subtitle: Text(t.description),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      if (type == 'shield') {
+                        await ref
+                            .read(engineeringRepositoryProvider)
+                            .applyShieldTemplate(shieldId, t.id);
+                      } else {
+                        await ref
+                            .read(engineeringRepositoryProvider)
+                            .applyLedTemplate(shieldId, t.id);
+                      }
+                      ref.invalidate(projectListProvider);
+                    },
+                  );
+                },
+              ),
             )),
         loading: () => const SizedBox(
             height: 100, child: Center(child: CircularProgressIndicator())),

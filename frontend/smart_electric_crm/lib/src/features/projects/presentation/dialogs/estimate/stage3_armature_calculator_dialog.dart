@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
@@ -374,10 +375,8 @@ class _Stage3ArmatureCalculatorDialogState
                       ),
                     ),
                   Expanded(
-                    child: Scrollbar(
+                    child: AppDialogScrollbar(
                       controller: _listScrollController,
-                      thumbVisibility: true,
-                      trackVisibility: true,
                       child: ListView.builder(
                         controller: _listScrollController,
                         padding: const EdgeInsets.all(16),
