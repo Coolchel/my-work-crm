@@ -593,6 +593,19 @@ class _ProjectCard extends StatefulWidget {
 }
 
 class _ProjectCardState extends State<_ProjectCard> {
+  static const double _titleFontSize = 16;
+  static const double _titleLineHeight = 1.2;
+  static const double _actionButtonSize = 30;
+  static const double _actionIconSize = 18;
+  static const double _actionButtonsGap = 2;
+  static const double _titleActionsGap = 8;
+  static const double _cardHorizontalPadding = 16;
+  static const double _cardVerticalPadding = 12;
+  static const double _actionIconVerticalInset =
+      (_actionButtonSize - _actionIconSize) / 2;
+  static const double _actionButtonsReservedWidth =
+      (_actionButtonSize * 2) + _actionButtonsGap;
+
   bool _isHovered = false;
 
   String _formatDate(DateTime date) {
@@ -680,120 +693,182 @@ class _ProjectCardState extends State<_ProjectCard> {
                   Container(width: 5, color: stripeColor),
                   // Content
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Header: address + action buttons (aligned on one line)
-                          Column(
+                    child: Stack(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: _cardHorizontalPadding,
+                            vertical: _cardVerticalPadding,
+                          ),
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Row(
+                              // Header: address + action buttons (aligned on one line)
+                              Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      right: _actionButtonsReservedWidth +
+                                          _titleActionsGap,
+                                    ),
                                     child: Text(
                                       project.address,
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: _titleFontSize,
+                                        height: _titleLineHeight,
                                         fontWeight: FontWeight.bold,
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface,
                                         letterSpacing: -0.3,
                                       ),
+                                      strutStyle: const StrutStyle(
+                                        fontSize: _titleFontSize,
+                                        height: _titleLineHeight,
+                                        forceStrutHeight: true,
+                                      ),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                  Align(
-                                    alignment: Alignment.topCenter,
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
+                                  if (project.intercomCode.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '\u0434\u043e\u043c\u043e\u0444\u043e\u043d: ${project.intercomCode}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey.shade500,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+
+                              const SizedBox(height: 12),
+
+                              // Info: Type + Stages (with icons)
+                              isCompact
+                                  ? Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        _ActionButton(
-                                          icon: Icons.edit_outlined,
-                                          tooltip:
-                                              '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
-                                          color: Colors.grey.shade400,
-                                          hoverColor: Colors.indigo,
-                                          onTap: () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (context) =>
-                                                  AddProjectDialog(
-                                                      project: project),
-                                            );
-                                          },
+                                        Wrap(
+                                          spacing: 20,
+                                          runSpacing: 10,
+                                          children: [
+                                            _buildInfoItem(
+                                              icon: _getObjectTypeIcon(
+                                                  project.objectType),
+                                              label: '\u0422\u0438\u043f',
+                                              value: _getObjectTypeDisplay(
+                                                  project.objectType),
+                                            ),
+                                            _buildInfoItem(
+                                              icon: Icons.layers_outlined,
+                                              label:
+                                                  '\u042d\u0442\u0430\u043f\u043e\u0432',
+                                              value: '${project.stages.length}',
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 2),
-                                        Consumer(
-                                          builder: (context, ref, child) {
-                                            return _ActionButton(
-                                              icon: Icons.close,
-                                              tooltip:
-                                                  '\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
-                                              color: Colors.grey.shade400,
-                                              hoverColor: Colors.grey.shade600,
-                                              onTap: () =>
-                                                  deleteProject(context, ref),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              if (project.intercomCode.isNotEmpty) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  '\u0434\u043e\u043c\u043e\u0444\u043e\u043d: ${project.intercomCode}',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.grey.shade500,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // Info: Type + Stages (with icons)
-                          isCompact
-                              ? Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Wrap(
-                                      spacing: 20,
-                                      runSpacing: 10,
-                                      children: [
-                                        _buildInfoItem(
-                                          icon: _getObjectTypeIcon(
-                                              project.objectType),
-                                          label: '\u0422\u0438\u043f',
-                                          value: _getObjectTypeDisplay(
-                                              project.objectType),
-                                        ),
-                                        _buildInfoItem(
-                                          icon: Icons.layers_outlined,
-                                          label:
-                                              '\u042d\u0442\u0430\u043f\u043e\u0432',
-                                          value: '${project.stages.length}',
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            const Spacer(),
+                                            _buildDateColumn(
+                                              createdLabel:
+                                                  '\u0421\u043e\u0437\u0434\u0430\u043d: ${_formatDate(createdAt)}',
+                                              updatedLabel: isEdited
+                                                  ? '\u0418\u0437\u043c\u0435\u043d\u0435\u043d: ${_formatDate(updatedAt)}'
+                                                  : null,
+                                            ),
+                                          ],
                                         ),
                                       ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
+                                    )
+                                  : Row(
                                       children: [
+                                        // Type icon + label
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.indigo.withOpacity(0.08),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            _getObjectTypeIcon(
+                                                project.objectType),
+                                            size: 18,
+                                            color: Colors.indigo,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Тип',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey.shade500,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            Text(
+                                              _getObjectTypeDisplay(
+                                                  project.objectType),
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.grey.shade800,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(width: 24),
+                                        // Stages icon + count
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                Colors.indigo.withOpacity(0.08),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.layers_outlined,
+                                            size: 18,
+                                            color: Colors.indigo,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Этапов',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey.shade500,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${project.stages.length}',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.grey.shade800,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                         const Spacer(),
                                         _buildDateColumn(
                                           createdLabel:
@@ -804,96 +879,50 @@ class _ProjectCardState extends State<_ProjectCard> {
                                         ),
                                       ],
                                     ),
-                                  ],
-                                )
-                              : Row(
-                                  children: [
-                                    // Type icon + label
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.indigo.withOpacity(0.08),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        _getObjectTypeIcon(project.objectType),
-                                        size: 18,
-                                        color: Colors.indigo,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Тип',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.grey.shade500,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          _getObjectTypeDisplay(
-                                              project.objectType),
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.grey.shade800,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(width: 24),
-                                    // Stages icon + count
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.indigo.withOpacity(0.08),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.layers_outlined,
-                                        size: 18,
-                                        color: Colors.indigo,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Этапов',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: Colors.grey.shade500,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          '${project.stages.length}',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.grey.shade800,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const Spacer(),
-                                    _buildDateColumn(
-                                      createdLabel:
-                                          '\u0421\u043e\u0437\u0434\u0430\u043d: ${_formatDate(createdAt)}',
-                                      updatedLabel: isEdited
-                                          ? '\u0418\u0437\u043c\u0435\u043d\u0435\u043d: ${_formatDate(updatedAt)}'
-                                          : null,
-                                    ),
-                                  ],
-                                ),
-                        ],
-                      ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          top: _cardVerticalPadding - _actionIconVerticalInset,
+                          right: _cardHorizontalPadding,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _ActionButton(
+                                icon: Icons.edit_outlined,
+                                tooltip:
+                                    '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
+                                color: Colors.grey.shade400,
+                                hoverColor: Colors.indigo,
+                                size: _actionButtonSize,
+                                iconSize: _actionIconSize,
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) =>
+                                        AddProjectDialog(project: project),
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: _actionButtonsGap),
+                              Consumer(
+                                builder: (context, ref, child) {
+                                  return _ActionButton(
+                                    icon: Icons.close,
+                                    tooltip:
+                                        '\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
+                                    color: Colors.grey.shade400,
+                                    hoverColor: Colors.grey.shade600,
+                                    size: _actionButtonSize,
+                                    iconSize: _actionIconSize,
+                                    onTap: () => deleteProject(context, ref),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -1017,6 +1046,8 @@ class _ActionButton extends StatefulWidget {
   final String tooltip;
   final Color color;
   final Color hoverColor;
+  final double size;
+  final double iconSize;
   final VoidCallback onTap;
 
   const _ActionButton({
@@ -1024,6 +1055,8 @@ class _ActionButton extends StatefulWidget {
     required this.tooltip,
     required this.color,
     required this.hoverColor,
+    this.size = 30,
+    this.iconSize = 18,
     required this.onTap,
   });
 
@@ -1045,8 +1078,8 @@ class _ActionButtonState extends State<_ActionButton> {
           onTap: widget.onTap,
           borderRadius: BorderRadius.circular(20),
           child: Container(
-            width: 30,
-            height: 30,
+            width: widget.size,
+            height: widget.size,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: _isHovered
@@ -1056,7 +1089,7 @@ class _ActionButtonState extends State<_ActionButton> {
             ),
             child: Icon(
               widget.icon,
-              size: 18,
+              size: widget.iconSize,
               color: _isHovered ? widget.hoverColor : widget.color,
             ),
           ),
