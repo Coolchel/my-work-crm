@@ -71,6 +71,9 @@ class _StageCardState extends State<StageCard> {
     final isEdited = createdAt != null &&
         updatedAt != null &&
         updatedAt.difference(createdAt).abs().inSeconds > 10;
+    final createdLabel =
+        createdAt != null ? 'Создан: ${_formatDate(createdAt)}' : null;
+    final updatedLabel = isEdited ? 'Изменен: ${_formatDate(updatedAt)}' : null;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -300,19 +303,11 @@ class _StageCardState extends State<StageCard> {
                                         ),
                                       ],
                                     ),
-                                    if (createdAt != null) ...[
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          const Spacer(),
-                                          _buildDateColumn(
-                                            createdLabel:
-                                                '\u0421\u043e\u0437\u0434\u0430\u043d: ${_formatDate(createdAt)}',
-                                            updatedLabel: isEdited
-                                                ? '\u0418\u0437\u043c\u0435\u043d\u0435\u043d: ${_formatDate(updatedAt)}'
-                                                : null,
-                                          ),
-                                        ],
+                                    if (createdLabel != null) ...[
+                                      const SizedBox(height: 12),
+                                      _buildMobileDateSection(
+                                        createdLabel: createdLabel,
+                                        updatedLabel: updatedLabel,
                                       ),
                                     ],
                                   ],
@@ -335,13 +330,10 @@ class _StageCardState extends State<StageCard> {
                                       color: Colors.blue,
                                     ),
                                     const Spacer(),
-                                    if (createdAt != null)
+                                    if (createdLabel != null)
                                       _buildDateColumn(
-                                        createdLabel:
-                                            'Создан: ${_formatDate(createdAt)}',
-                                        updatedLabel: isEdited
-                                            ? 'Изменен: ${_formatDate(updatedAt)}'
-                                            : null,
+                                        createdLabel: createdLabel,
+                                        updatedLabel: updatedLabel,
                                       ),
                                   ],
                                 ),
@@ -438,6 +430,30 @@ class _StageCardState extends State<StageCard> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMobileDateSection({
+    required String createdLabel,
+    String? updatedLabel,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(top: 10),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: Colors.grey.withOpacity(0.18),
+          ),
+        ),
+      ),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: _buildDateColumn(
+          createdLabel: createdLabel,
+          updatedLabel: updatedLabel,
+        ),
       ),
     );
   }
