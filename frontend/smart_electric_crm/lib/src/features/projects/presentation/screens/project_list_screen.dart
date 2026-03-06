@@ -653,8 +653,10 @@ class _ProjectCardState extends State<_ProjectCard> {
     final isMobilePlatform = !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.android ||
             defaultTargetPlatform == TargetPlatform.iOS);
-    final isCompact =
+    final useMobileLayout =
         isMobilePlatform || MediaQuery.sizeOf(context).width < 380;
+    final createdLabel = 'Создан: ${_formatDate(createdAt)}';
+    final updatedLabel = isEdited ? 'Изменен: ${_formatDate(updatedAt)}' : null;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -755,134 +757,16 @@ class _ProjectCardState extends State<_ProjectCard> {
 
                               const SizedBox(height: 12),
 
-                              // Info: Type + Stages (with icons)
-                              isCompact
-                                  ? Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Wrap(
-                                          spacing: 20,
-                                          runSpacing: 10,
-                                          children: [
-                                            _buildInfoItem(
-                                              icon: _getObjectTypeIcon(
-                                                  project.objectType),
-                                              label: '\u0422\u0438\u043f',
-                                              value: _getObjectTypeDisplay(
-                                                  project.objectType),
-                                            ),
-                                            _buildInfoItem(
-                                              icon: Icons.layers_outlined,
-                                              label:
-                                                  '\u042d\u0442\u0430\u043f\u043e\u0432',
-                                              value: '${project.stages.length}',
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            const Spacer(),
-                                            _buildDateColumn(
-                                              createdLabel:
-                                                  '\u0421\u043e\u0437\u0434\u0430\u043d: ${_formatDate(createdAt)}',
-                                              updatedLabel: isEdited
-                                                  ? '\u0418\u0437\u043c\u0435\u043d\u0435\u043d: ${_formatDate(updatedAt)}'
-                                                  : null,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                              useMobileLayout
+                                  ? _buildMobileInfoSection(
+                                      project: project,
+                                      createdLabel: createdLabel,
+                                      updatedLabel: updatedLabel,
                                     )
-                                  : Row(
-                                      children: [
-                                        // Type icon + label
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.indigo.withOpacity(0.08),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Icon(
-                                            _getObjectTypeIcon(
-                                                project.objectType),
-                                            size: 18,
-                                            color: Colors.indigo,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Тип',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: Colors.grey.shade500,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                            Text(
-                                              _getObjectTypeDisplay(
-                                                  project.objectType),
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.grey.shade800,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(width: 24),
-                                        // Stages icon + count
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.indigo.withOpacity(0.08),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(
-                                            Icons.layers_outlined,
-                                            size: 18,
-                                            color: Colors.indigo,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Этапов',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: Colors.grey.shade500,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                            Text(
-                                              '${project.stages.length}',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.grey.shade800,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const Spacer(),
-                                        _buildDateColumn(
-                                          createdLabel:
-                                              '\u0421\u043e\u0437\u0434\u0430\u043d: ${_formatDate(createdAt)}',
-                                          updatedLabel: isEdited
-                                              ? '\u0418\u0437\u043c\u0435\u043d\u0435\u043d: ${_formatDate(updatedAt)}'
-                                              : null,
-                                        ),
-                                      ],
+                                  : _buildWideInfoSection(
+                                      project: project,
+                                      createdLabel: createdLabel,
+                                      updatedLabel: updatedLabel,
                                     ),
                             ],
                           ),
@@ -985,9 +869,94 @@ class _ProjectCardState extends State<_ProjectCard> {
     );
   }
 
+  Widget _buildMobileInfoSection({
+    required ProjectModel project,
+    required String createdLabel,
+    String? updatedLabel,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 20,
+          runSpacing: 10,
+          children: [
+            _buildInfoItem(
+              icon: _getObjectTypeIcon(project.objectType),
+              label: 'Тип',
+              value: _getObjectTypeDisplay(project.objectType),
+            ),
+            _buildInfoItem(
+              icon: Icons.layers_outlined,
+              label: 'Этапов',
+              value: '${project.stages.length}',
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _buildMobileDateSection(
+          createdLabel: createdLabel,
+          updatedLabel: updatedLabel,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWideInfoSection({
+    required ProjectModel project,
+    required String createdLabel,
+    String? updatedLabel,
+  }) {
+    return Row(
+      children: [
+        _buildInfoItem(
+          icon: _getObjectTypeIcon(project.objectType),
+          label: 'Тип',
+          value: _getObjectTypeDisplay(project.objectType),
+        ),
+        const SizedBox(width: 24),
+        _buildInfoItem(
+          icon: Icons.layers_outlined,
+          label: 'Этапов',
+          value: '${project.stages.length}',
+        ),
+        const Spacer(),
+        _buildDateColumn(
+          createdLabel: createdLabel,
+          updatedLabel: updatedLabel,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileDateSection({
+    required String createdLabel,
+    String? updatedLabel,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(top: 10),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(
+            color: Colors.grey.withOpacity(0.18),
+          ),
+        ),
+      ),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: _buildDateColumn(
+          createdLabel: createdLabel,
+          updatedLabel: updatedLabel,
+        ),
+      ),
+    );
+  }
+
   Widget _buildDateColumn({
     required String createdLabel,
     String? updatedLabel,
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.end,
   }) {
     final hasUpdated = updatedLabel != null;
     return ConstrainedBox(
@@ -996,7 +965,7 @@ class _ProjectCardState extends State<_ProjectCard> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment:
             hasUpdated ? MainAxisAlignment.start : MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: crossAxisAlignment,
         children: [
           Text(
             createdLabel,
