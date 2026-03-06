@@ -214,6 +214,10 @@ class _SectionEntriesScreen extends ConsumerWidget {
     required this.onSelectTab,
   });
 
+  void _handleBack(BuildContext context) {
+    Navigator.of(context).maybePop();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final entriesAsync = ref.watch(directoryEntriesProvider(section.id));
@@ -226,7 +230,7 @@ class _SectionEntriesScreen extends ConsumerWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => _handleBack(context),
         ),
         title: 'Справочник',
         subtitle: section.name,
@@ -535,6 +539,10 @@ class _CategoryItemsScreen extends ConsumerWidget {
     required this.onSelectTab,
   });
 
+  void _handleBack(BuildContext context) {
+    Navigator.of(context).maybePop();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final itemsAsync = ref.watch(catalogItemsByCategoryProvider(category.id));
@@ -548,7 +556,7 @@ class _CategoryItemsScreen extends ConsumerWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => _handleBack(context),
         ),
         title: 'Каталог',
         subtitle: category.name,

@@ -33,6 +33,10 @@ class ProjectDetailScreen extends ConsumerWidget {
 
   const ProjectDetailScreen({super.key, required this.projectId});
 
+  void _handleBack(BuildContext context) {
+    Navigator.of(context).maybePop();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final projectAsync = ref.watch(projectByIdProvider(projectId));
@@ -44,7 +48,7 @@ class ProjectDetailScreen extends ConsumerWidget {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new),
             tooltip: 'Назад',
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => _handleBack(context),
           ),
           title: 'Объект',
           subtitle: 'Загрузка',
@@ -57,7 +61,7 @@ class ProjectDetailScreen extends ConsumerWidget {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new),
             tooltip: 'Назад',
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => _handleBack(context),
           ),
           title: 'Объект',
           subtitle: 'Ошибка загрузки',
@@ -88,6 +92,10 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
     Icons.folder_open_rounded,
   ];
 
+  void _handleBack() {
+    Navigator.of(context).maybePop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final showWelcome = ref.watch(
@@ -104,7 +112,7 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: _handleBack,
         ),
         title: _tabTitles[_currentIndex],
         subtitle: widget.project.address,

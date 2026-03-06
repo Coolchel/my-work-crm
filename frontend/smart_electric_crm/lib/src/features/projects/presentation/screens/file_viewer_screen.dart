@@ -28,6 +28,10 @@ class FileViewerScreen extends StatelessWidget {
     }
   }
 
+  void _handleBack(BuildContext context) {
+    Navigator.of(context).maybePop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,7 +42,7 @@ class FileViewerScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           tooltip: 'Назад',
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => _handleBack(context),
         ),
         title: Text(title, style: const TextStyle(color: Colors.white)),
         actions: [

@@ -19,6 +19,14 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    void handleBack() {
+      if (onBackPressed != null) {
+        onBackPressed!();
+        return;
+      }
+      Navigator.of(context).maybePop();
+    }
+
     final settings = ref.watch(appSettingsProvider);
     final settingsNotifier = ref.read(appSettingsProvider.notifier);
     final userAsync = ref.watch(userProfileProvider);
@@ -43,13 +51,7 @@ class SettingsScreen extends ConsumerWidget {
         leading: IconButton(
           tooltip: 'Назад',
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (onBackPressed != null) {
-              onBackPressed!();
-              return;
-            }
-            Navigator.of(context).maybePop();
-          },
+          onPressed: handleBack,
         ),
         title: 'Настройки',
         icon: Icons.settings_rounded,
@@ -107,8 +109,7 @@ class SettingsScreen extends ConsumerWidget {
             child: ListTile(
               leading: const Icon(Icons.folder_open, color: Colors.indigo),
               title: const Text('Справочник'),
-              subtitle: const Text(
-                  'Категории, расценки и шаблоны'),
+              subtitle: const Text('Категории, расценки и шаблоны'),
               trailing: const Icon(Icons.chevron_right),
               hoverColor: AppDesignTokens.hoverOverlay(context),
               onTap: () => _showReferenceWarning(context, ref),
@@ -175,8 +176,7 @@ class SettingsScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.lock_reset, color: Colors.indigo),
                   title: const Text('Управление паролем'),
-                  subtitle:
-                      const Text('Сменить текущий пароль'),
+                  subtitle: const Text('Сменить текущий пароль'),
                   hoverColor: AppDesignTokens.hoverOverlay(context),
                   onTap: () => _showChangePasswordDialog(context, ref),
                 ),
@@ -187,8 +187,7 @@ class SettingsScreen extends ConsumerWidget {
                     'Выйти из системы',
                     style: TextStyle(color: Colors.red),
                   ),
-                  subtitle: const Text(
-                      'Завершить текущий сеанс'),
+                  subtitle: const Text('Завершить текущий сеанс'),
                   hoverColor: AppDesignTokens.hoverOverlay(context),
                   onTap: () async {
                     final confirmed = await showDialog<bool>(
@@ -396,8 +395,7 @@ class SettingsScreen extends ConsumerWidget {
                     enabled: !isLoading,
                     obscureText: true,
                     decoration: InputDecoration(
-                      labelText:
-                          'Пароль текущего аккаунта',
+                      labelText: 'Пароль текущего аккаунта',
                       errorText: passwordError,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -471,8 +469,7 @@ class SettingsScreen extends ConsumerWidget {
                                   if (!isValid) {
                                     setDialogState(() {
                                       isLoading = false;
-                                      passwordError =
-                                          'Неверный пароль';
+                                      passwordError = 'Неверный пароль';
                                     });
                                     return;
                                   }
@@ -653,8 +650,7 @@ class SettingsScreen extends ConsumerWidget {
                                   if (newPasswordController.text !=
                                       confirmPasswordController.text) {
                                     setDialogState(() {
-                                      confirmError =
-                                          'Пароли не совпадают';
+                                      confirmError = 'Пароли не совпадают';
                                     });
                                     return;
                                   }
@@ -677,8 +673,8 @@ class SettingsScreen extends ConsumerWidget {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         const SnackBar(
-                                          content: Text(
-                                              'Пароль успешно изменен'),
+                                          content:
+                                              Text('Пароль успешно изменен'),
                                         ),
                                       );
                                     }

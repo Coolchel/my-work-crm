@@ -51,6 +51,14 @@ def env_csv(name: str, default: str = '') -> list[str]:
     return [item.strip() for item in raw.split(',') if item.strip()]
 
 
+def merge_unique(items: list[str], extra: list[str]) -> list[str]:
+    merged = list(items)
+    for item in extra:
+        if item not in merged:
+            merged.append(item)
+    return merged
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env_bool('DJANGO_DEBUG', default=True)
 
@@ -63,6 +71,13 @@ if not SECRET_KEY:
         raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is False.')
 
 ALLOWED_HOSTS = env_csv('DJANGO_ALLOWED_HOSTS', default='localhost,127.0.0.1')
+if DEBUG:
+    ALLOWED_HOSTS = merge_unique(
+        ALLOWED_HOSTS,
+        [
+            '10.0.2.2',  # Android Emulator -> host loopback
+        ],
+    )
 if not ALLOWED_HOSTS and not DEBUG:
     raise ImproperlyConfigured('DJANGO_ALLOWED_HOSTS must be set when DJANGO_DEBUG is False.')
 
