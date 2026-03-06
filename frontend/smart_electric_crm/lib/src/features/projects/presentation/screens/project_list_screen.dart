@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -649,7 +650,11 @@ class _ProjectCardState extends State<_ProjectCard> {
 
     final isEdited =
         updatedAt != null && updatedAt.difference(createdAt).abs().inHours >= 2;
-    final isCompact = MediaQuery.sizeOf(context).width < 380;
+    final isMobilePlatform = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS);
+    final isCompact =
+        isMobilePlatform || MediaQuery.sizeOf(context).width < 380;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
