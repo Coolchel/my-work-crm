@@ -27,6 +27,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _lastNonSettingsIndex = 0;
   bool _temporarySettingsVisible = false;
 
+  void _handleSettingsBack(AppSettingsState settings) {
+    _closeSettingsTab(settings);
+  }
+
+  bool _isSettingsTabSelected(AppSettingsState settings, int itemCount) {
+    if (itemCount == 0) {
+      return false;
+    }
+
+    final settingsIndex = (!settings.showWelcome || _temporarySettingsVisible)
+        ? itemCount - 1
+        : -1;
+    return settingsIndex != -1 && _currentIndex == settingsIndex;
+  }
+
   void _openSettingsFromWelcome(AppSettingsState settings) {
     setState(() {
       _lastNonSettingsIndex = _currentIndex;
@@ -100,7 +115,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       items.add(
         _DestinationItem(
           screen: SettingsScreen(
-            onBackPressed: () => _closeSettingsTab(settings),
+            onBackPressed: () => _handleSettingsBack(settings),
           ),
           destination: const NavigationDestination(
             icon: Icon(Icons.settings_outlined),
@@ -125,44 +140,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _currentIndex = 0;
     }
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: items.map((e) => e.screen).toList(),
-      ),
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          color: isDark
-              ? scheme.surfaceContainerHigh
-              : scheme.surface.withOpacity(0.98),
-          border: Border(
-            top: BorderSide(
-              color: scheme.outlineVariant.withOpacity(isDark ? 0.55 : 0.4),
-              width: 0.8,
+    return PopScope(
+      canPop: !_isSettingsTabSelected(settings, items.length),
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop || !_isSettingsTabSelected(settings, items.length)) {
+          return;
+        }
+        _handleSettingsBack(settings);
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: items.map((e) => e.screen).toList(),
+        ),
+        bottomNavigationBar: DecoratedBox(
+          decoration: BoxDecoration(
+            color: isDark
+                ? scheme.surfaceContainerHigh
+                : scheme.surface.withOpacity(0.98),
+            border: Border(
+              top: BorderSide(
+                color: scheme.outlineVariant.withOpacity(isDark ? 0.55 : 0.4),
+                width: 0.8,
+              ),
             ),
           ),
-        ),
-        child: NavigationBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          selectedIndex: _currentIndex,
-          onDestinationSelected: (index) {
-            final settingsIndex =
-                (!settings.showWelcome || _temporarySettingsVisible)
-                    ? items.length - 1
-                    : -1;
+          child: NavigationBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (index) {
+              final settingsIndex =
+                  (!settings.showWelcome || _temporarySettingsVisible)
+                      ? items.length - 1
+                      : -1;
 
-            setState(() {
-              _currentIndex = index;
-              if (index != settingsIndex) {
-                _lastNonSettingsIndex = index;
-                if (settings.showWelcome && _temporarySettingsVisible) {
-                  _temporarySettingsVisible = false;
+              setState(() {
+                _currentIndex = index;
+                if (index != settingsIndex) {
+                  _lastNonSettingsIndex = index;
+                  if (settings.showWelcome && _temporarySettingsVisible) {
+                    _temporarySettingsVisible = false;
+                  }
                 }
-              }
-            });
-          },
-          destinations: items.map((e) => e.destination).toList(),
+              });
+            },
+            destinations: items.map((e) => e.destination).toList(),
+          ),
         ),
       ),
     );

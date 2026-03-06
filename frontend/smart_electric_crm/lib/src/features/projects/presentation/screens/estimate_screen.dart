@@ -63,6 +63,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   List<EstimateItemModel> _precalcWorkItems = const [];
   List<EstimateItemModel> _precalcMaterialItems = const [];
 
+  void _handleBack() {
+    Navigator.of(context).maybePop();
+  }
+
   List<EstimateItemModel> get _works =>
       _items.where((i) => i.itemType == 'work').toList();
   List<EstimateItemModel> get _materials =>
@@ -164,7 +168,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: _handleBack,
         ),
         title: 'Смета',
         subtitle: StageCard.getStageTitleDisplay(widget.stage.title),

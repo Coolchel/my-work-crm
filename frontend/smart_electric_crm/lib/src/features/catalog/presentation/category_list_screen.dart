@@ -29,6 +29,10 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
   int _currentIndex = 0;
   bool _isSyncingSystemSections = false;
 
+  void _handleBack() {
+    Navigator.of(context).maybePop();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -120,7 +124,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: _handleBack,
         ),
         title: 'Справочник',
         icon: Icons.menu_book_rounded,
