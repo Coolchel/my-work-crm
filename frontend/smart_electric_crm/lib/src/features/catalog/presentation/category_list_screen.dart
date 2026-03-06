@@ -10,11 +10,11 @@ import 'package:smart_electric_crm/src/features/catalog/domain/category_model.da
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/directory_models.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 import 'package:smart_electric_crm/src/features/settings/application/app_settings_controller.dart';
-import '../../home/presentation/screens/home_screen.dart';
 
 part 'widgets/category_list_screen_components.dart';
 
@@ -164,12 +164,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
         selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
         onDestinationSelected: (index) {
           if (showWelcome && index == 0) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute<void>(
-                builder: (_) => const HomeScreen(),
-              ),
-              (route) => false,
-            );
+            AppNavigation.goHome();
             return;
           }
           setState(() => _currentIndex = showWelcome ? index - 1 : index);

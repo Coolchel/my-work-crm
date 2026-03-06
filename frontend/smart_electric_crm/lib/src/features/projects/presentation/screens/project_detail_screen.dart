@@ -16,8 +16,8 @@ import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_di
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import '../../../settings/application/app_settings_controller.dart';
-import '../../../home/presentation/screens/home_screen.dart';
 import 'dart:io';
 import '../../data/models/project_file_model.dart';
 import '../../../../shared/services/temp_file_service.dart';
@@ -126,12 +126,7 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
         selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
         onDestinationSelected: (index) {
           if (showWelcome && index == 0) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute<void>(
-                builder: (_) => const HomeScreen(),
-              ),
-              (route) => false,
-            );
+            AppNavigation.goHome();
             return;
           }
           setState(() {

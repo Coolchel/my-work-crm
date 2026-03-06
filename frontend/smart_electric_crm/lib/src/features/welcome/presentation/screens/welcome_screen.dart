@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/navigation/app_navigation.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../widgets/new_project_card.dart';
@@ -12,9 +13,11 @@ import '../widgets/welcome_header.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
   final VoidCallback onSettingsPressed;
+  final HomeScrollController? scrollController;
 
   const WelcomeScreen({
     required this.onSettingsPressed,
+    this.scrollController,
     super.key,
   });
 
@@ -46,6 +49,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
   void initState() {
     super.initState();
     _scrollController.addListener(_recalculateOverlayMaxHeight);
+    widget.scrollController?.attach(scrollToTop);
 
     _liftController = AnimationController(
       vsync: this,
@@ -71,11 +75,38 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
   }
 
   @override
+  void didUpdateWidget(covariant WelcomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.scrollController != widget.scrollController) {
+      oldWidget.scrollController?.detach();
+      widget.scrollController?.attach(scrollToTop);
+    }
+  }
+
+  @override
   void dispose() {
+    widget.scrollController?.detach();
     _scrollController.removeListener(_recalculateOverlayMaxHeight);
     _scrollController.dispose();
     _liftController.dispose();
     super.dispose();
+  }
+
+  Future<void> scrollToTop({bool animated = true}) async {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+
+    if (animated) {
+      await _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+
+    _scrollController.jumpTo(0);
   }
 
   void _recalculateOverlayMaxHeight() {

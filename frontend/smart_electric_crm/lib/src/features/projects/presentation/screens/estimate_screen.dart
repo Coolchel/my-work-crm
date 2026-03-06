@@ -19,7 +19,7 @@ import '../../../engineering/presentation/dialogs/template_selection_dialog.dart
 import '../../../engineering/presentation/providers/template_providers.dart';
 import '../../../engineering/data/models/template_models.dart';
 import '../../../settings/application/app_settings_controller.dart';
-import '../../../home/presentation/screens/home_screen.dart';
+import '../../../../core/navigation/app_navigation.dart';
 import '../../../../shared/presentation/dialogs/text_input_dialog.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
@@ -274,12 +274,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
         onDestinationSelected: (index) {
           if (showWelcome && index == 0) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute<void>(
-                builder: (_) => const HomeScreen(),
-              ),
-              (route) => false,
-            );
+            AppNavigation.goHome();
             return;
           }
           setState(() {

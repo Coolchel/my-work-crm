@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/navigation/app_navigation.dart';
 import '../../../finance/presentation/screens/finance_screen.dart';
 import '../../../projects/presentation/screens/project_list_screen.dart';
 import '../../../settings/application/app_settings_controller.dart';
@@ -27,8 +28,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _lastNonSettingsIndex = 0;
   bool _temporarySettingsVisible = false;
 
+  @override
+  void initState() {
+    super.initState();
+    AppNavigation.registerHomeTabHandler(_handleExternalHomeRequest);
+  }
+
+  @override
+  void dispose() {
+    AppNavigation.unregisterHomeTabHandler(_handleExternalHomeRequest);
+    super.dispose();
+  }
+
   void _handleSettingsBack(AppSettingsState settings) {
     _closeSettingsTab(settings);
+  }
+
+  void _handleExternalHomeRequest() {
+    if (!mounted) {
+      return;
+    }
+    final settings = ref.read(appSettingsProvider);
+    _selectHomeTab(settings, scrollToTop: false);
   }
 
   bool _isSettingsTabSelected(AppSettingsState settings, int itemCount) {
@@ -61,6 +82,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
+  Future<void> _scrollHomeToTop() {
+    return AppNavigation.homeScrollController.scrollToTop();
+  }
+
+  void _selectHomeTab(
+    AppSettingsState settings, {
+    required bool scrollToTop,
+  }) {
+    if (!settings.showWelcome) {
+      return;
+    }
+
+    setState(() {
+      _currentIndex = 0;
+      _lastNonSettingsIndex = 0;
+      if (_temporarySettingsVisible) {
+        _temporarySettingsVisible = false;
+      }
+    });
+
+    if (!scrollToTop) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _scrollHomeToTop();
+    });
+  }
+
+  void _handleDestinationSelected(
+    int index,
+    AppSettingsState settings,
+    int itemCount,
+  ) {
+    if (settings.showWelcome && index == 0) {
+      _selectHomeTab(settings, scrollToTop: true);
+      return;
+    }
+
+    final settingsIndex = (!settings.showWelcome || _temporarySettingsVisible)
+        ? itemCount - 1
+        : -1;
+
+    setState(() {
+      _currentIndex = index;
+      if (index != settingsIndex) {
+        _lastNonSettingsIndex = index;
+        if (settings.showWelcome && _temporarySettingsVisible) {
+          _temporarySettingsVisible = false;
+        }
+      }
+    });
+  }
+
   List<_DestinationItem> _buildDestinations(AppSettingsState settings) {
     final items = <_DestinationItem>[];
 
@@ -69,6 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _DestinationItem(
           screen: WelcomeScreen(
             onSettingsPressed: () => _openSettingsFromWelcome(settings),
+            scrollController: AppNavigation.homeScrollController,
           ),
           destination: const NavigationDestination(
             icon: Icon(Icons.home_outlined),
@@ -141,12 +220,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     return PopScope(
-      canPop: !_isSettingsTabSelected(settings, items.length),
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop || !_isSettingsTabSelected(settings, items.length)) {
+        if (didPop) {
           return;
         }
-        _handleSettingsBack(settings);
+        if (_isSettingsTabSelected(settings, items.length)) {
+          _handleSettingsBack(settings);
+        }
       },
       child: Scaffold(
         body: IndexedStack(
@@ -169,22 +250,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             selectedIndex: _currentIndex,
-            onDestinationSelected: (index) {
-              final settingsIndex =
-                  (!settings.showWelcome || _temporarySettingsVisible)
-                      ? items.length - 1
-                      : -1;
-
-              setState(() {
-                _currentIndex = index;
-                if (index != settingsIndex) {
-                  _lastNonSettingsIndex = index;
-                  if (settings.showWelcome && _temporarySettingsVisible) {
-                    _temporarySettingsVisible = false;
-                  }
-                }
-              });
-            },
+            onDestinationSelected: (index) =>
+                _handleDestinationSelected(index, settings, items.length),
             destinations: items.map((e) => e.destination).toList(),
           ),
         ),

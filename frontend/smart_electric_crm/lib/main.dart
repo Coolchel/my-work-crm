@@ -8,6 +8,7 @@ import 'src/features/settings/application/app_settings_controller.dart';
 import 'src/shared/services/temp_file_service.dart';
 import 'src/core/theme/app_theme.dart';
 import 'src/core/network/network_recovery_bootstrap.dart';
+import 'src/core/navigation/app_navigation.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
 
@@ -24,10 +25,11 @@ class MyApp extends ConsumerStatefulWidget {
   ConsumerState<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends ConsumerState<MyApp> {
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     ref.read(networkRecoveryBootstrapProvider);
     // Check auth status on app start
     // We delay slightly to ensure provider is ready or just call it.
@@ -36,11 +38,29 @@ class _MyAppState extends ConsumerState<MyApp> {
   }
 
   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Future<bool> didPopRoute() async {
+    final navigator = appNavigatorKey.currentState;
+    if (navigator == null) {
+      return true;
+    }
+
+    await navigator.maybePop();
+    return true;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final authStatus = ref.watch(authProvider);
     final settings = ref.watch(appSettingsProvider);
 
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       title: 'Smart Electric CRM',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
@@ -49,9 +69,15 @@ class _MyAppState extends ConsumerState<MyApp> {
       home: AppLifecycleManager(
         child: switch (authStatus) {
           AuthStatus.authenticated => const HomeScreen(),
-          AuthStatus.unauthenticated || AuthStatus.error => const LoginScreen(),
-          AuthStatus.loading || AuthStatus.initial => const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
+          AuthStatus.unauthenticated ||
+          AuthStatus.error =>
+            const _RootBackBlocker(
+              child: LoginScreen(),
+            ),
+          AuthStatus.loading || AuthStatus.initial => const _RootBackBlocker(
+              child: Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              ),
             ),
         },
       ),
@@ -102,5 +128,19 @@ class _AppLifecycleManagerState extends State<AppLifecycleManager> {
   @override
   Widget build(BuildContext context) {
     return widget.child;
+  }
+}
+
+class _RootBackBlocker extends StatelessWidget {
+  final Widget child;
+
+  const _RootBackBlocker({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      child: child,
+    );
   }
 }

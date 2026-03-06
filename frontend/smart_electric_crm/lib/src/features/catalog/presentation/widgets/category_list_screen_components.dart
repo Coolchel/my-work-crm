@@ -380,12 +380,7 @@ class _SectionEntriesScreen extends ConsumerWidget {
         selectedIndex: showWelcome ? 1 : 0,
         onDestinationSelected: (index) {
           if (showWelcome && index == 0) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute<void>(
-                builder: (_) => const HomeScreen(),
-              ),
-              (route) => false,
-            );
+            AppNavigation.goHome();
             return;
           }
           final mappedIndex = showWelcome ? index - 1 : index;
@@ -722,12 +717,7 @@ class _CategoryItemsScreen extends ConsumerWidget {
         selectedIndex: showWelcome ? 2 : 1,
         onDestinationSelected: (index) {
           if (showWelcome && index == 0) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute<void>(
-                builder: (_) => const HomeScreen(),
-              ),
-              (route) => false,
-            );
+            AppNavigation.goHome();
             return;
           }
           final mappedIndex = showWelcome ? index - 1 : index;
