@@ -13,7 +13,12 @@ import '../../../../core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class StatisticsScreen extends ConsumerStatefulWidget {
-  const StatisticsScreen({super.key});
+  final VoidCallback? onBackPressed;
+
+  const StatisticsScreen({
+    this.onBackPressed,
+    super.key,
+  });
 
   @override
   ConsumerState<StatisticsScreen> createState() => _StatisticsScreenState();
@@ -80,6 +85,8 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
     final statsAsync = ref.watch(statisticsDataProvider);
+    final handleBack =
+        widget.onBackPressed ?? () => Navigator.of(context).maybePop();
     final currentPeriod = ref.watch(statisticsFilterProvider);
     final statisticsAccent =
         Theme.of(context).floatingActionButtonTheme.backgroundColor ??
@@ -120,6 +127,11 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
 
     return Scaffold(
       appBar: CompactSectionAppBar(
+        leading: IconButton(
+          tooltip: '\u041d\u0430\u0437\u0430\u0434',
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: handleBack,
+        ),
         title: 'Статистика',
         icon: Icons.bar_chart_rounded,
         gradientColors: AppDesignTokens.subtleSectionGradient,

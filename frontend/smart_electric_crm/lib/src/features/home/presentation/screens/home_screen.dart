@@ -68,6 +68,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return settingsIndex != -1 && _currentIndex == settingsIndex;
   }
 
+  bool _canReturnToHome(AppSettingsState settings) {
+    return settings.showWelcome && _currentIndex != 0;
+  }
+
+  void _handleSectionBack(AppSettingsState settings, int itemCount) {
+    if (_canReturnToHome(settings)) {
+      _selectHomeTab(settings, scrollToTop: false);
+      return;
+    }
+
+    if (_isSettingsTabSelected(settings, itemCount)) {
+      _handleSettingsBack(settings);
+    }
+  }
+
   void _openSettingsFromWelcome(AppSettingsState settings) {
     setState(() {
       _lastNonSettingsIndex = _currentIndex;
@@ -172,7 +187,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     items.add(
       _DestinationItem(
-        screen: const ProjectListScreen(),
+        screen: ProjectListScreen(
+          onBackPressed: () => _handleSectionBack(settings, items.length),
+        ),
         destination: const NavigationDestination(
           icon: Icon(Icons.description_outlined),
           selectedIcon: Icon(Icons.description),
@@ -184,7 +201,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     items.addAll([
       _DestinationItem(
-        screen: const FinanceScreen(),
+        screen: FinanceScreen(
+          onBackPressed: () => _handleSectionBack(settings, items.length),
+        ),
         destination: const NavigationDestination(
           icon: Icon(Icons.account_balance_wallet_outlined),
           selectedIcon: Icon(Icons.account_balance_wallet),
@@ -193,7 +212,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         scrollController: AppNavigation.financeScrollController,
       ),
       _DestinationItem(
-        screen: const StatisticsScreen(),
+        screen: StatisticsScreen(
+          onBackPressed: () => _handleSectionBack(settings, items.length),
+        ),
         destination: const NavigationDestination(
           icon: Icon(Icons.bar_chart_outlined),
           selectedIcon: Icon(Icons.bar_chart),
@@ -207,7 +228,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       items.add(
         _DestinationItem(
           screen: SettingsScreen(
-            onBackPressed: () => _handleSettingsBack(settings),
+            onBackPressed: () => _handleSectionBack(settings, items.length),
           ),
           destination: const NavigationDestination(
             icon: Icon(Icons.settings_outlined),
@@ -239,9 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         if (didPop) {
           return;
         }
-        if (_isSettingsTabSelected(settings, items.length)) {
-          _handleSettingsBack(settings);
-        }
+        _handleSectionBack(settings, items.length);
       },
       child: Scaffold(
         body: IndexedStack(
