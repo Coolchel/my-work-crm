@@ -28,6 +28,8 @@ class CategoryListScreen extends ConsumerStatefulWidget {
 class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
   int _currentIndex = 0;
   bool _isSyncingSystemSections = false;
+  final ScrollController _systemScrollController = ScrollController();
+  final ScrollController _catalogScrollController = ScrollController();
 
   void _handleBack() {
     Navigator.of(context).maybePop();
@@ -39,6 +41,13 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _synchronizeSystemSections(showSuccessMessage: false);
     });
+  }
+
+  @override
+  void dispose() {
+    _systemScrollController.dispose();
+    _catalogScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _synchronizeSystemSections(
@@ -113,6 +122,13 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
     return error.toString();
   }
 
+  Future<void> _scrollCurrentTabToTop() {
+    if (_currentIndex == 0) {
+      return AppNavigation.directorySystemScrollController.scrollToTop();
+    }
+    return AppNavigation.directoryCatalogScrollController.scrollToTop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final showWelcome = ref.watch(
@@ -150,11 +166,13 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
         index: _currentIndex,
         children: [
           _SystemSectionsTab(
+            scrollController: _systemScrollController,
             isSyncing: _isSyncingSystemSections,
             onError: (message) => _showSnack(message, isError: true),
             onSelectTab: (index) => setState(() => _currentIndex = index),
           ),
           _CatalogTab(
+            scrollController: _catalogScrollController,
             onError: (message) => _showSnack(message, isError: true),
             onSelectTab: (index) => setState(() => _currentIndex = index),
           ),
@@ -167,7 +185,12 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
             AppNavigation.goHome();
             return;
           }
-          setState(() => _currentIndex = showWelcome ? index - 1 : index);
+          final mappedIndex = showWelcome ? index - 1 : index;
+          if (mappedIndex == _currentIndex) {
+            _scrollCurrentTabToTop();
+            return;
+          }
+          setState(() => _currentIndex = mappedIndex);
         },
         destinations: [
           if (showWelcome)

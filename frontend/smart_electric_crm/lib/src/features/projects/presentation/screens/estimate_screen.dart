@@ -39,7 +39,8 @@ class EstimateScreen extends ConsumerStatefulWidget {
 }
 
 class _EstimateScreenState extends ConsumerState<EstimateScreen> {
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _worksScrollController = ScrollController();
+  final ScrollController _materialsScrollController = ScrollController();
   Timer? _markupDebounce;
 
   int _currentIndex = 0;
@@ -151,7 +152,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _worksScrollController.dispose();
+    _materialsScrollController.dispose();
     _markupDebounce?.cancel();
     super.dispose();
   }
@@ -226,6 +228,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         children: [
           // Works Tab
           EstimateTab(
+            scrollController: _worksScrollController,
             items: _works,
             title: 'Работы', // Determines view mode inside widget
             showPrices: true,
@@ -245,6 +248,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           ),
           // Materials Tab
           EstimateTab(
+            scrollController: _materialsScrollController,
             items: _materials,
             title: 'Материалы',
             showPrices: _showPrices,
@@ -277,8 +281,17 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
             AppNavigation.goHome();
             return;
           }
+          final mappedIndex = showWelcome ? index - 1 : index;
+          if (mappedIndex == _currentIndex) {
+            if (_currentIndex == 0) {
+              AppNavigation.worksScrollController.scrollToTop();
+            } else {
+              AppNavigation.materialsScrollController.scrollToTop();
+            }
+            return;
+          }
           setState(() {
-            _currentIndex = showWelcome ? index - 1 : index;
+            _currentIndex = mappedIndex;
           });
         },
         destinations: [

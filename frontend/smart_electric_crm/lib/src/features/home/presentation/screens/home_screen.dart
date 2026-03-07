@@ -19,8 +19,13 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _DestinationItem {
   final Widget screen;
   final NavigationDestination destination;
+  final ScrollToTopController? scrollController;
 
-  const _DestinationItem({required this.screen, required this.destination});
+  const _DestinationItem({
+    required this.screen,
+    required this.destination,
+    this.scrollController,
+  });
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
@@ -117,13 +122,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _handleDestinationSelected(
     int index,
     AppSettingsState settings,
-    int itemCount,
+    List<_DestinationItem> items,
   ) {
+    if (index == _currentIndex) {
+      items[index].scrollController?.scrollToTop();
+      return;
+    }
+
     if (settings.showWelcome && index == 0) {
       _selectHomeTab(settings, scrollToTop: true);
       return;
     }
 
+    final itemCount = items.length;
     final settingsIndex = (!settings.showWelcome || _temporarySettingsVisible)
         ? itemCount - 1
         : -1;
@@ -154,41 +165,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             selectedIcon: Icon(Icons.home),
             label: 'Главная',
           ),
+          scrollController: AppNavigation.homeScrollController,
         ),
       );
     }
 
     items.add(
-      const _DestinationItem(
-        screen: ProjectListScreen(),
-        destination: NavigationDestination(
+      _DestinationItem(
+        screen: const ProjectListScreen(),
+        destination: const NavigationDestination(
           icon: Icon(Icons.description_outlined),
           selectedIcon: Icon(Icons.description),
           label: 'Объекты',
         ),
+        scrollController: AppNavigation.objectsScrollController,
       ),
     );
 
-    items.addAll(
-      const [
-        _DestinationItem(
-          screen: FinanceScreen(),
-          destination: NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet),
-            label: 'Финансы',
-          ),
+    items.addAll([
+      _DestinationItem(
+        screen: const FinanceScreen(),
+        destination: const NavigationDestination(
+          icon: Icon(Icons.account_balance_wallet_outlined),
+          selectedIcon: Icon(Icons.account_balance_wallet),
+          label: 'Финансы',
         ),
-        _DestinationItem(
-          screen: StatisticsScreen(),
-          destination: NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: 'Статистика',
-          ),
+        scrollController: AppNavigation.financeScrollController,
+      ),
+      _DestinationItem(
+        screen: const StatisticsScreen(),
+        destination: const NavigationDestination(
+          icon: Icon(Icons.bar_chart_outlined),
+          selectedIcon: Icon(Icons.bar_chart),
+          label: 'Статистика',
         ),
-      ],
-    );
+        scrollController: AppNavigation.statisticsScrollController,
+      ),
+    ]);
 
     if (!settings.showWelcome || _temporarySettingsVisible) {
       items.add(
@@ -201,6 +214,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             selectedIcon: Icon(Icons.settings),
             label: 'Настройки',
           ),
+          scrollController: AppNavigation.settingsScrollController,
         ),
       );
     }
@@ -251,7 +265,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             elevation: 0,
             selectedIndex: _currentIndex,
             onDestinationSelected: (index) =>
-                _handleDestinationSelected(index, settings, items.length),
+                _handleDestinationSelected(index, settings, items),
             destinations: items.map((e) => e.destination).toList(),
           ),
         ),

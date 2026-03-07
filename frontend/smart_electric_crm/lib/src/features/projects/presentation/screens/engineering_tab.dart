@@ -4,16 +4,60 @@ import '../../data/models/project_model.dart';
 import '../widgets/engineering/shield_card.dart';
 import '../../../engineering/data/models/shield_model.dart';
 import '../dialogs/engineering/add_shield_dialog.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
-class EngineeringTab extends ConsumerWidget {
+class EngineeringTab extends ConsumerStatefulWidget {
   final ProjectModel project;
+  final ScrollController scrollController;
 
-  const EngineeringTab({required this.project, super.key});
+  const EngineeringTab({
+    required this.project,
+    required this.scrollController,
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final sortedShields = List<ShieldModel>.from(project.shields)
+  ConsumerState<EngineeringTab> createState() => _EngineeringTabState();
+}
+
+class _EngineeringTabState extends ConsumerState<EngineeringTab> {
+  Object? _scrollAttachment;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollAttachment =
+        AppNavigation.shieldsScrollController.attach(_scrollToTop);
+  }
+
+  @override
+  void dispose() {
+    final scrollAttachment = _scrollAttachment;
+    if (scrollAttachment != null) {
+      AppNavigation.shieldsScrollController.detach(scrollAttachment);
+    }
+    super.dispose();
+  }
+
+  Future<void> _scrollToTop({bool animated = true}) async {
+    if (!widget.scrollController.hasClients) {
+      return;
+    }
+    if (animated) {
+      await widget.scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    widget.scrollController.jumpTo(0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sortedShields = List<ShieldModel>.from(widget.project.shields)
       ..sort((a, b) {
         final order = {'power': 0, 'multimedia': 1, 'led': 2};
         return (order[a.shieldType] ?? 99).compareTo(order[b.shieldType] ?? 99);
@@ -27,7 +71,7 @@ class EngineeringTab extends ConsumerWidget {
         child: FloatingActionButton(
           heroTag: 'add_shield_fab',
           onPressed: () =>
-              _showAddShieldDialog(context, ref, project.id.toString()),
+              _showAddShieldDialog(context, ref, widget.project.id.toString()),
           backgroundColor: Colors.indigo,
           foregroundColor: Theme.of(context).colorScheme.surface,
           elevation: 2,
@@ -36,10 +80,11 @@ class EngineeringTab extends ConsumerWidget {
         ),
       ),
       body: SingleChildScrollView(
+        controller: widget.scrollController,
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
         child: Column(
           children: [
-            if (project.shields.isEmpty)
+            if (widget.project.shields.isEmpty)
               const FriendlyEmptyState(
                 icon: Icons.settings_input_component_outlined,
                 title: 'Нет щитов',
@@ -50,7 +95,7 @@ class EngineeringTab extends ConsumerWidget {
             else
               ...sortedShields.map((shield) => ShieldCard(
                     shield: shield,
-                    projectId: project.id.toString(),
+                    projectId: widget.project.id.toString(),
                   )),
             const SizedBox(height: 80),
           ],

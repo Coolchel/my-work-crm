@@ -4,19 +4,31 @@ import 'package:flutter/material.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
-class HomeScrollController {
-  Future<void> Function({bool animated})? _scrollToTop;
+typedef ScrollToTopCallback = Future<void> Function({bool animated});
 
-  void attach(Future<void> Function({bool animated}) callback) {
-    _scrollToTop = callback;
+class ScrollToTopController {
+  final Map<Object, ScrollToTopCallback> _callbacks =
+      <Object, ScrollToTopCallback>{};
+  final List<Object> _attachmentOrder = <Object>[];
+
+  Object attach(ScrollToTopCallback callback) {
+    final token = Object();
+    _callbacks[token] = callback;
+    _attachmentOrder.add(token);
+    return token;
   }
 
-  void detach() {
-    _scrollToTop = null;
+  void detach(Object token) {
+    _callbacks.remove(token);
+    _attachmentOrder.remove(token);
   }
 
   Future<void> scrollToTop({bool animated = true}) async {
-    final callback = _scrollToTop;
+    if (_attachmentOrder.isEmpty) {
+      return;
+    }
+    final token = _attachmentOrder.last;
+    final callback = _callbacks[token];
     if (callback == null) {
       return;
     }
@@ -27,8 +39,30 @@ class HomeScrollController {
 class AppNavigation {
   AppNavigation._();
 
-  static final HomeScrollController homeScrollController =
-      HomeScrollController();
+  static final ScrollToTopController homeScrollController =
+      ScrollToTopController();
+  static final ScrollToTopController objectsScrollController =
+      ScrollToTopController();
+  static final ScrollToTopController financeScrollController =
+      ScrollToTopController();
+  static final ScrollToTopController statisticsScrollController =
+      ScrollToTopController();
+  static final ScrollToTopController settingsScrollController =
+      ScrollToTopController();
+  static final ScrollToTopController worksScrollController =
+      ScrollToTopController();
+  static final ScrollToTopController materialsScrollController =
+      ScrollToTopController();
+  static final ScrollToTopController stagesScrollController =
+      ScrollToTopController();
+  static final ScrollToTopController shieldsScrollController =
+      ScrollToTopController();
+  static final ScrollToTopController filesScrollController =
+      ScrollToTopController();
+  static final ScrollToTopController directorySystemScrollController =
+      ScrollToTopController();
+  static final ScrollToTopController directoryCatalogScrollController =
+      ScrollToTopController();
 
   static VoidCallback? _selectHomeTab;
 

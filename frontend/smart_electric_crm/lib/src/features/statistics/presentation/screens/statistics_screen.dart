@@ -9,10 +9,51 @@ import '../widgets/work_dynamics_chart.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../../../shared/presentation/widgets/help_tooltip_icon.dart';
 import '../../../../core/theme/app_design_tokens.dart';
+import '../../../../core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
-class StatisticsScreen extends ConsumerWidget {
+class StatisticsScreen extends ConsumerStatefulWidget {
   const StatisticsScreen({super.key});
+
+  @override
+  ConsumerState<StatisticsScreen> createState() => _StatisticsScreenState();
+}
+
+class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
+  final ScrollController _scrollController = ScrollController();
+  Object? _scrollAttachment;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollAttachment =
+        AppNavigation.statisticsScrollController.attach(_scrollToTop);
+  }
+
+  @override
+  void dispose() {
+    final scrollAttachment = _scrollAttachment;
+    if (scrollAttachment != null) {
+      AppNavigation.statisticsScrollController.detach(scrollAttachment);
+    }
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _scrollToTop({bool animated = true}) async {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    if (animated) {
+      await _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    _scrollController.jumpTo(0);
+  }
 
   String _formatAmount(double amount) {
     if (amount == amount.roundToDouble()) {
@@ -29,7 +70,7 @@ class StatisticsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final viewport = MediaQuery.sizeOf(context);
     final isMobile = viewport.width < 600;
     final orientation = MediaQuery.orientationOf(context);
@@ -92,6 +133,7 @@ class StatisticsScreen extends ConsumerWidget {
         data: (stats) => RefreshIndicator(
           onRefresh: () async => ref.invalidate(statisticsDataProvider),
           child: SingleChildScrollView(
+            controller: _scrollController,
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
