@@ -43,6 +43,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   late Animation<double> _fadeAnimation;
   final _searchFocusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
+  final SectionAppBarCollapseController _appBarCollapseController =
+      SectionAppBarCollapseController();
   Object? _scrollAttachment;
 
   static const _objectTypes = {
@@ -58,6 +60,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   @override
   void initState() {
     super.initState();
+    _appBarCollapseController.bind(_scrollController);
     _scrollAttachment =
         AppNavigation.objectsScrollController.attach(_scrollToTop);
     _searchAnimController = AnimationController(
@@ -76,6 +79,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     if (scrollAttachment != null) {
       AppNavigation.objectsScrollController.detach(scrollAttachment);
     }
+    _appBarCollapseController.dispose();
     _scrollController.dispose();
     _searchController.dispose();
     _searchAnimController.dispose();
@@ -188,37 +192,62 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     final handleBack =
         widget.onBackPressed ?? () => Navigator.of(context).maybePop();
 
-    return Scaffold(
-      appBar: CompactSectionAppBar(
-        leading: IconButton(
-          tooltip: '\u041d\u0430\u0437\u0430\u0434',
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: handleBack,
-        ),
-        title: 'Объекты',
-        icon: Icons.apartment_rounded,
-        gradientColors: AppDesignTokens.subtleSectionGradient,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            tooltip: 'Поиск',
-            onPressed: _toggleSearch,
-          ),
-          IconButton(
-            icon: Badge(
-              isLabelVisible: _hasActiveFilters,
-              smallSize: 8,
-              child: const Icon(Icons.filter_list),
+    return ListenableBuilder(
+      listenable: _appBarCollapseController,
+      builder: (context, child) {
+        return Scaffold(
+          appBar: CompactSectionAppBar(
+            collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
+              context,
+              _appBarCollapseController.progress,
             ),
-            tooltip: 'Фильтры',
-            onPressed: () => _showFilterDialog(context),
+            leading: IconButton(
+              tooltip: 'Назад',
+              icon: const Icon(Icons.arrow_back_ios_new),
+              onPressed: handleBack,
+            ),
+            title: 'Объекты',
+            icon: Icons.apartment_rounded,
+            gradientColors: AppDesignTokens.subtleSectionGradient,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.search),
+                tooltip: 'Поиск',
+                onPressed: _toggleSearch,
+              ),
+              IconButton(
+                icon: Badge(
+                  isLabelVisible: _hasActiveFilters,
+                  smallSize: 8,
+                  child: const Icon(Icons.filter_list),
+                ),
+                tooltip: 'Фильтры',
+                onPressed: () => _showFilterDialog(context),
+              ),
+              const SizedBox(width: 8),
+            ],
           ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Column(
+          body: child!,
+          floatingActionButton: Tooltip(
+            message: 'Добавить объект',
+            preferBelow: false,
+            verticalOffset: 32,
+            child: FloatingActionButton(
+              heroTag: 'add_project',
+              elevation: 4,
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => const AddProjectDialog(),
+                );
+              },
+              child: const Icon(Icons.add),
+            ),
+          ),
+        );
+      },
+      child: Column(
         children: [
-          // ── Pinned search panel (animated height) ──────────────────────────
           ClipRect(
             child: AnimatedSize(
               duration: const Duration(milliseconds: 300),
@@ -250,8 +279,11 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                             color: Colors.grey.shade500,
                             fontSize: 15,
                           ),
-                          prefixIcon: Icon(Icons.search,
-                              color: Colors.grey.shade600, size: 22),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: Colors.grey.shade600,
+                            size: 22,
+                          ),
                           suffixIcon: _searchController.text.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(Icons.close, size: 20),
@@ -269,15 +301,17 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: scheme.outlineVariant
-                                  .withOpacity(isDark ? 0.34 : 0.26),
+                              color: scheme.outlineVariant.withOpacity(
+                                isDark ? 0.34 : 0.26,
+                              ),
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: scheme.outlineVariant
-                                  .withOpacity(isDark ? 0.34 : 0.26),
+                              color: scheme.outlineVariant.withOpacity(
+                                isDark ? 0.34 : 0.26,
+                              ),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
@@ -286,7 +320,9 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                                 BorderSide(color: scheme.primary, width: 1.5),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                         ),
                         onChanged: (val) => setState(() => _searchQuery = val),
                         onSubmitted: (_) => _closeSearch(),
@@ -297,8 +333,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
               ),
             ),
           ),
-
-          // ── Scrollable list (fills remaining space) ────────────────────────
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
@@ -315,50 +349,55 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                       accentColor: Colors.indigo,
                     );
                   }
-                  return filtered.isEmpty
-                      ? FriendlyEmptyState(
-                          icon: _searchQuery.isNotEmpty
-                              ? Icons.search_off_rounded
-                              : Icons.filter_list_off_rounded,
-                          title: _searchQuery.isNotEmpty
-                              ? 'Ничего не найдено'
-                              : 'Нет объектов по заданным фильтрам',
-                          subtitle: _searchQuery.isNotEmpty
-                              ? 'Попробуйте изменить поисковый запрос.'
-                              : 'Измените параметры фильтра или сбросьте их.',
-                          accentColor: Colors.blueGrey,
-                          action: _hasActiveFilters
-                              ? TextButton(
-                                  onPressed: _resetFilters,
-                                  child: const Text('Сбросить фильтры'),
-                                )
-                              : null,
-                        )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.fromLTRB(
-                            AppDesignTokens.spacingM,
-                            16,
-                            AppDesignTokens.spacingM,
-                            120,
-                          ),
-                          itemCount: filtered.length,
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            return _ProjectCard(
-                              project: filtered[index],
-                              workSumUsd: _calcWorkSumUsd(filtered[index]),
-                            );
-                          },
-                        );
+
+                  if (filtered.isEmpty) {
+                    return FriendlyEmptyState(
+                      icon: _searchQuery.isNotEmpty
+                          ? Icons.search_off_rounded
+                          : Icons.filter_list_off_rounded,
+                      title: _searchQuery.isNotEmpty
+                          ? 'Ничего не найдено'
+                          : 'Нет объектов по заданным фильтрам',
+                      subtitle: _searchQuery.isNotEmpty
+                          ? 'Попробуйте изменить поисковый запрос.'
+                          : 'Измените параметры фильтра или сбросьте их.',
+                      accentColor: Colors.blueGrey,
+                      action: _hasActiveFilters
+                          ? TextButton(
+                              onPressed: _resetFilters,
+                              child: const Text('Сбросить фильтры'),
+                            )
+                          : null,
+                    );
+                  }
+
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.fromLTRB(
+                      AppDesignTokens.spacingM,
+                      16,
+                      AppDesignTokens.spacingM,
+                      120,
+                    ),
+                    itemCount: filtered.length,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      return _ProjectCard(
+                        project: filtered[index],
+                        workSumUsd: _calcWorkSumUsd(filtered[index]),
+                      );
+                    },
+                  );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stack) => Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Ошибка загрузки: $error',
-                          textAlign: TextAlign.center),
+                      Text(
+                        'Ошибка загрузки: $error',
+                        textAlign: TextAlign.center,
+                      ),
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () => ref.invalidate(projectListProvider),
@@ -371,22 +410,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             ),
           ),
         ],
-      ),
-      floatingActionButton: Tooltip(
-        message: 'Добавить объект',
-        preferBelow: false, // Show above
-        verticalOffset: 32, // Adjusted distance
-        child: FloatingActionButton(
-          heroTag: 'add_project',
-          elevation: 4,
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) => const AddProjectDialog(),
-            );
-          },
-          child: const Icon(Icons.add),
-        ),
       ),
     );
   }

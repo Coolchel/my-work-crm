@@ -24,11 +24,14 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final ScrollController _scrollController = ScrollController();
+  final SectionAppBarCollapseController _appBarCollapseController =
+      SectionAppBarCollapseController();
   Object? _scrollAttachment;
 
   @override
   void initState() {
     super.initState();
+    _appBarCollapseController.bind(_scrollController);
     _scrollAttachment =
         AppNavigation.settingsScrollController.attach(_scrollToTop);
   }
@@ -39,6 +42,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (scrollAttachment != null) {
       AppNavigation.settingsScrollController.detach(scrollAttachment);
     }
+    _appBarCollapseController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -87,17 +91,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     ];
 
-    return Scaffold(
-      appBar: CompactSectionAppBar(
-        leading: IconButton(
-          tooltip: 'Назад',
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: handleBack,
-        ),
-        title: 'Настройки',
-        icon: Icons.settings_rounded,
-      ),
-      body: ListView(
+    return ListenableBuilder(
+      listenable: _appBarCollapseController,
+      builder: (context, child) {
+        return Scaffold(
+          appBar: CompactSectionAppBar(
+            collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
+              context,
+              _appBarCollapseController.progress,
+            ),
+            leading: IconButton(
+              tooltip: 'Назад',
+              icon: const Icon(Icons.arrow_back_ios_new),
+              onPressed: handleBack,
+            ),
+            title: 'Настройки',
+            icon: Icons.settings_rounded,
+          ),
+          body: child!,
+        );
+      },
+      child: ListView(
         controller: _scrollController,
         padding: const EdgeInsets.all(16),
         children: [

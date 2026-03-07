@@ -1,5 +1,73 @@
+import 'dart:ui';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+
+class SectionAppBarCollapseController extends ChangeNotifier {
+  SectionAppBarCollapseController({
+    this.collapseDistance = CompactSectionAppBar.defaultCollapseDistance,
+  });
+
+  final double collapseDistance;
+
+  ScrollController? _scrollController;
+  double _progress = 0;
+
+  double get progress => _progress;
+  bool get isCollapsed => _progress >= 0.99;
+
+  void bind(ScrollController? controller) {
+    if (identical(_scrollController, controller)) {
+      _syncFromScroll();
+      return;
+    }
+
+    _scrollController?.removeListener(_handleScroll);
+    _scrollController = controller;
+    _scrollController?.addListener(_handleScroll);
+    _syncFromScroll(notify: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncFromScroll());
+  }
+
+  void reset() {
+    _setProgress(0);
+  }
+
+  void _handleScroll() {
+    _syncFromScroll();
+  }
+
+  void _syncFromScroll({bool notify = true}) {
+    final controller = _scrollController;
+    if (controller == null || !controller.hasClients) {
+      _setProgress(0, notify: notify);
+      return;
+    }
+
+    final offset = controller.offset.clamp(0.0, collapseDistance);
+    final nextProgress = collapseDistance <= 0
+        ? 1.0
+        : (offset / collapseDistance).clamp(0.0, 1.0);
+    _setProgress(nextProgress, notify: notify);
+  }
+
+  void _setProgress(double nextProgress, {bool notify = true}) {
+    if ((_progress - nextProgress).abs() < 0.001) {
+      return;
+    }
+    _progress = nextProgress;
+    if (notify) {
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController?.removeListener(_handleScroll);
+    super.dispose();
+  }
+}
 
 class CompactSectionAppBar extends StatelessWidget
     implements PreferredSizeWidget {
@@ -11,6 +79,9 @@ class CompactSectionAppBar extends StatelessWidget
   final bool centerTitle;
   final List<Color>? gradientColors;
   final double bottomGap;
+  final double collapsedBottomGap;
+  final double collapseProgress;
+  final double collapsedToolbarHeight;
 
   const CompactSectionAppBar({
     super.key,
@@ -22,11 +93,42 @@ class CompactSectionAppBar extends StatelessWidget
     this.centerTitle = false,
     this.gradientColors,
     this.bottomGap = _defaultBottomGap,
+    this.collapsedBottomGap = _collapsedBottomGap,
+    this.collapseProgress = 0,
+    this.collapsedToolbarHeight = _collapsedToolbarHeight,
   });
 
-  static const double _toolbarHeight = 68;
+  static const double expandedToolbarHeight = 68;
+  static const double defaultCollapseDistance = 72;
+  static const double _collapsedToolbarHeight = 54;
   static const double _defaultBottomGap = 30;
-  double get _totalHeight => _toolbarHeight + bottomGap;
+  static const double _collapsedBottomGap = 0;
+
+  static bool shouldUseCollapsibleLayout(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final isNarrowViewport = size.width < 700 || size.shortestSide < 700;
+    if (kIsWeb) {
+      return isNarrowViewport;
+    }
+    return defaultTargetPlatform == TargetPlatform.android && isNarrowViewport;
+  }
+
+  static double resolveCollapseProgress(
+    BuildContext context,
+    double progress,
+  ) {
+    if (!shouldUseCollapsibleLayout(context)) {
+      return 0;
+    }
+    return progress.clamp(0.0, 1.0);
+  }
+
+  double get _clampedCollapseProgress => collapseProgress.clamp(0.0, 1.0);
+  double get _toolbarHeight => lerpDouble(
+      expandedToolbarHeight, collapsedToolbarHeight, _clampedCollapseProgress)!;
+  double get _effectiveBottomGap =>
+      lerpDouble(bottomGap, collapsedBottomGap, _clampedCollapseProgress)!;
+  double get _totalHeight => _toolbarHeight + _effectiveBottomGap;
 
   @override
   Size get preferredSize => Size.fromHeight(_totalHeight);
@@ -40,12 +142,24 @@ class CompactSectionAppBar extends StatelessWidget
             ? AppDesignTokens.subtleSectionGradientDark
             : AppDesignTokens.subtleSectionGradient);
     final foreground = isDark ? scheme.onSurface : Colors.white;
+    final progress = _clampedCollapseProgress;
     final iconBadgeBackground = isDark
         ? scheme.surfaceContainerHighest.withOpacity(0.8)
         : Colors.white.withOpacity(0.16);
     final subtitleColor = isDark
         ? scheme.onSurface.withOpacity(0.72)
         : Colors.white.withOpacity(0.92);
+    final badgeSize = lerpDouble(28, 20, progress)!;
+    final badgeRadius = lerpDouble(9, 6, progress)!;
+    final badgeIconSize = lerpDouble(17, 14, progress)!;
+    final titleGap = lerpDouble(10, 6, progress)!;
+    final titleFontSize = lerpDouble(20, 17, progress)!;
+    final titleLineHeight = lerpDouble(1.1, 0.98, progress)!;
+    final subtitleOpacity =
+        (1 - Curves.easeOut.transform((progress * 1.2).clamp(0.0, 1.0)))
+            .clamp(0.0, 1.0);
+    final titleSpacing = lerpDouble(2, 0, progress)!;
+    final bottomRadius = lerpDouble(AppDesignTokens.radiusM, 10, progress)!;
 
     return AppBar(
       automaticallyImplyLeading: leading == null,
@@ -55,10 +169,10 @@ class CompactSectionAppBar extends StatelessWidget
       centerTitle: centerTitle,
       elevation: 0,
       clipBehavior: Clip.antiAlias,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(AppDesignTokens.radiusM),
-          bottomRight: Radius.circular(AppDesignTokens.radiusM),
+          bottomLeft: Radius.circular(bottomRadius),
+          bottomRight: Radius.circular(bottomRadius),
         ),
       ),
       backgroundColor: isDark ? scheme.surface : Colors.transparent,
@@ -70,9 +184,9 @@ class CompactSectionAppBar extends StatelessWidget
                 Container(
                   decoration: BoxDecoration(
                     color: scheme.surface,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(AppDesignTokens.radiusM),
-                      bottomRight: Radius.circular(AppDesignTokens.radiusM),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(bottomRadius),
+                      bottomRight: Radius.circular(bottomRadius),
                     ),
                   ),
                 ),
@@ -86,9 +200,9 @@ class CompactSectionAppBar extends StatelessWidget
                         scheme.primary.withOpacity(0.03),
                       ],
                     ),
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(AppDesignTokens.radiusM),
-                      bottomRight: Radius.circular(AppDesignTokens.radiusM),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(bottomRadius),
+                      bottomRight: Radius.circular(bottomRadius),
                     ),
                   ),
                 ),
@@ -101,9 +215,9 @@ class CompactSectionAppBar extends StatelessWidget
                   end: Alignment.bottomRight,
                   colors: colors,
                 ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(AppDesignTokens.radiusM),
-                  bottomRight: Radius.circular(AppDesignTokens.radiusM),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(bottomRadius),
+                  bottomRight: Radius.circular(bottomRadius),
                 ),
               ),
             ),
@@ -111,7 +225,7 @@ class CompactSectionAppBar extends StatelessWidget
       actionsIconTheme: IconThemeData(color: foreground),
       titleTextStyle: TextStyle(
         color: foreground,
-        fontSize: 20,
+        fontSize: titleFontSize,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.2,
       ),
@@ -121,15 +235,15 @@ class CompactSectionAppBar extends StatelessWidget
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              width: 28,
-              height: 28,
+              width: badgeSize,
+              height: badgeSize,
               decoration: BoxDecoration(
                 color: iconBadgeBackground,
-                borderRadius: BorderRadius.circular(9),
+                borderRadius: BorderRadius.circular(badgeRadius),
               ),
-              child: Icon(icon, size: 17),
+              child: Icon(icon, size: badgeIconSize),
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: titleGap),
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -140,23 +254,35 @@ class CompactSectionAppBar extends StatelessWidget
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 20,
+                    style: TextStyle(
+                      fontSize: titleFontSize,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.2,
-                      height: 1.1,
+                      height: titleLineHeight,
                     ),
                   ),
                   if (subtitle != null && subtitle!.trim().isNotEmpty)
-                    Text(
-                      subtitle!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: subtitleColor,
-                        fontWeight: FontWeight.w400,
-                        height: 1.1,
+                    ClipRect(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        heightFactor: subtitleOpacity,
+                        child: Opacity(
+                          opacity: subtitleOpacity,
+                          child: Padding(
+                            padding: EdgeInsets.only(top: titleSpacing),
+                            child: Text(
+                              subtitle!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: subtitleColor,
+                                fontWeight: FontWeight.w400,
+                                height: 1.1,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                 ],

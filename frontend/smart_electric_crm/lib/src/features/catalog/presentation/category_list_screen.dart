@@ -30,14 +30,27 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
   bool _isSyncingSystemSections = false;
   final ScrollController _systemScrollController = ScrollController();
   final ScrollController _catalogScrollController = ScrollController();
+  final SectionAppBarCollapseController _appBarCollapseController =
+      SectionAppBarCollapseController();
 
   void _handleBack() {
     Navigator.of(context).maybePop();
   }
 
+  ScrollController get _activeScrollController =>
+      _currentIndex == 0 ? _systemScrollController : _catalogScrollController;
+
+  void _handleAppBarCollapseChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _appBarCollapseController.bind(_activeScrollController);
+    _appBarCollapseController.addListener(_handleAppBarCollapseChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _synchronizeSystemSections(showSuccessMessage: false);
     });
@@ -45,6 +58,8 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
 
   @override
   void dispose() {
+    _appBarCollapseController.removeListener(_handleAppBarCollapseChanged);
+    _appBarCollapseController.dispose();
     _systemScrollController.dispose();
     _catalogScrollController.dispose();
     super.dispose();
@@ -137,6 +152,10 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
 
     return Scaffold(
       appBar: CompactSectionAppBar(
+        collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
+          context,
+          _appBarCollapseController.progress,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
@@ -191,6 +210,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
             return;
           }
           setState(() => _currentIndex = mappedIndex);
+          _appBarCollapseController.bind(_activeScrollController);
         },
         destinations: [
           if (showWelcome)

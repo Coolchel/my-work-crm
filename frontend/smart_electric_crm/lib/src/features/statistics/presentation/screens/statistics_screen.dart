@@ -26,11 +26,14 @@ class StatisticsScreen extends ConsumerStatefulWidget {
 
 class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
   final ScrollController _scrollController = ScrollController();
+  final SectionAppBarCollapseController _appBarCollapseController =
+      SectionAppBarCollapseController();
   Object? _scrollAttachment;
 
   @override
   void initState() {
     super.initState();
+    _appBarCollapseController.bind(_scrollController);
     _scrollAttachment =
         AppNavigation.statisticsScrollController.attach(_scrollToTop);
   }
@@ -41,6 +44,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     if (scrollAttachment != null) {
       AppNavigation.statisticsScrollController.detach(scrollAttachment);
     }
+    _appBarCollapseController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -125,19 +129,29 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
       ),
     ];
 
-    return Scaffold(
-      appBar: CompactSectionAppBar(
-        leading: IconButton(
-          tooltip: '\u041d\u0430\u0437\u0430\u0434',
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: handleBack,
-        ),
-        title: 'Статистика',
-        icon: Icons.bar_chart_rounded,
-        gradientColors: AppDesignTokens.subtleSectionGradient,
-        bottomGap: isPhoneLandscape ? 10 : 30,
-      ),
-      body: statsAsync.when(
+    return ListenableBuilder(
+      listenable: _appBarCollapseController,
+      builder: (context, child) {
+        return Scaffold(
+          appBar: CompactSectionAppBar(
+            collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
+              context,
+              _appBarCollapseController.progress,
+            ),
+            leading: IconButton(
+              tooltip: '\u041d\u0430\u0437\u0430\u0434',
+              icon: const Icon(Icons.arrow_back_ios_new),
+              onPressed: handleBack,
+            ),
+            title: 'Статистика',
+            icon: Icons.bar_chart_rounded,
+            gradientColors: AppDesignTokens.subtleSectionGradient,
+            bottomGap: isPhoneLandscape ? 10 : 30,
+          ),
+          body: child!,
+        );
+      },
+      child: statsAsync.when(
         skipLoadingOnReload: true,
         skipLoadingOnRefresh: true,
         loading: () => const Center(child: CircularProgressIndicator()),

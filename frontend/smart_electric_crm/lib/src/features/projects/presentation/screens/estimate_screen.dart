@@ -41,6 +41,8 @@ class EstimateScreen extends ConsumerStatefulWidget {
 class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   final ScrollController _worksScrollController = ScrollController();
   final ScrollController _materialsScrollController = ScrollController();
+  final SectionAppBarCollapseController _appBarCollapseController =
+      SectionAppBarCollapseController();
   Timer? _markupDebounce;
 
   int _currentIndex = 0;
@@ -68,6 +70,15 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     Navigator.of(context).maybePop();
   }
 
+  ScrollController get _activeScrollController =>
+      _currentIndex == 0 ? _worksScrollController : _materialsScrollController;
+
+  void _handleAppBarCollapseChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   List<EstimateItemModel> get _works =>
       _items.where((i) => i.itemType == 'work').toList();
   List<EstimateItemModel> get _materials =>
@@ -87,6 +98,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     _stage = widget.stage;
     _showPrices = _stage.showPrices;
     _markupPercent = _stage.markupPercent;
+    _appBarCollapseController.bind(_activeScrollController);
+    _appBarCollapseController.addListener(_handleAppBarCollapseChanged);
 
     // Load items
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -152,6 +165,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
 
   @override
   void dispose() {
+    _appBarCollapseController.removeListener(_handleAppBarCollapseChanged);
+    _appBarCollapseController.dispose();
     _worksScrollController.dispose();
     _materialsScrollController.dispose();
     _markupDebounce?.cancel();
@@ -167,6 +182,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     // Backdrop filter when FAB is expanded
     return Scaffold(
       appBar: CompactSectionAppBar(
+        collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
+          context,
+          _appBarCollapseController.progress,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
@@ -293,6 +312,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           setState(() {
             _currentIndex = mappedIndex;
           });
+          _appBarCollapseController.bind(_activeScrollController);
         },
         destinations: [
           if (showWelcome)
