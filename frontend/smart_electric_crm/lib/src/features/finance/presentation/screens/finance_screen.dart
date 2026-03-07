@@ -31,7 +31,12 @@ Future<FinanceSettingsModel> financeSettings(Ref ref) async {
 }
 
 class FinanceScreen extends ConsumerStatefulWidget {
-  const FinanceScreen({super.key});
+  final VoidCallback? onBackPressed;
+
+  const FinanceScreen({
+    this.onBackPressed,
+    super.key,
+  });
 
   @override
   ConsumerState<FinanceScreen> createState() => _FinanceScreenState();
@@ -219,6 +224,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   Widget build(BuildContext context) {
     final projectsAsync = ref.watch(unpaidProjectsProvider);
     final settingsAsync = ref.watch(financeSettingsProvider);
+    final handleBack =
+        widget.onBackPressed ?? () => Navigator.of(context).maybePop();
 
     // Безопасная инициализация данных
     if (!_isDataLoaded && settingsAsync.hasValue && !settingsAsync.isLoading) {
@@ -233,7 +240,12 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     }
 
     return Scaffold(
-      appBar: const CompactSectionAppBar(
+      appBar: CompactSectionAppBar(
+        leading: IconButton(
+          tooltip: '\u041d\u0430\u0437\u0430\u0434',
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: handleBack,
+        ),
         title: 'Финансы',
         icon: Icons.account_balance_wallet_rounded,
         gradientColors: AppDesignTokens.subtleSectionGradient,

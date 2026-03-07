@@ -17,7 +17,12 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empt
 enum SortOrder { newest, oldest }
 
 class ProjectListScreen extends ConsumerStatefulWidget {
-  const ProjectListScreen({super.key});
+  final VoidCallback? onBackPressed;
+
+  const ProjectListScreen({
+    this.onBackPressed,
+    super.key,
+  });
 
   @override
   ConsumerState<ProjectListScreen> createState() => _ProjectListScreenState();
@@ -180,9 +185,16 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     final projectListAsync = ref.watch(projectListProvider);
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final handleBack =
+        widget.onBackPressed ?? () => Navigator.of(context).maybePop();
 
     return Scaffold(
       appBar: CompactSectionAppBar(
+        leading: IconButton(
+          tooltip: '\u041d\u0430\u0437\u0430\u0434',
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: handleBack,
+        ),
         title: 'Объекты',
         icon: Icons.apartment_rounded,
         gradientColors: AppDesignTokens.subtleSectionGradient,
