@@ -5,11 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../catalog/presentation/category_list_screen.dart';
+import '../../../../core/navigation/app_navigation.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../application/app_settings_controller.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBackPressed;
 
   const SettingsScreen({
@@ -18,10 +19,50 @@ class SettingsScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final ScrollController _scrollController = ScrollController();
+  Object? _scrollAttachment;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollAttachment =
+        AppNavigation.settingsScrollController.attach(_scrollToTop);
+  }
+
+  @override
+  void dispose() {
+    final scrollAttachment = _scrollAttachment;
+    if (scrollAttachment != null) {
+      AppNavigation.settingsScrollController.detach(scrollAttachment);
+    }
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _scrollToTop({bool animated = true}) async {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    if (animated) {
+      await _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    _scrollController.jumpTo(0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     void handleBack() {
-      if (onBackPressed != null) {
-        onBackPressed!();
+      if (widget.onBackPressed != null) {
+        widget.onBackPressed!();
         return;
       }
       Navigator.of(context).maybePop();
@@ -50,13 +91,14 @@ class SettingsScreen extends ConsumerWidget {
       appBar: CompactSectionAppBar(
         leading: IconButton(
           tooltip: 'Назад',
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: handleBack,
         ),
         title: 'Настройки',
         icon: Icons.settings_rounded,
       ),
       body: ListView(
+        controller: _scrollController,
         padding: const EdgeInsets.all(16),
         children: [
           _buildSectionHeader('Внешний вид'),

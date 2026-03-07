@@ -5,6 +5,7 @@ import 'package:smart_electric_crm/src/features/projects/presentation/utils/deci
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_list_tile.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/group_header.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/total_dashboard.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
@@ -14,6 +15,7 @@ class EstimateTab extends ConsumerStatefulWidget {
   final Function(EstimateItemModel) onUpdate;
   final Function(EstimateItemModel) onDelete;
   final String title;
+  final ScrollController scrollController;
 
   // Note props
   final String note;
@@ -49,6 +51,7 @@ class EstimateTab extends ConsumerStatefulWidget {
     required this.onUpdate,
     required this.onDelete,
     required this.title,
+    required this.scrollController,
     required this.note,
     required this.onSaveNote,
     required this.remarks,
@@ -83,12 +86,17 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   String? _lastSavedRemarks;
   bool _hasUnsavedNote = false;
   bool _hasUnsavedRemarks = false;
+  Object? _scrollAttachment;
 
   static const _defaultMaterialsRemarks = "Не учтен вводной кабель.";
 
   @override
   void initState() {
     super.initState();
+    _scrollAttachment = (_isWorkTab
+            ? AppNavigation.worksScrollController
+            : AppNavigation.materialsScrollController)
+        .attach(_scrollToTop);
     _noteCtrl = TextEditingController(text: widget.note);
 
     // Default text logic for Materials
@@ -112,6 +120,19 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   @override
   void didUpdateWidget(EstimateTab oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.title != widget.title) {
+      final scrollAttachment = _scrollAttachment;
+      if (scrollAttachment != null) {
+        final oldController = oldWidget.title == "Работы"
+            ? AppNavigation.worksScrollController
+            : AppNavigation.materialsScrollController;
+        oldController.detach(scrollAttachment);
+      }
+      _scrollAttachment = (_isWorkTab
+              ? AppNavigation.worksScrollController
+              : AppNavigation.materialsScrollController)
+          .attach(_scrollToTop);
+    }
     if (widget.note != oldWidget.note) {
       if (widget.note != _lastSavedNote) {
         _noteCtrl.text = widget.note;
@@ -177,11 +198,33 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
 
   @override
   void dispose() {
+    final scrollAttachment = _scrollAttachment;
+    if (scrollAttachment != null) {
+      final controller = _isWorkTab
+          ? AppNavigation.worksScrollController
+          : AppNavigation.materialsScrollController;
+      controller.detach(scrollAttachment);
+    }
     _noteCtrl.dispose();
     _remarksCtrl.dispose();
     _markupCtrl.dispose();
     _markupFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _scrollToTop({bool animated = true}) async {
+    if (!widget.scrollController.hasClients) {
+      return;
+    }
+    if (animated) {
+      await widget.scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    widget.scrollController.jumpTo(0);
   }
 
   Future<void> _saveNote() async {
@@ -770,6 +813,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       onTap: widget.isDisabled ? widget.onDismissRequest : null,
       behavior: HitTestBehavior.translucent,
       child: CustomScrollView(
+        controller: widget.scrollController,
         primary: false,
         slivers: [
           const SliverToBoxAdapter(child: SizedBox(height: 8)),

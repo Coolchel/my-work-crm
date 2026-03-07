@@ -85,6 +85,9 @@ class _ProjectDetailContent extends ConsumerStatefulWidget {
 
 class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
   int _currentIndex = 0;
+  final ScrollController _stagesScrollController = ScrollController();
+  final ScrollController _shieldsScrollController = ScrollController();
+  final ScrollController _filesScrollController = ScrollController();
   static const List<String> _tabTitles = ['Этапы', 'Щиты', 'Файлы'];
   static const List<IconData> _tabIcons = [
     Icons.layers_rounded,
@@ -96,15 +99,45 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
     Navigator.of(context).maybePop();
   }
 
+  Future<void> _scrollCurrentTabToTop() {
+    switch (_currentIndex) {
+      case 0:
+        return AppNavigation.stagesScrollController.scrollToTop();
+      case 1:
+        return AppNavigation.shieldsScrollController.scrollToTop();
+      case 2:
+        return AppNavigation.filesScrollController.scrollToTop();
+      default:
+        return Future.value();
+    }
+  }
+
+  @override
+  void dispose() {
+    _stagesScrollController.dispose();
+    _shieldsScrollController.dispose();
+    _filesScrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final showWelcome = ref.watch(
       appSettingsProvider.select((value) => value.showWelcome),
     );
     final screens = [
-      _StagesTab(project: widget.project),
-      EngineeringTab(project: widget.project),
-      _FilesTab(project: widget.project),
+      _StagesTab(
+        project: widget.project,
+        scrollController: _stagesScrollController,
+      ),
+      EngineeringTab(
+        project: widget.project,
+        scrollController: _shieldsScrollController,
+      ),
+      _FilesTab(
+        project: widget.project,
+        scrollController: _filesScrollController,
+      ),
     ];
 
     return Scaffold(
@@ -129,8 +162,13 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
             AppNavigation.goHome();
             return;
           }
+          final mappedIndex = showWelcome ? index - 1 : index;
+          if (mappedIndex == _currentIndex) {
+            _scrollCurrentTabToTop();
+            return;
+          }
           setState(() {
-            _currentIndex = showWelcome ? index - 1 : index;
+            _currentIndex = mappedIndex;
           });
         },
         destinations: [
@@ -161,10 +199,52 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
   }
 }
 
-class _StagesTab extends ConsumerWidget {
+class _StagesTab extends ConsumerStatefulWidget {
   final ProjectModel project;
+  final ScrollController scrollController;
 
-  const _StagesTab({required this.project});
+  const _StagesTab({
+    required this.project,
+    required this.scrollController,
+  });
+
+  @override
+  ConsumerState<_StagesTab> createState() => _StagesTabState();
+}
+
+class _StagesTabState extends ConsumerState<_StagesTab> {
+  Object? _scrollAttachment;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollAttachment =
+        AppNavigation.stagesScrollController.attach(_scrollToTop);
+  }
+
+  @override
+  void dispose() {
+    final scrollAttachment = _scrollAttachment;
+    if (scrollAttachment != null) {
+      AppNavigation.stagesScrollController.detach(scrollAttachment);
+    }
+    super.dispose();
+  }
+
+  Future<void> _scrollToTop({bool animated = true}) async {
+    if (!widget.scrollController.hasClients) {
+      return;
+    }
+    if (animated) {
+      await widget.scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    widget.scrollController.jumpTo(0);
+  }
 
   Future<void> _updateStatus(BuildContext context, WidgetRef ref,
       String stageId, String newStatus) async {
@@ -203,7 +283,7 @@ class _StagesTab extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: Tooltip(
         message: 'Добавить этап',
@@ -217,6 +297,7 @@ class _StagesTab extends ConsumerWidget {
         ),
       ),
       body: SingleChildScrollView(
+        controller: widget.scrollController,
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,8 +347,8 @@ class _StagesTab extends ConsumerWidget {
                         DetailInfoRow(
                           icon: Icons.person_outline,
                           label: 'ЗАКАЗЧИК',
-                          value: project.clientInfo.isNotEmpty
-                              ? project.clientInfo
+                          value: widget.project.clientInfo.isNotEmpty
+                              ? widget.project.clientInfo
                               : '—',
                           color: Colors.blue.shade600,
                           selectable: true,
@@ -277,8 +358,9 @@ class _StagesTab extends ConsumerWidget {
                         DetailInfoRow(
                           icon: Icons.info_outline,
                           label: 'ИСТОЧНИК',
-                          value:
-                              project.source.isNotEmpty ? project.source : '—',
+                          value: widget.project.source.isNotEmpty
+                              ? widget.project.source
+                              : '—',
                           color: Colors.teal.shade700,
                           selectable: false,
                         ),
@@ -303,7 +385,7 @@ class _StagesTab extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
-            if (project.stages.isEmpty)
+            if (widget.project.stages.isEmpty)
               const FriendlyEmptyState(
                 icon: Icons.layers_clear_rounded,
                 title: 'Этапы еще не созданы',
@@ -314,7 +396,7 @@ class _StagesTab extends ConsumerWidget {
               ),
 
             // List of Stages
-            ...project.stages.map((stage) {
+            ...widget.project.stages.map((stage) {
               return StageCard(
                 stage: stage,
                 onTap: () {
@@ -323,7 +405,7 @@ class _StagesTab extends ConsumerWidget {
                     MaterialPageRoute(
                       builder: (context) => EstimateScreen(
                         stage: stage,
-                        projectId: project.id.toString(),
+                        projectId: widget.project.id.toString(),
                       ),
                     ),
                   );
@@ -344,29 +426,72 @@ class _StagesTab extends ConsumerWidget {
   // Helpers (Duplicated for now, should be moved to Utils or mixin)
 
   void _showAddStageDialog(BuildContext context, WidgetRef ref) {
-    final existingKeys = project.stages.map((s) => s.title).toList();
+    final existingKeys = widget.project.stages.map((s) => s.title).toList();
 
     showDialog(
       context: context,
       builder: (context) => AddStageDialog(
-        projectId: project.id.toString(),
+        projectId: widget.project.id.toString(),
         existingStageKeys: existingKeys,
       ),
     );
   }
 }
 
-class _FilesTab extends ConsumerWidget {
+class _FilesTab extends ConsumerStatefulWidget {
   final ProjectModel project;
+  final ScrollController scrollController;
 
-  const _FilesTab({required this.project});
+  const _FilesTab({
+    required this.project,
+    required this.scrollController,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FilesTab> createState() => _FilesTabState();
+}
+
+class _FilesTabState extends ConsumerState<_FilesTab> {
+  Object? _scrollAttachment;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollAttachment =
+        AppNavigation.filesScrollController.attach(_scrollToTop);
+  }
+
+  @override
+  void dispose() {
+    final scrollAttachment = _scrollAttachment;
+    if (scrollAttachment != null) {
+      AppNavigation.filesScrollController.detach(scrollAttachment);
+    }
+    super.dispose();
+  }
+
+  Future<void> _scrollToTop({bool animated = true}) async {
+    if (!widget.scrollController.hasClients) {
+      return;
+    }
+    if (animated) {
+      await widget.scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    widget.scrollController.jumpTo(0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         Expanded(
           child: ListView(
+            controller: widget.scrollController,
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
             children: [
               _FileCategorySection(
@@ -374,34 +499,36 @@ class _FilesTab extends ConsumerWidget {
                 icon: Icons.architecture_rounded,
                 color: Colors.blueGrey,
                 category: "PROJECT",
-                files: project.files
+                files: widget.project.files
                     .where((f) => f.category == "PROJECT")
                     .toList(),
                 onDelete: (fileId) => _deleteFile(context, ref, fileId),
                 onUpload: () => _pickAndUploadFiles(context, ref, "PROJECT"),
-                projectId: project.id.toString(),
+                projectId: widget.project.id.toString(),
               ),
               _FileCategorySection(
                 title: "Реализация (Этапы 1-2)",
                 icon: Icons.construction_rounded,
                 color: Colors.blue,
                 category: "WORK",
-                files:
-                    project.files.where((f) => f.category == "WORK").toList(),
+                files: widget.project.files
+                    .where((f) => f.category == "WORK")
+                    .toList(),
                 onDelete: (fileId) => _deleteFile(context, ref, fileId),
                 onUpload: () => _pickAndUploadFiles(context, ref, "WORK"),
-                projectId: project.id.toString(),
+                projectId: widget.project.id.toString(),
               ),
               _FileCategorySection(
                 title: "Финишные фото",
                 icon: Icons.auto_awesome_rounded,
                 color: Colors.green,
                 category: "FINISH",
-                files:
-                    project.files.where((f) => f.category == "FINISH").toList(),
+                files: widget.project.files
+                    .where((f) => f.category == "FINISH")
+                    .toList(),
                 onDelete: (fileId) => _deleteFile(context, ref, fileId),
                 onUpload: () => _pickAndUploadFiles(context, ref, "FINISH"),
-                projectId: project.id.toString(),
+                projectId: widget.project.id.toString(),
               ),
               const SizedBox(height: 8),
             ],
@@ -427,7 +554,7 @@ class _FilesTab extends ConsumerWidget {
   Future<void> _pickAndUploadFiles(
       BuildContext context, WidgetRef ref, String category) async {
     // 1. Проверка лимита количества файлов (Макс 12 на проект)
-    if (project.files.length >= 12) {
+    if (widget.project.files.length >= 12) {
       if (context.mounted) {
         showDialog(
           context: context,
@@ -471,14 +598,14 @@ class _FilesTab extends ConsumerWidget {
 
     if (result != null && result.files.isNotEmpty) {
       // Проверка: не превысит ли добавление новых файлов общий лимит
-      if (project.files.length + result.files.length > 12) {
+      if (widget.project.files.length + result.files.length > 12) {
         if (context.mounted) {
           showDialog(
             context: context,
             builder: (context) => ConfirmationDialog(
               title: 'Слишком много файлов',
               content:
-                  'Вы выбрали ${result.files.length} файлов для загрузки. В текущий проект можно загрузить еще не более ${12 - project.files.length} файлов.',
+                  'Вы выбрали ${result.files.length} файлов для загрузки. В текущий проект можно загрузить еще не более ${12 - widget.project.files.length} файлов.',
               confirmText: 'Закрыть',
               cancelText: '',
               isDestructive: false,
@@ -519,7 +646,7 @@ class _FilesTab extends ConsumerWidget {
 
         try {
           await notifier.uploadFile(
-            projectId: project.id,
+            projectId: widget.project.id,
             filePath: pickedFile.path!,
             fileName: pickedFile.name,
             category: category,
@@ -589,7 +716,7 @@ class _FilesTab extends ConsumerWidget {
     if (confirm == true) {
       await ref.read(projectOperationsProvider.notifier).deleteFile(
             fileId,
-            project.id.toString(),
+            widget.project.id.toString(),
           );
       if (context.mounted) {
         scaffoldMessenger.showSnackBar(

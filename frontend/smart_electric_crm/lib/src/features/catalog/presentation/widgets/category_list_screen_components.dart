@@ -63,22 +63,62 @@ class _AppBarActionButtonState extends State<_AppBarActionButton> {
   }
 }
 
-class _SystemSectionsTab extends ConsumerWidget {
+class _SystemSectionsTab extends ConsumerStatefulWidget {
+  final ScrollController scrollController;
   final bool isSyncing;
   final ValueChanged<String> onError;
   final ValueChanged<int> onSelectTab;
 
   const _SystemSectionsTab({
+    required this.scrollController,
     required this.isSyncing,
     required this.onError,
     required this.onSelectTab,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_SystemSectionsTab> createState() => _SystemSectionsTabState();
+}
+
+class _SystemSectionsTabState extends ConsumerState<_SystemSectionsTab> {
+  Object? _scrollAttachment;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollAttachment =
+        AppNavigation.directorySystemScrollController.attach(_scrollToTop);
+  }
+
+  @override
+  void dispose() {
+    final scrollAttachment = _scrollAttachment;
+    if (scrollAttachment != null) {
+      AppNavigation.directorySystemScrollController.detach(scrollAttachment);
+    }
+    super.dispose();
+  }
+
+  Future<void> _scrollToTop({bool animated = true}) async {
+    if (!widget.scrollController.hasClients) {
+      return;
+    }
+    if (animated) {
+      await widget.scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    widget.scrollController.jumpTo(0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final sectionsAsync = ref.watch(directorySectionsProvider);
 
-    if (isSyncing) {
+    if (widget.isSyncing) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 24),
@@ -110,6 +150,7 @@ class _SystemSectionsTab extends ConsumerWidget {
         }
 
         return ListView.builder(
+          controller: widget.scrollController,
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 112),
           itemCount: sections.length,
           itemBuilder: (context, index) {
@@ -126,8 +167,8 @@ class _SystemSectionsTab extends ConsumerWidget {
                   MaterialPageRoute(
                     builder: (_) => _SectionEntriesScreen(
                       section: section,
-                      onError: onError,
-                      onSelectTab: onSelectTab,
+                      onError: widget.onError,
+                      onSelectTab: widget.onSelectTab,
                     ),
                   ),
                 );
@@ -182,7 +223,7 @@ class _SystemSectionsTab extends ConsumerWidget {
                           .deleteSection(section.id);
                       ref.invalidate(directorySectionsProvider);
                     } catch (error) {
-                      onError(error.toString());
+                      widget.onError(error.toString());
                     }
                   },
                 ),
@@ -203,7 +244,7 @@ class _SystemSectionsTab extends ConsumerWidget {
   }
 }
 
-class _SectionEntriesScreen extends ConsumerWidget {
+class _SectionEntriesScreen extends ConsumerStatefulWidget {
   final DirectorySection section;
   final ValueChanged<String> onError;
   final ValueChanged<int> onSelectTab;
@@ -214,13 +255,54 @@ class _SectionEntriesScreen extends ConsumerWidget {
     required this.onSelectTab,
   });
 
+  @override
+  ConsumerState<_SectionEntriesScreen> createState() =>
+      _SectionEntriesScreenState();
+}
+
+class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
+  final ScrollController _scrollController = ScrollController();
+  Object? _scrollAttachment;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollAttachment =
+        AppNavigation.directorySystemScrollController.attach(_scrollToTop);
+  }
+
+  @override
+  void dispose() {
+    final scrollAttachment = _scrollAttachment;
+    if (scrollAttachment != null) {
+      AppNavigation.directorySystemScrollController.detach(scrollAttachment);
+    }
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _handleBack(BuildContext context) {
     Navigator.of(context).maybePop();
   }
 
+  Future<void> _scrollToTop({bool animated = true}) async {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    if (animated) {
+      await _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    _scrollController.jumpTo(0);
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final entriesAsync = ref.watch(directoryEntriesProvider(section.id));
+  Widget build(BuildContext context) {
+    final entriesAsync = ref.watch(directoryEntriesProvider(widget.section.id));
     final showWelcome = ref.watch(
       appSettingsProvider.select((value) => value.showWelcome),
     );
@@ -233,7 +315,7 @@ class _SectionEntriesScreen extends ConsumerWidget {
           onPressed: () => _handleBack(context),
         ),
         title: 'Справочник',
-        subtitle: section.name,
+        subtitle: widget.section.name,
         icon: Icons.schema_rounded,
       ),
       floatingActionButton: Tooltip(
@@ -248,14 +330,14 @@ class _SectionEntriesScreen extends ConsumerWidget {
                 title: 'Новая запись',
                 onSubmit: (code, name, order, isActive, metadata) async {
                   await ref.read(directoryRepositoryProvider).createEntry(
-                        section: section.id,
+                        section: widget.section.id,
                         code: code,
                         name: name,
                         sortOrder: order,
                         isActive: isActive,
                         metadata: metadata,
                       );
-                  ref.invalidate(directoryEntriesProvider(section.id));
+                  ref.invalidate(directoryEntriesProvider(widget.section.id));
                 },
               ),
             );
@@ -275,6 +357,7 @@ class _SectionEntriesScreen extends ConsumerWidget {
           }
 
           return ListView.builder(
+            controller: _scrollController,
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
             itemCount: entries.length,
             itemBuilder: (context, index) {
@@ -298,14 +381,15 @@ class _SectionEntriesScreen extends ConsumerWidget {
                       onSubmit: (code, name, order, isActive, metadata) async {
                         await ref.read(directoryRepositoryProvider).updateEntry(
                               id: entry.id,
-                              section: section.id,
+                              section: widget.section.id,
                               code: code,
                               name: name,
                               sortOrder: order,
                               isActive: isActive,
                               metadata: metadata,
                             );
-                        ref.invalidate(directoryEntriesProvider(section.id));
+                        ref.invalidate(
+                            directoryEntriesProvider(widget.section.id));
                       },
                     ),
                   );
@@ -328,7 +412,7 @@ class _SectionEntriesScreen extends ConsumerWidget {
                                 .read(directoryRepositoryProvider)
                                 .updateEntry(
                                   id: entry.id,
-                                  section: section.id,
+                                  section: widget.section.id,
                                   code: code,
                                   name: name,
                                   sortOrder: order,
@@ -336,7 +420,7 @@ class _SectionEntriesScreen extends ConsumerWidget {
                                   metadata: metadata,
                                 );
                             ref.invalidate(
-                                directoryEntriesProvider(section.id));
+                                directoryEntriesProvider(widget.section.id));
                           },
                         ),
                       );
@@ -362,9 +446,10 @@ class _SectionEntriesScreen extends ConsumerWidget {
                         await ref
                             .read(directoryRepositoryProvider)
                             .deleteEntry(entry.id);
-                        ref.invalidate(directoryEntriesProvider(section.id));
+                        ref.invalidate(
+                            directoryEntriesProvider(widget.section.id));
                       } catch (error) {
-                        onError(error.toString());
+                        widget.onError(error.toString());
                       }
                     },
                   ),
@@ -384,8 +469,11 @@ class _SectionEntriesScreen extends ConsumerWidget {
             return;
           }
           final mappedIndex = showWelcome ? index - 1 : index;
-          if (mappedIndex == 0) return;
-          onSelectTab(mappedIndex);
+          if (mappedIndex == 0) {
+            AppNavigation.directorySystemScrollController.scrollToTop();
+            return;
+          }
+          widget.onSelectTab(mappedIndex);
           Navigator.of(context).pop();
         },
         destinations: [
@@ -411,17 +499,57 @@ class _SectionEntriesScreen extends ConsumerWidget {
   }
 }
 
-class _CatalogTab extends ConsumerWidget {
+class _CatalogTab extends ConsumerStatefulWidget {
+  final ScrollController scrollController;
   final ValueChanged<String> onError;
   final ValueChanged<int> onSelectTab;
 
   const _CatalogTab({
+    required this.scrollController,
     required this.onError,
     required this.onSelectTab,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_CatalogTab> createState() => _CatalogTabState();
+}
+
+class _CatalogTabState extends ConsumerState<_CatalogTab> {
+  Object? _scrollAttachment;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollAttachment =
+        AppNavigation.directoryCatalogScrollController.attach(_scrollToTop);
+  }
+
+  @override
+  void dispose() {
+    final scrollAttachment = _scrollAttachment;
+    if (scrollAttachment != null) {
+      AppNavigation.directoryCatalogScrollController.detach(scrollAttachment);
+    }
+    super.dispose();
+  }
+
+  Future<void> _scrollToTop({bool animated = true}) async {
+    if (!widget.scrollController.hasClients) {
+      return;
+    }
+    if (animated) {
+      await widget.scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    widget.scrollController.jumpTo(0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(catalogCategoriesProvider);
 
     return categoriesAsync.when(
@@ -436,6 +564,7 @@ class _CatalogTab extends ConsumerWidget {
         }
 
         return ListView.builder(
+          controller: widget.scrollController,
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
           itemCount: categories.length,
           itemBuilder: (context, index) {
@@ -452,8 +581,8 @@ class _CatalogTab extends ConsumerWidget {
                   MaterialPageRoute(
                     builder: (_) => _CategoryItemsScreen(
                       category: category,
-                      onError: onError,
-                      onSelectTab: onSelectTab,
+                      onError: widget.onError,
+                      onSelectTab: widget.onSelectTab,
                     ),
                   ),
                 );
@@ -508,7 +637,7 @@ class _CatalogTab extends ConsumerWidget {
                           .deleteCategory(category.id);
                       ref.invalidate(catalogCategoriesProvider);
                     } catch (error) {
-                      onError(error.toString());
+                      widget.onError(error.toString());
                     }
                   },
                 ),
@@ -523,7 +652,7 @@ class _CatalogTab extends ConsumerWidget {
   }
 }
 
-class _CategoryItemsScreen extends ConsumerWidget {
+class _CategoryItemsScreen extends ConsumerStatefulWidget {
   final CatalogCategory category;
   final ValueChanged<String> onError;
   final ValueChanged<int> onSelectTab;
@@ -534,13 +663,55 @@ class _CategoryItemsScreen extends ConsumerWidget {
     required this.onSelectTab,
   });
 
+  @override
+  ConsumerState<_CategoryItemsScreen> createState() =>
+      _CategoryItemsScreenState();
+}
+
+class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
+  final ScrollController _scrollController = ScrollController();
+  Object? _scrollAttachment;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollAttachment =
+        AppNavigation.directoryCatalogScrollController.attach(_scrollToTop);
+  }
+
+  @override
+  void dispose() {
+    final scrollAttachment = _scrollAttachment;
+    if (scrollAttachment != null) {
+      AppNavigation.directoryCatalogScrollController.detach(scrollAttachment);
+    }
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _handleBack(BuildContext context) {
     Navigator.of(context).maybePop();
   }
 
+  Future<void> _scrollToTop({bool animated = true}) async {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    if (animated) {
+      await _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    _scrollController.jumpTo(0);
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final itemsAsync = ref.watch(catalogItemsByCategoryProvider(category.id));
+  Widget build(BuildContext context) {
+    final itemsAsync =
+        ref.watch(catalogItemsByCategoryProvider(widget.category.id));
     final workItemsAsync = ref.watch(catalogWorkItemsProvider);
     final showWelcome = ref.watch(
       appSettingsProvider.select((value) => value.showWelcome),
@@ -554,7 +725,7 @@ class _CategoryItemsScreen extends ConsumerWidget {
           onPressed: () => _handleBack(context),
         ),
         title: 'Каталог',
-        subtitle: category.name,
+        subtitle: widget.category.name,
         icon: Icons.inventory_2_rounded,
       ),
       floatingActionButton: Tooltip(
@@ -571,7 +742,7 @@ class _CategoryItemsScreen extends ConsumerWidget {
                 workItems: workItems,
                 onSubmit: (form) async {
                   await ref.read(directoryRepositoryProvider).createItem(
-                        categoryId: category.id,
+                        categoryId: widget.category.id,
                         name: form.name,
                         price: form.price,
                         unit: form.unit,
@@ -581,7 +752,8 @@ class _CategoryItemsScreen extends ConsumerWidget {
                         aggregationKey: form.aggregationKey,
                         relatedWorkItem: form.relatedWorkItem,
                       );
-                  ref.invalidate(catalogItemsByCategoryProvider(category.id));
+                  ref.invalidate(
+                      catalogItemsByCategoryProvider(widget.category.id));
                 },
               ),
             );
@@ -600,6 +772,7 @@ class _CategoryItemsScreen extends ConsumerWidget {
             );
           }
           return ListView.builder(
+            controller: _scrollController,
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 96),
             itemCount: items.length,
             itemBuilder: (context, index) {
@@ -626,7 +799,7 @@ class _CategoryItemsScreen extends ConsumerWidget {
                       onSubmit: (form) async {
                         await ref.read(directoryRepositoryProvider).updateItem(
                               id: item.id,
-                              categoryId: category.id,
+                              categoryId: widget.category.id,
                               name: form.name,
                               price: form.price,
                               unit: form.unit,
@@ -637,7 +810,7 @@ class _CategoryItemsScreen extends ConsumerWidget {
                               relatedWorkItem: form.relatedWorkItem,
                             );
                         ref.invalidate(
-                            catalogItemsByCategoryProvider(category.id));
+                            catalogItemsByCategoryProvider(widget.category.id));
                       },
                     ),
                   );
@@ -662,7 +835,7 @@ class _CategoryItemsScreen extends ConsumerWidget {
                                 .read(directoryRepositoryProvider)
                                 .updateItem(
                                   id: item.id,
-                                  categoryId: category.id,
+                                  categoryId: widget.category.id,
                                   name: form.name,
                                   price: form.price,
                                   unit: form.unit,
@@ -672,8 +845,8 @@ class _CategoryItemsScreen extends ConsumerWidget {
                                   aggregationKey: form.aggregationKey,
                                   relatedWorkItem: form.relatedWorkItem,
                                 );
-                            ref.invalidate(
-                                catalogItemsByCategoryProvider(category.id));
+                            ref.invalidate(catalogItemsByCategoryProvider(
+                                widget.category.id));
                           },
                         ),
                       );
@@ -699,9 +872,9 @@ class _CategoryItemsScreen extends ConsumerWidget {
                             .read(directoryRepositoryProvider)
                             .deleteItem(item.id);
                         ref.invalidate(
-                            catalogItemsByCategoryProvider(category.id));
+                            catalogItemsByCategoryProvider(widget.category.id));
                       } catch (error) {
-                        onError(error.toString());
+                        widget.onError(error.toString());
                       }
                     },
                   ),
@@ -721,8 +894,11 @@ class _CategoryItemsScreen extends ConsumerWidget {
             return;
           }
           final mappedIndex = showWelcome ? index - 1 : index;
-          if (mappedIndex == 1) return;
-          onSelectTab(mappedIndex);
+          if (mappedIndex == 1) {
+            AppNavigation.directoryCatalogScrollController.scrollToTop();
+            return;
+          }
+          widget.onSelectTab(mappedIndex);
           Navigator.of(context).pop();
         },
         destinations: [

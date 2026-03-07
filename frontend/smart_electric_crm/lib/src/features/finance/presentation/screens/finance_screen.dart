@@ -11,6 +11,7 @@ import '../../../projects/presentation/screens/estimate_screen.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../../../core/theme/app_design_tokens.dart';
+import '../../../../core/navigation/app_navigation.dart';
 
 part 'finance_screen.g.dart';
 part '../widgets/finance_screen_sections.dart';
@@ -43,8 +44,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   // Контроллеры для глобальных полей
   final _estimateController = TextEditingController();
   final _notesController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   bool _hasChanges = false;
   bool _isDataLoaded = false;
+  Object? _scrollAttachment;
 
   // Состояние раскрытых проектов (ID проекта -> раскрыт ли)
   final Map<int, bool> _expandedProjects = {};
@@ -67,6 +70,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   @override
   void initState() {
     super.initState();
+    _scrollAttachment =
+        AppNavigation.financeScrollController.attach(_scrollToTop);
     _estimateController.addListener(_onTextChanged);
     _notesController.addListener(_onTextChanged);
   }
@@ -79,9 +84,29 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   @override
   void dispose() {
+    final scrollAttachment = _scrollAttachment;
+    if (scrollAttachment != null) {
+      AppNavigation.financeScrollController.detach(scrollAttachment);
+    }
+    _scrollController.dispose();
     _estimateController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _scrollToTop({bool animated = true}) async {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    if (animated) {
+      await _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    _scrollController.jumpTo(0);
   }
 
   String _formatAmount(double amount) {
@@ -279,6 +304,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         await Future.delayed(const Duration(milliseconds: 500));
       },
       child: SingleChildScrollView(
+        controller: _scrollController,
         child: Column(
           children: [
             // Список проектов

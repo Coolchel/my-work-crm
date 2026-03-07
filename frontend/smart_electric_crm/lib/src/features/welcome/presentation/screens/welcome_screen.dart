@@ -13,7 +13,7 @@ import '../widgets/welcome_header.dart';
 
 class WelcomeScreen extends ConsumerStatefulWidget {
   final VoidCallback onSettingsPressed;
-  final HomeScrollController? scrollController;
+  final ScrollToTopController? scrollController;
 
   const WelcomeScreen({
     required this.onSettingsPressed,
@@ -31,6 +31,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
   final Object _searchTapGroupId = Object();
   final GlobalKey _searchAnchorKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
+  Object? _scrollAttachment;
 
   static const double _overlayOffsetY = 60;
   static const double _overlayBottomGap = 12;
@@ -49,7 +50,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
   void initState() {
     super.initState();
     _scrollController.addListener(_recalculateOverlayMaxHeight);
-    widget.scrollController?.attach(scrollToTop);
+    _attachScrollController(widget.scrollController);
 
     _liftController = AnimationController(
       vsync: this,
@@ -78,18 +79,34 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
   void didUpdateWidget(covariant WelcomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.scrollController != widget.scrollController) {
-      oldWidget.scrollController?.detach();
-      widget.scrollController?.attach(scrollToTop);
+      _detachScrollController(oldWidget.scrollController);
+      _attachScrollController(widget.scrollController);
     }
   }
 
   @override
   void dispose() {
-    widget.scrollController?.detach();
+    _detachScrollController(widget.scrollController);
     _scrollController.removeListener(_recalculateOverlayMaxHeight);
     _scrollController.dispose();
     _liftController.dispose();
     super.dispose();
+  }
+
+  void _attachScrollController(ScrollToTopController? controller) {
+    if (controller == null) {
+      return;
+    }
+    _scrollAttachment = controller.attach(scrollToTop);
+  }
+
+  void _detachScrollController(ScrollToTopController? controller) {
+    final token = _scrollAttachment;
+    if (controller == null || token == null) {
+      return;
+    }
+    controller.detach(token);
+    _scrollAttachment = null;
   }
 
   Future<void> scrollToTop({bool animated = true}) async {

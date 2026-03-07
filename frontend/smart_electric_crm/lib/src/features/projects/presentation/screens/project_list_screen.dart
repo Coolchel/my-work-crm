@@ -8,6 +8,7 @@ import 'project_detail_screen.dart';
 import 'add_project_screen.dart';
 import '../utils/project_stage_color_resolver.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
@@ -36,6 +37,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   late AnimationController _searchAnimController;
   late Animation<double> _fadeAnimation;
   final _searchFocusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
+  Object? _scrollAttachment;
 
   static const _objectTypes = {
     'new_building': 'Новостройка',
@@ -50,6 +53,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   @override
   void initState() {
     super.initState();
+    _scrollAttachment =
+        AppNavigation.objectsScrollController.attach(_scrollToTop);
     _searchAnimController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -62,10 +67,30 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
 
   @override
   void dispose() {
+    final scrollAttachment = _scrollAttachment;
+    if (scrollAttachment != null) {
+      AppNavigation.objectsScrollController.detach(scrollAttachment);
+    }
+    _scrollController.dispose();
     _searchController.dispose();
     _searchAnimController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _scrollToTop({bool animated = true}) async {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    if (animated) {
+      await _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    _scrollController.jumpTo(0);
   }
 
   void _toggleSearch() {
@@ -298,6 +323,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                               : null,
                         )
                       : ListView.builder(
+                          controller: _scrollController,
                           padding: const EdgeInsets.fromLTRB(
                             AppDesignTokens.spacingM,
                             16,
