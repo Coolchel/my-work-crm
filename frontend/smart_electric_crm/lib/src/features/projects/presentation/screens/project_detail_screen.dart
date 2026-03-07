@@ -88,6 +88,8 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
   final ScrollController _stagesScrollController = ScrollController();
   final ScrollController _shieldsScrollController = ScrollController();
   final ScrollController _filesScrollController = ScrollController();
+  final SectionAppBarCollapseController _appBarCollapseController =
+      SectionAppBarCollapseController();
   static const List<String> _tabTitles = ['Этапы', 'Щиты', 'Файлы'];
   static const List<IconData> _tabIcons = [
     Icons.layers_rounded,
@@ -97,6 +99,25 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
 
   void _handleBack() {
     Navigator.of(context).maybePop();
+  }
+
+  ScrollController get _activeScrollController {
+    switch (_currentIndex) {
+      case 0:
+        return _stagesScrollController;
+      case 1:
+        return _shieldsScrollController;
+      case 2:
+        return _filesScrollController;
+      default:
+        return _stagesScrollController;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _appBarCollapseController.bind(_activeScrollController);
   }
 
   Future<void> _scrollCurrentTabToTop() {
@@ -114,6 +135,7 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
 
   @override
   void dispose() {
+    _appBarCollapseController.dispose();
     _stagesScrollController.dispose();
     _shieldsScrollController.dispose();
     _filesScrollController.dispose();
@@ -140,60 +162,71 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
       ),
     ];
 
-    return Scaffold(
-      appBar: CompactSectionAppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          tooltip: 'Назад',
-          onPressed: _handleBack,
-        ),
-        title: _tabTitles[_currentIndex],
-        subtitle: widget.project.address,
-        icon: _tabIcons[_currentIndex],
-      ),
-      body: IndexedStack(
+    return ListenableBuilder(
+      listenable: _appBarCollapseController,
+      builder: (context, child) {
+        return Scaffold(
+          appBar: CompactSectionAppBar(
+            collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
+              context,
+              _appBarCollapseController.progress,
+            ),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new),
+              tooltip: 'Назад',
+              onPressed: _handleBack,
+            ),
+            title: _tabTitles[_currentIndex],
+            subtitle: widget.project.address,
+            icon: _tabIcons[_currentIndex],
+          ),
+          body: child!,
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
+            onDestinationSelected: (index) {
+              if (showWelcome && index == 0) {
+                AppNavigation.goHome();
+                return;
+              }
+              final mappedIndex = showWelcome ? index - 1 : index;
+              if (mappedIndex == _currentIndex) {
+                _scrollCurrentTabToTop();
+                return;
+              }
+              setState(() {
+                _currentIndex = mappedIndex;
+              });
+              _appBarCollapseController.bind(_activeScrollController);
+            },
+            destinations: [
+              if (showWelcome)
+                const NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home),
+                  label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+                ),
+              const NavigationDestination(
+                icon: Icon(Icons.layers_outlined),
+                selectedIcon: Icon(Icons.layers),
+                label: '\u042d\u0442\u0430\u043f\u044b',
+              ),
+              const NavigationDestination(
+                icon: Icon(Icons.settings_input_component_outlined),
+                selectedIcon: Icon(Icons.settings_input_component),
+                label: '\u0429\u0438\u0442\u044b',
+              ),
+              const NavigationDestination(
+                icon: Icon(Icons.folder_open_outlined),
+                selectedIcon: Icon(Icons.folder_open),
+                label: '\u0424\u0430\u0439\u043b\u044b',
+              ),
+            ],
+          ),
+        );
+      },
+      child: IndexedStack(
         index: _currentIndex,
         children: screens,
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
-        onDestinationSelected: (index) {
-          if (showWelcome && index == 0) {
-            AppNavigation.goHome();
-            return;
-          }
-          final mappedIndex = showWelcome ? index - 1 : index;
-          if (mappedIndex == _currentIndex) {
-            _scrollCurrentTabToTop();
-            return;
-          }
-          setState(() {
-            _currentIndex = mappedIndex;
-          });
-        },
-        destinations: [
-          if (showWelcome)
-            const NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
-            ),
-          const NavigationDestination(
-            icon: Icon(Icons.layers_outlined),
-            selectedIcon: Icon(Icons.layers),
-            label: '\u042d\u0442\u0430\u043f\u044b',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.settings_input_component_outlined),
-            selectedIcon: Icon(Icons.settings_input_component),
-            label: '\u0429\u0438\u0442\u044b',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.folder_open_outlined),
-            selectedIcon: Icon(Icons.folder_open),
-            label: '\u0424\u0430\u0439\u043b\u044b',
-          ),
-        ],
       ),
     );
   }

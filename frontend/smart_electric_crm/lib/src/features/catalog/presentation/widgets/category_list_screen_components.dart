@@ -262,11 +262,21 @@ class _SectionEntriesScreen extends ConsumerStatefulWidget {
 
 class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
   final ScrollController _scrollController = ScrollController();
+  final SectionAppBarCollapseController _appBarCollapseController =
+      SectionAppBarCollapseController();
   Object? _scrollAttachment;
+
+  void _handleAppBarCollapseChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _appBarCollapseController.bind(_scrollController);
+    _appBarCollapseController.addListener(_handleAppBarCollapseChanged);
     _scrollAttachment =
         AppNavigation.directorySystemScrollController.attach(_scrollToTop);
   }
@@ -277,6 +287,8 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
     if (scrollAttachment != null) {
       AppNavigation.directorySystemScrollController.detach(scrollAttachment);
     }
+    _appBarCollapseController.removeListener(_handleAppBarCollapseChanged);
+    _appBarCollapseController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -309,6 +321,10 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
 
     return Scaffold(
       appBar: CompactSectionAppBar(
+        collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
+          context,
+          _appBarCollapseController.progress,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',
@@ -670,11 +686,21 @@ class _CategoryItemsScreen extends ConsumerStatefulWidget {
 
 class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
   final ScrollController _scrollController = ScrollController();
+  final SectionAppBarCollapseController _appBarCollapseController =
+      SectionAppBarCollapseController();
   Object? _scrollAttachment;
+
+  void _handleAppBarCollapseChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+    _appBarCollapseController.bind(_scrollController);
+    _appBarCollapseController.addListener(_handleAppBarCollapseChanged);
     _scrollAttachment =
         AppNavigation.directoryCatalogScrollController.attach(_scrollToTop);
   }
@@ -685,6 +711,8 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
     if (scrollAttachment != null) {
       AppNavigation.directoryCatalogScrollController.detach(scrollAttachment);
     }
+    _appBarCollapseController.removeListener(_handleAppBarCollapseChanged);
+    _appBarCollapseController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -719,6 +747,10 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
 
     return Scaffold(
       appBar: CompactSectionAppBar(
+        collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
+          context,
+          _appBarCollapseController.progress,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
           tooltip: 'Назад',

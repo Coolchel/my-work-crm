@@ -50,6 +50,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   final _estimateController = TextEditingController();
   final _notesController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final SectionAppBarCollapseController _appBarCollapseController =
+      SectionAppBarCollapseController();
   bool _hasChanges = false;
   bool _isDataLoaded = false;
   Object? _scrollAttachment;
@@ -75,6 +77,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   @override
   void initState() {
     super.initState();
+    _appBarCollapseController.bind(_scrollController);
     _scrollAttachment =
         AppNavigation.financeScrollController.attach(_scrollToTop);
     _estimateController.addListener(_onTextChanged);
@@ -93,6 +96,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     if (scrollAttachment != null) {
       AppNavigation.financeScrollController.detach(scrollAttachment);
     }
+    _appBarCollapseController.dispose();
     _scrollController.dispose();
     _estimateController.dispose();
     _notesController.dispose();
@@ -239,18 +243,28 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       });
     }
 
-    return Scaffold(
-      appBar: CompactSectionAppBar(
-        leading: IconButton(
-          tooltip: '\u041d\u0430\u0437\u0430\u0434',
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: handleBack,
-        ),
-        title: 'Финансы',
-        icon: Icons.account_balance_wallet_rounded,
-        gradientColors: AppDesignTokens.subtleSectionGradient,
-      ),
-      body: projectsAsync.when(
+    return ListenableBuilder(
+      listenable: _appBarCollapseController,
+      builder: (context, child) {
+        return Scaffold(
+          appBar: CompactSectionAppBar(
+            collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
+              context,
+              _appBarCollapseController.progress,
+            ),
+            leading: IconButton(
+              tooltip: '\u041d\u0430\u0437\u0430\u0434',
+              icon: const Icon(Icons.arrow_back_ios_new),
+              onPressed: handleBack,
+            ),
+            title: 'Финансы',
+            icon: Icons.account_balance_wallet_rounded,
+            gradientColors: AppDesignTokens.subtleSectionGradient,
+          ),
+          body: child!,
+        );
+      },
+      child: projectsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => FriendlyEmptyState(
           icon: Icons.cloud_off_rounded,
