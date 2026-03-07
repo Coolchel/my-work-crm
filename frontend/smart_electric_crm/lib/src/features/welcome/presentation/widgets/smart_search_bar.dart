@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/search/project_search_texts.dart';
 
 import '../../../projects/presentation/providers/project_providers.dart';
 
 class SmartSearchBar extends ConsumerStatefulWidget {
+  final StateProvider<String?> searchQueryProvider;
+  final String hintText;
   final ValueChanged<bool>? onFocusChanged;
   final ValueChanged<String>? onQueryChanged;
   final VoidCallback? onCleared;
 
   const SmartSearchBar({
     super.key,
+    required this.searchQueryProvider,
+    this.hintText = ProjectSearchTexts.hint,
     this.onFocusChanged,
     this.onQueryChanged,
     this.onCleared,
@@ -29,7 +34,22 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
   @override
   void initState() {
     super.initState();
+    _syncControllerWithProvider();
     _searchFocusNode.addListener(_onFocusChange);
+  }
+
+  void _syncControllerWithProvider() {
+    final value = normalizeProjectSearchQuery(
+          ref.read(widget.searchQueryProvider),
+        ) ??
+        '';
+    if (_searchController.text == value) {
+      return;
+    }
+    _searchController.value = TextEditingValue(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+    );
   }
 
   @override
@@ -48,7 +68,7 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
 
     if (_searchFocusNode.hasFocus && _searchController.text.isNotEmpty) {
       final normalized = _searchController.text.trim();
-      ref.read(projectSearchQueryProvider.notifier).state =
+      ref.read(widget.searchQueryProvider.notifier).state =
           normalized.isEmpty ? null : normalized;
     }
   }
@@ -90,7 +110,7 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
           style: TextStyle(color: scheme.onSurface),
           cursorColor: scheme.primary,
           decoration: InputDecoration(
-            hintText: 'Поиск: объект, домофон, заказчик...',
+            hintText: widget.hintText,
             hintStyle: TextStyle(
               color: scheme.onSurfaceVariant.withOpacity(0.75),
             ),
@@ -103,8 +123,9 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
                     icon: Icon(Icons.close, color: scheme.onSurfaceVariant),
                     onPressed: () {
                       _searchController.clear();
-                      ref.read(projectSearchQueryProvider.notifier).state =
+                      ref.read(widget.searchQueryProvider.notifier).state =
                           null;
+                      setState(() {});
                       widget.onQueryChanged?.call('');
                       widget.onCleared?.call();
                       FocusScope.of(context).unfocus();
@@ -123,8 +144,9 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
           ),
           onChanged: (value) {
             final normalized = value.trim();
-            ref.read(projectSearchQueryProvider.notifier).state =
+            ref.read(widget.searchQueryProvider.notifier).state =
                 normalized.isEmpty ? null : normalized;
+            setState(() {});
             widget.onQueryChanged?.call(value);
           },
         ),

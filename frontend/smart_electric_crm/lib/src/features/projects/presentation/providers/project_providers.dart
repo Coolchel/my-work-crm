@@ -17,6 +17,17 @@ ProjectRepository projectRepository(ProjectRepositoryRef ref) {
 /// Провайдер для строки поиска
 final projectSearchQueryProvider = StateProvider<String?>((ref) => null);
 
+String? normalizeProjectSearchQuery(String? value) {
+  final normalized = value?.trim();
+  if (normalized == null || normalized.isEmpty) {
+    return null;
+  }
+  return normalized;
+}
+
+/// Провайдер для строки поиска на экране объектов.
+final objectsProjectSearchQueryProvider = StateProvider<String?>((ref) => null);
+
 // Провайдер для списка проектов (основной, без поиска)
 final projectListProvider = FutureProvider<List<ProjectModel>>((ref) async {
   final repository = ref.watch(projectRepositoryProvider);
@@ -30,9 +41,22 @@ final projectSearchResultsProvider =
   final repository = ref.watch(projectRepositoryProvider);
   final searchQuery = ref.watch(projectSearchQueryProvider);
 
-  // If no search query, return empty list (or handle as needed by UI)
-  final normalizedQuery = searchQuery?.trim();
-  if (normalizedQuery == null || normalizedQuery.isEmpty) {
+  final normalizedQuery = normalizeProjectSearchQuery(searchQuery);
+  if (normalizedQuery == null) {
+    return [];
+  }
+
+  return repository.fetchProjects(search: normalizedQuery);
+});
+
+/// Провайдер для backend search-результатов на экране объектов.
+final objectsProjectSearchResultsProvider =
+    FutureProvider<List<ProjectModel>>((ref) async {
+  final repository = ref.watch(projectRepositoryProvider);
+  final searchQuery = ref.watch(objectsProjectSearchQueryProvider);
+
+  final normalizedQuery = normalizeProjectSearchQuery(searchQuery);
+  if (normalizedQuery == null) {
     return [];
   }
 

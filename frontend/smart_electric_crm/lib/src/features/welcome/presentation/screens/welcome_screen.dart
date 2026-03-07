@@ -186,6 +186,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
         key: _searchAnchorKey,
         link: _layerLink,
         child: SmartSearchBar(
+          searchQueryProvider: projectSearchQueryProvider,
           onFocusChanged: (hasFocus) {
             if (hasFocus) {
               _activateSearch(isMobile: isMobile);
@@ -314,6 +315,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                           groupId: _searchTapGroupId,
                           child: SearchResultsOverlay(
                             maxHeight: _searchOverlayMaxHeight,
+                            queryProvider: projectSearchQueryProvider,
+                            resultsProvider: projectSearchResultsProvider,
                           ),
                         ),
                       ),
