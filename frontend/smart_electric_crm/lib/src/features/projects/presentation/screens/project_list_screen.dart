@@ -11,7 +11,9 @@ import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/search/project_search_texts.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/widgets/project_search_result_tile.dart';
 
 // Filter enums
 enum SortOrder { newest, oldest }
@@ -37,7 +39,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
 
   // Search
   final _searchController = TextEditingController();
-  String _searchQuery = '';
 
   late AnimationController _searchAnimController;
   late Animation<double> _fadeAnimation;
@@ -113,8 +114,13 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   }
 
   void _closeSearch() {
+    _searchController.clear();
+    ref.read(objectsProjectSearchQueryProvider.notifier).state = null;
     _searchAnimController.reverse();
     FocusScope.of(context).unfocus();
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   /// Calc total work amount (client_amount) in USD across all stages
@@ -133,12 +139,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   List<ProjectModel> _applyFilters(List<ProjectModel> projects) {
     var result = List<ProjectModel>.from(projects);
 
-    // Search filter
-    if (_searchQuery.isNotEmpty) {
-      final q = _searchQuery.toLowerCase();
-      result =
-          result.where((p) => p.address.toLowerCase().contains(q)).toList();
-    }
     // Source filter
     if (_filterSource != null) {
       result = result.where((p) => p.source == _filterSource).toList();
@@ -184,9 +184,156 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     });
   }
 
+  void _openProjectDetails(ProjectModel project) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProjectDetailScreen(
+          projectId: project.id.toString(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBaseList(AsyncValue<List<ProjectModel>> projectListAsync) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        return ref.refresh(projectListProvider.future);
+      },
+      child: projectListAsync.when(
+        data: (projects) {
+          final filtered = _applyFilters(projects);
+          if (projects.isEmpty) {
+            return const FriendlyEmptyState(
+              icon: Icons.apartment_outlined,
+              title: 'Объекты пока не добавлены',
+              subtitle: 'Создайте первый объект, чтобы начать работу.',
+              accentColor: Colors.indigo,
+            );
+          }
+
+          if (filtered.isEmpty) {
+            return FriendlyEmptyState(
+              icon: Icons.filter_list_off_rounded,
+              title: 'Нет объектов по заданным фильтрам',
+              subtitle: 'Измените параметры фильтра или сбросьте их.',
+              accentColor: Colors.blueGrey,
+              action: _hasActiveFilters
+                  ? TextButton(
+                      onPressed: _resetFilters,
+                      child: const Text('Сбросить фильтры'),
+                    )
+                  : null,
+            );
+          }
+
+          return ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.fromLTRB(
+              AppDesignTokens.spacingM,
+              16,
+              AppDesignTokens.spacingM,
+              120,
+            ),
+            itemCount: filtered.length,
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemBuilder: (context, index) {
+              return _ProjectCard(
+                project: filtered[index],
+                workSumUsd: _calcWorkSumUsd(filtered[index]),
+              );
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Ошибка загрузки: $error',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(projectListProvider),
+                child: const Text('Повторить'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchLayer(AsyncValue<List<ProjectModel>> searchResultsAsync) {
+    return Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: RefreshIndicator(
+        onRefresh: () async {
+          return ref.refresh(objectsProjectSearchResultsProvider.future);
+        },
+        child: searchResultsAsync.when(
+          data: (projects) {
+            if (projects.isEmpty) {
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+                children: const [
+                  FriendlyEmptyState(
+                    icon: Icons.search_off_rounded,
+                    title: ProjectSearchTexts.emptyTitle,
+                    subtitle: ProjectSearchTexts.emptySubtitle,
+                    accentColor: Colors.blueGrey,
+                  ),
+                ],
+              );
+            }
+
+            return ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: projects.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final project = projects[index];
+                return ProjectSearchResultTile(
+                  project: project,
+                  onTap: () => _openProjectDetails(project),
+                );
+              },
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+            children: [
+              FriendlyEmptyState(
+                icon: Icons.error_outline,
+                title: 'Не удалось выполнить поиск',
+                subtitle: '$error',
+                accentColor: Colors.redAccent,
+                action: TextButton(
+                  onPressed: () =>
+                      ref.invalidate(objectsProjectSearchResultsProvider),
+                  child: const Text('Повторить'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final projectListAsync = ref.watch(projectListProvider);
+    final searchQuery = ref.watch(objectsProjectSearchQueryProvider);
+    final normalizedSearchQuery = normalizeProjectSearchQuery(searchQuery);
+    final isSearchActive = normalizedSearchQuery != null;
+    final searchResultsAsync = ref.watch(objectsProjectSearchResultsProvider);
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final handleBack =
@@ -274,7 +421,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                         style: const TextStyle(fontSize: 16),
                         decoration: InputDecoration(
                           isDense: true,
-                          hintText: 'Поиск по адресу...',
+                          hintText: ProjectSearchTexts.hint,
                           hintStyle: TextStyle(
                             color: Colors.grey.shade500,
                             fontSize: 15,
@@ -290,7 +437,13 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                                   color: Colors.grey.shade500,
                                   onPressed: () {
                                     _searchController.clear();
-                                    setState(() => _searchQuery = '');
+                                    ref
+                                        .read(
+                                          objectsProjectSearchQueryProvider
+                                              .notifier,
+                                        )
+                                        .state = null;
+                                    setState(() {});
                                   },
                                 )
                               : null,
@@ -324,8 +477,13 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                             vertical: 12,
                           ),
                         ),
-                        onChanged: (val) => setState(() => _searchQuery = val),
-                        onSubmitted: (_) => _closeSearch(),
+                        onChanged: (val) {
+                          ref
+                              .read(objectsProjectSearchQueryProvider.notifier)
+                              .state = normalizeProjectSearchQuery(val);
+                          setState(() {});
+                        },
+                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
                       ),
                     ),
                   );
@@ -334,79 +492,12 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             ),
           ),
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                return ref.refresh(projectListProvider.future);
-              },
-              child: projectListAsync.when(
-                data: (projects) {
-                  final filtered = _applyFilters(projects);
-                  if (projects.isEmpty) {
-                    return const FriendlyEmptyState(
-                      icon: Icons.apartment_outlined,
-                      title: 'Объекты пока не добавлены',
-                      subtitle: 'Создайте первый объект, чтобы начать работу.',
-                      accentColor: Colors.indigo,
-                    );
-                  }
-
-                  if (filtered.isEmpty) {
-                    return FriendlyEmptyState(
-                      icon: _searchQuery.isNotEmpty
-                          ? Icons.search_off_rounded
-                          : Icons.filter_list_off_rounded,
-                      title: _searchQuery.isNotEmpty
-                          ? 'Ничего не найдено'
-                          : 'Нет объектов по заданным фильтрам',
-                      subtitle: _searchQuery.isNotEmpty
-                          ? 'Попробуйте изменить поисковый запрос.'
-                          : 'Измените параметры фильтра или сбросьте их.',
-                      accentColor: Colors.blueGrey,
-                      action: _hasActiveFilters
-                          ? TextButton(
-                              onPressed: _resetFilters,
-                              child: const Text('Сбросить фильтры'),
-                            )
-                          : null,
-                    );
-                  }
-
-                  return ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.fromLTRB(
-                      AppDesignTokens.spacingM,
-                      16,
-                      AppDesignTokens.spacingM,
-                      120,
-                    ),
-                    itemCount: filtered.length,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemBuilder: (context, index) {
-                      return _ProjectCard(
-                        project: filtered[index],
-                        workSumUsd: _calcWorkSumUsd(filtered[index]),
-                      );
-                    },
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (error, stack) => Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Ошибка загрузки: $error',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => ref.invalidate(projectListProvider),
-                        child: const Text('Повторить'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            child: Stack(
+              children: [
+                Positioned.fill(child: _buildBaseList(projectListAsync)),
+                if (isSearchActive)
+                  Positioned.fill(child: _buildSearchLayer(searchResultsAsync)),
+              ],
             ),
           ),
         ],

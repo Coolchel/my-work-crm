@@ -51,6 +51,7 @@ class NetworkRecoveryCoordinator {
         'NetworkRecoveryCoordinator: reconnect detected, refreshing data');
     _ref.invalidate(projectListProvider);
     _ref.invalidate(projectSearchResultsProvider);
+    _ref.invalidate(objectsProjectSearchResultsProvider);
     _ref.invalidate(unpaidProjectsProvider);
     _ref.invalidate(financeSettingsProvider);
     _ref.invalidate(statisticsDataProvider);

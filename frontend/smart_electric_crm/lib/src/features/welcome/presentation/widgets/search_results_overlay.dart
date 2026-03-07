@@ -6,13 +6,16 @@ import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 import '../../../projects/data/models/project_model.dart';
-import '../../../projects/presentation/providers/project_providers.dart';
+import '../../../projects/presentation/search/project_search_texts.dart';
 import '../../../projects/presentation/screens/project_detail_screen.dart';
+import '../../../projects/presentation/widgets/project_search_result_tile.dart';
 
 class SearchResultsOverlay extends ConsumerWidget {
   const SearchResultsOverlay({
     super.key,
     this.maxHeight = 400,
+    required this.queryProvider,
+    required this.resultsProvider,
   });
 
   static const int _maxVisibleItemsCap = 8;
@@ -23,11 +26,13 @@ class SearchResultsOverlay extends ConsumerWidget {
   static const double _listVerticalPadding = _viewportEdgeInset * 2;
 
   final double maxHeight;
+  final StateProvider<String?> queryProvider;
+  final FutureProvider<List<ProjectModel>> resultsProvider;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final searchQuery = ref.watch(projectSearchQueryProvider);
-    final projectsAsync = ref.watch(projectSearchResultsProvider);
+    final searchQuery = ref.watch(queryProvider);
+    final projectsAsync = ref.watch(resultsProvider);
 
     if (searchQuery == null || searchQuery.isEmpty) {
       return const SizedBox.shrink();
@@ -58,8 +63,8 @@ class SearchResultsOverlay extends ConsumerWidget {
               if (projects.isEmpty) {
                 return const FriendlyEmptyState(
                   icon: Icons.search_off_rounded,
-                  title: 'Ничего не найдено',
-                  subtitle: 'Попробуйте изменить запрос.',
+                  title: ProjectSearchTexts.emptyTitle,
+                  subtitle: ProjectSearchTexts.emptySubtitle,
                   accentColor: Colors.blueGrey,
                   iconSize: 62,
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 18),
@@ -100,7 +105,7 @@ class SearchResultsOverlay extends ConsumerWidget {
                     ),
                     itemBuilder: (context, index) {
                       final project = projects[index];
-                      return _SearchResultItem(
+                      return ProjectSearchResultTile(
                         project: project,
                         onTap: () {
                           Navigator.push(
@@ -129,161 +134,6 @@ class SearchResultsOverlay extends ConsumerWidget {
               child: Text(
                 'Ошибка: $err',
                 style: const TextStyle(color: Colors.red, fontSize: 12),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SearchResultItem extends StatefulWidget {
-  final ProjectModel project;
-  final VoidCallback onTap;
-
-  const _SearchResultItem({
-    required this.project,
-    required this.onTap,
-  });
-
-  @override
-  State<_SearchResultItem> createState() => _SearchResultItemState();
-}
-
-class _SearchResultItemState extends State<_SearchResultItem> {
-  bool _isHovered = false;
-
-  IconData _getIcon(String type) {
-    switch (type) {
-      case 'new_building':
-        return Icons.apartment;
-      case 'secondary':
-        return Icons.home;
-      case 'cottage':
-        return Icons.villa;
-      case 'office':
-        return Icons.business;
-      default:
-        return Icons.category;
-    }
-  }
-
-  String _buildMetaLine(ProjectModel project) {
-    final client = project.clientInfo.trim();
-    final intercom = project.intercomCode.trim();
-
-    if (client.isNotEmpty && intercom.isNotEmpty) {
-      return '$client • Домофон: $intercom';
-    }
-    if (client.isNotEmpty) {
-      return client;
-    }
-    if (intercom.isNotEmpty) {
-      return 'Домофон: $intercom';
-    }
-    return 'Без данных по клиенту';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final metaLine = _buildMetaLine(widget.project);
-    final onSurfaceVariant = scheme.onSurfaceVariant;
-
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.symmetric(
-          horizontal: 8,
-          vertical: SearchResultsOverlay._itemOuterVerticalMargin,
-        ),
-        decoration: BoxDecoration(
-          color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
-          ),
-          boxShadow: _isHovered
-              ? [
-                  BoxShadow(
-                    color: AppDesignTokens.cardShadow(context, hovered: true),
-                    blurRadius: 10,
-                    offset: const Offset(0, 0),
-                  ),
-                ]
-              : const [],
-        ),
-        child: SizedBox(
-          height: SearchResultsOverlay._resultTileExtent,
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: widget.onTap,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppDesignTokens.isDark(context)
-                            ? scheme.surfaceContainerHigh
-                            : Colors.indigo.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        _getIcon(widget.project.objectType),
-                        size: 20,
-                        color: Colors.indigo.shade400,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.project.address,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              height: 1.1,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            metaLine,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              height: 1.1,
-                              color: onSurfaceVariant,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Icon(
-                      Icons.chevron_right,
-                      size: 16,
-                      color: _isHovered
-                          ? scheme.onSurfaceVariant
-                          : scheme.onSurfaceVariant.withOpacity(0.7),
-                    ),
-                  ],
-                ),
               ),
             ),
           ),
