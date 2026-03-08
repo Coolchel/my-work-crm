@@ -771,6 +771,8 @@ class _ProjectCard extends StatefulWidget {
 class _ProjectCardState extends State<_ProjectCard> {
   static const double _titleFontSize = 16;
   static const double _titleLineHeight = 1.2;
+  static const double _headerBlockHeight = 58;
+  static const double _intercomLineHeight = 14;
   static const double _actionButtonSize = 30;
   static const double _actionIconSize = 18;
   static const double _actionButtonsGap = 2;
@@ -887,47 +889,87 @@ class _ProjectCardState extends State<_ProjectCard> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               // Header: address + action buttons (aligned on one line)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                      right: _actionButtonsReservedWidth +
-                                          _titleActionsGap,
-                                    ),
-                                    child: Text(
-                                      project.address,
-                                      style: TextStyle(
-                                        fontSize: _titleFontSize,
-                                        height: _titleLineHeight,
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface,
-                                        letterSpacing: -0.3,
+                              SizedBox(
+                                height: _headerBlockHeight,
+                                child: project.intercomCode.isEmpty
+                                    ? Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: _actionButtonsReservedWidth +
+                                                _titleActionsGap,
+                                          ),
+                                          child: Text(
+                                            project.address,
+                                            style: TextStyle(
+                                              fontSize: _titleFontSize,
+                                              height: _titleLineHeight,
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface,
+                                              letterSpacing: -0.3,
+                                            ),
+                                            strutStyle: const StrutStyle(
+                                              fontSize: _titleFontSize,
+                                              height: _titleLineHeight,
+                                              forceStrutHeight: true,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      )
+                                    : Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              right:
+                                                  _actionButtonsReservedWidth +
+                                                      _titleActionsGap,
+                                            ),
+                                            child: Text(
+                                              project.address,
+                                              style: TextStyle(
+                                                fontSize: _titleFontSize,
+                                                height: _titleLineHeight,
+                                                fontWeight: FontWeight.bold,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface,
+                                                letterSpacing: -0.3,
+                                              ),
+                                              strutStyle: const StrutStyle(
+                                                fontSize: _titleFontSize,
+                                                height: _titleLineHeight,
+                                                forceStrutHeight: true,
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          SizedBox(
+                                            height: _intercomLineHeight,
+                                            child: Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: Text(
+                                                '\u0434\u043e\u043c\u043e\u0444\u043e\u043d: ${project.intercomCode}',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Colors.grey.shade500,
+                                                  letterSpacing: 0.3,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      strutStyle: const StrutStyle(
-                                        fontSize: _titleFontSize,
-                                        height: _titleLineHeight,
-                                        forceStrutHeight: true,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  if (project.intercomCode.isNotEmpty) ...[
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '\u0434\u043e\u043c\u043e\u0444\u043e\u043d: ${project.intercomCode}',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.grey.shade500,
-                                        letterSpacing: 0.3,
-                                      ),
-                                    ),
-                                  ],
-                                ],
                               ),
 
                               const SizedBox(height: 12),
