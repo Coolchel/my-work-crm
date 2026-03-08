@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 
 /// Comprehensive dashboard for summary totals.
@@ -152,7 +151,7 @@ class TotalDashboard extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.manrope(
+          style: TextStyle(
             color: isBold ? color : Colors.grey.shade700,
             fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
             letterSpacing: 0.2,
