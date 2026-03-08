@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/navigation/app_navigation.dart';
@@ -36,12 +37,14 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   final LayerLink _layerLink = LayerLink();
   final Object _searchTapGroupId = Object();
   final GlobalKey _searchAnchorKey = GlobalKey();
+  final GlobalKey _headerKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
   Object? _scrollAttachment;
 
   double _searchOverlayMaxHeight = 320;
   double _searchOverlayOffsetY = 56;
   bool _isSearchFocused = false;
+  bool _useLightStatusBarIcons = true;
 
   bool get _shouldAutoRepositionSearch =>
       !kIsWeb && defaultTargetPlatform != TargetPlatform.windows;
@@ -52,6 +55,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_recalculateOverlayMaxHeight);
+    _scrollController.addListener(_updateStatusBarStyle);
     _attachScrollController(widget.scrollController);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -74,6 +78,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   void dispose() {
     _detachScrollController(widget.scrollController);
     _scrollController.removeListener(_recalculateOverlayMaxHeight);
+    _scrollController.removeListener(_updateStatusBarStyle);
     _scrollController.dispose();
     super.dispose();
   }
@@ -141,6 +146,86 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         _searchOverlayOffsetY = nextOffset;
       });
     }
+  }
+
+  void _updateStatusBarStyle() {
+    final headerContext = _headerKey.currentContext;
+    if (headerContext == null || !mounted) {
+      return;
+    }
+
+    final headerBox = headerContext.findRenderObject() as RenderBox?;
+    if (headerBox == null) {
+      return;
+    }
+
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+    final switchOffset = headerBox.size.height > statusBarHeight
+        ? headerBox.size.height - statusBarHeight
+        : 0.0;
+    final shouldUseLightIcons = _scrollController.offset < switchOffset;
+
+    if (_useLightStatusBarIcons == shouldUseLightIcons) {
+      return;
+    }
+
+    setState(() {
+      _useLightStatusBarIcons = shouldUseLightIcons;
+    });
+  }
+
+  SystemUiOverlayStyle _resolveSystemUiOverlayStyle(BuildContext context) {
+    final useLightIcons = _useLightStatusBarIcons;
+
+    return (useLightIcons
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark)
+        .copyWith(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness:
+          useLightIcons ? Brightness.light : Brightness.dark,
+      statusBarBrightness: useLightIcons ? Brightness.dark : Brightness.light,
+    );
+  }
+
+  Widget _buildStatusBarBackdrop(BuildContext context) {
+    final topInset = MediaQuery.of(context).padding.top;
+    if (topInset <= 0) {
+      return const SizedBox.shrink();
+    }
+
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final backdropColor = isDark
+        ? scheme.surfaceContainerHigh.withOpacity(0.96)
+        : scheme.surface.withOpacity(0.96);
+    final borderColor = scheme.outlineVariant.withOpacity(isDark ? 0.45 : 0.55);
+
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: IgnorePointer(
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOut,
+          opacity: _useLightStatusBarIcons ? 0 : 1,
+          child: Container(
+            height: topInset,
+            decoration: BoxDecoration(
+              color: backdropColor,
+              border: Border(
+                bottom: BorderSide(
+                  color: borderColor,
+                  width: 0.6,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _activateSearch() {
@@ -252,112 +337,118 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _recalculateOverlayMaxHeight();
+        _updateStatusBarStyle();
       }
     });
 
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Column(
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                SingleChildScrollView(
-                  controller: _scrollController,
-                  child: Column(
-                    children: [
-                      WelcomeHeader(
-                        onSettingsPressed: widget.onSettingsPressed,
-                      ),
-                      Transform.translate(
-                        offset: const Offset(0, -20),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
-                            children: [
-                              QuickStatsRow(
-                                selectedStat: selectedStat,
-                                onStatSelected: (stat) {
-                                  ref
-                                      .read(dashboardFilterProvider.notifier)
-                                      .state = stat;
-                                },
-                              ),
-                              const SizedBox(height: 24),
-                              _buildSearchBar(),
-                              if (isSearchActive && _useInlineDesktopResults)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 16),
-                                  child: SearchResultsOverlay(
-                                    maxHeight: 520,
-                                    queryProvider: projectSearchQueryProvider,
-                                    resultsProvider:
-                                        projectSearchResultsProvider,
-                                    inline: true,
-                                    matchSearchWidth: true,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: _resolveSystemUiOverlayStyle(context),
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: Column(
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    controller: _scrollController,
+                    child: Column(
+                      children: [
+                        WelcomeHeader(
+                          key: _headerKey,
+                          onSettingsPressed: widget.onSettingsPressed,
+                        ),
+                        Transform.translate(
+                          offset: const Offset(0, -20),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              children: [
+                                QuickStatsRow(
+                                  selectedStat: selectedStat,
+                                  onStatSelected: (stat) {
+                                    ref
+                                        .read(dashboardFilterProvider.notifier)
+                                        .state = stat;
+                                  },
+                                ),
+                                const SizedBox(height: 24),
+                                _buildSearchBar(),
+                                if (isSearchActive && _useInlineDesktopResults)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 16),
+                                    child: SearchResultsOverlay(
+                                      maxHeight: 520,
+                                      queryProvider: projectSearchQueryProvider,
+                                      resultsProvider:
+                                          projectSearchResultsProvider,
+                                      inline: true,
+                                      matchSearchWidth: true,
+                                    ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      AnimatedOpacity(
-                        duration: const Duration(milliseconds: 180),
-                        curve: Curves.easeOut,
-                        opacity: isSearchActive ? 0 : 1,
-                        child: IgnorePointer(
-                          ignoring: isSearchActive,
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 8),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 16),
-                                child: NewProjectCard(),
-                              ),
-                              if (hasProjectsLoadError)
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOut,
+                          opacity: isSearchActive ? 0 : 1,
+                          child: IgnorePointer(
+                            ignoring: isSearchActive,
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 8),
                                 const Padding(
-                                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                                  child: _WelcomeNetworkNotice(),
+                                  padding: EdgeInsets.symmetric(horizontal: 16),
+                                  child: NewProjectCard(),
                                 ),
-                              const SizedBox(height: 24),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 16),
-                                child: RecentProjectsList(),
-                              ),
-                            ],
+                                if (hasProjectsLoadError)
+                                  const Padding(
+                                    padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                                    child: _WelcomeNetworkNotice(),
+                                  ),
+                                const SizedBox(height: 24),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 16),
+                                  child: RecentProjectsList(),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 100),
-                    ],
+                        const SizedBox(height: 100),
+                      ],
+                    ),
                   ),
-                ),
-                if (isSearchActive && !_useInlineDesktopResults)
-                  CompositedTransformFollower(
-                    link: _layerLink,
-                    showWhenUnlinked: false,
-                    offset: Offset(0, _searchOverlayOffsetY),
-                    child: Align(
-                      alignment: Alignment.topLeft,
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width - 40,
-                        child: TapRegion(
-                          groupId: _searchTapGroupId,
-                          child: SearchResultsOverlay(
-                            maxHeight: _searchOverlayMaxHeight,
-                            queryProvider: projectSearchQueryProvider,
-                            resultsProvider: projectSearchResultsProvider,
-                            matchSearchWidth: true,
+                  _buildStatusBarBackdrop(context),
+                  if (isSearchActive && !_useInlineDesktopResults)
+                    CompositedTransformFollower(
+                      link: _layerLink,
+                      showWhenUnlinked: false,
+                      offset: Offset(0, _searchOverlayOffsetY),
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width - 40,
+                          child: TapRegion(
+                            groupId: _searchTapGroupId,
+                            child: SearchResultsOverlay(
+                              maxHeight: _searchOverlayMaxHeight,
+                              queryProvider: projectSearchQueryProvider,
+                              resultsProvider: projectSearchResultsProvider,
+                              matchSearchWidth: true,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
