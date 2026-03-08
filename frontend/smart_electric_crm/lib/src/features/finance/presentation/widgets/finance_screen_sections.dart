@@ -658,46 +658,27 @@ extension _FinanceScreenSections on _FinanceScreenState {
           _buildInputField(
             label: 'Смета контрагента',
             controller: _estimateController,
-            minLines: 2,
+            minLines: 1,
             maxLines: null,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           _buildInputField(
             label: 'Заметки',
             controller: _notesController,
-            minLines: 2,
+            minLines: 1,
             maxLines: null,
           ),
           if (_hasChanges) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerRight,
-              child: OutlinedButton.icon(
-                onPressed: _saveSettings,
-                icon: const Icon(Icons.save, size: 14),
-                label: const Text('Сохранить'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _FinanceScreenState._financeAccent,
-                  side: const BorderSide(
-                    color: _FinanceScreenState._financeAccent,
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                ).copyWith(
-                  overlayColor: WidgetStateProperty.resolveWith<Color?>(
-                    (states) {
-                      if (states.contains(WidgetState.hovered)) {
-                        return _FinanceScreenState._financeAccent
-                            .withOpacity(0.08);
-                      }
-                      return null;
-                    },
-                  ),
+            InlineSaveActionsRow(
+              actions: [
+                InlineSaveButton(
+                  accentColor: _FinanceScreenState._financeAccent,
+                  label: 'Сохранить',
+                  onPressed: _saveSettings,
                 ),
-              ),
+              ],
             ),
           ],
-          const SizedBox(height: 20), // Фиксированный отступ снизу
         ],
       ),
     );
@@ -725,6 +706,9 @@ extension _FinanceScreenSections on _FinanceScreenState {
           controller: controller,
           minLines: minLines,
           maxLines: maxLines,
+          keyboardType:
+              maxLines == 1 ? TextInputType.text : TextInputType.multiline,
+          textAlignVertical: TextAlignVertical.top,
           style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             isDense: true,

@@ -8,6 +8,7 @@ import 'package:smart_electric_crm/src/features/projects/presentation/widgets/es
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/inline_save_button.dart';
 
 /// Tab widget for displaying estimate items (Materials or Works)
 class EstimateTab extends ConsumerStatefulWidget {
@@ -82,6 +83,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   late FocusNode _markupFocus;
   bool _savingNote = false;
   bool _savingRemarks = false;
+  bool _savingNotesAction = false;
   String? _lastSavedNote;
   String? _lastSavedRemarks;
   bool _hasUnsavedNote = false;
@@ -257,6 +259,32 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     }
   }
 
+  Future<void> _savePendingNotes() async {
+    if (_savingNotesAction || widget.isDisabled) {
+      return;
+    }
+
+    final shouldSaveRemarks = _hasUnsavedRemarks;
+    final shouldSaveNote = _hasUnsavedNote;
+    if (!shouldSaveRemarks && !shouldSaveNote) {
+      return;
+    }
+
+    setState(() => _savingNotesAction = true);
+    try {
+      if (shouldSaveRemarks) {
+        await _saveRemarks();
+      }
+      if (shouldSaveNote) {
+        await _saveNote();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _savingNotesAction = false);
+      }
+    }
+  }
+
   void _onNoteChanged(String value) {
     setState(() {
       _hasUnsavedNote = value != _lastSavedNote;
@@ -296,46 +324,22 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     return null;
   }
 
-  Widget _buildSaveButton({
+  Widget? _buildSaveButton({
     required bool hasUnsaved,
     required bool saving,
     required VoidCallback onSave,
+    required String label,
+    String? savingLabel,
   }) {
-    if (!hasUnsaved && !saving) return const SizedBox.shrink();
+    if (!hasUnsaved && !saving) return null;
 
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: OutlinedButton.icon(
-          onPressed: widget.isDisabled || saving ? null : onSave,
-          icon: saving
-              ? const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.save, size: 14),
-          label: Text(saving ? 'Сохранение...' : 'Сохранить'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: _primaryColor,
-            side: BorderSide(color: _primaryColor),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ).copyWith(
-            overlayColor: WidgetStateProperty.resolveWith<Color?>(
-              (states) {
-                if (states.contains(WidgetState.hovered)) {
-                  return _primaryColor.withOpacity(0.08);
-                }
-                return null;
-              },
-            ),
-          ),
-        ),
-      ),
+    return InlineSaveButton(
+      accentColor: _primaryColor,
+      label: label,
+      savingLabel: savingLabel,
+      saving: saving,
+      enabled: !widget.isDisabled,
+      onPressed: widget.isDisabled || saving ? null : onSave,
     );
   }
 
@@ -362,8 +366,9 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
         TextField(
           controller: controller,
           maxLines: null,
-          minLines: 2,
+          minLines: 1,
           keyboardType: TextInputType.multiline,
+          textAlignVertical: TextAlignVertical.top,
           style: const TextStyle(fontSize: 14),
           onChanged: onChanged,
           readOnly: widget.isDisabled,
@@ -808,6 +813,13 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
 
     // Use passed prop instead of provider
     final showPrices = _isWorkTab ? true : widget.showPrices;
+    final notesSaveButton = _buildSaveButton(
+      hasUnsaved: _hasUnsavedRemarks || _hasUnsavedNote,
+      saving: _savingNotesAction || _savingRemarks || _savingNote,
+      onSave: _savePendingNotes,
+      label: 'Сохранить',
+      savingLabel: 'Сохранение...',
+    );
 
     return GestureDetector(
       onTap: widget.isDisabled ? widget.onDismissRequest : null,
@@ -927,11 +939,6 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                     onChanged: _onRemarksChanged,
                     suffix: _buildSuffix(isSaving: _savingRemarks),
                   ),
-                  _buildSaveButton(
-                    hasUnsaved: _hasUnsavedRemarks,
-                    saving: _savingRemarks,
-                    onSave: _saveRemarks,
-                  ),
                   const SizedBox(height: 12),
                   _buildInputField(
                     label: "Заметки (для себя)",
@@ -939,10 +946,10 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                     onChanged: _onNoteChanged,
                     suffix: _buildSuffix(isSaving: _savingNote),
                   ),
-                  _buildSaveButton(
-                    hasUnsaved: _hasUnsavedNote,
-                    saving: _savingNote,
-                    onSave: _saveNote,
+                  InlineSaveActionsRow(
+                    actions: [
+                      if (notesSaveButton != null) notesSaveButton,
+                    ],
                   ),
                 ],
               ),
