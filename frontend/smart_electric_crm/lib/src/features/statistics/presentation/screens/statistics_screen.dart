@@ -10,7 +10,6 @@ import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../../../shared/presentation/widgets/help_tooltip_icon.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/navigation/app_navigation.dart';
-import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class StatisticsScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBackPressed;
@@ -25,6 +24,7 @@ class StatisticsScreen extends ConsumerStatefulWidget {
 }
 
 class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
+  static const double _pieChartCardHeight = 320;
   final ScrollController _scrollController = ScrollController();
   final SectionAppBarCollapseController _appBarCollapseController =
       SectionAppBarCollapseController();
@@ -550,35 +550,55 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
 
   // 1. Financial Summary Cards
   Widget _buildFinancialSummary(BuildContext context, CurrencyAmount finances) {
-    return IntrinsicHeight(
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildFinanceCard(
-              context,
-              'Всего USD',
-              finances.usd,
-              '\$',
-              Colors.green,
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useVerticalLayout = constraints.maxWidth < 560;
+        final usdCard = _buildFinanceCard(
+          context,
+          'Всего USD',
+          finances.usd,
+          '\$',
+          Colors.green,
+          compact: useVerticalLayout,
+        );
+        final bynCard = _buildFinanceCard(
+          context,
+          'Всего BYN',
+          finances.byn,
+          'р',
+          Colors.indigo,
+          compact: useVerticalLayout,
+        );
+
+        if (useVerticalLayout) {
+          return Column(
+            children: [
+              usdCard,
+              const SizedBox(height: 16),
+              bynCard,
+            ],
+          );
+        }
+
+        return IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(child: usdCard),
+              const SizedBox(width: 16),
+              Expanded(child: bynCard),
+            ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildFinanceCard(
-              context,
-              'Всего BYN',
-              finances.byn,
-              'р',
-              Colors.indigo,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildFinanceCard(BuildContext context, String title, double amount,
-      String symbol, Color color) {
+      String symbol, Color color,
+      {bool compact = false}) {
+    final scheme = Theme.of(context).colorScheme;
+    final amountText = '${_formatAmount(amount)} $symbol';
+
     return _HoverStatsCard(
       borderRadius: 16,
       padding: const EdgeInsets.all(20),
@@ -611,13 +631,23 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          Text(
-            '${_formatAmount(amount)} $symbol',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-              letterSpacing: -0.5,
+          SizedBox(
+            width: double.infinity,
+            height: compact ? 40 : 44,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                amountText,
+                maxLines: 1,
+                softWrap: false,
+                style: TextStyle(
+                  fontSize: compact ? 28 : 30,
+                  fontWeight: FontWeight.bold,
+                  color: scheme.onSurface,
+                  letterSpacing: -0.6,
+                ),
+              ),
             ),
           ),
         ],
@@ -629,26 +659,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
 
   Widget _buildPieChartCard(BuildContext context, List<_ChartData> data,
       {int paletteOffset = 0}) {
-    if (data.isEmpty) {
-      return Container(
-        height: 300,
-        decoration: BoxDecoration(
-          color: AppDesignTokens.cardBackground(context),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppDesignTokens.cardBorder(context)),
-        ),
-        child: const FriendlyEmptyState(
-          icon: Icons.pie_chart_outline_rounded,
-          title: 'Нет данных',
-          subtitle: 'Данные появятся после добавления активности.',
-          accentColor: Colors.indigo,
-          iconSize: 64,
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-      );
-    }
-
-    // Reverted palette (Mixed colors)
     final List<Color> palette = [
       Colors.indigo,
       Colors.teal,
@@ -660,22 +670,28 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
       Colors.brown,
     ];
 
-    final realTotal = data.fold(0.0, (sum, item) => sum + item.value);
+    final normalizedData = data.where((item) => item.value > 0).toList();
+    final realTotal = normalizedData.fold(0.0, (sum, item) => sum + item.value);
 
-    // Sort logic
-    final sortedData = List<_ChartData>.from(data)
+    if (normalizedData.isEmpty || realTotal <= 0) {
+      return SizedBox(
+        height: _pieChartCardHeight,
+        child: _HoverStatsCard(
+          borderRadius: 16,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: _buildPieChartEmptyState(context),
+        ),
+      );
+    }
+
+    final sortedData = List<_ChartData>.from(normalizedData)
       ..sort((a, b) => b.value.compareTo(a.value));
 
-    // Logic to visually boost small percentages to 5%
-    // but keep REAL value in text
     final List<({_ChartData original, double visualValue, double realPercent})>
         chartData = [];
 
-    for (var item in sortedData) {
-      final realPercent = (item.value / realTotal * 100);
-      // If less than 5%, visual value is 5% of total (approx), else real value
-      // Note: This distorts the chart slightly but ensures visibility.
-      // A better approximation for visual consistency:
+    for (final item in sortedData) {
+      final realPercent = item.value / realTotal * 100;
       final visualValue = realPercent < 5.0 ? (realTotal * 0.05) : item.value;
 
       chartData.add((
@@ -685,9 +701,8 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
       ));
     }
 
-    // Build Legend Widget first to reuse it
     final legendWidget = Column(
-      mainAxisSize: MainAxisSize.min, // Wrap content so it stays at bottom
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: chartData.asMap().entries.map((entry) {
         final index = entry.key;
@@ -707,11 +722,12 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
               ),
               const SizedBox(width: 6),
               Flexible(
-                // Ensure text doesn't overflow if very narrow
                 child: Text(
                   item.original.name,
                   style: const TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w500),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -726,61 +742,113 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
       }).toList(),
     );
 
-    return _HoverStatsCard(
-      borderRadius: 16,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // 1. Hidden Top Legend (For balancing)
-          IgnorePointer(
-            child: Opacity(
-              opacity: 0.0,
-              child: Align(
-                alignment: Alignment.topRight,
-                child: legendWidget,
-              ),
-            ),
-          ),
+    return SizedBox(
+      height: _pieChartCardHeight,
+      child: _HoverStatsCard(
+        borderRadius: 16,
+        padding: const EdgeInsets.all(16),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final legendMaxWidth = (constraints.maxWidth * 0.42)
+                .clamp(150.0, constraints.maxWidth - 24)
+                .toDouble();
 
-          // 2. Chart (Centered)
-          Center(
-            child: SizedBox(
-              height: 170, // Increased height
-              child: PieChart(
-                PieChartData(
-                  sectionsSpace: 2,
-                  centerSpaceRadius: 25,
-                  sections: chartData.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final item = entry.value;
-                    final color =
-                        palette[(index + paletteOffset) % palette.length];
+            return Stack(
+              children: [
+                Center(
+                  child: SizedBox.square(
+                    dimension: 170,
+                    child: PieChart(
+                      PieChartData(
+                        sectionsSpace: 2,
+                        centerSpaceRadius: 25,
+                        sections: chartData.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final item = entry.value;
+                          final color =
+                              palette[(index + paletteOffset) % palette.length];
 
-                    return PieChartSectionData(
-                      color: color,
-                      value: item.visualValue,
-                      title:
-                          '${item.realPercent.toStringAsFixed(1).replaceAll('.0', '')}%',
-                      radius: 50, // Increased radius
-                      titleStyle: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                          return PieChartSectionData(
+                            color: color,
+                            value: item.visualValue,
+                            title:
+                                '${item.realPercent.toStringAsFixed(1).replaceAll('.0', '')}%',
+                            radius: 50,
+                            titleStyle: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          );
+                        }).toList(),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ),
                 ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: legendMaxWidth),
+                    child: SingleChildScrollView(
+                      child: legendWidget,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPieChartEmptyState(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
+
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest.withOpacity(
+                isDark ? 0.52 : 0.8,
               ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              Icons.pie_chart_outline_rounded,
+              color: scheme.onSurfaceVariant.withOpacity(0.88),
+              size: 30,
             ),
           ),
-
-          // 3. Visible Bottom Legend
-          Align(
-            alignment: Alignment.bottomRight,
-            child: legendWidget,
-          )
+          const SizedBox(height: 12),
+          Text(
+            'Нет данных для диаграммы',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.35,
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Карточка заполнится, когда в статистике появятся ненулевые значения.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              height: 1.35,
+              fontWeight: FontWeight.w500,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
