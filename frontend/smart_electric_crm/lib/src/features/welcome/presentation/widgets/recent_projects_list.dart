@@ -277,6 +277,11 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
     final intercomLine = _buildIntercomLine(project);
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final secondaryInfoStyle = TextStyle(
+      fontSize: 12,
+      color: scheme.onSurfaceVariant,
+      fontWeight: FontWeight.w500,
+    );
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -380,11 +385,7 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                                         const SizedBox(height: 2),
                                         Text(
                                           clientLine,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: scheme.onSurfaceVariant,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                          style: secondaryInfoStyle,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -393,11 +394,7 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                                         const SizedBox(height: 1),
                                         Text(
                                           intercomLine,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: scheme.onSurfaceVariant,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                          style: secondaryInfoStyle,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
