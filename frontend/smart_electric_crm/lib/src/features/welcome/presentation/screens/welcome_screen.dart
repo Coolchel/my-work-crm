@@ -1,9 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/navigation/app_navigation.dart';
-import '../../../projects/presentation/providers/project_providers.dart';
 import '../../../../core/theme/app_design_tokens.dart';
+import '../../../projects/presentation/providers/project_providers.dart';
 import '../widgets/new_project_card.dart';
 import '../widgets/quick_stats_row.dart';
 import '../widgets/recent_projects_list.dart';
@@ -25,26 +26,25 @@ class WelcomeScreen extends ConsumerStatefulWidget {
   ConsumerState<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
-    with SingleTickerProviderStateMixin {
+class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
+  static const double _overlayGap = 8;
+  static const double _overlayBottomGap = 12;
+  static const double _overlayMinHeight = 120;
+  static const double _overlayMaxHeightCap = 520;
+  static const double _searchTopMargin = 8;
+
   final LayerLink _layerLink = LayerLink();
   final Object _searchTapGroupId = Object();
   final GlobalKey _searchAnchorKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
   Object? _scrollAttachment;
 
-  static const double _overlayOffsetY = 60;
-  static const double _overlayBottomGap = 12;
-  static const double _overlayMinHeight = 120;
-  static const double _overlayMaxHeightCap = 360;
-
   double _searchOverlayMaxHeight = 320;
+  double _searchOverlayOffsetY = 56;
   bool _isSearchFocused = false;
 
-  // ── Lift animation ─────────────────────────────────────────────────────────
-  late final AnimationController _liftController;
-  late final Animation<Offset> _slideAnim;
-  late final Animation<double> _fadeAnim;
+  bool get _shouldAutoRepositionSearch =>
+      !kIsWeb && defaultTargetPlatform != TargetPlatform.windows;
 
   @override
   void initState() {
@@ -52,26 +52,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
     _scrollController.addListener(_recalculateOverlayMaxHeight);
     _attachScrollController(widget.scrollController);
 
-    _liftController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 280),
-    );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, -1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _liftController,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
-    ));
-    _fadeAnim = CurvedAnimation(
-      parent: _liftController,
-      curve: Curves.easeOut,
-      reverseCurve: Curves.easeIn,
-    );
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _recalculateOverlayMaxHeight();
+      if (mounted) {
+        _recalculateOverlayMaxHeight();
+      }
     });
   }
 
@@ -89,7 +73,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
     _detachScrollController(widget.scrollController);
     _scrollController.removeListener(_recalculateOverlayMaxHeight);
     _scrollController.dispose();
-    _liftController.dispose();
     super.dispose();
   }
 
@@ -128,37 +111,49 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
 
   void _recalculateOverlayMaxHeight() {
     final anchorContext = _searchAnchorKey.currentContext;
-    if (anchorContext == null || !mounted) return;
+    if (anchorContext == null || !mounted) {
+      return;
+    }
 
     final anchorBox = anchorContext.findRenderObject() as RenderBox?;
     final rootBox = context.findRenderObject() as RenderBox?;
-    if (anchorBox == null || rootBox == null) return;
+    if (anchorBox == null || rootBox == null) {
+      return;
+    }
 
     final anchorTopLeft =
         anchorBox.localToGlobal(Offset.zero, ancestor: rootBox);
-    final overlayTop = anchorTopLeft.dy + _overlayOffsetY;
+    final overlayTop = anchorTopLeft.dy + anchorBox.size.height + _overlayGap;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final availableHeight =
         rootBox.size.height - overlayTop - _overlayBottomGap - bottomInset;
     final nextHeight = availableHeight
         .clamp(_overlayMinHeight, _overlayMaxHeightCap)
         .toDouble();
+    final nextOffset = anchorBox.size.height + _overlayGap;
 
-    if ((nextHeight - _searchOverlayMaxHeight).abs() >= 1) {
-      setState(() => _searchOverlayMaxHeight = nextHeight);
+    if ((nextHeight - _searchOverlayMaxHeight).abs() >= 1 ||
+        (nextOffset - _searchOverlayOffsetY).abs() >= 1) {
+      setState(() {
+        _searchOverlayMaxHeight = nextHeight;
+        _searchOverlayOffsetY = nextOffset;
+      });
     }
   }
 
-  void _activateSearch({required bool isMobile}) {
+  void _activateSearch() {
     if (!_isSearchFocused) {
       setState(() => _isSearchFocused = true);
-      _liftController.forward();
     }
-    if (_scrollController.hasClients) {
-      _scrollController.jumpTo(0);
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _recalculateOverlayMaxHeight();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        return;
+      }
+      _recalculateOverlayMaxHeight();
+      if (_shouldAutoRepositionSearch) {
+        await _scrollSearchToTop();
+      }
     });
   }
 
@@ -166,21 +161,53 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
     ref.read(projectSearchQueryProvider.notifier).state = null;
     FocusScope.of(context).unfocus();
     if (_isSearchFocused) {
-      _liftController.reverse().then((_) {
-        if (mounted) {
-          setState(() => _isSearchFocused = false);
-          if (_scrollController.hasClients) {
-            _scrollController.jumpTo(0);
-          }
-        }
-      });
+      setState(() => _isSearchFocused = false);
+      if (_shouldAutoRepositionSearch && _scrollController.hasClients) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        );
+      }
     }
   }
 
-  Widget _buildSearchBar({required bool isMobile}) {
+  Future<void> _scrollSearchToTop() async {
+    final anchorContext = _searchAnchorKey.currentContext;
+    if (anchorContext == null || !_scrollController.hasClients) {
+      return;
+    }
+
+    final anchorBox = anchorContext.findRenderObject() as RenderBox?;
+    final rootBox = context.findRenderObject() as RenderBox?;
+    if (anchorBox == null || rootBox == null) {
+      return;
+    }
+
+    final anchorTopLeft =
+        anchorBox.localToGlobal(Offset.zero, ancestor: rootBox);
+    final safeTop = MediaQuery.of(context).padding.top + _searchTopMargin;
+    final delta = anchorTopLeft.dy - safeTop;
+    if (delta.abs() < 1) {
+      return;
+    }
+
+    final target = (_scrollController.offset + delta).clamp(
+      0.0,
+      _scrollController.position.maxScrollExtent,
+    );
+
+    await _scrollController.animateTo(
+      target,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  Widget _buildSearchBar() {
     return TapRegion(
       groupId: _searchTapGroupId,
-      onTapInside: (_) => _activateSearch(isMobile: isMobile),
+      onTapInside: (_) => _activateSearch(),
       onTapOutside: (_) => _deactivateSearch(),
       child: CompositedTransformTarget(
         key: _searchAnchorKey,
@@ -189,7 +216,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
           searchQueryProvider: projectSearchQueryProvider,
           onFocusChanged: (hasFocus) {
             if (hasFocus) {
-              _activateSearch(isMobile: isMobile);
+              _activateSearch();
             } else {
               final q = ref.read(projectSearchQueryProvider);
               if (q == null || q.isEmpty) {
@@ -197,12 +224,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
               }
             }
           },
-          onQueryChanged: (value) {
-            if (value.trim().isNotEmpty) {
-              _activateSearch(isMobile: isMobile);
-            }
+          onQueryChanged: (_) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _recalculateOverlayMaxHeight();
+              if (mounted) {
+                _recalculateOverlayMaxHeight();
+              }
             });
           },
           onCleared: _deactivateSearch,
@@ -216,15 +242,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
     final selectedStat = ref.watch(dashboardFilterProvider);
     final searchQuery = ref.watch(projectSearchQueryProvider);
     final isSearchActive = searchQuery != null && searchQuery.isNotEmpty;
-    final isMobile = MediaQuery.sizeOf(context).width < 600;
-    final isSearchLifted = _isSearchFocused || isSearchActive;
     final hasProjectsLoadError = ref.watch(projectListProvider).maybeWhen(
           error: (_, __) => true,
           orElse: () => false,
         );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _recalculateOverlayMaxHeight();
+      if (mounted) {
+        _recalculateOverlayMaxHeight();
+      }
     });
 
     return Scaffold(
@@ -232,23 +258,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
-          // ── Animated fixed search bar (slides in from top) ──────────────────
-          if (isSearchLifted)
-            SlideTransition(
-              position: _slideAnim,
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
-                    child: _buildSearchBar(isMobile: isMobile),
-                  ),
-                ),
-              ),
-            ),
-
-          // ── Scrollable body ─────────────────────────────────────────────────
           Expanded(
             child: Stack(
               children: [
@@ -256,48 +265,56 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                   controller: _scrollController,
                   child: Column(
                     children: [
-                      if (!isSearchLifted) ...[
-                        WelcomeHeader(
-                          onSettingsPressed: widget.onSettingsPressed,
+                      WelcomeHeader(
+                        onSettingsPressed: widget.onSettingsPressed,
+                      ),
+                      Transform.translate(
+                        offset: const Offset(0, -20),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            children: [
+                              QuickStatsRow(
+                                selectedStat: selectedStat,
+                                onStatSelected: (stat) {
+                                  ref
+                                      .read(dashboardFilterProvider.notifier)
+                                      .state = stat;
+                                },
+                              ),
+                              const SizedBox(height: 24),
+                              _buildSearchBar(),
+                            ],
+                          ),
                         ),
-                        Transform.translate(
-                          offset: const Offset(0, -20),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Column(
-                              children: [
-                                QuickStatsRow(
-                                  selectedStat: selectedStat,
-                                  onStatSelected: (stat) {
-                                    ref
-                                        .read(dashboardFilterProvider.notifier)
-                                        .state = stat;
-                                  },
+                      ),
+                      AnimatedOpacity(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeOut,
+                        opacity: isSearchActive ? 0 : 1,
+                        child: IgnorePointer(
+                          ignoring: isSearchActive,
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 8),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: NewProjectCard(),
+                              ),
+                              if (hasProjectsLoadError)
+                                const Padding(
+                                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                                  child: _WelcomeNetworkNotice(),
                                 ),
-                                const SizedBox(height: 24),
-                                _buildSearchBar(isMobile: isMobile),
-                              ],
-                            ),
+                              const SizedBox(height: 24),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16),
+                                child: RecentProjectsList(),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                      if (!isSearchActive && !isSearchLifted) ...[
-                        const SizedBox(height: 8),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: NewProjectCard(),
-                        ),
-                        if (hasProjectsLoadError)
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                            child: _WelcomeNetworkNotice(),
-                          ),
-                        const SizedBox(height: 24),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: RecentProjectsList(),
-                        ),
-                      ],
+                      ),
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -306,7 +323,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen>
                   CompositedTransformFollower(
                     link: _layerLink,
                     showWhenUnlinked: false,
-                    offset: const Offset(0, _overlayOffsetY),
+                    offset: Offset(0, _searchOverlayOffsetY),
                     child: Align(
                       alignment: Alignment.topLeft,
                       child: SizedBox(
@@ -366,7 +383,7 @@ class _WelcomeNetworkNotice extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Нет подключения к интернету. Некоторые блоки временно недоступны.',
+              'РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ. РќРµРєРѕС‚РѕСЂС‹Рµ Р±Р»РѕРєРё РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРЅС‹.',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
