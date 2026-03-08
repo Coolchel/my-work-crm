@@ -5,6 +5,8 @@ import 'app_design_tokens.dart';
 class AppTheme {
   const AppTheme._();
 
+  static const String _baseFontFamily = 'Roboto';
+
   static ThemeData light() {
     final scheme = ColorScheme.fromSeed(
       seedColor: Colors.indigo,
@@ -52,6 +54,10 @@ class AppTheme {
     required Color cardShadow,
     required Color navIndicator,
   }) {
+    final typography = Typography.material2021(
+      platform: TargetPlatform.android,
+      colorScheme: scheme,
+    );
     final selectedNavColor = scheme.primary;
     final unselectedNavColor = scheme.onSurfaceVariant;
     final isDark = scheme.brightness == Brightness.dark;
@@ -75,6 +81,8 @@ class AppTheme {
     final textTheme = ThemeData(
       useMaterial3: true,
       brightness: scheme.brightness,
+      typography: typography,
+      fontFamily: _baseFontFamily,
     ).textTheme.copyWith(
           headlineSmall: TextStyle(
             color:
@@ -103,6 +111,8 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      typography: typography,
+      fontFamily: _baseFontFamily,
       textTheme: textTheme,
       scaffoldBackgroundColor: scaffoldBackground,
       dividerColor: scheme.outlineVariant,
