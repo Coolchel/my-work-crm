@@ -22,6 +22,7 @@ import 'dart:io';
 import '../../data/models/project_file_model.dart';
 import '../../../../shared/services/temp_file_service.dart';
 import '../widgets/stages/stage_card.dart';
+import 'add_project_screen.dart';
 import '../widgets/project_detail/add_stage_dialog.dart';
 import '../widgets/project_detail/detail_info_row.dart';
 import '../../services/project_file_save_service.dart';
@@ -371,8 +372,34 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                     width: 5,
                     child: Container(color: Colors.indigo),
                   ),
+                  Positioned(
+                    top: 14,
+                    right: 14,
+                    child: Tooltip(
+                      message: 'Редактировать объект',
+                      child: SizedBox(
+                        width: 28,
+                        height: 28,
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.edit_outlined,
+                            size: 18,
+                            color: Colors.grey.shade400,
+                          ),
+                          padding: EdgeInsets.zero,
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) =>
+                                  AddProjectDialog(project: widget.project),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 20, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(22, 20, 56, 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

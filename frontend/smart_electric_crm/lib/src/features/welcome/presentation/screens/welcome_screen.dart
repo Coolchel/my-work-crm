@@ -45,6 +45,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
   bool get _shouldAutoRepositionSearch =>
       !kIsWeb && defaultTargetPlatform != TargetPlatform.windows;
+  bool get _useInlineDesktopResults =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
 
   @override
   void initState() {
@@ -284,6 +286,18 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               ),
                               const SizedBox(height: 24),
                               _buildSearchBar(),
+                              if (isSearchActive && _useInlineDesktopResults)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 16),
+                                  child: SearchResultsOverlay(
+                                    maxHeight: 520,
+                                    queryProvider: projectSearchQueryProvider,
+                                    resultsProvider:
+                                        projectSearchResultsProvider,
+                                    inline: true,
+                                    matchSearchWidth: true,
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -319,7 +333,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     ],
                   ),
                 ),
-                if (isSearchActive)
+                if (isSearchActive && !_useInlineDesktopResults)
                   CompositedTransformFollower(
                     link: _layerLink,
                     showWhenUnlinked: false,
@@ -334,6 +348,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                             maxHeight: _searchOverlayMaxHeight,
                             queryProvider: projectSearchQueryProvider,
                             resultsProvider: projectSearchResultsProvider,
+                            matchSearchWidth: true,
                           ),
                         ),
                       ),

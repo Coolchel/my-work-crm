@@ -1,5 +1,6 @@
-import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import '../../../data/models/stage_model.dart';
 
@@ -65,7 +66,11 @@ class _StageCardState extends State<StageCard> {
     final stageColor = _getStageColor(widget.stage.title);
     final createdAt = widget.stage.createdAt;
     final updatedAt = widget.stage.updatedAt;
-    final isCompact = MediaQuery.sizeOf(context).width < 380;
+    final isMobilePlatform = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS);
+    final useMobileLayout =
+        isMobilePlatform || MediaQuery.sizeOf(context).width < 380;
 
     // Check if updated date is different from created date (threshold 10 seconds to avoid drift)
     final isEdited = createdAt != null &&
@@ -121,7 +126,7 @@ class _StageCardState extends State<StageCard> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           // Header with Title and Delete Button
-                          isCompact
+                          useMobileLayout
                               ? Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -272,7 +277,7 @@ class _StageCardState extends State<StageCard> {
                           const SizedBox(height: 16),
 
                           // Stats Rows
-                          isCompact
+                          useMobileLayout
                               ? Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
