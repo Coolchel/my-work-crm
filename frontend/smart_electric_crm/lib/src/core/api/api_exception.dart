@@ -1,6 +1,15 @@
 import 'package:dio/dio.dart';
 
 class ApiException implements Exception {
+  static const String networkErrorMessage =
+      '\u041d\u0435\u0442 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f \u043a \u0438\u043d\u0442\u0435\u0440\u043d\u0435\u0442\u0443. \u041f\u0440\u043e\u0432\u0435\u0440\u044c\u0442\u0435 \u0441\u0435\u0442\u044c \u0438 \u043f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u0435 \u043f\u043e\u043f\u044b\u0442\u043a\u0443.';
+  static const String invalidCredentialsMessage =
+      '\u041d\u0435\u0432\u0435\u0440\u043d\u044b\u0439 \u043b\u043e\u0433\u0438\u043d \u0438\u043b\u0438 \u043f\u0430\u0440\u043e\u043b\u044c. \u041f\u0440\u043e\u0432\u0435\u0440\u044c\u0442\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 \u0438 \u043f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0441\u043d\u043e\u0432\u0430.';
+  static const String genericErrorMessage =
+      '\u041f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0430 \u043e\u0448\u0438\u0431\u043a\u0430. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0435 \u0440\u0430\u0437.';
+  static const String requestFailedMessage =
+      '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0432\u044b\u043f\u043e\u043b\u043d\u0438\u0442\u044c \u0437\u0430\u043f\u0440\u043e\u0441. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0435 \u0440\u0430\u0437.';
+
   final String message;
   final int? statusCode;
   final Object raw;
@@ -48,12 +57,21 @@ class ApiException implements Exception {
     required String? responseMessage,
     required String fallbackMessage,
   }) {
-    if (_isNetworkError(error)) {
-      return 'Нет подключения к интернету. Проверьте сеть и повторите попытку.';
+    if (statusCode == 401) {
+      if (_looksLikeInvalidCredentials(responseMessage) ||
+          responseMessage == null ||
+          responseMessage.trim().isEmpty) {
+        return invalidCredentialsMessage;
+      }
+
+      final trimmed = responseMessage.trim();
+      if (!_looksTechnical(trimmed)) {
+        return trimmed;
+      }
     }
 
-    if (statusCode == 401 && _looksLikeInvalidCredentials(responseMessage)) {
-      return 'Неверный логин или пароль. Проверьте данные и попробуйте снова.';
+    if (_isNetworkError(error)) {
+      return networkErrorMessage;
     }
 
     if (responseMessage != null) {
@@ -67,6 +85,10 @@ class ApiException implements Exception {
   }
 
   static bool _isNetworkError(DioException error) {
+    if (error.response != null) {
+      return false;
+    }
+
     if (error.type == DioExceptionType.connectionError ||
         error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
@@ -87,9 +109,10 @@ class ApiException implements Exception {
     final text = message.toLowerCase();
     return text.contains('invalid credentials') ||
         text.contains('no active account') ||
-        text.contains('неверн') ||
-        text.contains('неправильн') ||
-        text.contains('учетн');
+        text.contains('\u043d\u0435\u0432\u0435\u0440\u043d') ||
+        text.contains(
+            '\u043d\u0435\u043f\u0440\u0430\u0432\u0438\u043b\u044c\u043d') ||
+        text.contains('\u0443\u0447\u0435\u0442\u043d');
   }
 
   static bool _looksTechnical(String message) {
@@ -102,10 +125,10 @@ class ApiException implements Exception {
   static String _sanitizeFallback(String fallbackMessage) {
     final trimmed = fallbackMessage.trim();
     if (trimmed.isEmpty || _looksTechnical(trimmed)) {
-      return 'Произошла ошибка. Попробуйте еще раз.';
+      return genericErrorMessage;
     }
     if (trimmed.toLowerCase().startsWith('failed to ')) {
-      return 'Не удалось выполнить запрос. Попробуйте еще раз.';
+      return requestFailedMessage;
     }
     return trimmed;
   }
