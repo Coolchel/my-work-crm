@@ -28,7 +28,6 @@ class SmartSearchBar extends ConsumerStatefulWidget {
 class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
-  bool _isHovered = false;
   bool _isFocused = false;
 
   @override
@@ -77,79 +76,77 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
-    final isInteractive = _isHovered;
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.text,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        decoration: BoxDecoration(
-          color:
-              AppDesignTokens.cardBackground(context, hovered: isInteractive),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: _isFocused
-                ? scheme.primary.withOpacity(isDark ? 0.34 : 0.28)
-                : AppDesignTokens.cardBorder(context, hovered: isInteractive),
-            width: 0.8,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 140),
+      child: TextField(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        style: TextStyle(color: scheme.onSurface, fontSize: 16),
+        cursorColor: scheme.primary,
+        textAlignVertical: TextAlignVertical.center,
+        decoration: InputDecoration(
+          isDense: true,
+          hintText: widget.hintText,
+          hintStyle: TextStyle(
+            color: scheme.onSurfaceVariant.withOpacity(0.75),
+            fontSize: 15,
           ),
-          boxShadow: [
-            BoxShadow(
-              color:
-                  AppDesignTokens.cardShadow(context, hovered: isInteractive),
-              blurRadius: isInteractive ? 12 : 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: TextField(
-          controller: _searchController,
-          focusNode: _searchFocusNode,
-          style: TextStyle(color: scheme.onSurface),
-          cursorColor: scheme.primary,
-          decoration: InputDecoration(
-            hintText: widget.hintText,
-            hintStyle: TextStyle(
-              color: scheme.onSurfaceVariant.withOpacity(0.75),
-            ),
-            prefixIcon: Icon(
-              Icons.search,
-              color: scheme.onSurfaceVariant.withOpacity(0.85),
-            ),
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-                    icon: Icon(Icons.close, color: scheme.onSurfaceVariant),
-                    onPressed: () {
-                      _searchController.clear();
-                      ref.read(widget.searchQueryProvider.notifier).state =
-                          null;
-                      setState(() {});
-                      widget.onQueryChanged?.call('');
-                      widget.onCleared?.call();
-                      FocusScope.of(context).unfocus();
-                    },
-                  )
-                : null,
-            filled: true,
-            fillColor: isDark
-                ? scheme.surfaceContainer.withOpacity(0.36)
-                : scheme.surface.withOpacity(0.88),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
+          prefixIcon: Icon(
+            Icons.search,
+            color: scheme.onSurfaceVariant.withOpacity(0.85),
+            size: 22,
+          ),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  color: scheme.onSurfaceVariant.withOpacity(0.85),
+                  onPressed: () {
+                    _searchController.clear();
+                    ref.read(widget.searchQueryProvider.notifier).state = null;
+                    setState(() {});
+                    widget.onQueryChanged?.call('');
+                    widget.onCleared?.call();
+                    FocusScope.of(context).unfocus();
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: scheme.surfaceContainerHighest.withOpacity(
+            isDark ? 0.40 : 0.56,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: scheme.outlineVariant.withOpacity(
+                isDark ? 0.34 : 0.26,
+              ),
             ),
           ),
-          onChanged: (value) {
-            final normalized = value.trim();
-            ref.read(widget.searchQueryProvider.notifier).state =
-                normalized.isEmpty ? null : normalized;
-            setState(() {});
-            widget.onQueryChanged?.call(value);
-          },
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: scheme.outlineVariant.withOpacity(
+                isDark ? 0.34 : 0.26,
+              ),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: scheme.primary, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
         ),
+        onChanged: (value) {
+          final normalized = value.trim();
+          ref.read(widget.searchQueryProvider.notifier).state =
+              normalized.isEmpty ? null : normalized;
+          setState(() {});
+          widget.onQueryChanged?.call(value);
+        },
       ),
     );
   }

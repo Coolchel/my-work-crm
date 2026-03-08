@@ -18,7 +18,7 @@ class SearchResultsOverlay extends ConsumerWidget {
     required this.resultsProvider,
   });
 
-  static const int _maxVisibleItemsCap = 8;
+  static const int _maxVisibleItemsCap = 12;
   static const double _resultTileExtent = 58;
   static const double _separatorSpacing = 8;
   static const double _viewportEdgeInset = 10;
