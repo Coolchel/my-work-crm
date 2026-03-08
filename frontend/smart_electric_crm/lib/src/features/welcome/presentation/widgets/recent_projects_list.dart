@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +11,88 @@ import '../../../projects/presentation/screens/project_detail_screen.dart';
 
 class RecentProjectsList extends ConsumerWidget {
   const RecentProjectsList({super.key});
+
+  bool _isMobileDevice() {
+    return !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS);
+  }
+
+  Widget _buildListHeader(
+    BuildContext context,
+    String title, {
+    VoidCallback? onClear,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final showClear = onClear != null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.indigo.withOpacity(0.18),
+                      Colors.teal.withOpacity(0.10),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  showClear ? Icons.tune_rounded : Icons.history_rounded,
+                  size: 18,
+                  color: Colors.indigo,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ),
+              if (showClear)
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: onClear,
+                ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Container(
+              height: 3,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.indigo.withOpacity(0.50),
+                    Colors.teal.withOpacity(0.22),
+                    Colors.transparent,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -75,30 +158,17 @@ class RecentProjectsList extends ConsumerWidget {
             : filteredProjects;
 
         if (filter != null && displayProjects.isEmpty) {
+          void clearFilter() {
+            ref.read(dashboardFilterProvider.notifier).state = null;
+          }
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Row(
-                  children: [
-                    Text(
-                      listTitle,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => ref
-                          .read(dashboardFilterProvider.notifier)
-                          .state = null,
-                    ),
-                  ],
-                ),
+              _buildListHeader(
+                context,
+                listTitle,
+                onClear: clearFilter,
               ),
               const SizedBox(height: 20),
               const FriendlyEmptyState(
@@ -116,30 +186,15 @@ class RecentProjectsList extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    listTitle,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  if (filter != null)
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => ref
-                          .read(dashboardFilterProvider.notifier)
-                          .state = null,
-                    ),
-                ],
-              ),
+            _buildListHeader(
+              context,
+              listTitle,
+              onClear: filter != null
+                  ? () =>
+                      ref.read(dashboardFilterProvider.notifier).state = null
+                  : null,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: _isMobileDevice() ? 6 : 10),
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -170,6 +225,8 @@ class _RecentProjectTile extends StatefulWidget {
 class _RecentProjectTileState extends State<_RecentProjectTile> {
   bool _isHovered = false;
   static const double _tileMinHeight = 92;
+  static const double _dateColumnWidth = 92;
+  static const double _contentDateGap = 12;
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
@@ -295,66 +352,78 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      project.address,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 14,
-                                        color: scheme.onSurface,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  right: _dateColumnWidth + _contentDateGap,
+                                ),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        project.address,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 14,
+                                          color: scheme.onSurface,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                      if (clientLine != null) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          clientLine,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: scheme.onSurfaceVariant,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                      if (intercomLine != null) ...[
+                                        const SizedBox(height: 1),
+                                        Text(
+                                          intercomLine,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: scheme.onSurfaceVariant,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ],
                                   ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    _formatDate(lastActivity),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: scheme.onSurfaceVariant,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
-                              if (clientLine != null) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  clientLine,
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: SizedBox(
+                                width: _dateColumnWidth,
+                                child: Text(
+                                  _formatDate(lastActivity),
+                                  textAlign: TextAlign.right,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: scheme.onSurfaceVariant,
                                     fontWeight: FontWeight.w500,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ],
-                              if (intercomLine != null) ...[
-                                const SizedBox(height: 1),
-                                Text(
-                                  intercomLine,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: scheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ],
-                          ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

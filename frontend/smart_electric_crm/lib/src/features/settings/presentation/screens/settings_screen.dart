@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -117,41 +118,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         children: [
           _buildSectionHeader('Внешний вид'),
           _HoverSettingsCard(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Тема приложения',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: SegmentedButton<ThemeMode>(
-                      segments: themeSegments,
-                      showSelectedIcon: false,
-                      style: ButtonStyle(
-                        visualDensity: isMobile
-                            ? VisualDensity.compact
-                            : VisualDensity.standard,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        padding: MaterialStateProperty.all(
-                          EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: isMobile ? 8 : 10,
-                          ),
-                        ),
-                      ),
-                      selected: {settings.themeMode},
-                      onSelectionChanged: (selection) {
-                        settingsNotifier.setThemeMode(selection.first);
-                      },
-                    ),
-                  ),
-                ],
-              ),
+            child: _buildThemeSection(
+              context,
+              settings,
+              settingsNotifier,
+              themeSegments,
+              isMobile,
             ),
           ),
           const SizedBox(height: 12),
@@ -162,13 +134,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const SizedBox(height: 24),
           _buildSectionHeader('Инструменты'),
           _HoverSettingsCard(
-            child: ListTile(
-              leading: const Icon(Icons.folder_open, color: Colors.indigo),
-              title: const Text('Справочник'),
-              subtitle: const Text('Категории, расценки и шаблоны'),
-              trailing: const Icon(Icons.chevron_right),
+            child: InkWell(
               hoverColor: AppDesignTokens.hoverOverlay(context),
               onTap: () => _showReferenceWarning(context, ref),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: _buildSettingsSectionRow(
+                  context: context,
+                  icon: Icons.menu_book_outlined,
+                  title:
+                      '\u0421\u043f\u0440\u0430\u0432\u043e\u0447\u043d\u0438\u043a',
+                  subtitle:
+                      '\u041a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438, \u0440\u0430\u0441\u0446\u0435\u043d\u043a\u0438 \u0438 \u0448\u0430\u0431\u043b\u043e\u043d\u044b',
+                  trailing: const Icon(Icons.chevron_right),
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -177,73 +157,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               children: [
                 userAsync.when(
-                  data: (user) => Container(
+                  data: (user) => Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        CircleAvatar(
-                          radius: 28,
-                          backgroundColor: Colors.indigo.withOpacity(0.1),
-                          child: const Icon(
-                            Icons.manage_accounts_outlined,
-                            color: Colors.indigo,
-                            size: 30,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user['username'] ?? 'Пользователь',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (user['email'] != null &&
-                                  user['email'].toString().isNotEmpty)
-                                Text(
-                                  user['email'],
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    child: _buildSettingsSectionRow(
+                      context: context,
+                      icon: Icons.badge_outlined,
+                      title: user['username'] ??
+                          '\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c',
+                      subtitle: user['email'] != null &&
+                              user['email'].toString().isNotEmpty
+                          ? user['email']
+                          : '\u0410\u043a\u043a\u0430\u0443\u043d\u0442 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f',
                     ),
                   ),
                   loading: () => const Padding(
                     padding: EdgeInsets.all(16),
                     child: Center(child: CircularProgressIndicator()),
                   ),
-                  error: (e, _) => ListTile(
-                    title: const Text('Ошибка профиля'),
-                    subtitle: Text(e.toString()),
+                  error: (e, _) => Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _buildSettingsSectionRow(
+                      context: context,
+                      icon: Icons.error_outline,
+                      title:
+                          '\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u0440\u043e\u0444\u0438\u043b\u044f',
+                      subtitle: e.toString(),
+                      accentColor: Colors.redAccent,
+                    ),
                   ),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.lock_reset, color: Colors.indigo),
-                  title: const Text('Управление паролем'),
-                  subtitle: const Text('Сменить текущий пароль'),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Divider(height: 1),
+                ),
+                InkWell(
                   hoverColor: AppDesignTokens.hoverOverlay(context),
                   onTap: () => _showChangePasswordDialog(context, ref),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.logout, color: Colors.red),
-                  title: const Text(
-                    'Выйти из системы',
-                    style: TextStyle(color: Colors.red),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _buildSettingsSectionRow(
+                      context: context,
+                      icon: Icons.lock_outline_rounded,
+                      title:
+                          '\u0423\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u043f\u0430\u0440\u043e\u043b\u0435\u043c',
+                      subtitle:
+                          '\u0421\u043c\u0435\u043d\u0438\u0442\u044c \u0442\u0435\u043a\u0443\u0449\u0438\u0439 \u043f\u0430\u0440\u043e\u043b\u044c',
+                      trailing: const Icon(Icons.chevron_right),
+                    ),
                   ),
-                  subtitle: const Text('Завершить текущий сеанс'),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Divider(height: 1),
+                ),
+                InkWell(
                   hoverColor: AppDesignTokens.hoverOverlay(context),
                   onTap: () async {
                     final confirmed = await showDialog<bool>(
@@ -270,7 +237,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     Icon(Icons.logout, color: Colors.red),
                                     SizedBox(width: 12),
                                     Text(
-                                      'Выход',
+                                      '\u0412\u044b\u0445\u043e\u0434',
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -283,7 +250,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               const Padding(
                                 padding: EdgeInsets.all(24),
                                 child: Text(
-                                  'Вы действительно хотите выйти из системы?',
+                                  '\u0412\u044b \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043b\u044c\u043d\u043e \u0445\u043e\u0442\u0438\u0442\u0435 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0441\u0438\u0441\u0442\u0435\u043c\u044b?',
                                   style: TextStyle(fontSize: 15),
                                 ),
                               ),
@@ -299,7 +266,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.pop(context, false),
-                                      child: const Text('Отмена'),
+                                      child: const Text(
+                                        '\u041e\u0442\u043c\u0435\u043d\u0430',
+                                      ),
                                     ),
                                     const SizedBox(width: 8),
                                     ElevatedButton(
@@ -315,7 +284,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       ),
                                       onPressed: () =>
                                           Navigator.pop(context, true),
-                                      child: const Text('Выйти'),
+                                      child: const Text(
+                                        '\u0412\u044b\u0439\u0442\u0438',
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -329,6 +300,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       await ref.read(authProvider.notifier).logout();
                     }
                   },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _buildSettingsSectionRow(
+                      context: context,
+                      icon: Icons.logout_outlined,
+                      title:
+                          '\u0412\u044b\u0439\u0442\u0438 \u0438\u0437 \u0441\u0438\u0441\u0442\u0435\u043c\u044b',
+                      subtitle:
+                          '\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044c \u0442\u0435\u043a\u0443\u0449\u0438\u0439 \u0441\u0435\u0430\u043d\u0441',
+                      trailing: const Icon(Icons.chevron_right),
+                      accentColor: Colors.redAccent,
+                      titleColor: Colors.red,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -343,40 +328,141 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     AppSettingsState settings,
     AppSettingsNotifier settingsNotifier,
   ) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-          child: Row(
-            children: [
-              const Icon(Icons.waving_hand_outlined),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  '\u041d\u0430\u0447\u0430\u043b\u044c\u043d\u044b\u0439 \u044d\u043a\u0440\u0430\u043d',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-              Switch(
-                value: settings.showWelcome,
-                onChanged: (value) => settingsNotifier.setShowWelcome(value),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
-          child: Text(
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: _buildSettingsSectionRow(
+        context: context,
+        icon: Icons.space_dashboard_outlined,
+        title:
+            '\u041d\u0430\u0447\u0430\u043b\u044c\u043d\u044b\u0439 \u044d\u043a\u0440\u0430\u043d',
+        subtitle:
             '\u041f\u0440\u0438\u0432\u0435\u0442\u0441\u0442\u0432\u0438\u0435 \u0438 \u0431\u044b\u0441\u0442\u0440\u044b\u0439 \u043f\u043e\u0438\u0441\u043a. '
             '\u0415\u0441\u043b\u0438 \u044d\u043a\u0440\u0430\u043d \u0432\u044b\u043a\u043b\u044e\u0447\u0435\u043d, \u0432\u043a\u043b\u0430\u0434\u043a\u0430 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043a \u043f\u043e\u044f\u0432\u0438\u0442\u0441\u044f \u0432\u043d\u0438\u0437\u0443, '
             '\u0430 \u043a\u043d\u043e\u043f\u043a\u0430 \u00ab\u0413\u043b\u0430\u0432\u043d\u0430\u044f\u00bb \u0432 \u0433\u043b\u0443\u0431\u043e\u043a\u0438\u0445 \u0440\u0430\u0437\u0434\u0435\u043b\u0430\u0445 \u0441\u043a\u0440\u044b\u0432\u0430\u0435\u0442\u0441\u044f.',
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              height: 1.35,
+        trailing: Switch(
+          value: settings.showWelcome,
+          onChanged: (value) => settingsNotifier.setShowWelcome(value),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeSection(
+    BuildContext context,
+    AppSettingsState settings,
+    AppSettingsNotifier settingsNotifier,
+    List<ButtonSegment<ThemeMode>> themeSegments,
+    bool isMobile,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSettingsSectionRow(
+            context: context,
+            icon: Icons.palette_outlined,
+            title:
+                '\u0422\u0435\u043c\u0430 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f',
+            subtitle:
+                '\u0421\u0432\u0435\u0442\u043b\u0430\u044f, \u0442\u0435\u043c\u043d\u0430\u044f \u0438\u043b\u0438 \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u0430\u044f \u0442\u0435\u043c\u0430 \u0432 \u0437\u0430\u0432\u0438\u0441\u0438\u043c\u043e\u0441\u0442\u0438 \u043e\u0442 \u0441\u0438\u0441\u0442\u0435\u043c\u044b.',
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<ThemeMode>(
+              segments: themeSegments,
+              showSelectedIcon: false,
+              style: ButtonStyle(
+                visualDensity:
+                    isMobile ? VisualDensity.compact : VisualDensity.standard,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: MaterialStateProperty.all(
+                  EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: isMobile ? 8 : 10,
+                  ),
+                ),
+              ),
+              selected: {settings.themeMode},
+              onSelectionChanged: (selection) {
+                settingsNotifier.setThemeMode(selection.first);
+              },
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsSectionRow({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    Widget? trailing,
+    Color accentColor = Colors.indigo,
+    Color? titleColor,
+    Color? subtitleColor,
+  }) {
+    final theme = Theme.of(context);
+    final isWindowsDesktop =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+    final titleStyle = (isWindowsDesktop
+            ? theme.textTheme.titleMedium
+            : theme.textTheme.titleSmall)
+        ?.copyWith(fontWeight: FontWeight.w600);
+    final subtitleStyle = (isWindowsDesktop
+            ? theme.textTheme.bodyMedium
+            : theme.textTheme.bodySmall)
+        ?.copyWith(
+      color: subtitleColor ?? theme.colorScheme.onSurfaceVariant,
+      height: 1.35,
+    );
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: accentColor.withOpacity(0.10),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            icon,
+            color: accentColor,
+            size: 20,
+          ),
         ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  title,
+                  style: titleStyle?.copyWith(
+                    color: titleColor ?? theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(subtitle, style: subtitleStyle),
+            ],
+          ),
+        ),
+        if (trailing != null) ...[
+          const SizedBox(width: 12),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: trailing,
+          ),
+        ],
       ],
     );
   }

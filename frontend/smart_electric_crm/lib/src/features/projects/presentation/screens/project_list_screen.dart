@@ -32,6 +32,8 @@ class ProjectListScreen extends ConsumerStatefulWidget {
 
 class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     with SingleTickerProviderStateMixin {
+  static const double _searchHorizontalPadding = 16;
+
   SortOrder _sortOrder = SortOrder.newest;
   String? _filterSource;
   String? _filterType;
@@ -278,7 +280,12 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             if (projects.isEmpty) {
               return ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+                padding: const EdgeInsets.fromLTRB(
+                  _searchHorizontalPadding,
+                  16,
+                  _searchHorizontalPadding,
+                  120,
+                ),
                 children: const [
                   FriendlyEmptyState(
                     icon: Icons.search_off_rounded,
@@ -291,7 +298,12 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             }
 
             return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+              padding: const EdgeInsets.fromLTRB(
+                _searchHorizontalPadding,
+                16,
+                _searchHorizontalPadding,
+                120,
+              ),
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: projects.length,
               separatorBuilder: (context, index) => const SizedBox(height: 8),
@@ -299,6 +311,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                 final project = projects[index];
                 return ProjectSearchResultTile(
                   project: project,
+                  margin: EdgeInsets.zero,
                   onTap: () => _openProjectDetails(project),
                 );
               },
@@ -307,7 +320,12 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+            padding: const EdgeInsets.fromLTRB(
+              _searchHorizontalPadding,
+              16,
+              _searchHorizontalPadding,
+              120,
+            ),
             children: [
               FriendlyEmptyState(
                 icon: Icons.error_outline,
@@ -412,7 +430,12 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                     child: Container(
                       width: double.infinity,
                       color: Theme.of(context).colorScheme.surface,
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                      padding: const EdgeInsets.fromLTRB(
+                        _searchHorizontalPadding,
+                        8,
+                        _searchHorizontalPadding,
+                        10,
+                      ),
                       child: TextField(
                         controller: _searchController,
                         focusNode: _searchFocusNode,
