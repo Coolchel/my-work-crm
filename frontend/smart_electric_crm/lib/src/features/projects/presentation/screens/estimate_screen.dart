@@ -30,9 +30,18 @@ import '../../../../core/theme/app_design_tokens.dart';
 class EstimateScreen extends ConsumerStatefulWidget {
   final String projectId;
   final StageModel stage;
+  final EstimateSection initialTab;
+  final ValueChanged<EstimateSection>? onTabChanged;
+  final VoidCallback? onBackPressed;
 
-  const EstimateScreen(
-      {required this.projectId, required this.stage, super.key});
+  const EstimateScreen({
+    required this.projectId,
+    required this.stage,
+    this.initialTab = EstimateSection.works,
+    this.onTabChanged,
+    this.onBackPressed,
+    super.key,
+  });
 
   @override
   ConsumerState<EstimateScreen> createState() => _EstimateScreenState();
@@ -67,7 +76,22 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   List<EstimateItemModel> _precalcMaterialItems = const [];
 
   void _handleBack() {
+    widget.onBackPressed?.call();
+    if (widget.onBackPressed != null) {
+      return;
+    }
     Navigator.of(context).maybePop();
+  }
+
+  int _tabIndexFromSection(EstimateSection section) {
+    return switch (section) {
+      EstimateSection.works => 0,
+      EstimateSection.materials => 1,
+    };
+  }
+
+  EstimateSection _sectionFromTabIndex(int index) {
+    return index == 1 ? EstimateSection.materials : EstimateSection.works;
   }
 
   ScrollController get _activeScrollController =>
@@ -96,6 +120,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   void initState() {
     super.initState();
     _stage = widget.stage;
+    _currentIndex = _tabIndexFromSection(widget.initialTab);
     _showPrices = _stage.showPrices;
     _markupPercent = _stage.markupPercent;
     _appBarCollapseController.bind(_activeScrollController);
@@ -105,6 +130,16 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refresh();
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant EstimateScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final nextIndex = _tabIndexFromSection(widget.initialTab);
+    if (nextIndex != _currentIndex) {
+      _currentIndex = nextIndex;
+      _appBarCollapseController.bind(_activeScrollController);
+    }
   }
 
   Future<void> _refresh() async {
@@ -312,6 +347,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           setState(() {
             _currentIndex = mappedIndex;
           });
+          widget.onTabChanged?.call(_sectionFromTabIndex(mappedIndex));
           _appBarCollapseController.bind(_activeScrollController);
         },
         destinations: [

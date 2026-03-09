@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/project_providers.dart';
 import '../../data/models/project_model.dart';
-import 'project_detail_screen.dart';
 import 'add_project_screen.dart';
 import '../utils/project_stage_color_resolver.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
@@ -187,13 +186,9 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   }
 
   void _openProjectDetails(ProjectModel project) {
-    Navigator.push(
+    AppNavigation.openProject(
       context,
-      MaterialPageRoute(
-        builder: (context) => ProjectDetailScreen(
-          projectId: project.id.toString(),
-        ),
-      ),
+      projectId: project.id.toString(),
     );
   }
 
@@ -861,12 +856,9 @@ class _ProjectCardState extends State<_ProjectCard> {
           color: Colors.transparent,
           child: InkWell(
             onTap: () {
-              Navigator.push(
+              AppNavigation.openProject(
                 context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      ProjectDetailScreen(projectId: project.id.toString()),
-                ),
+                projectId: project.id.toString(),
               );
             },
             child: IntrinsicHeight(

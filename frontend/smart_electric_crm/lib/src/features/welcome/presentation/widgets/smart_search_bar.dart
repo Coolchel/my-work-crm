@@ -28,7 +28,6 @@ class SmartSearchBar extends ConsumerStatefulWidget {
 class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
-  bool _isFocused = false;
 
   @override
   void initState() {
@@ -60,9 +59,6 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
   }
 
   void _onFocusChange() {
-    if (mounted) {
-      setState(() => _isFocused = _searchFocusNode.hasFocus);
-    }
     widget.onFocusChanged?.call(_searchFocusNode.hasFocus);
 
     if (_searchFocusNode.hasFocus && _searchController.text.isNotEmpty) {

@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/project_providers.dart';
 import '../../data/models/project_model.dart';
 import 'engineering_tab.dart';
-import 'estimate_screen.dart';
-import 'file_viewer_screen.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
@@ -31,10 +29,23 @@ import '../../data/models/stage_model.dart';
 
 class ProjectDetailScreen extends ConsumerWidget {
   final String projectId;
+  final ProjectDetailSection initialTab;
+  final ValueChanged<ProjectDetailSection>? onTabChanged;
+  final VoidCallback? onBackPressed;
 
-  const ProjectDetailScreen({super.key, required this.projectId});
+  const ProjectDetailScreen({
+    super.key,
+    required this.projectId,
+    this.initialTab = ProjectDetailSection.stages,
+    this.onTabChanged,
+    this.onBackPressed,
+  });
 
   void _handleBack(BuildContext context) {
+    onBackPressed?.call();
+    if (onBackPressed != null) {
+      return;
+    }
     Navigator.of(context).maybePop();
   }
 
@@ -43,7 +54,12 @@ class ProjectDetailScreen extends ConsumerWidget {
     final projectAsync = ref.watch(projectByIdProvider(projectId));
 
     return projectAsync.when(
-      data: (project) => _ProjectDetailContent(project: project),
+      data: (project) => _ProjectDetailContent(
+        project: project,
+        initialTab: initialTab,
+        onTabChanged: onTabChanged,
+        onBackPressed: onBackPressed,
+      ),
       loading: () => Scaffold(
         appBar: CompactSectionAppBar(
           leading: IconButton(
@@ -76,8 +92,16 @@ class ProjectDetailScreen extends ConsumerWidget {
 
 class _ProjectDetailContent extends ConsumerStatefulWidget {
   final ProjectModel project;
+  final ProjectDetailSection initialTab;
+  final ValueChanged<ProjectDetailSection>? onTabChanged;
+  final VoidCallback? onBackPressed;
 
-  const _ProjectDetailContent({required this.project});
+  const _ProjectDetailContent({
+    required this.project,
+    required this.initialTab,
+    this.onTabChanged,
+    this.onBackPressed,
+  });
 
   @override
   ConsumerState<_ProjectDetailContent> createState() =>
@@ -98,7 +122,27 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
     Icons.folder_open_rounded,
   ];
 
+  int _tabIndexFromSection(ProjectDetailSection section) {
+    return switch (section) {
+      ProjectDetailSection.stages => 0,
+      ProjectDetailSection.shields => 1,
+      ProjectDetailSection.files => 2,
+    };
+  }
+
+  ProjectDetailSection _sectionFromTabIndex(int index) {
+    return switch (index) {
+      1 => ProjectDetailSection.shields,
+      2 => ProjectDetailSection.files,
+      _ => ProjectDetailSection.stages,
+    };
+  }
+
   void _handleBack() {
+    widget.onBackPressed?.call();
+    if (widget.onBackPressed != null) {
+      return;
+    }
     Navigator.of(context).maybePop();
   }
 
@@ -118,7 +162,18 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
   @override
   void initState() {
     super.initState();
+    _currentIndex = _tabIndexFromSection(widget.initialTab);
     _appBarCollapseController.bind(_activeScrollController);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ProjectDetailContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final nextIndex = _tabIndexFromSection(widget.initialTab);
+    if (nextIndex != _currentIndex) {
+      _currentIndex = nextIndex;
+      _appBarCollapseController.bind(_activeScrollController);
+    }
   }
 
   Future<void> _scrollCurrentTabToTop() {
@@ -197,6 +252,7 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
               setState(() {
                 _currentIndex = mappedIndex;
               });
+              widget.onTabChanged?.call(_sectionFromTabIndex(mappedIndex));
               _appBarCollapseController.bind(_activeScrollController);
             },
             destinations: [
@@ -460,14 +516,10 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
               return StageCard(
                 stage: stage,
                 onTap: () {
-                  Navigator.push(
+                  AppNavigation.openEstimate(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => EstimateScreen(
-                        stage: stage,
-                        projectId: widget.project.id.toString(),
-                      ),
-                    ),
+                    projectId: widget.project.id.toString(),
+                    stageId: stage.id.toString(),
                   );
                 },
                 onStatusChanged: (newStatus) =>
@@ -1061,11 +1113,10 @@ class _FileCardState extends ConsumerState<_FileCard> {
 
   void _openFile(BuildContext context, String url) {
     if (isImage) {
-      Navigator.push(
+      AppNavigation.openFileViewer(
         context,
-        MaterialPageRoute(
-          builder: (context) => FileViewerScreen(url: url, title: displayName),
-        ),
+        url: url,
+        title: displayName,
       );
     } else {
       _downloadAndOpenFile(url);

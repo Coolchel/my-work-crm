@@ -8,7 +8,6 @@ import '../../data/repositories/finance_repository.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../shared/presentation/widgets/inline_save_button.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
-import '../../../projects/presentation/screens/estimate_screen.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../../../core/theme/app_design_tokens.dart';

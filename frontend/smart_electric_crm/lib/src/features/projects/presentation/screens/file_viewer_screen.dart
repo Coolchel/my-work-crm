@@ -8,11 +8,13 @@ import 'package:http/http.dart' as http;
 class FileViewerScreen extends StatelessWidget {
   final String url;
   final String title;
+  final VoidCallback? onBackPressed;
 
   const FileViewerScreen({
     super.key,
     required this.url,
     required this.title,
+    this.onBackPressed,
   });
 
   Future<void> _shareFile() async {
@@ -29,6 +31,10 @@ class FileViewerScreen extends StatelessWidget {
   }
 
   void _handleBack(BuildContext context) {
+    onBackPressed?.call();
+    if (onBackPressed != null) {
+      return;
+    }
     Navigator.of(context).maybePop();
   }
 
