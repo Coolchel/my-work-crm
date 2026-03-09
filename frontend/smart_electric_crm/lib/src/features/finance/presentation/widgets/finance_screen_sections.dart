@@ -280,14 +280,10 @@ extension _FinanceScreenSections on _FinanceScreenState {
                   final realStage =
                       realProject.stages.firstWhere((s) => s.id == stage.id);
 
-                  Navigator.push(
+                  AppNavigation.openEstimate(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => EstimateScreen(
-                        projectId: realProject.id.toString(),
-                        stage: realStage,
-                      ),
-                    ),
+                    projectId: realProject.id.toString(),
+                    stageId: realStage.id.toString(),
                   );
                 } catch (e) {
                   debugPrint("Navigation error: $e");

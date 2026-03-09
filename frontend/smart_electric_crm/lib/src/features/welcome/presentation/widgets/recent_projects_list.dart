@@ -2,12 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 import '../../../projects/data/models/project_model.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
-import '../../../projects/presentation/screens/project_detail_screen.dart';
 
 class RecentProjectsList extends ConsumerWidget {
   const RecentProjectsList({super.key});
@@ -317,13 +317,9 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
           color: Colors.transparent,
           child: InkWell(
             onTap: () {
-              Navigator.push(
+              AppNavigation.openProject(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => ProjectDetailScreen(
-                    projectId: project.id.toString(),
-                  ),
-                ),
+                projectId: project.id.toString(),
               );
             },
             child: ConstrainedBox(

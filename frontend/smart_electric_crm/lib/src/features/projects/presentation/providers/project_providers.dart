@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/models/project_model.dart';
+import '../../data/models/stage_model.dart';
 import '../../data/repositories/project_repository.dart';
 import '../../../../core/api/dio_client.dart';
 
@@ -160,4 +161,10 @@ final showPricesProvider = StateProvider<bool>((ref) => true);
 
 /// Провайдер для фильтрации проектов на главном экране (Welcome Screen)
 /// Возможные значения: 'pre_calc', 'active_objects', 'paid', или null (без фильтра)
+final stageByIdProvider =
+    FutureProvider.family<StageModel, int>((ref, id) async {
+  final repository = ref.watch(projectRepositoryProvider);
+  return repository.fetchStage(id);
+});
+
 final dashboardFilterProvider = StateProvider<String?>((ref) => null);

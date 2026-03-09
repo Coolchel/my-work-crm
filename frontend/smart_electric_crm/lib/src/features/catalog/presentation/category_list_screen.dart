@@ -19,7 +19,16 @@ import 'package:smart_electric_crm/src/features/settings/application/app_setting
 part 'widgets/category_list_screen_components.dart';
 
 class CategoryListScreen extends ConsumerStatefulWidget {
-  const CategoryListScreen({super.key});
+  const CategoryListScreen({
+    this.initialTab = CatalogSection.system,
+    this.onTabChanged,
+    this.onBackPressed,
+    super.key,
+  });
+
+  final CatalogSection initialTab;
+  final ValueChanged<CatalogSection>? onTabChanged;
+  final VoidCallback? onBackPressed;
 
   @override
   ConsumerState<CategoryListScreen> createState() => _CategoryListScreenState();
@@ -34,7 +43,22 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
       SectionAppBarCollapseController();
 
   void _handleBack() {
+    widget.onBackPressed?.call();
+    if (widget.onBackPressed != null) {
+      return;
+    }
     Navigator.of(context).maybePop();
+  }
+
+  int _tabIndexFromSection(CatalogSection section) {
+    return switch (section) {
+      CatalogSection.system => 0,
+      CatalogSection.catalog => 1,
+    };
+  }
+
+  CatalogSection _sectionFromTabIndex(int index) {
+    return index == 1 ? CatalogSection.catalog : CatalogSection.system;
   }
 
   ScrollController get _activeScrollController =>
@@ -49,11 +73,22 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
   @override
   void initState() {
     super.initState();
+    _currentIndex = _tabIndexFromSection(widget.initialTab);
     _appBarCollapseController.bind(_activeScrollController);
     _appBarCollapseController.addListener(_handleAppBarCollapseChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _synchronizeSystemSections(showSuccessMessage: false);
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant CategoryListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final nextIndex = _tabIndexFromSection(widget.initialTab);
+    if (nextIndex != _currentIndex) {
+      _currentIndex = nextIndex;
+      _appBarCollapseController.bind(_activeScrollController);
+    }
   }
 
   @override
@@ -210,6 +245,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
             return;
           }
           setState(() => _currentIndex = mappedIndex);
+          widget.onTabChanged?.call(_sectionFromTabIndex(mappedIndex));
           _appBarCollapseController.bind(_activeScrollController);
         },
         destinations: [

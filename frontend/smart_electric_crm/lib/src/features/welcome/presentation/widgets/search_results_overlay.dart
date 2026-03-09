@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 import '../../../projects/data/models/project_model.dart';
-import '../../../projects/presentation/screens/project_detail_screen.dart';
 import '../../../projects/presentation/search/project_search_texts.dart';
 import '../../../projects/presentation/widgets/project_search_result_tile.dart';
 
@@ -77,13 +77,9 @@ class SearchResultsOverlay extends ConsumerWidget {
                     vertical: 2,
                   ),
                   onTap: () {
-                    Navigator.push(
+                    AppNavigation.openProject(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => ProjectDetailScreen(
-                          projectId: project.id.toString(),
-                        ),
-                      ),
+                      projectId: project.id.toString(),
                     );
                   },
                 );
