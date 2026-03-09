@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/api/api_exception.dart';
 import '../../data/auth_repository.dart';
@@ -12,6 +13,15 @@ enum AuthStatus {
   error,
 }
 
+enum PostAuthDestination {
+  restoreRequestedLocation,
+  defaultLanding,
+}
+
+final postAuthDestinationProvider = StateProvider<PostAuthDestination>(
+  (ref) => PostAuthDestination.restoreRequestedLocation,
+);
+
 @riverpod
 class Auth extends _$Auth {
   @override
@@ -20,6 +30,8 @@ class Auth extends _$Auth {
   }
 
   Future<void> checkAuth() async {
+    ref.read(postAuthDestinationProvider.notifier).state =
+        PostAuthDestination.restoreRequestedLocation;
     state = AuthStatus.loading;
     final repo = await ref.read(authRepositoryProvider.future);
 
@@ -55,8 +67,12 @@ class Auth extends _$Auth {
     try {
       final repo = await ref.read(authRepositoryProvider.future);
       await repo.login(username, password);
+      ref.read(postAuthDestinationProvider.notifier).state =
+          PostAuthDestination.defaultLanding;
       state = AuthStatus.authenticated;
     } catch (e, st) {
+      ref.read(postAuthDestinationProvider.notifier).state =
+          PostAuthDestination.restoreRequestedLocation;
       state = AuthStatus.error;
       Error.throwWithStackTrace(e, st);
     }
@@ -65,6 +81,8 @@ class Auth extends _$Auth {
   Future<void> logout() async {
     final repo = await ref.read(authRepositoryProvider.future);
     await repo.logout();
+    ref.read(postAuthDestinationProvider.notifier).state =
+        PostAuthDestination.restoreRequestedLocation;
     state = AuthStatus.unauthenticated;
   }
 }

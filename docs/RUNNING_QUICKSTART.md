@@ -3,6 +3,7 @@
 Единая инструкция по локальному запуску проекта:
 
 - backend
+- Web browser
 - Android phone
 - Android emulator
 - Windows app
@@ -29,6 +30,71 @@ Invoke-WebRequest -Uri "http://127.0.0.1:8000/api/auth/token/" -Method Post -Bod
 
 - `admin / admin`
 - `coolchel / admin`
+
+## Web Browser
+
+Для web есть два нормальных режима, и они не требуют хардкодить `127.0.0.1` в коде.
+
+### Вариант 1. Локальная разработка через Flutter web dev server
+
+Подходит и для ПК, и для телефона в одной сети.
+
+1. Поднять backend:
+
+```powershell
+cd D:\my_software\work_project\backend
+python manage.py runserver 0.0.0.0:8000
+```
+
+2. Поднять Flutter web:
+
+```powershell
+cd D:\my_software\work_project\frontend\smart_electric_crm
+flutter run -d chrome --web-hostname 0.0.0.0 --web-port 3000
+```
+
+3. Открыть приложение:
+
+- на ПК: `http://127.0.0.1:3000`
+- на телефоне: `http://<LAN-IP-компьютера>:3000`
+
+Как работает API по умолчанию:
+
+- если web открыт с `localhost` или `127.0.0.1`, frontend автоматически использует `http://localhost:8000/api`;
+- если web открыт с LAN IP, например `http://192.168.0.196:3000`, frontend автоматически использует `http://192.168.0.196:8000/api`.
+
+Отдельный `--dart-define=API_BASE_URL_WEB=...` для такого dev-сценария обычно не нужен.
+
+Если backend слушает не `8000`, укажите порт явно:
+
+```powershell
+flutter run -d chrome --web-hostname 0.0.0.0 --web-port 3000 --dart-define=API_WEB_BACKEND_PORT=8010
+```
+
+Если backend находится на другом хосте или домене, задайте полный URL:
+
+```powershell
+flutter run -d chrome --web-hostname 0.0.0.0 --web-port 3000 --dart-define=API_BASE_URL_WEB=http://192.168.0.50:8000/api
+```
+
+### Вариант 2. Production / same-origin схема для web
+
+Предпочтительный вариант для деплоя: web и backend публикуются под одним origin, а API остается на `/api`.
+
+Сборка:
+
+```powershell
+cd D:\my_software\work_project\frontend\smart_electric_crm
+flutter build web --release --dart-define=API_BASE_URL_WEB=/api
+```
+
+Что нужно на стороне хостинга:
+
+- web build должен открываться с того же origin, что и backend;
+- запросы `/api/...` должны попадать в Django;
+- файлы `/media/...` тоже должны раздаваться с этого же origin или через корректный proxy/static/media setup.
+
+Если frontend и backend будут жить на разных origin, вместо `/api` нужно задать полный `API_BASE_URL_WEB`, а на backend настроить `DJANGO_CORS_ALLOWED_ORIGINS`.
 
 ## Android Phone
 

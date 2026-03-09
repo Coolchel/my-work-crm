@@ -17,8 +17,13 @@ import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/statistics/presentation/screens/statistics_screen.dart';
 import '../../features/welcome/presentation/screens/welcome_screen.dart';
 import 'app_navigation.dart';
+import 'route_bootstrap_storage.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  // Deep routes still use push to preserve native stack behavior, so enable
+  // browser URL synchronization for imperative navigation on web.
+  GoRouter.optionURLReflectsImperativeAPIs = true;
+
   final refreshNotifier = _RouterRefreshNotifier();
   ref.listen<AuthStatus>(authProvider, (_, __) => refreshNotifier.refresh());
   ref.listen<AppSettingsState>(
@@ -44,7 +49,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         if (matchedLocation == AppNavigation.loadingPath) {
           return null;
         }
-        return _withFrom(
+        RouteBootstrapStorage.setPendingRedirect(location);
+        return _withRedirect(
           AppNavigation.loadingPath,
           location,
         );
@@ -55,17 +61,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         if (matchedLocation == AppNavigation.loginPath) {
           return null;
         }
-        final requestedLocation = state.uri.queryParameters['from'] ?? location;
-        return _withFrom(
+        RouteBootstrapStorage.setPendingRedirect(location);
+        return _withRedirect(
           AppNavigation.loginPath,
-          requestedLocation,
+          location,
         );
       }
 
       if (isAuthRoute) {
-        final from = state.uri.queryParameters['from'];
-        return _sanitizeAuthenticatedTarget(from, settings);
+        final postAuthDestination = ref.read(postAuthDestinationProvider);
+        if (postAuthDestination == PostAuthDestination.defaultLanding) {
+          ref.read(postAuthDestinationProvider.notifier).state =
+              PostAuthDestination.restoreRequestedLocation;
+          RouteBootstrapStorage.clearPendingRedirect();
+          return settings.showWelcome
+              ? AppNavigation.homePath
+              : AppNavigation.projectsPath;
+        }
+
+        final redirectTo = state.uri.queryParameters['redirect'] ??
+            RouteBootstrapStorage.takePendingRedirect();
+        if (redirectTo != null && redirectTo.isNotEmpty) {
+          RouteBootstrapStorage.clearPendingRedirect();
+        }
+        return _sanitizeAuthenticatedTarget(redirectTo, settings);
       }
+
+      RouteBootstrapStorage.clearPendingRedirect();
 
       if (!settings.showWelcome && matchedLocation == AppNavigation.homePath) {
         return AppNavigation.projectsPath;
@@ -236,25 +258,25 @@ class _RouterRefreshNotifier extends ChangeNotifier {
   void refresh() => notifyListeners();
 }
 
-String _withFrom(String path, String from) {
+String _withRedirect(String path, String location) {
   return Uri(
     path: path,
-    queryParameters: <String, String>{'from': from},
+    queryParameters: <String, String>{'redirect': location},
   ).toString();
 }
 
 String _sanitizeAuthenticatedTarget(
-  String? from,
+  String? redirectTo,
   AppSettingsState settings,
 ) {
   final fallback = settings.showWelcome
       ? AppNavigation.homePath
       : AppNavigation.projectsPath;
-  if (from == null || from.isEmpty) {
+  if (redirectTo == null || redirectTo.isEmpty) {
     return fallback;
   }
 
-  final uri = Uri.tryParse(from);
+  final uri = Uri.tryParse(redirectTo);
   if (uri == null) {
     return fallback;
   }

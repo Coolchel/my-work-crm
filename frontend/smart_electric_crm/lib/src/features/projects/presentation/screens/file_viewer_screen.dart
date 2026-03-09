@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:smart_electric_crm/src/core/constants/api_urls.dart';
 
 class FileViewerScreen extends StatelessWidget {
   final String url;
@@ -18,10 +19,12 @@ class FileViewerScreen extends StatelessWidget {
   });
 
   Future<void> _shareFile() async {
+    final resolvedUrl = ApiUrls.resolveBackendUrl(url);
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(resolvedUrl));
       final documentDirectory = await getTemporaryDirectory();
-      final file = File('${documentDirectory.path}/${url.split('/').last}');
+      final file =
+          File('${documentDirectory.path}/${resolvedUrl.split('/').last}');
       file.writeAsBytesSync(response.bodyBytes);
 
       await Share.shareXFiles([XFile(file.path)], text: title);
@@ -40,6 +43,8 @@ class FileViewerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final resolvedUrl = ApiUrls.resolveBackendUrl(url);
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -59,7 +64,7 @@ class FileViewerScreen extends StatelessWidget {
         ],
       ),
       body: PhotoView(
-        imageProvider: NetworkImage(url),
+        imageProvider: NetworkImage(resolvedUrl),
         loadingBuilder: (context, event) => const Center(
           child: CircularProgressIndicator(),
         ),

@@ -61,6 +61,10 @@ def merge_unique(items: list[str], extra: list[str]) -> list[str]:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env_bool('DJANGO_DEBUG', default=True)
+ALLOW_ALL_HOSTS_IN_DEBUG = DEBUG and env_bool(
+    'DJANGO_ALLOW_ALL_HOSTS_IN_DEBUG',
+    default=True,
+)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '')
@@ -71,11 +75,15 @@ if not SECRET_KEY:
         raise ImproperlyConfigured('DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is False.')
 
 ALLOWED_HOSTS = env_csv('DJANGO_ALLOWED_HOSTS', default='localhost,127.0.0.1')
-if DEBUG:
+if ALLOW_ALL_HOSTS_IN_DEBUG:
+    ALLOWED_HOSTS = ['*']
+elif DEBUG:
     ALLOWED_HOSTS = merge_unique(
         ALLOWED_HOSTS,
         [
             '10.0.2.2',  # Android Emulator -> host loopback
+            '::1',
+            '[::1]',
         ],
     )
 if not ALLOWED_HOSTS and not DEBUG:

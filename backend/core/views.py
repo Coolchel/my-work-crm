@@ -1,3 +1,8 @@
+import mimetypes
+from pathlib import Path
+
+from django.conf import settings
+from django.http import FileResponse, Http404
 from rest_framework import viewsets, status, filters, mixins
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
@@ -80,6 +85,45 @@ DIRECTORY_SECTION_DEFINITIONS = [
         'description': 'Категории файлов в проекте.'
     },
 ]
+
+
+def serve_flutter_web(request, path=''):
+    build_dir = (
+        settings.BASE_DIR.parent / 'frontend' / 'smart_electric_crm' / 'build' / 'web'
+    )
+    build_dir_resolved = build_dir.resolve()
+
+    if not build_dir_resolved.exists():
+        raise Http404('Flutter web build not found.')
+
+    requested_path = (path or 'index.html').lstrip('/')
+    candidate = (build_dir_resolved / requested_path).resolve()
+
+    try:
+        candidate.relative_to(build_dir_resolved)
+    except ValueError as error:
+        raise Http404('Invalid path.') from error
+
+    if candidate.is_file():
+        content_type, encoding = mimetypes.guess_type(candidate.name)
+        response = FileResponse(
+            candidate.open('rb'),
+            content_type=content_type or 'application/octet-stream',
+        )
+        if encoding:
+            response['Content-Encoding'] = encoding
+        return response
+
+    index_path = build_dir_resolved / 'index.html'
+    if not index_path.exists():
+        raise Http404('Flutter web entry point not found.')
+
+    response = FileResponse(
+        index_path.open('rb'),
+        content_type='text/html; charset=utf-8',
+    )
+    response['Cache-Control'] = 'no-cache'
+    return response
 
 
 
