@@ -7,6 +7,7 @@ Create a local `.env` file in `backend/` based on `.env.example`.
 Variables:
 - `DJANGO_DEBUG`: `True` for local development, `False` for production.
 - `DJANGO_SECRET_KEY`: required in production, should be a long random secret.
+- `DJANGO_ALLOW_ALL_HOSTS_IN_DEBUG`: defaults to `True`; lets local browser/device access Django without manually listing each LAN IP.
 - `DJANGO_ALLOWED_HOSTS`: comma-separated hostnames/IPs allowed by Django.
 - `DJANGO_CORS_ALLOW_ALL_ORIGINS`: keep `True` for local dev convenience.
 - `DJANGO_CORS_ALLOWED_ORIGINS`: comma-separated full origins for production CORS whitelist.
@@ -16,12 +17,20 @@ Variables:
 - Local dev defaults are convenient:
   - `DJANGO_DEBUG=True`
   - fallback dev secret key if `DJANGO_SECRET_KEY` is not set
-  - `DJANGO_ALLOWED_HOSTS` defaults to `localhost,127.0.0.1`
+  - `DJANGO_ALLOW_ALL_HOSTS_IN_DEBUG=True`, so browser access from `localhost` and LAN devices works without editing `DJANGO_ALLOWED_HOSTS`
+  - if you disable `DJANGO_ALLOW_ALL_HOSTS_IN_DEBUG`, `DJANGO_ALLOWED_HOSTS` defaults to `localhost,127.0.0.1`
   - CORS allow-all enabled by default
 - Production is strict (`DJANGO_DEBUG=False`):
   - `DJANGO_SECRET_KEY` must be set
   - `DJANGO_ALLOWED_HOSTS` must be configured
   - CORS should use `DJANGO_CORS_ALLOWED_ORIGINS` whitelist
+
+## Web notes
+
+- Same-origin deployment is preferred for web: serve the Flutter web app behind the same public origin and use frontend `API_BASE_URL_WEB=/api`.
+- If frontend and backend are on different origins in production, configure both:
+  - frontend `API_BASE_URL_WEB=https://your-backend-host/api`
+  - backend `DJANGO_CORS_ALLOWED_ORIGINS=https://your-frontend-host`
 
 ## Run tests
 

@@ -15,6 +15,7 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_secti
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
+import 'package:smart_electric_crm/src/core/constants/api_urls.dart';
 import '../../../settings/application/app_settings_controller.dart';
 import 'dart:io';
 import '../../data/models/project_file_model.dart';
@@ -924,7 +925,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
 
   @override
   Widget build(BuildContext context) {
-    final fileUrl = widget.file.file;
+    final fileUrl = ApiUrls.resolveBackendUrl(widget.file.file);
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final supportsHover = switch (defaultTargetPlatform) {

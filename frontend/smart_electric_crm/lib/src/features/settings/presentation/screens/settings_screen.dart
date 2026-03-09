@@ -2,10 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/navigation/app_navigation.dart';
+import '../../../../core/navigation/route_bootstrap_storage.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../application/app_settings_controller.dart';
 import '../../../../core/theme/app_design_tokens.dart';
@@ -296,7 +298,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     );
                     if (confirmed == true) {
+                      RouteBootstrapStorage.clearPendingRedirect();
                       await ref.read(authProvider.notifier).logout();
+                      if (context.mounted) {
+                        context.go(AppNavigation.loginPath);
+                      }
                     }
                   },
                   child: Padding(
