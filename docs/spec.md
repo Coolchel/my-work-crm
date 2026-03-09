@@ -17,6 +17,7 @@
 - На старте приложения проверяется валидность токенов.
 - Access автоматически подставляется в запросы.
 - При `401` выполняется refresh; при неуспехе — выход в экран логина.
+- Для проверки текущего пароля перед входом в Directory клиент повторно использует `POST /api/auth/token/` с текущим `username/password`.
 
 ## 2. Projects & Stages
 
@@ -30,6 +31,8 @@
 - Создание проекта поддерживает `init_stages`.
 - При создании проекта backend создает три базовых щита (`power/led/multimedia`).
 - Статусы/типы и этапы задаются choices backend + доступны через Directory bootstrap.
+- `GET /api/projects/?search=...` использует backend search по `address`, `intercom_code`, `client_info`, `source`.
+- `PATCH /api/projects/{id}/` используется не только для статуса, но и для редактирования карточки объекта.
 
 ## 3. Estimates
 
@@ -42,6 +45,8 @@
 - Разделы: `works` и `materials`.
 - Поддержка USD/BYN на уровне позиции.
 - Поддержка `markup_percent`, `show_prices`, заметок и remarks на уровне этапа.
+- Поддержка frontend workflow `precalc -> target stage` только для выбранной секции.
+- Поддержка atomic workflow `stage_3 armature calculator -> clear & replace materials`.
 
 ### 3.3 Формулы
 - `client_amount`, `employer_amount`, `my_amount` — по правилам из `docs/LOGIC.md`.
@@ -58,6 +63,16 @@
 - `POST /api/stages/{id}/calculate_works/`
 - Поддержка `aggregation_key` и `related_work_item`.
 - Для найденных связей создаются/заменяются work-позиции.
+
+### 4.3 Ручные workflow этапов
+- `POST /api/stages/{id}/import_from_precalc_section/`
+  - body: `{ "item_type": "work" | "material" }`
+  - доступно только для `stage_1`, `stage_2`, `stage_1_2`
+  - поведение: `clear & replace` выбранной секции из `precalc`
+- `POST /api/stages/{id}/apply_stage3_armature/`
+  - body: список строк `[{ "catalog_item": int, "quantity": number }]`
+  - доступно только для `stage_3`
+  - работает атомарно: при ошибке промежуточные изменения не коммитятся
 
 ## 5. Templates
 
@@ -120,16 +135,21 @@
 - До 20 МБ на файл.
 - Категории: `PROJECT`, `WORK`, `FINISH`.
 - На удалении файла backend удаляет физический файл с диска.
+- Клиентские действия для файла: переименование, `save as`, шаринг, открытие.
 
 ## 9. Finance & Statistics
 
 ### 9.1 Finance
 - `GET /api/projects/unpaid_projects/` — агрегат по неоплаченным этапам (кроме `precalc`).
-- `GET /api/finance/`, `PATCH /api/finance/1/` — singleton финансовых настроек.
+- `GET /api/finance/` — singleton в виде списка из одной записи.
+- `GET /api/finance/1/`, `PATCH /api/finance/1/` — detail/update singleton финансовых настроек.
 
 ### 9.2 Statistics
 - `GET /api/statistics/?period=month|year|all`.
 - Возвращает: `finances`, `sources`, `object_types`, `work_dynamics`.
+- `sources` и `object_types` содержат `name`, `count`, `usd`, `byn`.
+- `work_dynamics` содержит `date`, `usd`, `byn`.
+- Для `month` дата идет по дням (`YYYY-MM-DD`), для `year/all` — по месяцам (`YYYY-MM`).
 
 ## 10. Directory & Catalog
 
@@ -154,6 +174,13 @@
 
 ## 11. Settings
 - Переключение `ThemeMode` (`Light/Dark/System`) с persistence.
+- Переключение `showWelcome` с persistence.
 - Вход в Directory из Settings: warning + проверка пароля текущего аккаунта.
 - Ошибка пароля отображается inline, без перехода на Directory.
-- Текущее расхождение по навигации Settings зафиксировано как `NAV-SETTINGS-001` в `docs/DESIGN.md` (статус: `known issue / tech debt`).
+- Навигация зависит от `showWelcome`:
+  - `true` -> `Главная`, `Объекты`, `Финансы`, `Статистика`;
+  - `false` -> `Объекты`, `Финансы`, `Статистика`, `Настройки`.
+
+## 12. Frontend runtime contracts
+- После восстановления сети клиент должен автоматически рефетчить проекты, результаты поиска, финансы и статистику.
+- На deep screens (`ProjectDetail`, `Estimate`) при `showWelcome = true` нижняя навигация добавляет быстрый переход на `Главную`.
