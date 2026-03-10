@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:share_plus/share_plus.dart';
@@ -5,6 +6,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:smart_electric_crm/src/core/constants/api_urls.dart';
+import '../../services/project_file_share_service.dart';
 
 class FileViewerScreen extends StatelessWidget {
   final String url;
@@ -18,8 +20,26 @@ class FileViewerScreen extends StatelessWidget {
     this.onBackPressed,
   });
 
-  Future<void> _shareFile() async {
+  static final ProjectFileShareService _fileShareService =
+      ProjectFileShareService();
+
+  Future<void> _shareFile(BuildContext context) async {
     final resolvedUrl = ApiUrls.resolveBackendUrl(url);
+
+    if (kIsWeb) {
+      final result = await _fileShareService.shareRemoteFile(
+        url: resolvedUrl,
+        displayName: title,
+      );
+      if (!context.mounted || result.isShared || result.isCancelled) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.message)),
+      );
+      return;
+    }
+
     try {
       final response = await http.get(Uri.parse(resolvedUrl));
       final documentDirectory = await getTemporaryDirectory();
@@ -59,7 +79,7 @@ class FileViewerScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
-            onPressed: _shareFile,
+            onPressed: () => _shareFile(context),
           ),
         ],
       ),

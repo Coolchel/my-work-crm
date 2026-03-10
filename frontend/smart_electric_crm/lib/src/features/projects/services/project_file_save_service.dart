@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
+import 'project_file_browser_bridge.dart';
+
 enum ProjectFileSaveStatus { saved, cancelled, failed }
 
 class ProjectFileSaveResult {
@@ -146,19 +148,29 @@ class LocalProjectFileWriter implements ProjectFileWriter {
 }
 
 typedef ProjectFileBytesDownloader = Future<Uint8List> Function(Uri uri);
+typedef ProjectFileBrowserSaver = Future<void> Function({
+  required Uint8List bytes,
+  required String fileName,
+});
 
 class ProjectFileSaveService {
   ProjectFileSaveService({
     ProjectFileSavePicker? picker,
     ProjectFileWriter? writer,
     ProjectFileBytesDownloader? downloadBytes,
+    ProjectFileBrowserSaver? browserSave,
+    bool? useBrowserDownload,
   })  : _picker = picker ?? FilePickerProjectFileSavePicker(),
         _writer = writer ?? LocalProjectFileWriter(),
-        _downloadBytes = downloadBytes ?? _defaultDownloadBytes;
+        _downloadBytes = downloadBytes ?? _defaultDownloadBytes,
+        _browserSave = browserSave ?? downloadBytesInBrowser,
+        _useBrowserDownload = useBrowserDownload ?? kIsWeb;
 
   final ProjectFileSavePicker _picker;
   final ProjectFileWriter _writer;
   final ProjectFileBytesDownloader _downloadBytes;
+  final ProjectFileBrowserSaver _browserSave;
+  final bool _useBrowserDownload;
 
   static String sanitizeFileName(String rawName, {String fallback = 'file'}) {
     final trimmed = rawName.trim();
@@ -195,6 +207,16 @@ class ProjectFileSaveService {
     }
 
     try {
+      if (_useBrowserDownload) {
+        await _browserSave(
+          bytes: await ensureBytes(),
+          fileName: suggestedFileName,
+        );
+        return ProjectFileSaveResult.saved(
+          message: 'Файл передан браузеру для сохранения.',
+        );
+      }
+
       final selection = await _picker.pickDestination(
         suggestedFileName: suggestedFileName,
         bytes: _picker.requiresBytesBeforePicking ? await ensureBytes() : null,

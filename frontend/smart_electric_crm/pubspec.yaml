@@ -38,6 +38,7 @@ dependencies:
   path: ^1.9.0
   http: ^1.2.1
   http_parser: ^4.0.0
+  web: ^1.1.1
   fl_chart: ^1.1.1
   shared_preferences: ^2.5.4
   connectivity_plus: ^6.1.3

@@ -159,6 +159,35 @@ void main() {
     expect(downloadCount, 1);
     expect(receivedBytes, [4, 5, 6]);
   });
+
+  test('uses browser download flow when requested', () async {
+    Uint8List? savedBytes;
+    String? savedFileName;
+    var downloadCount = 0;
+
+    final service = ProjectFileSaveService(
+      useBrowserDownload: true,
+      browserSave: ({required bytes, required fileName}) async {
+        savedBytes = bytes;
+        savedFileName = fileName;
+      },
+      downloadBytes: (_) async {
+        downloadCount += 1;
+        return Uint8List.fromList([10, 20, 30]);
+      },
+    );
+
+    final result = await service.saveRemoteFile(
+      url: 'https://example.com/files/report.txt',
+      displayName: 'report.txt',
+    );
+
+    expect(result.isSaved, isTrue);
+    expect(result.message, 'Файл передан браузеру для сохранения.');
+    expect(downloadCount, 1);
+    expect(savedBytes, [10, 20, 30]);
+    expect(savedFileName, 'report.txt');
+  });
 }
 
 class _FakePicker implements ProjectFileSavePicker {
