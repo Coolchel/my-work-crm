@@ -26,6 +26,32 @@ Future<void> downloadBytesInBrowser({
   }
 }
 
+Future<void> copyTextInBrowser(String text) async {
+  try {
+    await web.window.navigator.clipboard.writeText(text).toDart;
+    return;
+  } catch (_) {
+    // Fall through to legacy copy below.
+  }
+
+  final textArea = web.HTMLTextAreaElement()
+    ..value = text
+    ..style.position = 'fixed'
+    ..style.left = '-9999px'
+    ..style.top = '0'
+    ..setAttribute('readonly', 'readonly');
+  web.document.body?.append(textArea);
+  textArea.focus();
+  textArea.select();
+
+  final copied = web.document.execCommand('copy');
+  textArea.remove();
+
+  if (!copied) {
+    throw Exception('Browser clipboard copy failed.');
+  }
+}
+
 void openUrlInBrowser(String url) {
   final anchor = web.HTMLAnchorElement()
     ..href = url
