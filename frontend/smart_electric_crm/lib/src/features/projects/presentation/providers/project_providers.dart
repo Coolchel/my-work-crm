@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -116,8 +117,9 @@ class ProjectOperations extends _$ProjectOperations {
   /// Загружает файл проекта.
   Future<void> uploadFile({
     required int projectId,
-    required String filePath,
     required String category,
+    String? filePath,
+    Uint8List? fileBytes,
     String? fileName,
     String description = '',
   }) async {
@@ -125,6 +127,7 @@ class ProjectOperations extends _$ProjectOperations {
     await repository.uploadFile(
       projectId: projectId,
       filePath: filePath,
+      fileBytes: fileBytes,
       category: category,
       fileName: fileName,
       description: description,

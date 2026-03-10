@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:smart_electric_crm/src/core/api/api_exception.dart';
+import 'dart:typed_data';
 import '../../data/models/project_model.dart';
 import '../../data/models/project_file_model.dart';
 import '../../data/models/stage_model.dart';
 import 'package:http_parser/http_parser.dart';
-import 'dart:io';
 import 'package:path/path.dart' as p;
 
 class ProjectRepository {
@@ -222,27 +222,38 @@ class ProjectRepository {
   /// Загружает файл проекта.
   Future<ProjectFileModel> uploadFile({
     required int projectId,
-    required String filePath,
     required String category,
+    String? filePath,
+    Uint8List? fileBytes,
     String? fileName,
     String description = '',
   }) async {
     try {
-      final file = File(filePath);
-      final finalFileName = fileName ?? p.basename(file.path);
+      final normalizedPath = filePath?.trim();
+      final finalFileName = _resolveUploadFileName(
+        fileName: fileName,
+        filePath: normalizedPath,
+      );
 
       final formData = FormData.fromMap({
         'project': projectId,
         'category': category,
         'description': description,
-        'file': await MultipartFile.fromFile(
-          file.path,
-          filename: finalFileName,
-          contentType: _getMediaType(finalFileName),
+        'file': await _buildUploadMultipartFile(
+          fileName: finalFileName,
+          filePath: normalizedPath,
+          fileBytes: fileBytes,
         ),
       });
 
-      final response = await _dio.post('/project-files/', data: formData);
+      final response = await _dio.post(
+        '/project-files/',
+        data: formData,
+        options: Options(
+          sendTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+        ),
+      );
       return ProjectFileModel.fromJson(response.data);
     } catch (e, st) {
       _throwApiError(e, st, fallbackMessage: 'Failed to upload project file');
@@ -280,5 +291,45 @@ class ProjectRepository {
       default:
         return MediaType('application', 'octet-stream');
     }
+  }
+
+  String _resolveUploadFileName({
+    String? fileName,
+    String? filePath,
+  }) {
+    final normalizedName = fileName?.trim();
+    if (normalizedName != null && normalizedName.isNotEmpty) {
+      return normalizedName;
+    }
+    if (filePath != null && filePath.isNotEmpty) {
+      return p.basename(filePath);
+    }
+    throw ArgumentError('Upload requires a file name or file path.');
+  }
+
+  Future<MultipartFile> _buildUploadMultipartFile({
+    required String fileName,
+    String? filePath,
+    Uint8List? fileBytes,
+  }) async {
+    final contentType = _getMediaType(fileName);
+
+    if (fileBytes != null) {
+      return MultipartFile.fromBytes(
+        fileBytes,
+        filename: fileName,
+        contentType: contentType,
+      );
+    }
+
+    if (filePath != null && filePath.isNotEmpty) {
+      return MultipartFile.fromFile(
+        filePath,
+        filename: fileName,
+        contentType: contentType,
+      );
+    }
+
+    throw ArgumentError('Upload requires file bytes or a file path.');
   }
 }

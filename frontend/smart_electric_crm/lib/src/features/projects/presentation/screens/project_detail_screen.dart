@@ -690,6 +690,7 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
     // 2. Выбор файлов с фильтрацией по расширению
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: true,
+      withData: kIsWeb,
       type: FileType.custom,
       allowedExtensions: [
         'jpg',
@@ -740,14 +741,17 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
       );
 
       for (final pickedFile in result.files) {
-        if (pickedFile.path == null) {
+        final uploadPath = kIsWeb ? null : pickedFile.path?.trim();
+        final uploadBytes = pickedFile.bytes;
+        final sizeInBytes =
+            pickedFile.size > 0 ? pickedFile.size : uploadBytes?.length ?? 0;
+        if ((uploadPath == null || uploadPath.isEmpty) &&
+            (uploadBytes == null || uploadBytes.isEmpty)) {
           uploadErrors
-              .add('${pickedFile.name}: не удалось получить путь к файлу');
+              .add('${pickedFile.name}: не удалось получить данные файла');
           continue;
         }
         // 3. Проверка размера файла (Макс 20 МБ)
-        final file = File(pickedFile.path!);
-        final sizeInBytes = await file.length();
         final sizeInMb = sizeInBytes / (1024 * 1024);
 
         if (sizeInMb > 20) {
@@ -760,7 +764,8 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
         try {
           await notifier.uploadFile(
             projectId: widget.project.id,
-            filePath: pickedFile.path!,
+            filePath: uploadPath,
+            fileBytes: uploadBytes,
             fileName: pickedFile.name,
             category: category,
           );
