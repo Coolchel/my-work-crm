@@ -14,6 +14,10 @@ Future<void> downloadBytesInBrowser({
   );
 }
 
+Future<void> copyTextInBrowser(String text) {
+  return browser_bridge.copyTextInBrowser(text);
+}
+
 void openUrlInBrowser(String url) {
   browser_bridge.openUrlInBrowser(url);
 }

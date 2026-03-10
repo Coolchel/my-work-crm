@@ -7,6 +7,10 @@ Future<void> downloadBytesInBrowser({
   throw UnsupportedError('Browser downloads are only supported on web.');
 }
 
+Future<void> copyTextInBrowser(String text) {
+  throw UnsupportedError('Browser clipboard is only supported on web.');
+}
+
 void openUrlInBrowser(String url) {
   throw UnsupportedError('Browser opening is only supported on web.');
 }

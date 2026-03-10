@@ -24,6 +24,7 @@ import '../widgets/stages/stage_card.dart';
 import 'add_project_screen.dart';
 import '../widgets/project_detail/add_stage_dialog.dart';
 import '../widgets/project_detail/detail_info_row.dart';
+import '../dialogs/project_file_share_fallback_dialog.dart';
 import '../../services/project_file_browser_bridge.dart';
 import '../../services/project_file_save_service.dart';
 import '../../services/project_file_share_service.dart';
@@ -897,6 +898,15 @@ class _FileCardState extends ConsumerState<_FileCard> {
     return Colors.blue;
   }
 
+  bool get usesCopyLinkShareAction =>
+      kIsWeb && _fileShareService.usesCopyLinkAsPrimaryAction;
+
+  IconData get shareActionIcon =>
+      kIsWeb ? Icons.link_rounded : Icons.share_rounded;
+
+  String get shareActionTooltip =>
+      usesCopyLinkShareAction ? 'Скопировать ссылку' : 'Поделиться';
+
   String _fileNameFromUrl(String url) {
     try {
       final uri = Uri.parse(url);
@@ -1098,8 +1108,8 @@ class _FileCardState extends ConsumerState<_FileCard> {
                         ),
                         const SizedBox(width: 4),
                         _ActionButton(
-                          icon: Icons.share_rounded,
-                          tooltip: "Поделиться",
+                          icon: shareActionIcon,
+                          tooltip: shareActionTooltip,
                           onTap: () => _shareFile(context, fileUrl),
                         ),
                         const SizedBox(width: 4),
@@ -1212,6 +1222,17 @@ class _FileCardState extends ConsumerState<_FileCard> {
         displayName: displayName,
       );
       if (!context.mounted || result.isShared || result.isCancelled) {
+        return;
+      }
+      if (result.requiresManualFallback && result.url != null) {
+        await showProjectFileShareFallbackDialog(
+          context: context,
+          url: result.url!,
+          displayName: displayName,
+          saveService: _fileSaveService,
+          shareService: _fileShareService,
+          message: result.message,
+        );
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(

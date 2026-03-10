@@ -6,6 +6,8 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:smart_electric_crm/src/core/constants/api_urls.dart';
+import '../dialogs/project_file_share_fallback_dialog.dart';
+import '../../services/project_file_save_service.dart';
 import '../../services/project_file_share_service.dart';
 
 class FileViewerScreen extends StatelessWidget {
@@ -22,6 +24,8 @@ class FileViewerScreen extends StatelessWidget {
 
   static final ProjectFileShareService _fileShareService =
       ProjectFileShareService();
+  static final ProjectFileSaveService _fileSaveService =
+      ProjectFileSaveService();
 
   Future<void> _shareFile(BuildContext context) async {
     final resolvedUrl = ApiUrls.resolveBackendUrl(url);
@@ -32,6 +36,17 @@ class FileViewerScreen extends StatelessWidget {
         displayName: title,
       );
       if (!context.mounted || result.isShared || result.isCancelled) {
+        return;
+      }
+      if (result.requiresManualFallback && result.url != null) {
+        await showProjectFileShareFallbackDialog(
+          context: context,
+          url: result.url!,
+          displayName: title,
+          saveService: _fileSaveService,
+          shareService: _fileShareService,
+          message: result.message,
+        );
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,6 +79,8 @@ class FileViewerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolvedUrl = ApiUrls.resolveBackendUrl(url);
+    final usesCopyLinkShareAction =
+        kIsWeb && _fileShareService.usesCopyLinkAsPrimaryAction;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -78,7 +95,11 @@ class FileViewerScreen extends StatelessWidget {
         title: Text(title, style: const TextStyle(color: Colors.white)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share),
+            tooltip:
+                usesCopyLinkShareAction ? 'Скопировать ссылку' : 'Поделиться',
+            icon: Icon(
+              kIsWeb ? Icons.link_rounded : Icons.share,
+            ),
             onPressed: () => _shareFile(context),
           ),
         ],
