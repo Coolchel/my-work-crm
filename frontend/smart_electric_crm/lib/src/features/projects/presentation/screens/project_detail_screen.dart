@@ -24,7 +24,9 @@ import '../widgets/stages/stage_card.dart';
 import 'add_project_screen.dart';
 import '../widgets/project_detail/add_stage_dialog.dart';
 import '../widgets/project_detail/detail_info_row.dart';
+import '../../services/project_file_browser_bridge.dart';
 import '../../services/project_file_save_service.dart';
+import '../../services/project_file_share_service.dart';
 
 import '../../data/models/stage_model.dart';
 
@@ -864,6 +866,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
   bool _isHovered = false;
   bool _areTouchActionsVisible = false;
   final ProjectFileSaveService _fileSaveService = ProjectFileSaveService();
+  final ProjectFileShareService _fileShareService = ProjectFileShareService();
 
   bool get isImage {
     final ext = widget.file.file.toLowerCase();
@@ -1097,7 +1100,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
                         _ActionButton(
                           icon: Icons.share_rounded,
                           tooltip: "Поделиться",
-                          onTap: () => _shareFile(fileUrl),
+                          onTap: () => _shareFile(context, fileUrl),
                         ),
                         const SizedBox(width: 4),
                         _ActionButton(
@@ -1124,9 +1127,15 @@ class _FileCardState extends ConsumerState<_FileCard> {
         url: url,
         title: displayName,
       );
-    } else {
-      _downloadAndOpenFile(url);
+      return;
     }
+
+    if (kIsWeb) {
+      openUrlInBrowser(url);
+      return;
+    }
+
+    _downloadAndOpenFile(url);
   }
 
   Future<void> _renameFile(BuildContext context) async {
@@ -1196,7 +1205,21 @@ class _FileCardState extends ConsumerState<_FileCard> {
     }
   }
 
-  Future<void> _shareFile(String url) async {
+  Future<void> _shareFile(BuildContext context, String url) async {
+    if (kIsWeb) {
+      final result = await _fileShareService.shareRemoteFile(
+        url: url,
+        displayName: displayName,
+      );
+      if (!context.mounted || result.isShared || result.isCancelled) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.message)),
+      );
+      return;
+    }
+
     try {
       final localFile =
           await _createDownloadedTempFile(url, preferredName: displayName);
