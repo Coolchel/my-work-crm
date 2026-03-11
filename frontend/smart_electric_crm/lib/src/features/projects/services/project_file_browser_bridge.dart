@@ -7,10 +7,24 @@ import 'project_file_browser_bridge_stub.dart'
 Future<void> downloadBytesInBrowser({
   required Uint8List bytes,
   required String fileName,
+  String mimeType = 'application/octet-stream',
 }) {
   return browser_bridge.downloadBytesInBrowser(
     bytes: bytes,
     fileName: fileName,
+    mimeType: mimeType,
+  );
+}
+
+Future<void> openBytesInBrowser({
+  required Uint8List bytes,
+  required String fileName,
+  String mimeType = 'application/octet-stream',
+}) {
+  return browser_bridge.openBytesInBrowser(
+    bytes: bytes,
+    fileName: fileName,
+    mimeType: mimeType,
   );
 }
 

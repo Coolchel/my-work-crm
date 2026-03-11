@@ -207,45 +207,9 @@ class ProjectFileSaveService {
     }
 
     try {
-      if (_useBrowserDownload) {
-        await _browserSave(
-          bytes: await ensureBytes(),
-          fileName: suggestedFileName,
-        );
-        return ProjectFileSaveResult.saved(
-          message: 'Файл передан браузеру для сохранения.',
-        );
-      }
-
-      final selection = await _picker.pickDestination(
+      return await _saveBytesInternal(
         suggestedFileName: suggestedFileName,
-        bytes: _picker.requiresBytesBeforePicking ? await ensureBytes() : null,
-      );
-
-      if (selection == null) {
-        return ProjectFileSaveResult.cancelled();
-      }
-
-      final outputPath = selection.path?.trim();
-      if (selection.isPersistedByPlatform) {
-        return ProjectFileSaveResult.saved(
-          message: outputPath == null || outputPath.isEmpty
-              ? 'Файл сохранен'
-              : 'Файл сохранен: $outputPath',
-          path: outputPath,
-        );
-      }
-
-      if (outputPath == null || outputPath.isEmpty) {
-        return ProjectFileSaveResult.failed(
-          'Не удалось определить путь сохранения файла.',
-        );
-      }
-
-      await _writer.writeBytes(outputPath, await ensureBytes());
-      return ProjectFileSaveResult.saved(
-        message: 'Файл сохранен: $outputPath',
-        path: outputPath,
+        bytesLoader: ensureBytes,
       );
     } catch (error, stackTrace) {
       debugPrint(
@@ -253,6 +217,71 @@ class ProjectFileSaveService {
       );
       return ProjectFileSaveResult.failed(_mapErrorToMessage(error));
     }
+  }
+
+  Future<ProjectFileSaveResult> saveBytes({
+    required Uint8List bytes,
+    required String displayName,
+  }) async {
+    final suggestedFileName = sanitizeFileName(displayName, fallback: 'file');
+
+    try {
+      return await _saveBytesInternal(
+        suggestedFileName: suggestedFileName,
+        bytesLoader: () async => bytes,
+      );
+    } catch (error, stackTrace) {
+      debugPrint(
+        'ProjectFileSaveService.saveBytes failed: $error\n$stackTrace',
+      );
+      return ProjectFileSaveResult.failed(_mapErrorToMessage(error));
+    }
+  }
+
+  Future<ProjectFileSaveResult> _saveBytesInternal({
+    required String suggestedFileName,
+    required Future<Uint8List> Function() bytesLoader,
+  }) async {
+    if (_useBrowserDownload) {
+      await _browserSave(
+        bytes: await bytesLoader(),
+        fileName: suggestedFileName,
+      );
+      return ProjectFileSaveResult.saved(
+        message: 'Файл передан браузеру для сохранения.',
+      );
+    }
+
+    final selection = await _picker.pickDestination(
+      suggestedFileName: suggestedFileName,
+      bytes: _picker.requiresBytesBeforePicking ? await bytesLoader() : null,
+    );
+
+    if (selection == null) {
+      return ProjectFileSaveResult.cancelled();
+    }
+
+    final outputPath = selection.path?.trim();
+    if (selection.isPersistedByPlatform) {
+      return ProjectFileSaveResult.saved(
+        message: outputPath == null || outputPath.isEmpty
+            ? 'Файл сохранен'
+            : 'Файл сохранен: $outputPath',
+        path: outputPath,
+      );
+    }
+
+    if (outputPath == null || outputPath.isEmpty) {
+      return ProjectFileSaveResult.failed(
+        'Не удалось определить путь сохранения файла.',
+      );
+    }
+
+    await _writer.writeBytes(outputPath, await bytesLoader());
+    return ProjectFileSaveResult.saved(
+      message: 'Файл сохранен: $outputPath',
+      path: outputPath,
+    );
   }
 
   static Future<Uint8List> _defaultDownloadBytes(Uri uri) async {
