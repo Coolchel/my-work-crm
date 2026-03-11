@@ -14,6 +14,8 @@ import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.
 import '../../../data/models/estimate_item_model.dart';
 import '../../../data/models/stage_model.dart';
 import '../../providers/project_providers.dart';
+import '../../../services/project_file_browser_bridge.dart';
+import '../../../services/project_file_save_service.dart';
 import '../../utils/estimate_report_generator.dart';
 import '../../../services/pdf_service.dart';
 
@@ -745,20 +747,25 @@ class EstimateTextActionsDialog extends ConsumerWidget
 
 // --- PDF ACTIONS DIALOG ---
 
+enum EstimatePdfDeliveryMode { open, download, share }
+
 class EstimatePdfActionRequest {
   final bool isWork;
   final bool showPrices;
   final double markup;
   final String type;
-  final bool share;
+  final EstimatePdfDeliveryMode deliveryMode;
 
   const EstimatePdfActionRequest({
     required this.isWork,
     this.showPrices = true,
     this.markup = 0.0,
     this.type = 'total',
-    this.share = false,
+    this.deliveryMode = EstimatePdfDeliveryMode.open,
   });
+
+  bool get share => deliveryMode == EstimatePdfDeliveryMode.share;
+  bool get download => deliveryMode == EstimatePdfDeliveryMode.download;
 }
 
 class EstimatePdfActionsDialog extends ConsumerStatefulWidget {
@@ -790,12 +797,14 @@ class EstimatePdfActionsDialog extends ConsumerStatefulWidget {
 class _EstimatePdfActionsDialogState
     extends ConsumerState<EstimatePdfActionsDialog> with EstimateDialogHelpers {
   bool _isBusy = false;
+  final ProjectFileSaveService _fileSaveService = ProjectFileSaveService();
 
   @override
   Widget build(BuildContext context) {
     final hasWorks = widget.works.isNotEmpty;
     final hasMaterials = widget.materials.isNotEmpty;
     final hasPartnerWorks = widget.works.any((w) => w.employerQuantity > 0);
+    const showPdfShareActions = !kIsWeb;
     const themeColor = Colors.blueGrey;
 
     return buildPremiumContainer(
@@ -864,10 +873,64 @@ class _EstimatePdfActionsDialogState
                   ),
                 ),
 
-              // 2. Share PDF (Dropdowns)
-              buildSectionHeader("Поделиться PDF", icon: Icons.share_rounded),
-              _buildPdfShareSection(
-                  context, hasWorks, hasPartnerWorks, hasMaterials),
+              if (kIsWeb) ...[
+                buildSectionHeader("Скачать PDF", icon: Icons.download_rounded),
+                if (hasWorks)
+                  buildWideActionBtn(
+                    context,
+                    label: "Заказчик (Работы)",
+                    icon: Icons.person_outline,
+                    color: Colors.green,
+                    enabled: !_isBusy,
+                    onTap: () => _runPdfAction(
+                      context,
+                      const EstimatePdfActionRequest(
+                        isWork: true,
+                        type: 'total',
+                        deliveryMode: EstimatePdfDeliveryMode.download,
+                      ),
+                    ),
+                  ),
+                if (hasPartnerWorks)
+                  buildWideActionBtn(
+                    context,
+                    label: "Контрагент (Работы)",
+                    icon: Icons.handshake_outlined,
+                    color: Colors.green,
+                    enabled: !_isBusy,
+                    onTap: () => _runPdfAction(
+                      context,
+                      const EstimatePdfActionRequest(
+                        isWork: true,
+                        type: 'employer',
+                        deliveryMode: EstimatePdfDeliveryMode.download,
+                      ),
+                    ),
+                  ),
+                if (hasMaterials)
+                  buildWideActionBtn(
+                    context,
+                    label: "Материалы (Текущие настройки)",
+                    icon: Icons.inventory_2_outlined,
+                    color: Colors.blue.shade700,
+                    enabled: !_isBusy,
+                    onTap: () => _runPdfAction(
+                      context,
+                      const EstimatePdfActionRequest(
+                        isWork: false,
+                        showPrices: true,
+                        deliveryMode: EstimatePdfDeliveryMode.download,
+                      ),
+                    ),
+                  ),
+              ],
+
+              if (showPdfShareActions) ...[
+                // 2. Share PDF (Dropdowns)
+                buildSectionHeader("Поделиться PDF", icon: Icons.share_rounded),
+                _buildPdfShareSection(
+                    context, hasWorks, hasPartnerWorks, hasMaterials),
+              ],
               if (_isBusy)
                 const Padding(
                   padding: EdgeInsets.fromLTRB(24, 12, 24, 0),
@@ -931,7 +994,7 @@ class _EstimatePdfActionsDialogState
               EstimatePdfActionRequest(
                 isWork: true,
                 type: val,
-                share: true,
+                deliveryMode: EstimatePdfDeliveryMode.share,
               ),
             ),
           ),
@@ -983,7 +1046,7 @@ class _EstimatePdfActionsDialogState
                     const EstimatePdfActionRequest(
                       isWork: false,
                       showPrices: false,
-                      share: true,
+                      deliveryMode: EstimatePdfDeliveryMode.share,
                     ),
                   );
                 } else if (val == 'price') {
@@ -992,7 +1055,7 @@ class _EstimatePdfActionsDialogState
                     const EstimatePdfActionRequest(
                       isWork: false,
                       showPrices: true,
-                      share: true,
+                      deliveryMode: EstimatePdfDeliveryMode.share,
                     ),
                   );
                 } else if (val == 'markup') {
@@ -1002,7 +1065,7 @@ class _EstimatePdfActionsDialogState
                       isWork: false,
                       showPrices: true,
                       markup: widget.markupPercent,
-                      share: true,
+                      deliveryMode: EstimatePdfDeliveryMode.share,
                     ),
                   );
                 }
@@ -1067,7 +1130,7 @@ class _EstimatePdfActionsDialogState
       quantityType: request.type,
       remarks: remarks,
       markupPercent: request.markup,
-      share: request.share,
+      deliveryMode: request.deliveryMode,
     );
   }
 
@@ -1080,7 +1143,7 @@ class _EstimatePdfActionsDialogState
     String? remarks,
     double markupPercent = 0.0,
     String quantityType = 'total',
-    bool share = false,
+    EstimatePdfDeliveryMode deliveryMode = EstimatePdfDeliveryMode.open,
   }) async {
     try {
       final pdfService = PdfService();
@@ -1094,34 +1157,43 @@ class _EstimatePdfActionsDialogState
         markupPercent: markupPercent,
       );
 
-      final output = await getTemporaryDirectory();
-      final filename = title.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
-      final file = File("${output.path}/$filename.pdf");
-      await file.writeAsBytes(bytes);
+      final fileName =
+          '${ProjectFileSaveService.sanitizeFileName(title, fallback: 'estimate')}.pdf';
+      if (!context.mounted) {
+        return;
+      }
 
-      if (share) {
-        final didShare = await Printing.sharePdf(
-          bytes: bytes,
-          filename: '$filename.pdf',
-          subject: title,
-          body: title,
-        );
-        if (!didShare) {
-          if (context.mounted) {
-            await ErrorFeedback.showMessage(
-              context,
-              "Не удалось открыть системное меню шаринга PDF.",
-            );
-          }
-        }
-      } else {
-        final result = await OpenFilex.open(file.path);
-        if (result.type != ResultType.done && context.mounted) {
-          await ErrorFeedback.showMessage(
+      switch (deliveryMode) {
+        case EstimatePdfDeliveryMode.open:
+          await _openPdf(
             context,
-            "Не удалось открыть файл: ${result.message}",
+            bytes: bytes,
+            fileName: fileName,
           );
-        }
+          return;
+        case EstimatePdfDeliveryMode.download:
+          await _downloadPdf(
+            context,
+            bytes: bytes,
+            fileName: fileName,
+          );
+          return;
+        case EstimatePdfDeliveryMode.share:
+          if (kIsWeb) {
+            await _downloadPdf(
+              context,
+              bytes: bytes,
+              fileName: fileName,
+            );
+            return;
+          }
+          await _sharePdf(
+            context,
+            bytes: bytes,
+            fileName: fileName,
+            title: title,
+          );
+          return;
       }
     } catch (e, st) {
       if (context.mounted) {
@@ -1133,6 +1205,102 @@ class _EstimatePdfActionsDialogState
         );
       }
     }
+  }
+
+  Future<void> _openPdf(
+    BuildContext context, {
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    if (kIsWeb) {
+      await openBytesInBrowser(
+        bytes: bytes,
+        fileName: fileName,
+        mimeType: 'application/pdf',
+      );
+      return;
+    }
+
+    final output = await getTemporaryDirectory();
+    final file = File("${output.path}/$fileName");
+    await file.writeAsBytes(bytes, flush: true);
+
+    final result = await OpenFilex.open(file.path);
+    if (result.type != ResultType.done && context.mounted) {
+      await ErrorFeedback.showMessage(
+        context,
+        'Не удалось открыть файл: ${result.message}',
+        title: 'PDF',
+      );
+    }
+  }
+
+  Future<void> _downloadPdf(
+    BuildContext context, {
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    final result = await _fileSaveService.saveBytes(
+      bytes: bytes,
+      displayName: fileName,
+    );
+    if (!context.mounted || result.isCancelled) {
+      return;
+    }
+
+    if (kIsWeb && result.isSaved) {
+      return;
+    }
+
+    await ErrorFeedback.showMessage(
+      context,
+      result.message,
+      title: 'PDF',
+    );
+  }
+
+  Future<void> _sharePdf(
+    BuildContext context, {
+    required Uint8List bytes,
+    required String fileName,
+    required String title,
+  }) async {
+    final didShare = await Printing.sharePdf(
+      bytes: bytes,
+      filename: fileName,
+      subject: title,
+      body: title,
+    );
+
+    if (didShare || !context.mounted) {
+      return;
+    }
+
+    if (!kIsWeb) {
+      await ErrorFeedback.showMessage(
+        context,
+        'Не удалось открыть системное меню шаринга PDF.',
+        title: 'PDF',
+      );
+      return;
+    }
+
+    final saveResult = await _fileSaveService.saveBytes(
+      bytes: bytes,
+      displayName: fileName,
+    );
+    if (!context.mounted) {
+      return;
+    }
+
+    final message = saveResult.isSaved
+        ? 'Браузер не поддержал шаринг PDF. Файл передан браузеру для сохранения, после чего им можно поделиться вручную.'
+        : saveResult.message;
+    await ErrorFeedback.showMessage(
+      context,
+      message,
+      title: 'PDF',
+    );
   }
 }
 
