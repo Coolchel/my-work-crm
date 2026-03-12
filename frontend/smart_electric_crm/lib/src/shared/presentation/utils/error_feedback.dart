@@ -31,7 +31,14 @@ class ErrorFeedback {
         builder: (dialogContext) {
           final isNetworkIssue =
               message.toLowerCase().contains('нет подключения');
-          final themeColor = isNetworkIssue ? Colors.deepOrange : Colors.indigo;
+          final isFailure = title.toLowerCase().contains('ошибка') ||
+              message.toLowerCase().contains('не удалось') ||
+              message.toLowerCase().contains('ошибка');
+          final themeColor = isFailure
+              ? Colors.red
+              : isNetworkIssue
+                  ? Colors.deepOrange
+                  : Colors.indigo;
           final isDark = AppDesignTokens.isDark(dialogContext);
 
           return Dialog(
@@ -72,9 +79,11 @@ class ErrorFeedback {
                     child: Row(
                       children: [
                         Icon(
-                          isNetworkIssue
-                              ? Icons.wifi_off_rounded
-                              : Icons.error_outline,
+                          isFailure
+                              ? Icons.error_outline
+                              : isNetworkIssue
+                                  ? Icons.wifi_off_rounded
+                                  : Icons.info_outline,
                           color: themeColor,
                           size: 22,
                         ),

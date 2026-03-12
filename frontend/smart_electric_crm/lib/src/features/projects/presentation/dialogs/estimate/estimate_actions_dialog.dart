@@ -48,7 +48,10 @@ mixin EstimateDialogHelpers {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(16),
       child: Container(
-        constraints: BoxConstraints(maxWidth: maxWidth),
+        constraints: BoxConstraints(
+          maxWidth: maxWidth,
+          maxHeight: MediaQuery.sizeOf(context).height - 32,
+        ),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(28),
@@ -487,89 +490,100 @@ class EstimateTextActionsDialog extends ConsumerWidget
     return buildPremiumContainer(
       context: context,
       themeColor: themeColor,
-      child: AppDialogScrollbar.builder(
-        builder: (scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              buildPremiumHeader(
-                context: context,
-                title: "Текстовые сметы",
-                icon: Icons.description_outlined,
-                themeColor: themeColor,
-              ),
-
-              // 1. View / Preview
-              buildSectionHeader("Просмотр",
-                  icon: Icons.remove_red_eye_rounded),
-              buildWideActionBtn(
-                context,
-                label: "Открыть предпросмотр",
-                icon: Icons.fullscreen_rounded,
-                color: Colors.grey.shade800,
-                onTap: (hasWorks || hasMaterials)
-                    ? () {
-                        Navigator.pop(context);
-                        _showReport(context, ref);
-                      }
-                    : () {},
-              ),
-
-              // 2. Copy Text (Direct Actions)
-              if (hasWorks || hasMaterials)
-                buildSectionHeader("Копировать текст",
-                    icon: Icons.copy_rounded),
-              if (hasWorks)
-                buildWideActionBtn(
-                  context,
-                  label: "Заказчик (Работы)",
-                  icon: Icons.person_outline,
-                  color: Colors.green,
-                  onTap: () async {
-                    Navigator.pop(context);
-                    await _processAction(context, ref,
-                        isWork: true, type: 'total', share: false);
-                  },
-                ),
-              if (hasPartnerWorks)
-                buildWideActionBtn(
-                  context,
-                  label: "Контрагент (Работы)",
-                  icon: Icons.handshake_outlined,
-                  color: Colors.green,
-                  onTap: () async {
-                    Navigator.pop(context);
-                    await _processAction(context, ref,
-                        isWork: true, type: 'employer', share: false);
-                  },
-                ),
-              if (hasMaterials)
-                buildWideActionBtn(
-                  context,
-                  label: "Материалы (Текущие настройки)",
-                  icon: Icons.inventory_2_outlined,
-                  color: Colors.blue.shade700,
-                  onTap: () async {
-                    Navigator.pop(context);
-                    await _processAction(context, ref,
-                        isWork: false, type: 'total', share: false);
-                  },
-                ),
-
-              // 3. Share Text (Dropdowns)
-              if (hasWorks || hasMaterials)
-                buildSectionHeader("Поделиться текстом",
-                    icon: Icons.share_rounded),
-              _buildShareSection(
-                  context, ref, hasWorks, hasPartnerWorks, hasMaterials),
-
-              const SizedBox(height: 24),
-            ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          buildPremiumHeader(
+            context: context,
+            title: "Текстовые сметы",
+            icon: Icons.description_outlined,
+            themeColor: themeColor,
           ),
-        ),
+          Flexible(
+            child: AppDialogScrollbar.builder(
+              builder: (scrollController) => SingleChildScrollView(
+                controller: scrollController,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    buildSectionHeader(
+                      "Просмотр",
+                      icon: Icons.remove_red_eye_rounded,
+                    ),
+                    buildWideActionBtn(
+                      context,
+                      label: "Открыть предпросмотр",
+                      icon: Icons.fullscreen_rounded,
+                      color: Colors.grey.shade800,
+                      onTap: (hasWorks || hasMaterials)
+                          ? () {
+                              Navigator.pop(context);
+                              _showReport(context, ref);
+                            }
+                          : () {},
+                    ),
+                    if (hasWorks || hasMaterials)
+                      buildSectionHeader(
+                        "Копировать текст",
+                        icon: Icons.copy_rounded,
+                      ),
+                    if (hasWorks)
+                      buildWideActionBtn(
+                        context,
+                        label: "Заказчик (Работы)",
+                        icon: Icons.person_outline,
+                        color: Colors.green,
+                        onTap: () async {
+                          Navigator.pop(context);
+                          await _processAction(context, ref,
+                              isWork: true, type: 'total', share: false);
+                        },
+                      ),
+                    if (hasPartnerWorks)
+                      buildWideActionBtn(
+                        context,
+                        label: "Контрагент (Работы)",
+                        icon: Icons.handshake_outlined,
+                        color: Colors.green,
+                        onTap: () async {
+                          Navigator.pop(context);
+                          await _processAction(context, ref,
+                              isWork: true, type: 'employer', share: false);
+                        },
+                      ),
+                    if (hasMaterials)
+                      buildWideActionBtn(
+                        context,
+                        label: "Материалы (Текущие настройки)",
+                        icon: Icons.inventory_2_outlined,
+                        color: Colors.blue.shade700,
+                        onTap: () async {
+                          Navigator.pop(context);
+                          await _processAction(context, ref,
+                              isWork: false, type: 'total', share: false);
+                        },
+                      ),
+                    if (hasWorks || hasMaterials)
+                      buildSectionHeader(
+                        "Поделиться текстом",
+                        icon: Icons.share_rounded,
+                      ),
+                    _buildShareSection(
+                      context,
+                      ref,
+                      hasWorks,
+                      hasPartnerWorks,
+                      hasMaterials,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -799,169 +813,185 @@ class _EstimatePdfActionsDialogState
   bool _isBusy = false;
   final ProjectFileSaveService _fileSaveService = ProjectFileSaveService();
 
+  bool get _showsPdfNativeDownloadMenu =>
+      defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.android;
+
   @override
   Widget build(BuildContext context) {
     final hasWorks = widget.works.isNotEmpty;
     final hasMaterials = widget.materials.isNotEmpty;
     final hasPartnerWorks = widget.works.any((w) => w.employerQuantity > 0);
-    const showPdfShareActions = !kIsWeb;
     const themeColor = Colors.blueGrey;
 
     return buildPremiumContainer(
       context: context,
       themeColor: themeColor,
-      child: AppDialogScrollbar.builder(
-        builder: (scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              buildPremiumHeader(
-                context: context,
-                title: "PDF сметы",
-                icon: Icons.picture_as_pdf_outlined,
-                themeColor: themeColor,
-              ),
-
-              // 1. Export PDF (Direct Actions)
-              buildSectionHeader("Экспорт в PDF", icon: Icons.save_alt_rounded),
-              if (hasWorks)
-                buildWideActionBtn(
-                  context,
-                  label: "Заказчик (Работы)",
-                  icon: Icons.person_outline,
-                  color: Colors.green,
-                  enabled: !_isBusy,
-                  onTap: () => _runPdfAction(
-                    context,
-                    const EstimatePdfActionRequest(
-                      isWork: true,
-                      type: 'total',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          buildPremiumHeader(
+            context: context,
+            title: "PDF сметы",
+            icon: Icons.picture_as_pdf_outlined,
+            themeColor: themeColor,
+          ),
+          Flexible(
+            child: AppDialogScrollbar.builder(
+              builder: (scrollController) => SingleChildScrollView(
+                controller: scrollController,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    buildSectionHeader(
+                      "Открыть в PDF",
+                      icon: Icons.open_in_new_rounded,
                     ),
-                  ),
-                ),
-              if (hasPartnerWorks)
-                buildWideActionBtn(
-                  context,
-                  label: "Контрагент (Работы)",
-                  icon: Icons.handshake_outlined,
-                  color: Colors.green,
-                  enabled: !_isBusy,
-                  onTap: () => _runPdfAction(
-                    context,
-                    const EstimatePdfActionRequest(
-                      isWork: true,
-                      type: 'employer',
-                    ),
-                  ),
-                ),
-              if (hasMaterials)
-                buildWideActionBtn(
-                  context,
-                  label: "Материалы (Текущие настройки)",
-                  icon: Icons.inventory_2_outlined,
-                  color: Colors.blue.shade700,
-                  enabled: !_isBusy,
-                  onTap: () => _runPdfAction(
-                    context,
-                    const EstimatePdfActionRequest(
-                      isWork: false,
-                      showPrices: true,
-                    ),
-                  ),
-                ),
-
-              if (kIsWeb) ...[
-                buildSectionHeader("Скачать PDF", icon: Icons.download_rounded),
-                if (hasWorks)
-                  buildWideActionBtn(
-                    context,
-                    label: "Заказчик (Работы)",
-                    icon: Icons.person_outline,
-                    color: Colors.green,
-                    enabled: !_isBusy,
-                    onTap: () => _runPdfAction(
-                      context,
-                      const EstimatePdfActionRequest(
-                        isWork: true,
-                        type: 'total',
-                        deliveryMode: EstimatePdfDeliveryMode.download,
-                      ),
-                    ),
-                  ),
-                if (hasPartnerWorks)
-                  buildWideActionBtn(
-                    context,
-                    label: "Контрагент (Работы)",
-                    icon: Icons.handshake_outlined,
-                    color: Colors.green,
-                    enabled: !_isBusy,
-                    onTap: () => _runPdfAction(
-                      context,
-                      const EstimatePdfActionRequest(
-                        isWork: true,
-                        type: 'employer',
-                        deliveryMode: EstimatePdfDeliveryMode.download,
-                      ),
-                    ),
-                  ),
-                if (hasMaterials)
-                  buildWideActionBtn(
-                    context,
-                    label: "Материалы (Текущие настройки)",
-                    icon: Icons.inventory_2_outlined,
-                    color: Colors.blue.shade700,
-                    enabled: !_isBusy,
-                    onTap: () => _runPdfAction(
-                      context,
-                      const EstimatePdfActionRequest(
-                        isWork: false,
-                        showPrices: true,
-                        deliveryMode: EstimatePdfDeliveryMode.download,
-                      ),
-                    ),
-                  ),
-              ],
-
-              if (showPdfShareActions) ...[
-                // 2. Share PDF (Dropdowns)
-                buildSectionHeader("Поделиться PDF", icon: Icons.share_rounded),
-                _buildPdfShareSection(
-                    context, hasWorks, hasPartnerWorks, hasMaterials),
-              ],
-              if (_isBusy)
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(24, 12, 24, 0),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          "Генерация/шаринг PDF...",
-                          style: TextStyle(fontSize: 13),
+                    if (hasWorks)
+                      buildWideActionBtn(
+                        context,
+                        label: "Заказчик (Работы)",
+                        icon: Icons.person_outline,
+                        color: Colors.green,
+                        enabled: !_isBusy,
+                        onTap: () => _runPdfAction(
+                          context,
+                          const EstimatePdfActionRequest(
+                            isWork: true,
+                            type: 'total',
+                          ),
                         ),
                       ),
+                    if (hasPartnerWorks)
+                      buildWideActionBtn(
+                        context,
+                        label: "Контрагент (Работы)",
+                        icon: Icons.handshake_outlined,
+                        color: Colors.green,
+                        enabled: !_isBusy,
+                        onTap: () => _runPdfAction(
+                          context,
+                          const EstimatePdfActionRequest(
+                            isWork: true,
+                            type: 'employer',
+                          ),
+                        ),
+                      ),
+                    if (hasMaterials)
+                      buildWideActionBtn(
+                        context,
+                        label: "Материалы (Текущие настройки)",
+                        icon: Icons.inventory_2_outlined,
+                        color: Colors.blue.shade700,
+                        enabled: !_isBusy,
+                        onTap: () => _runPdfAction(
+                          context,
+                          const EstimatePdfActionRequest(
+                            isWork: false,
+                            showPrices: true,
+                          ),
+                        ),
+                      ),
+                    if (kIsWeb) ...[
+                      buildSectionHeader(
+                        "Скачать PDF",
+                        icon: Icons.download_rounded,
+                      ),
+                      if (hasWorks)
+                        buildWideActionBtn(
+                          context,
+                          label: "Заказчик (Работы)",
+                          icon: Icons.person_outline,
+                          color: Colors.green,
+                          enabled: !_isBusy,
+                          onTap: () => _runPdfAction(
+                            context,
+                            const EstimatePdfActionRequest(
+                              isWork: true,
+                              type: 'total',
+                              deliveryMode: EstimatePdfDeliveryMode.download,
+                            ),
+                          ),
+                        ),
+                      if (hasPartnerWorks)
+                        buildWideActionBtn(
+                          context,
+                          label: "Контрагент (Работы)",
+                          icon: Icons.handshake_outlined,
+                          color: Colors.green,
+                          enabled: !_isBusy,
+                          onTap: () => _runPdfAction(
+                            context,
+                            const EstimatePdfActionRequest(
+                              isWork: true,
+                              type: 'employer',
+                              deliveryMode: EstimatePdfDeliveryMode.download,
+                            ),
+                          ),
+                        ),
+                      if (hasMaterials)
+                        buildWideActionBtn(
+                          context,
+                          label: "Материалы (Текущие настройки)",
+                          icon: Icons.inventory_2_outlined,
+                          color: Colors.blue.shade700,
+                          enabled: !_isBusy,
+                          onTap: () => _runPdfAction(
+                            context,
+                            const EstimatePdfActionRequest(
+                              isWork: false,
+                              showPrices: true,
+                              deliveryMode: EstimatePdfDeliveryMode.download,
+                            ),
+                          ),
+                        ),
                     ],
-                  ),
+                    if (_showsPdfNativeDownloadMenu) ...[
+                      buildSectionHeader(
+                        "Скачать PDF",
+                        icon: Icons.download_rounded,
+                      ),
+                      _buildPdfDeliverySection(
+                        context,
+                        hasWorks,
+                        hasPartnerWorks,
+                        hasMaterials,
+                        deliveryMode: EstimatePdfDeliveryMode.download,
+                      ),
+                    ],
+                    if (!kIsWeb) ...[
+                      buildSectionHeader(
+                        "Поделиться PDF",
+                        icon: Icons.share_rounded,
+                      ),
+                      _buildPdfDeliverySection(
+                        context,
+                        hasWorks,
+                        hasPartnerWorks,
+                        hasMaterials,
+                        deliveryMode: EstimatePdfDeliveryMode.share,
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                  ],
                 ),
-
-              const SizedBox(height: 24),
-            ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildPdfShareSection(BuildContext context, bool hasWorks,
-      bool hasPartnerWorks, bool hasMaterials) {
+  Widget _buildPdfDeliverySection(
+    BuildContext context,
+    bool hasWorks,
+    bool hasPartnerWorks,
+    bool hasMaterials, {
+    required EstimatePdfDeliveryMode deliveryMode,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -994,7 +1024,7 @@ class _EstimatePdfActionsDialogState
               EstimatePdfActionRequest(
                 isWork: true,
                 type: val,
-                deliveryMode: EstimatePdfDeliveryMode.share,
+                deliveryMode: deliveryMode,
               ),
             ),
           ),
@@ -1043,19 +1073,19 @@ class _EstimatePdfActionsDialogState
                 if (val == 'noprice') {
                   _runPdfAction(
                     context,
-                    const EstimatePdfActionRequest(
+                    EstimatePdfActionRequest(
                       isWork: false,
                       showPrices: false,
-                      deliveryMode: EstimatePdfDeliveryMode.share,
+                      deliveryMode: deliveryMode,
                     ),
                   );
                 } else if (val == 'price') {
                   _runPdfAction(
                     context,
-                    const EstimatePdfActionRequest(
+                    EstimatePdfActionRequest(
                       isWork: false,
                       showPrices: true,
-                      deliveryMode: EstimatePdfDeliveryMode.share,
+                      deliveryMode: deliveryMode,
                     ),
                   );
                 } else if (val == 'markup') {
@@ -1065,7 +1095,7 @@ class _EstimatePdfActionsDialogState
                       isWork: false,
                       showPrices: true,
                       markup: widget.markupPercent,
-                      deliveryMode: EstimatePdfDeliveryMode.share,
+                      deliveryMode: deliveryMode,
                     ),
                   );
                 }
