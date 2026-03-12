@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 
+import 'project_file_android_save_bridge.dart';
 import 'project_file_browser_bridge.dart';
 
 enum ProjectFileSaveStatus { saved, cancelled, failed }
@@ -81,8 +82,31 @@ class FilePickerProjectFileSavePicker implements ProjectFileSavePicker {
     Uint8List? bytes,
   }) async {
     final extension = p.extension(suggestedFileName).replaceFirst('.', '');
+    if (Platform.isAndroid) {
+      if (bytes == null) {
+        throw ArgumentError(
+            'Bytes are required when saving a file on Android.');
+      }
+      final outputPath = await saveFileOnAndroid(
+        fileName: suggestedFileName,
+        bytes: bytes,
+        mimeType: _mimeTypeForExtension(extension),
+      );
+      if (outputPath == null) {
+        return null;
+      }
+      return ProjectFileSaveSelection(
+        path: outputPath,
+        isPersistedByPlatform: true,
+      );
+    }
+
+    // Android/iOS persist the bytes through the system save UI. Avoiding
+    // custom extension filters keeps that flow stable for storage roots too.
     final allowedExtensions =
-        extension.isEmpty ? null : <String>[extension.toLowerCase()];
+        !requiresBytesBeforePicking && extension.isNotEmpty
+            ? <String>[extension.toLowerCase()]
+            : null;
     final type = allowedExtensions == null ? FileType.any : FileType.custom;
 
     if (requiresBytesBeforePicking) {
@@ -115,6 +139,26 @@ class FilePickerProjectFileSavePicker implements ProjectFileSavePicker {
       path: outputPath,
       isPersistedByPlatform: false,
     );
+  }
+
+  String _mimeTypeForExtension(String extension) {
+    switch (extension.toLowerCase()) {
+      case 'pdf':
+        return 'application/pdf';
+      case 'txt':
+        return 'text/plain';
+      case 'csv':
+        return 'text/csv';
+      case 'json':
+        return 'application/json';
+      case 'png':
+        return 'image/png';
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      default:
+        return 'application/octet-stream';
+    }
   }
 }
 

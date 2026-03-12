@@ -62,8 +62,8 @@ class _AppDialogScrollbarState extends State<AppDialogScrollbar> {
         interactive: true,
         radius: const Radius.circular(999),
         minThumbLength: 44,
-        crossAxisMargin: 4,
-        mainAxisMargin: 6,
+        crossAxisMargin: 8,
+        mainAxisMargin: 12,
         thickness: WidgetStateProperty.resolveWith<double?>((states) {
           if (states.contains(WidgetState.hovered) ||
               states.contains(WidgetState.dragged)) {
