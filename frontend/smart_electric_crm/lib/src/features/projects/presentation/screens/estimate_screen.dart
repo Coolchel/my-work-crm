@@ -2,30 +2,28 @@ import 'dart:async'; // For Timer
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../catalog/data/catalog_repository.dart';
-import '../../data/models/estimate_item_model.dart';
-import '../../data/models/stage_model.dart';
-import '../../data/repositories/project_repository.dart';
-import '../providers/project_providers.dart';
-import '../widgets/estimate/estimate_tab.dart';
-import '../widgets/estimate/estimate_app_bar_actions.dart';
-import '../dialogs/estimate/add_item_dialog.dart';
-import '../dialogs/estimate/quantity_input_dialog.dart';
-import '../dialogs/estimate/edit_item_dialog.dart';
-import '../dialogs/estimate/estimate_actions_dialog.dart';
-import '../dialogs/estimate/stage3_armature_calculator_dialog.dart';
-import '../../../engineering/presentation/dialogs/template_selection_dialog.dart';
-import '../../../engineering/presentation/providers/template_providers.dart';
-import '../../../engineering/data/models/template_models.dart';
-import '../../../settings/application/app_settings_controller.dart';
-import '../../../../core/navigation/app_navigation.dart';
-import '../../../../shared/presentation/dialogs/text_input_dialog.dart';
-import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
-import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
-
-import '../widgets/stages/stage_card.dart';
-import '../../../../core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
+import 'package:smart_electric_crm/src/features/engineering/data/models/template_models.dart';
+import 'package:smart_electric_crm/src/features/engineering/presentation/dialogs/template_selection_dialog.dart';
+import 'package:smart_electric_crm/src/features/engineering/presentation/providers/template_providers.dart';
+import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
+import 'package:smart_electric_crm/src/features/projects/data/models/stage_model.dart';
+import 'package:smart_electric_crm/src/features/projects/data/repositories/project_repository.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/estimate/add_item_dialog.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/estimate/edit_item_dialog.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/estimate/estimate_actions_dialog.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/estimate/quantity_input_dialog.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/estimate/stage3_armature_calculator_dialog.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_app_bar_actions.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_tab.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/widgets/stages/stage_card.dart';
+import 'package:smart_electric_crm/src/features/settings/application/app_settings_controller.dart';
+import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
+import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_dialog.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
   final String projectId;
