@@ -11,6 +11,7 @@ import 'package:printing/printing.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
+import 'package:smart_electric_crm/src/shared/services/temp_file_service.dart';
 
 import '../../../data/models/estimate_item_model.dart';
 import '../../../data/models/stage_model.dart';
@@ -394,6 +395,335 @@ class _HoverableMenuTriggerState extends State<_HoverableMenuTrigger> {
 
 // --- TEXT ACTIONS DIALOG ---
 
+enum EstimateTextDeliveryMode { copy, save, share }
+
+class EstimateTextDocument {
+  const EstimateTextDocument({
+    required this.viewMode,
+    required this.text,
+    required this.fileName,
+    required this.themeColor,
+  });
+
+  final String viewMode;
+  final String text;
+  final String fileName;
+  final MaterialColor themeColor;
+}
+
+class EstimateTextDocumentBuilder {
+  static List<String> availableModes({
+    required List<EstimateItemModel> works,
+    required List<EstimateItemModel> materials,
+    required bool showPrices,
+    required double markupPercent,
+  }) {
+    final modes = <String>[];
+    final hasPartnerWorks = works.any((w) => w.employerQuantity > 0);
+    if (works.isNotEmpty) {
+      modes.add('work_total');
+      if (hasPartnerWorks) {
+        modes.add('work_employer');
+      }
+      modes.add('work_our');
+    }
+    if (materials.isNotEmpty) {
+      modes.add('mat_noprice');
+      if (showPrices) {
+        modes.add('mat_price');
+        if (markupPercent > 0) {
+          modes.add('mat_markup');
+        }
+      }
+    }
+    return modes;
+  }
+
+  static EstimateTextDocument fromActionSelection({
+    required bool isWork,
+    required String type,
+    required String? projectAddress,
+    required StageModel stage,
+    required List<EstimateItemModel> works,
+    required List<EstimateItemModel> materials,
+    required bool showPrices,
+    required double markupPercent,
+  }) {
+    final viewMode = switch ((isWork, type)) {
+      (true, 'employer') => 'work_employer',
+      (true, 'our') => 'work_our',
+      (true, _) => 'work_total',
+      (false, 'price') => 'mat_price',
+      (false, 'markup') => 'mat_markup',
+      (false, _) => 'mat_noprice',
+    };
+
+    return fromViewMode(
+      viewMode: viewMode,
+      projectAddress: projectAddress,
+      stage: stage,
+      works: works,
+      materials: materials,
+      showPrices: showPrices,
+      markupPercent: markupPercent,
+    );
+  }
+
+  static EstimateTextDocument fromViewMode({
+    required String viewMode,
+    required String? projectAddress,
+    required StageModel stage,
+    required List<EstimateItemModel> works,
+    required List<EstimateItemModel> materials,
+    required bool showPrices,
+    required double markupPercent,
+  }) {
+    final stageTitle = EstimateReportGenerator.formatStageTitle(stage.title);
+    final address = projectAddress ?? 'Адрес не указан';
+
+    switch (viewMode) {
+      case 'work_total':
+        return EstimateTextDocument(
+          viewMode: viewMode,
+          text: EstimateReportGenerator.generateReportText(
+            works,
+            '$address - Работы - $stageTitle',
+            showPrices: true,
+            quantityType: 'total',
+            note: stage.workRemarks,
+          ),
+          fileName: '$address - Работы - $stageTitle.txt',
+          themeColor: Colors.green,
+        );
+      case 'work_employer':
+        return EstimateTextDocument(
+          viewMode: viewMode,
+          text: EstimateReportGenerator.generateReportText(
+            works,
+            '$address - Работы (ТВОИ) - $stageTitle',
+            showPrices: true,
+            quantityType: 'employer',
+            note: stage.workRemarks,
+          ),
+          fileName: '$address - Работы (ТВОИ) - $stageTitle.txt',
+          themeColor: Colors.green,
+        );
+      case 'work_our':
+        return EstimateTextDocument(
+          viewMode: viewMode,
+          text: EstimateReportGenerator.generateReportText(
+            works,
+            '$address - Работы (НАШИ) - $stageTitle',
+            showPrices: true,
+            quantityType: 'our',
+            note: stage.workRemarks,
+          ),
+          fileName: '$address - Работы (НАШИ) - $stageTitle.txt',
+          themeColor: Colors.green,
+        );
+      case 'mat_price':
+        return EstimateTextDocument(
+          viewMode: viewMode,
+          text: EstimateReportGenerator.generateReportText(
+            materials,
+            '$address - Материалы - $stageTitle',
+            showPrices: true,
+            markup: 0,
+            quantityType: 'total',
+            note: stage.materialRemarks,
+          ),
+          fileName: '$address - Материалы - $stageTitle.txt',
+          themeColor: Colors.blue,
+        );
+      case 'mat_markup':
+        return EstimateTextDocument(
+          viewMode: viewMode,
+          text: EstimateReportGenerator.generateReportText(
+            materials,
+            '$address - Материалы - $stageTitle',
+            showPrices: true,
+            markup: markupPercent,
+            quantityType: 'total',
+            note: stage.materialRemarks,
+          ),
+          fileName: '$address - Материалы - $stageTitle.txt',
+          themeColor: Colors.blue,
+        );
+      case 'mat_noprice':
+      default:
+        return EstimateTextDocument(
+          viewMode: viewMode,
+          text: EstimateReportGenerator.generateReportText(
+            materials,
+            '$address - Материалы - $stageTitle',
+            showPrices: false,
+            markup: 0,
+            quantityType: 'total',
+            note: stage.materialRemarks,
+          ),
+          fileName: '$address - Материалы - $stageTitle.txt',
+          themeColor: Colors.blue,
+        );
+    }
+  }
+}
+
+class EstimateTextActionHandler {
+  EstimateTextActionHandler({
+    ProjectFileSaveService? fileSaveService,
+  }) : _fileSaveService = fileSaveService ?? ProjectFileSaveService();
+
+  final ProjectFileSaveService _fileSaveService;
+
+  static bool get supportsFileShare =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.windows);
+
+  static bool get showsShareSection => !kIsWeb;
+
+  static String get shareSectionTitle =>
+      supportsFileShare ? 'Поделиться файлом' : 'Поделиться текстом';
+
+  static String get downloadSectionTitle => 'Скачать TXT';
+
+  Future<void> copyText(
+    BuildContext context,
+    EstimateTextDocument document,
+  ) async {
+    try {
+      if (kIsWeb) {
+        await copyTextInBrowser(document.text);
+      } else {
+        await Clipboard.setData(ClipboardData(text: document.text));
+      }
+
+      if (!context.mounted) {
+        return;
+      }
+
+      await ErrorFeedback.showMessage(
+        context,
+        'Текст сметы скопирован в буфер обмена.',
+        title: 'TXT',
+      );
+    } catch (_) {
+      if (!context.mounted) {
+        return;
+      }
+
+      await ErrorFeedback.showMessage(
+        context,
+        'Не удалось скопировать текст сметы в буфер обмена.',
+        title: 'TXT',
+      );
+    }
+  }
+
+  Future<void> saveText(
+    BuildContext context,
+    EstimateTextDocument document,
+  ) async {
+    final result = await _fileSaveService.saveBytes(
+      bytes: Uint8List.fromList(utf8.encode(document.text)),
+      displayName: ProjectFileSaveService.sanitizeFileName(
+        document.fileName,
+        fallback: 'estimate.txt',
+      ),
+    );
+
+    if (!context.mounted || result.isCancelled) {
+      return;
+    }
+
+    if (kIsWeb && result.isSaved) {
+      return;
+    }
+
+    await ErrorFeedback.showMessage(
+      context,
+      result.message,
+      title: 'TXT',
+    );
+  }
+
+  Future<void> shareText(
+    BuildContext context,
+    EstimateTextDocument document,
+  ) async {
+    try {
+      if (supportsFileShare) {
+        final shareFile = await _buildShareFile(document);
+        if (defaultTargetPlatform == TargetPlatform.android) {
+          await SharePlus.instance.share(
+            ShareParams(
+              files: [shareFile],
+            ),
+          );
+          return;
+        }
+
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [shareFile],
+            fileNameOverrides: [
+              ProjectFileSaveService.sanitizeFileName(
+                document.fileName,
+                fallback: 'estimate.txt',
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
+      await SharePlus.instance.share(
+        ShareParams(
+          text: document.text,
+          subject: document.fileName,
+          title: document.fileName,
+        ),
+      );
+    } catch (_) {
+      if (!context.mounted) {
+        return;
+      }
+
+      await ErrorFeedback.showMessage(
+        context,
+        'Не удалось выполнить отправку текстовой сметы.',
+        title: 'TXT',
+      );
+    }
+  }
+
+  Future<XFile> _buildShareFile(EstimateTextDocument document) async {
+    final file = await _createTempTextFile(document);
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return XFile(
+        file.path,
+        mimeType: 'application/octet-stream',
+      );
+    }
+    return XFile(file.path, mimeType: 'text/plain');
+  }
+
+  Future<File> _createTempTextFile(EstimateTextDocument document) async {
+    final output = await getTemporaryDirectory();
+    final fileName = ProjectFileSaveService.sanitizeFileName(
+      document.fileName,
+      fallback: 'estimate.txt',
+    );
+    final file = File('${output.path}/$fileName');
+    await file.writeAsBytes(
+      Uint8List.fromList(utf8.encode(document.text)),
+      flush: true,
+    );
+    TempFileService().track(file);
+    return file;
+  }
+}
+
 class EstimateTextActionsDialog extends ConsumerWidget
     with EstimateDialogHelpers {
   final String projectId;
@@ -402,8 +732,10 @@ class EstimateTextActionsDialog extends ConsumerWidget
   final List<EstimateItemModel> materials;
   final bool showPrices;
   final double markupPercent;
+  final EstimateTextActionHandler _textActionHandler =
+      EstimateTextActionHandler();
 
-  const EstimateTextActionsDialog({
+  EstimateTextActionsDialog({
     super.key,
     required this.projectId,
     required this.stage,
@@ -419,6 +751,10 @@ class EstimateTextActionsDialog extends ConsumerWidget
     final hasWorks = works.isNotEmpty;
     final hasMaterials = materials.isNotEmpty;
     final hasPartnerWorks = works.any((w) => w.employerQuantity > 0);
+    final hasTextActions = hasWorks || hasMaterials;
+    final showShareSection =
+        hasTextActions && EstimateTextActionHandler.showsShareSection;
+    final downloadBeforeShare = EstimateTextActionHandler.supportsFileShare;
     const themeColor = Colors.blueGrey; // Neutral theme for dialog logic
 
     return buildPremiumContainer(
@@ -453,12 +789,15 @@ class EstimateTextActionsDialog extends ConsumerWidget
                       color: Colors.grey.shade800,
                       onTap: (hasWorks || hasMaterials)
                           ? () {
+                              final rootContext =
+                                  Navigator.of(context, rootNavigator: true)
+                                      .context;
                               Navigator.pop(context);
-                              _showReport(context, ref);
+                              _showReport(rootContext, ref);
                             }
                           : () {},
                     ),
-                    if (hasWorks || hasMaterials)
+                    if (hasTextActions)
                       buildSectionHeader(
                         "Копировать текст",
                         icon: Icons.copy_rounded,
@@ -469,21 +808,50 @@ class EstimateTextActionsDialog extends ConsumerWidget
                       hasWorks,
                       hasPartnerWorks,
                       hasMaterials,
-                      share: false,
+                      deliveryMode: EstimateTextDeliveryMode.copy,
                     ),
-                    if (hasWorks || hasMaterials)
+                    if (downloadBeforeShare && hasTextActions)
                       buildSectionHeader(
-                        "Поделиться текстом",
+                        EstimateTextActionHandler.downloadSectionTitle,
+                        icon: Icons.download_rounded,
+                      ),
+                    if (downloadBeforeShare)
+                      _buildTextDeliverySection(
+                        context,
+                        ref,
+                        hasWorks,
+                        hasPartnerWorks,
+                        hasMaterials,
+                        deliveryMode: EstimateTextDeliveryMode.save,
+                      ),
+                    if (showShareSection)
+                      buildSectionHeader(
+                        EstimateTextActionHandler.shareSectionTitle,
                         icon: Icons.share_rounded,
                       ),
-                    _buildTextDeliverySection(
-                      context,
-                      ref,
-                      hasWorks,
-                      hasPartnerWorks,
-                      hasMaterials,
-                      share: true,
-                    ),
+                    if (showShareSection)
+                      _buildTextDeliverySection(
+                        context,
+                        ref,
+                        hasWorks,
+                        hasPartnerWorks,
+                        hasMaterials,
+                        deliveryMode: EstimateTextDeliveryMode.share,
+                      ),
+                    if (!downloadBeforeShare && hasTextActions)
+                      buildSectionHeader(
+                        EstimateTextActionHandler.downloadSectionTitle,
+                        icon: Icons.download_rounded,
+                      ),
+                    if (!downloadBeforeShare)
+                      _buildTextDeliverySection(
+                        context,
+                        ref,
+                        hasWorks,
+                        hasPartnerWorks,
+                        hasMaterials,
+                        deliveryMode: EstimateTextDeliveryMode.save,
+                      ),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -497,7 +865,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
 
   Widget _buildTextDeliverySection(BuildContext context, WidgetRef ref,
       bool hasWorks, bool hasPartnerWorks, bool hasMaterials,
-      {required bool share}) {
+      {required EstimateTextDeliveryMode deliveryMode}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -530,9 +898,16 @@ class EstimateTextActionsDialog extends ConsumerWidget
                 ),
             ]),
             onSelected: (val) async {
+              final rootContext =
+                  Navigator.of(context, rootNavigator: true).context;
               Navigator.pop(context);
-              await _processAction(context, ref,
-                  isWork: true, type: val, share: share);
+              await _processAction(
+                rootContext,
+                ref,
+                isWork: true,
+                type: val,
+                deliveryMode: deliveryMode,
+              );
             },
           ),
         if (hasMaterials)
@@ -563,74 +938,51 @@ class EstimateTextActionsDialog extends ConsumerWidget
                 ),
             ]),
             onSelected: (val) async {
+              final rootContext =
+                  Navigator.of(context, rootNavigator: true).context;
               Navigator.pop(context);
-              await _processAction(context, ref,
-                  isWork: false, type: val, share: share);
+              await _processAction(
+                rootContext,
+                ref,
+                isWork: false,
+                type: val,
+                deliveryMode: deliveryMode,
+              );
             },
           ),
       ],
     );
   }
 
-  /// Handles report generation and action (copy/share)
+  /// Handles report generation and action (copy/share/save)
   Future<void> _processAction(BuildContext context, WidgetRef ref,
-      {required bool isWork, required String type, required bool share}) async {
+      {required bool isWork,
+      required String type,
+      required EstimateTextDeliveryMode deliveryMode}) async {
     final project = await ref.read(projectByIdProvider(projectId).future);
     if (!context.mounted) return;
 
-    String text = "";
-    final stageTitle = EstimateReportGenerator.formatStageTitle(stage.title);
+    final document = EstimateTextDocumentBuilder.fromActionSelection(
+      isWork: isWork,
+      type: type,
+      projectAddress: project.address as String?,
+      stage: stage,
+      works: works,
+      materials: materials,
+      showPrices: showPrices,
+      markupPercent: markupPercent,
+    );
 
-    if (isWork) {
-      String titleType = "Работы";
-      String qType = 'total';
-
-      if (type == 'employer') {
-        titleType = "Работы (ТВОИ)";
-        qType = 'employer';
-      } else if (type == 'our') {
-        titleType = "Работы (НАШИ)";
-        qType = 'our';
-      }
-
-      final title = "${project.address} - $titleType - $stageTitle";
-      text = EstimateReportGenerator.generateReportText(works, title,
-          showPrices: true, quantityType: qType, note: stage.workRemarks);
-    } else {
-      final title = "${project.address} - Материалы - $stageTitle";
-      bool usePrices = showPrices;
-      double useMarkup = markupPercent > 0 ? markupPercent : 0;
-
-      // Dropdown override logic
-      if (type == 'noprice') {
-        usePrices = false;
-        useMarkup = 0;
-      } else if (type == 'price') {
-        usePrices = true;
-        useMarkup = 0;
-      } else if (type == 'markup') {
-        usePrices = true;
-        useMarkup = markupPercent;
-      }
-
-      text = EstimateReportGenerator.generateReportText(
-        materials,
-        title,
-        showPrices: usePrices,
-        markup: useMarkup,
-        quantityType: 'total',
-        note: stage.materialRemarks,
-      );
-    }
-
-    if (share) {
-      await Share.share(text);
-    } else {
-      await Clipboard.setData(ClipboardData(text: text));
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Скопировано в буфер обмена!")));
-      }
+    switch (deliveryMode) {
+      case EstimateTextDeliveryMode.copy:
+        await _textActionHandler.copyText(context, document);
+        break;
+      case EstimateTextDeliveryMode.save:
+        await _textActionHandler.saveText(context, document);
+        break;
+      case EstimateTextDeliveryMode.share:
+        await _textActionHandler.shareText(context, document);
+        break;
     }
   }
 
@@ -1186,25 +1538,17 @@ class ReportPreviewDialog extends StatefulWidget {
 class _ReportPreviewDialogState extends State<ReportPreviewDialog>
     with EstimateDialogHelpers {
   final ScrollController _previewScrollController = ScrollController();
-  final ProjectFileSaveService _fileSaveService = ProjectFileSaveService();
+  final EstimateTextActionHandler _textActionHandler =
+      EstimateTextActionHandler();
   late String _viewMode;
 
   List<String> get _availableModes {
-    final modes = <String>[];
-    final hasPartnerWorks = widget.works.any((w) => w.employerQuantity > 0);
-    if (widget.works.isNotEmpty) {
-      modes.add('work_total');
-      if (hasPartnerWorks) modes.add('work_employer');
-      modes.add('work_our');
-    }
-    if (widget.materials.isNotEmpty) {
-      modes.add('mat_noprice');
-      if (widget.showPrices) {
-        modes.add('mat_price');
-        if (widget.markupPercent > 0) modes.add('mat_markup');
-      }
-    }
-    return modes;
+    return EstimateTextDocumentBuilder.availableModes(
+      works: widget.works,
+      materials: widget.materials,
+      showPrices: widget.showPrices,
+      markupPercent: widget.markupPercent,
+    );
   }
 
   @override
@@ -1220,108 +1564,32 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
     super.dispose();
   }
 
-  String get _currentText {
-    final stageTitle =
-        EstimateReportGenerator.formatStageTitle(widget.stage.title);
-    final address = widget.project.address ?? 'Адрес не указан';
-    switch (_viewMode) {
-      case 'work_total':
-        return EstimateReportGenerator.generateReportText(
-            widget.works, "$address - Работы - $stageTitle",
-            showPrices: true,
-            quantityType: 'total',
-            note: widget.stage.workRemarks);
-      case 'work_employer':
-        return EstimateReportGenerator.generateReportText(
-            widget.works, "$address - Работы (ТВОИ) - $stageTitle",
-            showPrices: true,
-            quantityType: 'employer',
-            note: widget.stage.workRemarks);
-      case 'work_our':
-        return EstimateReportGenerator.generateReportText(
-            widget.works, "$address - Работы (НАШИ) - $stageTitle",
-            showPrices: true,
-            quantityType: 'our',
-            note: widget.stage.workRemarks);
-      case 'mat_noprice':
-        return EstimateReportGenerator.generateReportText(
-            widget.materials, "$address - Материалы - $stageTitle",
-            showPrices: false,
-            markup: 0,
-            quantityType: 'total',
-            note: widget.stage.materialRemarks);
-      case 'mat_price':
-        return EstimateReportGenerator.generateReportText(
-            widget.materials, "$address - Материалы - $stageTitle",
-            showPrices: true,
-            markup: 0,
-            quantityType: 'total',
-            note: widget.stage.materialRemarks);
-      case 'mat_markup':
-        return EstimateReportGenerator.generateReportText(
-            widget.materials, "$address - Материалы - $stageTitle",
-            showPrices: true,
-            markup: widget.markupPercent,
-            quantityType: 'total',
-            note: widget.stage.materialRemarks);
-      default:
-        return "";
-    }
-  }
+  EstimateTextDocument get _currentDocument =>
+      EstimateTextDocumentBuilder.fromViewMode(
+        viewMode: _viewMode,
+        projectAddress: widget.project.address as String?,
+        stage: widget.stage,
+        works: widget.works,
+        materials: widget.materials,
+        showPrices: widget.showPrices,
+        markupPercent: widget.markupPercent,
+      );
 
-  String get _currentFileName {
-    final stageTitle =
-        EstimateReportGenerator.formatStageTitle(widget.stage.title);
-    final address = widget.project.address ?? 'Адрес не указан';
-    switch (_viewMode) {
-      case 'work_total':
-        return '$address - Работы - $stageTitle.txt';
-      case 'work_employer':
-        return '$address - Работы (ТВОИ) - $stageTitle.txt';
-      case 'work_our':
-        return '$address - Работы (НАШИ) - $stageTitle.txt';
-      case 'mat_noprice':
-      case 'mat_price':
-      case 'mat_markup':
-        return '$address - Материалы - $stageTitle.txt';
-      default:
-        return 'estimate.txt';
-    }
-  }
+  String get _currentText => _currentDocument.text;
 
-  MaterialColor get _themeColor =>
-      _viewMode.startsWith('work') ? Colors.green : Colors.blue;
+  MaterialColor get _themeColor => _currentDocument.themeColor;
 
   Future<void> _saveCurrentText() async {
-    final result = await _fileSaveService.saveBytes(
-      bytes: Uint8List.fromList(utf8.encode(_currentText)),
-      displayName: ProjectFileSaveService.sanitizeFileName(
-        _currentFileName,
-        fallback: 'estimate.txt',
-      ),
-    );
-
-    if (!mounted || result.isCancelled) {
-      return;
-    }
-
-    if (result.isFailed) {
-      await ErrorFeedback.showMessage(
-        context,
-        result.message,
-        title: 'TXT',
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(result.message)),
-    );
+    await _textActionHandler.saveText(context, _currentDocument);
   }
 
   @override
   Widget build(BuildContext context) {
     final themeColor = _themeColor;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final useCompactActionRow =
+        (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) ||
+            (kIsWeb && screenWidth < 600);
     return buildPremiumContainer(
       context: context,
       themeColor: themeColor,
@@ -1417,49 +1685,62 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Center(
-                  child: Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    alignment: WrapAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 220,
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Clipboard.setData(
-                                ClipboardData(text: _currentText));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Скопировано!")),
-                            );
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: themeColor.shade800,
-                            side: BorderSide(color: themeColor.shade200),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                  child: useCompactActionRow
+                      ? SizedBox(
+                          width: double.infinity,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _buildPreviewActionButton(
+                                  themeColor: themeColor,
+                                  icon: Icons.copy_rounded,
+                                  label: "Копировать",
+                                  onPressed: () => _textActionHandler.copyText(
+                                    context,
+                                    _currentDocument,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildPreviewActionButton(
+                                  themeColor: themeColor,
+                                  icon: Icons.download_rounded,
+                                  label: "Скачать TXT",
+                                  onPressed: _saveCurrentText,
+                                ),
+                              ),
+                            ],
                           ),
-                          icon: const Icon(Icons.copy_rounded, size: 18),
-                          label: const Text("Копировать"),
+                        )
+                      : Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 220,
+                              child: _buildPreviewActionButton(
+                                themeColor: themeColor,
+                                icon: Icons.copy_rounded,
+                                label: "Копировать",
+                                onPressed: () => _textActionHandler.copyText(
+                                  context,
+                                  _currentDocument,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 220,
+                              child: _buildPreviewActionButton(
+                                themeColor: themeColor,
+                                icon: Icons.download_rounded,
+                                label: "Скачать TXT",
+                                onPressed: _saveCurrentText,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      SizedBox(
-                        width: 220,
-                        child: OutlinedButton.icon(
-                          onPressed: _saveCurrentText,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: themeColor.shade800,
-                            side: BorderSide(color: themeColor.shade200),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          icon: const Icon(Icons.download_rounded, size: 18),
-                          label: const Text("Сохранить TXT"),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
               const SizedBox(height: 32),
@@ -1472,6 +1753,7 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
 
   Widget _buildChip(String mode, String label, MaterialColor color) {
     final isSelected = _viewMode == mode;
+    final isDark = AppDesignTokens.isDark(context);
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
@@ -1479,18 +1761,45 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
         if (val) setState(() => _viewMode = mode);
       },
       selectedColor: color.shade100,
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor:
+          isDark ? color.shade900.withOpacity(0.18) : color.shade50,
       labelStyle: TextStyle(
-        color: isSelected ? color.shade900 : Colors.grey.shade700,
+        color: isSelected
+            ? color.shade900
+            : (isDark ? color.shade100 : color.shade800),
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
         fontSize: 13,
       ),
       side: BorderSide(
-        color: isSelected ? color.shade300 : Colors.grey.shade300,
+        color: isSelected
+            ? color.shade300
+            : (isDark ? color.shade700 : color.shade100),
         width: 1,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       showCheckmark: false,
+    );
+  }
+
+  Widget _buildPreviewActionButton({
+    required MaterialColor themeColor,
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: themeColor.shade800,
+        side: BorderSide(color: themeColor.shade200),
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      icon: Icon(icon, size: 18),
+      label: Text(
+        label,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 }

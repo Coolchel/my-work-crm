@@ -141,11 +141,28 @@ class ErrorFeedback {
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
 
+    _showFixedSnackBar(messenger, message);
+  }
+
+  static void showSnackBarMessage(
+    BuildContext context,
+    String message,
+  ) {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+
+    _showFixedSnackBar(messenger, message);
+  }
+
+  static void _showFixedSnackBar(
+    ScaffoldMessengerState messenger,
+    String message,
+  ) {
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
       SnackBar(
         content: Text(message),
-        behavior: SnackBarBehavior.floating,
+        behavior: SnackBarBehavior.fixed,
       ),
     );
   }
