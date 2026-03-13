@@ -2,17 +2,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../providers/project_providers.dart';
-import '../../data/models/project_model.dart';
-import 'add_project_screen.dart';
-import '../utils/project_stage_color_resolver.dart';
+import 'package:smart_electric_crm/src/features/projects/data/models/project_model.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/screens/add_project_screen.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/search/project_search_texts.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/utils/project_stage_color_resolver.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/widgets/project_search_result_tile.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
-import 'package:smart_electric_crm/src/features/projects/presentation/search/project_search_texts.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
-import 'package:smart_electric_crm/src/features/projects/presentation/widgets/project_search_result_tile.dart';
 
 // Filter enums
 enum SortOrder { newest, oldest }

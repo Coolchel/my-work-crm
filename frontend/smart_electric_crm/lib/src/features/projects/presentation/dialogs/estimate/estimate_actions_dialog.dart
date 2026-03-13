@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import 'dart:io';
@@ -462,53 +463,26 @@ class EstimateTextActionsDialog extends ConsumerWidget
                         "Копировать текст",
                         icon: Icons.copy_rounded,
                       ),
-                    if (hasWorks)
-                      buildWideActionBtn(
-                        context,
-                        label: "Заказчик (Работы)",
-                        icon: Icons.person_outline,
-                        color: Colors.green,
-                        onTap: () async {
-                          Navigator.pop(context);
-                          await _processAction(context, ref,
-                              isWork: true, type: 'total', share: false);
-                        },
-                      ),
-                    if (hasPartnerWorks)
-                      buildWideActionBtn(
-                        context,
-                        label: "Контрагент (Работы)",
-                        icon: Icons.handshake_outlined,
-                        color: Colors.green,
-                        onTap: () async {
-                          Navigator.pop(context);
-                          await _processAction(context, ref,
-                              isWork: true, type: 'employer', share: false);
-                        },
-                      ),
-                    if (hasMaterials)
-                      buildWideActionBtn(
-                        context,
-                        label: "Материалы (Текущие настройки)",
-                        icon: Icons.inventory_2_outlined,
-                        color: Colors.blue.shade700,
-                        onTap: () async {
-                          Navigator.pop(context);
-                          await _processAction(context, ref,
-                              isWork: false, type: 'total', share: false);
-                        },
-                      ),
-                    if (hasWorks || hasMaterials)
-                      buildSectionHeader(
-                        "Поделиться текстом",
-                        icon: Icons.share_rounded,
-                      ),
-                    _buildShareSection(
+                    _buildTextDeliverySection(
                       context,
                       ref,
                       hasWorks,
                       hasPartnerWorks,
                       hasMaterials,
+                      share: false,
+                    ),
+                    if (hasWorks || hasMaterials)
+                      buildSectionHeader(
+                        "Поделиться текстом",
+                        icon: Icons.share_rounded,
+                      ),
+                    _buildTextDeliverySection(
+                      context,
+                      ref,
+                      hasWorks,
+                      hasPartnerWorks,
+                      hasMaterials,
+                      share: true,
                     ),
                     const SizedBox(height: 24),
                   ],
@@ -521,15 +495,16 @@ class EstimateTextActionsDialog extends ConsumerWidget
     );
   }
 
-  Widget _buildShareSection(BuildContext context, WidgetRef ref, bool hasWorks,
-      bool hasPartnerWorks, bool hasMaterials) {
+  Widget _buildTextDeliverySection(BuildContext context, WidgetRef ref,
+      bool hasWorks, bool hasPartnerWorks, bool hasMaterials,
+      {required bool share}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (hasWorks)
           buildMenuBtn(
             context,
-            label: "Работы (Всего)",
+            label: "Работы",
             icon: Icons.work_outline,
             color: Colors.green,
             items: buildPopupMenuItemsWithDividers([
@@ -557,55 +532,42 @@ class EstimateTextActionsDialog extends ConsumerWidget
             onSelected: (val) async {
               Navigator.pop(context);
               await _processAction(context, ref,
-                  isWork: true, type: val, share: true);
+                  isWork: true, type: val, share: share);
             },
           ),
         if (hasMaterials)
-          Builder(builder: (context) {
-            String label = "Материалы";
-            // Logic for label based on current settings
-            if (!showPrices) {
-              label = "Материалы: Без цен";
-            } else if (markupPercent > 0) {
-              label =
-                  "Материалы: С наценкой (+${markupPercent.toStringAsFixed(0)}%)";
-            } else {
-              label = "Материалы: С ценами";
-            }
-
-            return buildMenuBtn(
-              context,
-              label: label,
-              icon: Icons.inventory_2_outlined,
-              color: Colors.blue.shade700,
-              items: buildPopupMenuItemsWithDividers([
+          buildMenuBtn(
+            context,
+            label: "Материалы",
+            icon: Icons.inventory_2_outlined,
+            color: Colors.blue.shade700,
+            items: buildPopupMenuItemsWithDividers([
+              buildPopupMenuItem(
+                value: 'noprice',
+                icon: Icons.list_alt_rounded,
+                text: "Без цен",
+                color: Colors.blue.shade700,
+              ),
+              buildPopupMenuItem(
+                value: 'price',
+                icon: Icons.attach_money_rounded,
+                text: "С ценами",
+                color: Colors.blue.shade700,
+              ),
+              if (markupPercent > 0)
                 buildPopupMenuItem(
-                  value: 'noprice',
-                  icon: Icons.list_alt_rounded,
-                  text: "Без цен",
+                  value: 'markup',
+                  icon: Icons.trending_up_rounded,
+                  text: "С наценкой (+${markupPercent.toStringAsFixed(0)}%)",
                   color: Colors.blue.shade700,
                 ),
-                buildPopupMenuItem(
-                  value: 'price',
-                  icon: Icons.attach_money_rounded,
-                  text: "С ценами",
-                  color: Colors.blue.shade700,
-                ),
-                if (markupPercent > 0)
-                  buildPopupMenuItem(
-                    value: 'markup',
-                    icon: Icons.trending_up_rounded,
-                    text: "С наценкой (+${markupPercent.toStringAsFixed(0)}%)",
-                    color: Colors.blue.shade700,
-                  ),
-              ]),
-              onSelected: (val) async {
-                Navigator.pop(context);
-                await _processAction(context, ref,
-                    isWork: false, type: val, share: true);
-              },
-            );
-          }),
+            ]),
+            onSelected: (val) async {
+              Navigator.pop(context);
+              await _processAction(context, ref,
+                  isWork: false, type: val, share: share);
+            },
+          ),
       ],
     );
   }
@@ -781,51 +743,13 @@ class _EstimatePdfActionsDialogState
                       "Открыть в PDF",
                       icon: Icons.open_in_new_rounded,
                     ),
-                    if (hasWorks)
-                      buildWideActionBtn(
-                        context,
-                        label: "Заказчик (Работы)",
-                        icon: Icons.person_outline,
-                        color: Colors.green,
-                        enabled: !_isBusy,
-                        onTap: () => _runPdfAction(
-                          context,
-                          const EstimatePdfActionRequest(
-                            isWork: true,
-                            type: 'total',
-                          ),
-                        ),
-                      ),
-                    if (hasPartnerWorks)
-                      buildWideActionBtn(
-                        context,
-                        label: "Контрагент (Работы)",
-                        icon: Icons.handshake_outlined,
-                        color: Colors.green,
-                        enabled: !_isBusy,
-                        onTap: () => _runPdfAction(
-                          context,
-                          const EstimatePdfActionRequest(
-                            isWork: true,
-                            type: 'employer',
-                          ),
-                        ),
-                      ),
-                    if (hasMaterials)
-                      buildWideActionBtn(
-                        context,
-                        label: "Материалы (Текущие настройки)",
-                        icon: Icons.inventory_2_outlined,
-                        color: Colors.blue.shade700,
-                        enabled: !_isBusy,
-                        onTap: () => _runPdfAction(
-                          context,
-                          const EstimatePdfActionRequest(
-                            isWork: false,
-                            showPrices: true,
-                          ),
-                        ),
-                      ),
+                    _buildPdfDeliverySection(
+                      context,
+                      hasWorks,
+                      hasPartnerWorks,
+                      hasMaterials,
+                      deliveryMode: EstimatePdfDeliveryMode.open,
+                    ),
                     if (kIsWeb) ...[
                       buildSectionHeader(
                         "Скачать PDF",
@@ -889,7 +813,7 @@ class _EstimatePdfActionsDialogState
         if (hasWorks)
           buildMenuBtn(
             context,
-            label: "Работы (Всего)",
+            label: "Работы",
             icon: Icons.work_outline,
             color: Colors.green,
             enabled: !_isBusy,
@@ -907,6 +831,13 @@ class _EstimatePdfActionsDialogState
                   text: "Для Контрагента",
                   color: Colors.green,
                 ),
+              if (hasPartnerWorks)
+                buildPopupMenuItem(
+                  value: 'our',
+                  icon: Icons.engineering_rounded,
+                  text: "Наши (Остаток)",
+                  color: Colors.green,
+                ),
             ]),
             onSelected: (val) => _runPdfAction(
               context,
@@ -918,78 +849,66 @@ class _EstimatePdfActionsDialogState
             ),
           ),
         if (hasMaterials)
-          Builder(builder: (context) {
-            String label = "Материалы";
-            if (!widget.showPrices) {
-              label = "Материалы: Без цен";
-            } else if (widget.markupPercent > 0) {
-              label =
-                  "Материалы: С наценкой (+${widget.markupPercent.toStringAsFixed(0)}%)";
-            } else {
-              label = "Материалы: С ценами";
-            }
-
-            return buildMenuBtn(
-              context,
-              label: label,
-              icon: Icons.inventory_2_outlined,
-              color: Colors.blue.shade700,
-              enabled: !_isBusy,
-              items: buildPopupMenuItemsWithDividers([
+          buildMenuBtn(
+            context,
+            label: "Материалы",
+            icon: Icons.inventory_2_outlined,
+            color: Colors.blue.shade700,
+            enabled: !_isBusy,
+            items: buildPopupMenuItemsWithDividers([
+              buildPopupMenuItem(
+                value: 'noprice',
+                icon: Icons.list_alt_rounded,
+                text: "Без цен",
+                color: Colors.blue.shade700,
+              ),
+              buildPopupMenuItem(
+                value: 'price',
+                icon: Icons.attach_money_rounded,
+                text: "С ценами",
+                color: Colors.blue.shade700,
+              ),
+              if (widget.markupPercent > 0)
                 buildPopupMenuItem(
-                  value: 'noprice',
-                  icon: Icons.list_alt_rounded,
-                  text: "Без цен",
+                  value: 'markup',
+                  icon: Icons.trending_up_rounded,
+                  text:
+                      "С наценкой (+${widget.markupPercent.toStringAsFixed(0)}%)",
                   color: Colors.blue.shade700,
                 ),
-                buildPopupMenuItem(
-                  value: 'price',
-                  icon: Icons.attach_money_rounded,
-                  text: "С ценами",
-                  color: Colors.blue.shade700,
-                ),
-                if (widget.markupPercent > 0)
-                  buildPopupMenuItem(
-                    value: 'markup',
-                    icon: Icons.trending_up_rounded,
-                    text:
-                        "С наценкой (+${widget.markupPercent.toStringAsFixed(0)}%)",
-                    color: Colors.blue.shade700,
+            ]),
+            onSelected: (val) {
+              if (val == 'noprice') {
+                _runPdfAction(
+                  context,
+                  EstimatePdfActionRequest(
+                    isWork: false,
+                    showPrices: false,
+                    deliveryMode: deliveryMode,
                   ),
-              ]),
-              onSelected: (val) {
-                if (val == 'noprice') {
-                  _runPdfAction(
-                    context,
-                    EstimatePdfActionRequest(
-                      isWork: false,
-                      showPrices: false,
-                      deliveryMode: deliveryMode,
-                    ),
-                  );
-                } else if (val == 'price') {
-                  _runPdfAction(
-                    context,
-                    EstimatePdfActionRequest(
-                      isWork: false,
-                      showPrices: true,
-                      deliveryMode: deliveryMode,
-                    ),
-                  );
-                } else if (val == 'markup') {
-                  _runPdfAction(
-                    context,
-                    EstimatePdfActionRequest(
-                      isWork: false,
-                      showPrices: true,
-                      markup: widget.markupPercent,
-                      deliveryMode: deliveryMode,
-                    ),
-                  );
-                }
-              },
-            );
-          }),
+                );
+              } else if (val == 'price') {
+                _runPdfAction(
+                  context,
+                  EstimatePdfActionRequest(
+                    isWork: false,
+                    showPrices: true,
+                    deliveryMode: deliveryMode,
+                  ),
+                );
+              } else if (val == 'markup') {
+                _runPdfAction(
+                  context,
+                  EstimatePdfActionRequest(
+                    isWork: false,
+                    showPrices: true,
+                    markup: widget.markupPercent,
+                    deliveryMode: deliveryMode,
+                  ),
+                );
+              }
+            },
+          ),
       ],
     );
   }
@@ -1028,6 +947,7 @@ class _EstimatePdfActionsDialogState
     String titleType = request.isWork ? "Работы" : "Материалы";
     String titleSuffix = "";
     if (request.type == 'employer') titleSuffix = " - ТВОИ";
+    if (request.type == 'our') titleSuffix = " - НАШИ";
 
     final project =
         await ref.read(projectByIdProvider(widget.projectId).future);
@@ -1183,6 +1103,23 @@ class _EstimatePdfActionsDialogState
     required String fileName,
     required String title,
   }) async {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
+      final output = await getTemporaryDirectory();
+      final file = File("${output.path}/$fileName");
+      await file.writeAsBytes(bytes, flush: true);
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path, mimeType: 'application/pdf')],
+          subject: title,
+          text: title,
+          title: title,
+          fileNameOverrides: [fileName],
+        ),
+      );
+      return;
+    }
+
     final didShare = await Printing.sharePdf(
       bytes: bytes,
       filename: fileName,
@@ -1249,6 +1186,7 @@ class ReportPreviewDialog extends StatefulWidget {
 class _ReportPreviewDialogState extends State<ReportPreviewDialog>
     with EstimateDialogHelpers {
   final ScrollController _previewScrollController = ScrollController();
+  final ProjectFileSaveService _fileSaveService = ProjectFileSaveService();
   late String _viewMode;
 
   List<String> get _availableModes {
@@ -1331,8 +1269,55 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
     }
   }
 
+  String get _currentFileName {
+    final stageTitle =
+        EstimateReportGenerator.formatStageTitle(widget.stage.title);
+    final address = widget.project.address ?? 'Адрес не указан';
+    switch (_viewMode) {
+      case 'work_total':
+        return '$address - Работы - $stageTitle.txt';
+      case 'work_employer':
+        return '$address - Работы (ТВОИ) - $stageTitle.txt';
+      case 'work_our':
+        return '$address - Работы (НАШИ) - $stageTitle.txt';
+      case 'mat_noprice':
+      case 'mat_price':
+      case 'mat_markup':
+        return '$address - Материалы - $stageTitle.txt';
+      default:
+        return 'estimate.txt';
+    }
+  }
+
   MaterialColor get _themeColor =>
       _viewMode.startsWith('work') ? Colors.green : Colors.blue;
+
+  Future<void> _saveCurrentText() async {
+    final result = await _fileSaveService.saveBytes(
+      bytes: Uint8List.fromList(utf8.encode(_currentText)),
+      displayName: ProjectFileSaveService.sanitizeFileName(
+        _currentFileName,
+        fallback: 'estimate.txt',
+      ),
+    );
+
+    if (!mounted || result.isCancelled) {
+      return;
+    }
+
+    if (result.isFailed) {
+      await ErrorFeedback.showMessage(
+        context,
+        result.message,
+        title: 'TXT',
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(result.message)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1432,25 +1417,48 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Center(
-                  child: SizedBox(
-                    width: 220,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: _currentText));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Скопировано!")),
-                        );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: themeColor.shade800,
-                        side: BorderSide(color: themeColor.shade200),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 220,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Clipboard.setData(
+                                ClipboardData(text: _currentText));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Скопировано!")),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: themeColor.shade800,
+                            side: BorderSide(color: themeColor.shade200),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.copy_rounded, size: 18),
+                          label: const Text("Копировать"),
+                        ),
                       ),
-                      icon: const Icon(Icons.copy_rounded, size: 18),
-                      label: const Text("Копировать"),
-                    ),
+                      SizedBox(
+                        width: 220,
+                        child: OutlinedButton.icon(
+                          onPressed: _saveCurrentText,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: themeColor.shade800,
+                            side: BorderSide(color: themeColor.shade200),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.download_rounded, size: 18),
+                          label: const Text("Сохранить TXT"),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

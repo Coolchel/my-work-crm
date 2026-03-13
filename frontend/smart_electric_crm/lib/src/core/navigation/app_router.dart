@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../features/auth/presentation/login_screen.dart';
-import '../../features/auth/presentation/providers/auth_provider.dart';
-import '../../features/catalog/presentation/category_list_screen.dart';
-import '../../features/finance/presentation/screens/finance_screen.dart';
-import '../../features/home/presentation/screens/home_screen.dart';
-import '../../features/projects/presentation/providers/project_providers.dart';
-import '../../features/projects/presentation/screens/estimate_screen.dart';
-import '../../features/projects/presentation/screens/file_viewer_screen.dart';
-import '../../features/projects/presentation/screens/project_detail_screen.dart';
-import '../../features/projects/presentation/screens/project_list_screen.dart';
-import '../../features/settings/application/app_settings_controller.dart';
-import '../../features/settings/presentation/screens/settings_screen.dart';
-import '../../features/statistics/presentation/screens/statistics_screen.dart';
-import '../../features/welcome/presentation/screens/welcome_screen.dart';
-import 'app_navigation.dart';
-import 'route_bootstrap_storage.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
+import 'package:smart_electric_crm/src/core/navigation/route_bootstrap_storage.dart';
+import 'package:smart_electric_crm/src/features/auth/presentation/login_screen.dart';
+import 'package:smart_electric_crm/src/features/auth/presentation/providers/auth_provider.dart';
+import 'package:smart_electric_crm/src/features/catalog/presentation/category_list_screen.dart';
+import 'package:smart_electric_crm/src/features/finance/presentation/screens/finance_screen.dart';
+import 'package:smart_electric_crm/src/features/home/presentation/screens/home_screen.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/screens/estimate_screen.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/screens/file_viewer_screen.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/screens/project_detail_screen.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/screens/project_list_screen.dart';
+import 'package:smart_electric_crm/src/features/settings/application/app_settings_controller.dart';
+import 'package:smart_electric_crm/src/features/settings/presentation/screens/settings_screen.dart';
+import 'package:smart_electric_crm/src/features/statistics/presentation/screens/statistics_screen.dart';
+import 'package:smart_electric_crm/src/features/welcome/presentation/screens/welcome_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // Deep routes still use push to preserve native stack behavior, so enable

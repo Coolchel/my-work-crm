@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/api/api_exception.dart';
 import '../../data/auth_repository.dart';
 
@@ -30,35 +31,44 @@ class Auth extends _$Auth {
   }
 
   Future<void> checkAuth() async {
-    ref.read(postAuthDestinationProvider.notifier).state =
-        PostAuthDestination.restoreRequestedLocation;
-    state = AuthStatus.loading;
-    final repo = await ref.read(authRepositoryProvider.future);
-
-    final accessToken = repo.getAccessToken();
-    if (accessToken == null) {
-      state = AuthStatus.unauthenticated;
-      return;
-    }
-
     try {
-      await repo.getUser();
-      state = AuthStatus.authenticated;
-      return;
-    } catch (_) {
-      final refreshed = await repo.refreshToken();
-      if (!refreshed) {
-        await repo.logout();
+      ref.read(postAuthDestinationProvider.notifier).state =
+          PostAuthDestination.restoreRequestedLocation;
+      state = AuthStatus.loading;
+
+      final repo = await ref
+          .read(authRepositoryProvider.future)
+          .timeout(const Duration(seconds: 15));
+
+      final accessToken = repo.getAccessToken();
+      if (accessToken == null) {
         state = AuthStatus.unauthenticated;
         return;
       }
-    }
 
-    try {
-      await repo.getUser();
-      state = AuthStatus.authenticated;
-    } catch (_) {
-      await repo.logout();
+      try {
+        await repo.getUser().timeout(const Duration(seconds: 15));
+        state = AuthStatus.authenticated;
+        return;
+      } catch (_) {
+        final refreshed =
+            await repo.refreshToken().timeout(const Duration(seconds: 15));
+        if (!refreshed) {
+          await repo.logout();
+          state = AuthStatus.unauthenticated;
+          return;
+        }
+      }
+
+      try {
+        await repo.getUser().timeout(const Duration(seconds: 15));
+        state = AuthStatus.authenticated;
+      } catch (_) {
+        await repo.logout();
+        state = AuthStatus.unauthenticated;
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Auth.checkAuth failed: $error\n$stackTrace');
       state = AuthStatus.unauthenticated;
     }
   }

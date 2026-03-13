@@ -3,13 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../data/models/statistics_model.dart';
-import '../../data/repositories/statistics_repository.dart';
-import '../widgets/work_dynamics_chart.dart';
-import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
-import '../../../../shared/presentation/widgets/help_tooltip_icon.dart';
-import '../../../../core/theme/app_design_tokens.dart';
-import '../../../../core/navigation/app_navigation.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/features/statistics/data/models/statistics_model.dart';
+import 'package:smart_electric_crm/src/features/statistics/data/repositories/statistics_repository.dart';
+import 'package:smart_electric_crm/src/features/statistics/presentation/widgets/work_dynamics_chart.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/help_tooltip_icon.dart';
 
 class StatisticsScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBackPressed;
