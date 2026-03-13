@@ -250,44 +250,58 @@ mixin EstimateDialogHelpers {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
-      child: Theme(
-        data: theme.copyWith(
-          hoverColor: menuHoverColor,
-          highlightColor: menuHoverColor,
-          splashColor: menuHoverColor,
-          popupMenuTheme: theme.popupMenuTheme.copyWith(
-            color: theme.colorScheme.surfaceContainer,
-            surfaceTintColor: Colors.transparent,
-          ),
-        ),
-        child: PopupMenuButton<String>(
-          enabled: enabled,
-          onSelected: onSelected,
-          itemBuilder: (context) => items,
-          offset: const Offset(0, 56), // Show menu below button
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 3,
-          shadowColor: Colors.black.withOpacity(0.2),
-          splashRadius: 24,
-          position: _isTouchPlatform
-              ? PopupMenuPosition.under
-              : PopupMenuPosition.over,
-          constraints: _isTouchPlatform
-              ? const BoxConstraints(minWidth: 220)
-              : const BoxConstraints(minWidth: 280), // Reasonable min width
-          child: Opacity(
-            opacity: enabled ? 1.0 : 0.6,
-            child: _isTouchPlatform
-                ? triggerContent
-                : _HoverableMenuTrigger(
-                    enabled: enabled,
-                    hoverColor: triggerHoverColor,
-                    borderRadius: BorderRadius.circular(14),
-                    child: triggerContent,
-                  ),
-          ),
-        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final menuWidth = constraints.maxWidth;
+          return TooltipVisibility(
+            visible: false,
+            child: Theme(
+              data: theme.copyWith(
+                hoverColor: menuHoverColor,
+                highlightColor: menuHoverColor,
+                splashColor: menuHoverColor,
+                popupMenuTheme: theme.popupMenuTheme.copyWith(
+                  color: theme.colorScheme.surfaceContainer,
+                  surfaceTintColor: Colors.transparent,
+                ),
+              ),
+              child: PopupMenuButton<String>(
+                enabled: enabled,
+                tooltip: '',
+                padding: EdgeInsets.zero,
+                menuPadding: EdgeInsets.zero,
+                onSelected: onSelected,
+                itemBuilder: (context) => items,
+                offset: const Offset(0, 56), // Show menu below button
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                clipBehavior: Clip.antiAlias,
+                elevation: 3,
+                shadowColor: Colors.black.withOpacity(0.2),
+                splashRadius: 24,
+                position: _isTouchPlatform
+                    ? PopupMenuPosition.under
+                    : PopupMenuPosition.over,
+                constraints: BoxConstraints(
+                  minWidth: menuWidth,
+                  maxWidth: menuWidth,
+                ),
+                child: Opacity(
+                  opacity: enabled ? 1.0 : 0.6,
+                  child: _isTouchPlatform
+                      ? triggerContent
+                      : _HoverableMenuTrigger(
+                          enabled: enabled,
+                          hoverColor: triggerHoverColor,
+                          borderRadius: BorderRadius.circular(14),
+                          child: triggerContent,
+                        ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -301,43 +315,8 @@ mixin EstimateDialogHelpers {
   }) {
     return PopupMenuItem<String>(
       value: value,
-      height: 48,
-      padding: EdgeInsets.zero,
-      child: _isTouchPlatform
-          ? _StaticPopupMenuItemContent(
-              icon: icon,
-              text: text,
-              color: color,
-            )
-          : _HoverablePopupMenuItemContent(
-              icon: icon,
-              text: text,
-              color: color,
-            ),
-    );
-  }
-}
-
-class _StaticPopupMenuItemContent extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final Color color;
-
-  const _StaticPopupMenuItemContent({
-    required this.icon,
-    required this.text,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minHeight: 40),
+      height: 56,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-      ),
       child: Row(
         children: [
           Icon(icon, color: color, size: 20),
@@ -355,6 +334,19 @@ class _StaticPopupMenuItemContent extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  List<PopupMenuEntry<String>> buildPopupMenuItemsWithDividers(
+    List<PopupMenuItem<String>> items,
+  ) {
+    final entries = <PopupMenuEntry<String>>[];
+    for (var index = 0; index < items.length; index++) {
+      if (index > 0) {
+        entries.add(const PopupMenuDivider(height: 1));
+      }
+      entries.add(items[index]);
+    }
+    return entries;
   }
 }
 
@@ -393,65 +385,6 @@ class _HoverableMenuTriggerState extends State<_HoverableMenuTrigger> {
             borderRadius: widget.borderRadius,
           ),
           child: widget.child,
-        ),
-      ),
-    );
-  }
-}
-
-class _HoverablePopupMenuItemContent extends StatefulWidget {
-  final IconData icon;
-  final String text;
-  final Color color;
-
-  const _HoverablePopupMenuItemContent({
-    required this.icon,
-    required this.text,
-    required this.color,
-  });
-
-  @override
-  State<_HoverablePopupMenuItemContent> createState() =>
-      _HoverablePopupMenuItemContentState();
-}
-
-class _HoverablePopupMenuItemContentState
-    extends State<_HoverablePopupMenuItemContent> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = AppDesignTokens.isDark(context);
-    const baseColor = Colors.transparent;
-    final hoverColor = widget.color.withOpacity(isDark ? 0.22 : 0.12);
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 120),
-        constraints: const BoxConstraints(minHeight: 40),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: _isHovered ? hoverColor : baseColor,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Icon(widget.icon, color: widget.color, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                widget.text,
-                style: TextStyle(
-                  color: widget.color,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -599,29 +532,28 @@ class EstimateTextActionsDialog extends ConsumerWidget
             label: "Работы (Всего)",
             icon: Icons.work_outline,
             color: Colors.green,
-            items: [
+            items: buildPopupMenuItemsWithDividers([
               buildPopupMenuItem(
                 value: 'total',
                 icon: Icons.person_rounded,
                 text: "Для Заказчика",
                 color: Colors.green,
               ),
-              if (hasPartnerWorks) ...[
-                const PopupMenuDivider(),
+              if (hasPartnerWorks)
                 buildPopupMenuItem(
                   value: 'employer',
                   icon: Icons.handshake_rounded,
                   text: "Для Контрагента",
                   color: Colors.green,
                 ),
+              if (hasPartnerWorks)
                 buildPopupMenuItem(
                   value: 'our',
                   icon: Icons.engineering_rounded,
                   text: "Наши (Остаток)",
                   color: Colors.green,
                 ),
-              ]
-            ],
+            ]),
             onSelected: (val) async {
               Navigator.pop(context);
               await _processAction(context, ref,
@@ -646,14 +578,13 @@ class EstimateTextActionsDialog extends ConsumerWidget
               label: label,
               icon: Icons.inventory_2_outlined,
               color: Colors.blue.shade700,
-              items: [
+              items: buildPopupMenuItemsWithDividers([
                 buildPopupMenuItem(
                   value: 'noprice',
                   icon: Icons.list_alt_rounded,
                   text: "Без цен",
                   color: Colors.blue.shade700,
                 ),
-                const PopupMenuDivider(),
                 buildPopupMenuItem(
                   value: 'price',
                   icon: Icons.attach_money_rounded,
@@ -667,7 +598,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
                     text: "С наценкой (+${markupPercent.toStringAsFixed(0)}%)",
                     color: Colors.blue.shade700,
                   ),
-              ],
+              ]),
               onSelected: (val) async {
                 Navigator.pop(context);
                 await _processAction(context, ref,
@@ -814,8 +745,9 @@ class _EstimatePdfActionsDialogState
   final ProjectFileSaveService _fileSaveService = ProjectFileSaveService();
 
   bool get _showsPdfNativeDownloadMenu =>
-      defaultTargetPlatform == TargetPlatform.windows ||
-      defaultTargetPlatform == TargetPlatform.android;
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.android);
 
   @override
   Widget build(BuildContext context) {
@@ -899,54 +831,13 @@ class _EstimatePdfActionsDialogState
                         "Скачать PDF",
                         icon: Icons.download_rounded,
                       ),
-                      if (hasWorks)
-                        buildWideActionBtn(
-                          context,
-                          label: "Заказчик (Работы)",
-                          icon: Icons.person_outline,
-                          color: Colors.green,
-                          enabled: !_isBusy,
-                          onTap: () => _runPdfAction(
-                            context,
-                            const EstimatePdfActionRequest(
-                              isWork: true,
-                              type: 'total',
-                              deliveryMode: EstimatePdfDeliveryMode.download,
-                            ),
-                          ),
-                        ),
-                      if (hasPartnerWorks)
-                        buildWideActionBtn(
-                          context,
-                          label: "Контрагент (Работы)",
-                          icon: Icons.handshake_outlined,
-                          color: Colors.green,
-                          enabled: !_isBusy,
-                          onTap: () => _runPdfAction(
-                            context,
-                            const EstimatePdfActionRequest(
-                              isWork: true,
-                              type: 'employer',
-                              deliveryMode: EstimatePdfDeliveryMode.download,
-                            ),
-                          ),
-                        ),
-                      if (hasMaterials)
-                        buildWideActionBtn(
-                          context,
-                          label: "Материалы (Текущие настройки)",
-                          icon: Icons.inventory_2_outlined,
-                          color: Colors.blue.shade700,
-                          enabled: !_isBusy,
-                          onTap: () => _runPdfAction(
-                            context,
-                            const EstimatePdfActionRequest(
-                              isWork: false,
-                              showPrices: true,
-                              deliveryMode: EstimatePdfDeliveryMode.download,
-                            ),
-                          ),
-                        ),
+                      _buildPdfDeliverySection(
+                        context,
+                        hasWorks,
+                        hasPartnerWorks,
+                        hasMaterials,
+                        deliveryMode: EstimatePdfDeliveryMode.download,
+                      ),
                     ],
                     if (_showsPdfNativeDownloadMenu) ...[
                       buildSectionHeader(
@@ -1002,23 +893,21 @@ class _EstimatePdfActionsDialogState
             icon: Icons.work_outline,
             color: Colors.green,
             enabled: !_isBusy,
-            items: [
+            items: buildPopupMenuItemsWithDividers([
               buildPopupMenuItem(
                 value: 'total',
                 icon: Icons.person_rounded,
                 text: "Для Заказчика",
                 color: Colors.green,
               ),
-              if (hasPartnerWorks) ...[
-                const PopupMenuDivider(),
+              if (hasPartnerWorks)
                 buildPopupMenuItem(
                   value: 'employer',
                   icon: Icons.handshake_rounded,
                   text: "Для Контрагента",
                   color: Colors.green,
                 ),
-              ]
-            ],
+            ]),
             onSelected: (val) => _runPdfAction(
               context,
               EstimatePdfActionRequest(
@@ -1046,14 +935,13 @@ class _EstimatePdfActionsDialogState
               icon: Icons.inventory_2_outlined,
               color: Colors.blue.shade700,
               enabled: !_isBusy,
-              items: [
+              items: buildPopupMenuItemsWithDividers([
                 buildPopupMenuItem(
                   value: 'noprice',
                   icon: Icons.list_alt_rounded,
                   text: "Без цен",
                   color: Colors.blue.shade700,
                 ),
-                const PopupMenuDivider(),
                 buildPopupMenuItem(
                   value: 'price',
                   icon: Icons.attach_money_rounded,
@@ -1068,7 +956,7 @@ class _EstimatePdfActionsDialogState
                         "С наценкой (+${widget.markupPercent.toStringAsFixed(0)}%)",
                     color: Colors.blue.shade700,
                   ),
-              ],
+              ]),
               onSelected: (val) {
                 if (val == 'noprice') {
                   _runPdfAction(
