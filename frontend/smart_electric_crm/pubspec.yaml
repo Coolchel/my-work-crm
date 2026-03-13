@@ -60,3 +60,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - FontManifest.json
+    - fonts/MaterialIcons-Regular.otf
