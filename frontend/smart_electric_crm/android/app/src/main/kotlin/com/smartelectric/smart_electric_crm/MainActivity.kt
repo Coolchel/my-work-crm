@@ -50,7 +50,6 @@ class MainActivity : FlutterActivity() {
 
                     startActivityForResult(intent, REQUEST_CODE_SAVE_FILE)
                 }
-
                 else -> result.notImplemented()
             }
         }
