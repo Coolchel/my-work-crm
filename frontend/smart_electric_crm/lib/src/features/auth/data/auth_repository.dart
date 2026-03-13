@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +11,7 @@ part 'auth_repository.g.dart';
 class AuthRepository {
   final Dio _dio;
   final SharedPreferences _prefs;
+  Future<bool>? _ongoingRefresh;
 
   static const _accessTokenKey = 'access_token';
   static const _refreshTokenKey = 'refresh_token';
@@ -50,6 +52,7 @@ class AuthRepository {
   }
 
   Future<void> logout() async {
+    _ongoingRefresh = null;
     await _prefs.remove(_accessTokenKey);
     await _prefs.remove(_refreshTokenKey);
   }
@@ -122,6 +125,23 @@ class AuthRepository {
   }
 
   Future<bool> refreshToken() async {
+    final pendingRefresh = _ongoingRefresh;
+    if (pendingRefresh != null) {
+      return pendingRefresh;
+    }
+
+    final refreshFuture = _refreshTokenInternal();
+    _ongoingRefresh = refreshFuture;
+    try {
+      return await refreshFuture;
+    } finally {
+      if (identical(_ongoingRefresh, refreshFuture)) {
+        _ongoingRefresh = null;
+      }
+    }
+  }
+
+  Future<bool> _refreshTokenInternal() async {
     final refresh = getRefreshToken();
     if (refresh == null) return false;
 
@@ -144,7 +164,11 @@ class AuthRepository {
       }
 
       return true;
-    } catch (e) {
+    } catch (e, st) {
+      // A rejected refresh token should be invalidated immediately, otherwise
+      // multiple listeners/interceptors can keep hammering /auth/refresh/.
+      await logout();
+      debugPrint('AuthRepository.refreshToken failed: $e\n$st');
       return false;
     }
   }

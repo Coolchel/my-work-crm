@@ -17,6 +17,19 @@ class ErrorFeedback {
     await showMessage(context, userMessage);
   }
 
+  static void showSnackBar(
+    BuildContext context,
+    Object error, {
+    String fallbackMessage = UserFriendlyErrorMapper.genericErrorMessage,
+  }) {
+    final userMessage = UserFriendlyErrorMapper.map(
+      error,
+      fallbackMessage: fallbackMessage,
+    );
+    debugPrint('ErrorFeedback.showSnackBar: $error');
+    showSnackBarMessage(context, userMessage);
+  }
+
   static Future<void> showMessage(
     BuildContext context,
     String message, {
