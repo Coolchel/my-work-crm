@@ -1192,7 +1192,7 @@ class _EstimatePdfActionsDialogState
                 ),
             ]),
             onSelected: (val) => _runPdfAction(
-              context,
+              Navigator.of(context, rootNavigator: true).context,
               EstimatePdfActionRequest(
                 isWork: true,
                 type: val,
@@ -1232,7 +1232,7 @@ class _EstimatePdfActionsDialogState
             onSelected: (val) {
               if (val == 'noprice') {
                 _runPdfAction(
-                  context,
+                  Navigator.of(context, rootNavigator: true).context,
                   EstimatePdfActionRequest(
                     isWork: false,
                     showPrices: false,
@@ -1241,7 +1241,7 @@ class _EstimatePdfActionsDialogState
                 );
               } else if (val == 'price') {
                 _runPdfAction(
-                  context,
+                  Navigator.of(context, rootNavigator: true).context,
                   EstimatePdfActionRequest(
                     isWork: false,
                     showPrices: true,
@@ -1250,7 +1250,7 @@ class _EstimatePdfActionsDialogState
                 );
               } else if (val == 'markup') {
                 _runPdfAction(
-                  context,
+                  Navigator.of(context, rootNavigator: true).context,
                   EstimatePdfActionRequest(
                     isWork: false,
                     showPrices: true,
@@ -1268,7 +1268,13 @@ class _EstimatePdfActionsDialogState
   Future<void> _runPdfAction(
       BuildContext context, EstimatePdfActionRequest request) async {
     if (_isBusy) return;
-    setState(() => _isBusy = true);
+    final dialogContext = mounted ? this.context : null;
+    if (dialogContext != null && Navigator.of(dialogContext).canPop()) {
+      Navigator.of(dialogContext).pop();
+    }
+    if (mounted) {
+      setState(() => _isBusy = true);
+    }
     try {
       if (widget.onExecuteAction != null) {
         await widget.onExecuteAction!(request);
@@ -1278,7 +1284,7 @@ class _EstimatePdfActionsDialogState
     } catch (e, st) {
       if (context.mounted) {
         debugPrint('EstimatePdfActionsDialog._runPdfAction failed: $e\n$st');
-        await ErrorFeedback.show(
+        ErrorFeedback.showSnackBar(
           context,
           e,
           fallbackMessage: 'Не удалось выполнить операцию с PDF.',
@@ -1388,7 +1394,7 @@ class _EstimatePdfActionsDialogState
     } catch (e, st) {
       if (context.mounted) {
         debugPrint('EstimatePdfActionsDialog._printPdf failed: $e\n$st');
-        await ErrorFeedback.show(
+        ErrorFeedback.showSnackBar(
           context,
           e,
           fallbackMessage: 'Не удалось сформировать PDF.',
@@ -1417,10 +1423,9 @@ class _EstimatePdfActionsDialogState
 
     final result = await OpenFilex.open(file.path);
     if (result.type != ResultType.done && context.mounted) {
-      await ErrorFeedback.showMessage(
+      ErrorFeedback.showSnackBarMessage(
         context,
         'Не удалось открыть файл: ${result.message}',
-        title: 'PDF',
       );
     }
   }
@@ -1442,10 +1447,9 @@ class _EstimatePdfActionsDialogState
       return;
     }
 
-    await ErrorFeedback.showMessage(
+    ErrorFeedback.showSnackBarMessage(
       context,
       result.message,
-      title: 'PDF',
     );
   }
 
@@ -1484,10 +1488,9 @@ class _EstimatePdfActionsDialogState
     }
 
     if (!kIsWeb) {
-      await ErrorFeedback.showMessage(
+      ErrorFeedback.showSnackBarMessage(
         context,
         'Не удалось открыть системное меню шаринга PDF.',
-        title: 'PDF',
       );
       return;
     }
@@ -1503,10 +1506,9 @@ class _EstimatePdfActionsDialogState
     final message = saveResult.isSaved
         ? 'Браузер не поддержал шаринг PDF. Файл передан браузеру для сохранения, после чего им можно поделиться вручную.'
         : saveResult.message;
-    await ErrorFeedback.showMessage(
+    ErrorFeedback.showSnackBarMessage(
       context,
       message,
-      title: 'PDF',
     );
   }
 }
