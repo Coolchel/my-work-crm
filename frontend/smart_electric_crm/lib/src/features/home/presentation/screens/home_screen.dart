@@ -37,6 +37,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const int _financeBranchIndex = 2;
   static const int _statisticsBranchIndex = 3;
   static const int _settingsBranchIndex = 4;
+  static const double _defaultDesktopMenuTop = 132;
+  static const double _welcomeDesktopMenuTop = 220;
 
   @override
   void initState() {
@@ -69,6 +71,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   bool _isSettingsBranchSelected() {
     return widget.navigationShell.currentIndex == _settingsBranchIndex;
+  }
+
+  bool _isHomeBranchSelected(AppSettingsState settings) {
+    return settings.showWelcome &&
+        widget.navigationShell.currentIndex == _homeBranchIndex;
   }
 
   List<_DestinationItem> _buildDestinations(AppSettingsState settings) {
@@ -195,15 +202,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final items = _buildDestinations(settings);
     final selectedIndex = _selectedVisibleIndex(items);
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
-    final useExtendedRail = DesktopWebFrame.isWide(context, minWidth: 1420);
+    final desktopMenuTop = _isHomeBranchSelected(settings)
+        ? _welcomeDesktopMenuTop
+        : _defaultDesktopMenuTop;
 
     final scaffold = Scaffold(
       body: isDesktopWeb
-          ? Row(
+          ? Stack(
               children: [
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+                widget.navigationShell,
+                Positioned(
+                  left: 16,
+                  top: desktopMenuTop,
+                  bottom: 16,
+                  child: SafeArea(
+                    top: false,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         color: isDark
@@ -224,83 +237,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ],
                       ),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              useExtendedRail ? 18 : 12,
-                              18,
-                              useExtendedRail ? 18 : 12,
-                              12,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        scheme.primary,
-                                        scheme.secondary,
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.bolt_rounded,
-                                    color: scheme.onPrimary,
+                      child: SizedBox(
+                        width: 224,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 14,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (var i = 0; i < items.length; i++) ...[
+                                _DesktopNavigationButton(
+                                  label: items[i].destination.label,
+                                  icon: items[i].destination.icon,
+                                  selectedIcon:
+                                      items[i].destination.selectedIcon,
+                                  isSelected: i == selectedIndex,
+                                  onTap: () => _handleDestinationSelected(
+                                    i,
+                                    settings,
+                                    items,
                                   ),
                                 ),
-                                if (useExtendedRail) ...[
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'Smart CRM',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                  ),
-                                ],
+                                if (i < items.length - 1)
+                                  const SizedBox(height: 6),
                               ],
-                            ),
+                            ],
                           ),
-                          Expanded(
-                            child: NavigationRail(
-                              extended: useExtendedRail,
-                              backgroundColor: Colors.transparent,
-                              selectedIndex: selectedIndex,
-                              onDestinationSelected: (index) =>
-                                  _handleDestinationSelected(
-                                      index, settings, items),
-                              groupAlignment: -0.9,
-                              minWidth: 80,
-                              minExtendedWidth: 208,
-                              useIndicator: true,
-                              indicatorColor: scheme.primary.withOpacity(
-                                isDark ? 0.22 : 0.12,
-                              ),
-                              destinations: [
-                                for (final item in items)
-                                  NavigationRailDestination(
-                                    icon: item.destination.icon,
-                                    selectedIcon: item.destination.selectedIcon,
-                                    label: Text(item.destination.label),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-                Expanded(child: widget.navigationShell),
               ],
             )
           : widget.navigationShell,
@@ -343,6 +312,98 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _handleNativeBack(settings);
       },
       child: scaffold,
+    );
+  }
+}
+
+class _DesktopNavigationButton extends StatefulWidget {
+  const _DesktopNavigationButton({
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final Widget icon;
+  final Widget? selectedIcon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  State<_DesktopNavigationButton> createState() =>
+      _DesktopNavigationButtonState();
+}
+
+class _DesktopNavigationButtonState extends State<_DesktopNavigationButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isActive = widget.isSelected;
+    final backgroundColor = isActive
+        ? scheme.primary.withOpacity(isDark ? 0.24 : 0.12)
+        : _isHovered
+            ? scheme.primary.withOpacity(isDark ? 0.12 : 0.07)
+            : Colors.transparent;
+    final borderColor = isActive
+        ? scheme.primary.withOpacity(isDark ? 0.38 : 0.20)
+        : _isHovered
+            ? scheme.outlineVariant.withOpacity(isDark ? 0.36 : 0.28)
+            : Colors.transparent;
+    final foregroundColor = isActive
+        ? scheme.primary
+        : _isHovered
+            ? scheme.onSurface
+            : scheme.onSurfaceVariant;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: borderColor),
+            ),
+            child: Row(
+              children: [
+                IconTheme(
+                  data: IconThemeData(
+                    size: 24,
+                    color: foregroundColor,
+                  ),
+                  child: widget.isSelected
+                      ? (widget.selectedIcon ?? widget.icon)
+                      : widget.icon,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    widget.label,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: foregroundColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
