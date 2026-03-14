@@ -9,6 +9,7 @@ import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../shared/presentation/widgets/inline_save_button.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
+import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
 import '../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/navigation/app_navigation.dart';
@@ -321,6 +322,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   Widget _buildContent(UnpaidProjectsResponse data,
       AsyncValue<FinanceSettingsModel> settingsAsync) {
     // Инициализация контроллеров перенесена в build с использованием addPostFrameCallback
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1240);
+    final sortedProjects = data.projects.toList()
+      ..sort((a, b) {
+        final aDate = _getEarliestStageDate(a);
+        final bDate = _getEarliestStageDate(b);
+        return aDate.compareTo(bDate);
+      });
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -331,45 +339,91 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       },
       child: SingleChildScrollView(
         controller: _scrollController,
-        child: Column(
-          children: [
-            // Список проектов
-            if (data.projects.isEmpty)
-              _buildEmptyState()
-            else
-              Column(
-                children: [
-                  _buildProjectsHeader(data.projects.length),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: _sectionHPadding, vertical: 8),
-                    child: Column(
-                      children: [
-                        // Сортировка: сверху - старые, снизу - новые
-                        ...(data.projects.toList()
-                              ..sort((a, b) {
-                                final aDate = _getEarliestStageDate(a);
-                                final bDate = _getEarliestStageDate(b);
-                                return aDate.compareTo(bDate);
-                              }))
-                            .asMap()
-                            .entries
-                            .map((entry) =>
-                                _buildProjectCard(entry.value, entry.key + 1)),
-                      ],
+        child: DesktopWebPageFrame(
+          maxWidth: 1380,
+          padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 0, 16, 0),
+          child: isDesktopWeb
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          if (data.projects.isEmpty)
+                            _buildEmptyState()
+                          else
+                            Column(
+                              children: [
+                                _buildProjectsHeader(data.projects.length),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: _sectionHPadding,
+                                    vertical: 8,
+                                  ),
+                                  child: Column(
+                                    children: sortedProjects
+                                        .asMap()
+                                        .entries
+                                        .map(
+                                          (entry) => _buildProjectCard(
+                                            entry.value,
+                                            entry.key + 1,
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          const SizedBox(height: 80),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-
-            // Блок "Итого к получению" внизу
-            _buildTotalSection(data.totalUsd, data.totalByn),
-
-            // Глобальные поля заметок
-            _buildGlobalSettingsSection(),
-
-            const SizedBox(height: 80), // Отступ снизу
-          ],
+                    const SizedBox(width: 24),
+                    SizedBox(
+                      width: 380,
+                      child: Column(
+                        children: [
+                          _buildTotalSection(data.totalUsd, data.totalByn),
+                          _buildGlobalSettingsSection(),
+                        ],
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    if (data.projects.isEmpty)
+                      _buildEmptyState()
+                    else
+                      Column(
+                        children: [
+                          _buildProjectsHeader(data.projects.length),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: _sectionHPadding,
+                              vertical: 8,
+                            ),
+                            child: Column(
+                              children: sortedProjects
+                                  .asMap()
+                                  .entries
+                                  .map(
+                                    (entry) => _buildProjectCard(
+                                      entry.value,
+                                      entry.key + 1,
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    _buildTotalSection(data.totalUsd, data.totalByn),
+                    _buildGlobalSettingsSection(),
+                    const SizedBox(height: 80),
+                  ],
+                ),
         ),
       ),
     );

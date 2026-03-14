@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+
 import '../../data/models/project_model.dart';
-import '../widgets/engineering/shield_card.dart';
 import '../../../engineering/data/models/shield_model.dart';
 import '../dialogs/engineering/add_shield_dialog.dart';
-import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
-import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import '../widgets/engineering/shield_card.dart';
 
 class EngineeringTab extends ConsumerStatefulWidget {
   final ProjectModel project;
@@ -57,6 +59,7 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
     final sortedShields = List<ShieldModel>.from(widget.project.shields)
       ..sort((a, b) {
         final order = {'power': 0, 'multimedia': 1, 'led': 2};
@@ -75,37 +78,57 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
           backgroundColor: Colors.indigo,
           foregroundColor: Theme.of(context).colorScheme.surface,
           elevation: 2,
-          tooltip: null, // Disable built-in tooltip
+          tooltip: null,
           child: const Icon(Icons.add),
         ),
       ),
-      body: SingleChildScrollView(
-        controller: widget.scrollController,
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-        child: Column(
-          children: [
-            if (widget.project.shields.isEmpty)
-              const FriendlyEmptyState(
-                icon: Icons.settings_input_component_outlined,
-                title: 'Нет щитов',
-                subtitle:
-                    'Добавьте первый щит, чтобы начать инженерную часть проекта.',
-                accentColor: Colors.indigo,
-              )
-            else
-              ...sortedShields.map((shield) => ShieldCard(
-                    shield: shield,
-                    projectId: widget.project.id.toString(),
-                  )),
-            const SizedBox(height: 80),
-          ],
-        ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final content = SingleChildScrollView(
+            controller: widget.scrollController,
+            padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 20, 16, 16),
+            child: Column(
+              children: [
+                if (widget.project.shields.isEmpty)
+                  const FriendlyEmptyState(
+                    icon: Icons.settings_input_component_outlined,
+                    title: 'Нет щитов',
+                    subtitle:
+                        'Добавьте первый щит, чтобы начать инженерную часть проекта.',
+                    accentColor: Colors.indigo,
+                  )
+                else
+                  ...sortedShields.map((shield) => ShieldCard(
+                        shield: shield,
+                        projectId: widget.project.id.toString(),
+                      )),
+                const SizedBox(height: 80),
+              ],
+            ),
+          );
+
+          if (!isDesktopWeb) {
+            return content;
+          }
+
+          return DesktopWebPageFrame(
+            maxWidth: 1320,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SizedBox(
+              width: constraints.maxWidth,
+              child: content,
+            ),
+          );
+        },
       ),
     );
   }
 
   void _showAddShieldDialog(
-      BuildContext context, WidgetRef ref, String projectId) {
+    BuildContext context,
+    WidgetRef ref,
+    String projectId,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AddShieldDialog(projectId: projectId),

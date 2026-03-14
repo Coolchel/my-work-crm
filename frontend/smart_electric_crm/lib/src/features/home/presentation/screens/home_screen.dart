@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/navigation/app_navigation.dart';
 import '../../../settings/application/app_settings_controller.dart';
+import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({
@@ -193,30 +194,140 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final items = _buildDestinations(settings);
     final selectedIndex = _selectedVisibleIndex(items);
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final useExtendedRail = DesktopWebFrame.isWide(context, minWidth: 1420);
 
     final scaffold = Scaffold(
-      body: widget.navigationShell,
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          color: isDark
-              ? scheme.surfaceContainerHigh
-              : scheme.surface.withOpacity(0.98),
-          border: Border(
-            top: BorderSide(
-              color: scheme.outlineVariant.withOpacity(isDark ? 0.55 : 0.4),
-              width: 0.8,
+      body: isDesktopWeb
+          ? Row(
+              children: [
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? scheme.surfaceContainerHigh
+                            : scheme.surface.withOpacity(0.98),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: scheme.outlineVariant
+                              .withOpacity(isDark ? 0.5 : 0.35),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                Colors.black.withOpacity(isDark ? 0.22 : 0.05),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              useExtendedRail ? 18 : 12,
+                              18,
+                              useExtendedRail ? 18 : 12,
+                              12,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        scheme.primary,
+                                        scheme.secondary,
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.bolt_rounded,
+                                    color: scheme.onPrimary,
+                                  ),
+                                ),
+                                if (useExtendedRail) ...[
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Smart CRM',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: NavigationRail(
+                              extended: useExtendedRail,
+                              backgroundColor: Colors.transparent,
+                              selectedIndex: selectedIndex,
+                              onDestinationSelected: (index) =>
+                                  _handleDestinationSelected(
+                                      index, settings, items),
+                              groupAlignment: -0.9,
+                              minWidth: 80,
+                              minExtendedWidth: 208,
+                              useIndicator: true,
+                              indicatorColor: scheme.primary.withOpacity(
+                                isDark ? 0.22 : 0.12,
+                              ),
+                              destinations: [
+                                for (final item in items)
+                                  NavigationRailDestination(
+                                    icon: item.destination.icon,
+                                    selectedIcon: item.destination.selectedIcon,
+                                    label: Text(item.destination.label),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(child: widget.navigationShell),
+              ],
+            )
+          : widget.navigationShell,
+      bottomNavigationBar: isDesktopWeb
+          ? null
+          : DecoratedBox(
+              decoration: BoxDecoration(
+                color: isDark
+                    ? scheme.surfaceContainerHigh
+                    : scheme.surface.withOpacity(0.98),
+                border: Border(
+                  top: BorderSide(
+                    color:
+                        scheme.outlineVariant.withOpacity(isDark ? 0.55 : 0.4),
+                    width: 0.8,
+                  ),
+                ),
+              ),
+              child: NavigationBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                selectedIndex: selectedIndex,
+                onDestinationSelected: (index) =>
+                    _handleDestinationSelected(index, settings, items),
+                destinations: items.map((item) => item.destination).toList(),
+              ),
             ),
-          ),
-        ),
-        child: NavigationBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          selectedIndex: selectedIndex,
-          onDestinationSelected: (index) =>
-              _handleDestinationSelected(index, settings, items),
-          destinations: items.map((item) => item.destination).toList(),
-        ),
-      ),
     );
 
     if (kIsWeb) {
