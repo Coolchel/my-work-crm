@@ -24,6 +24,7 @@ import 'package:smart_electric_crm/src/features/settings/application/app_setting
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -94,6 +95,50 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
 
   ScrollController get _activeScrollController =>
       _currentIndex == 0 ? _worksScrollController : _materialsScrollController;
+
+  void _handleSectionSelection(int index, bool showWelcome) {
+    if (showWelcome && index == 0) {
+      AppNavigation.goHome();
+      return;
+    }
+
+    final mappedIndex = showWelcome ? index - 1 : index;
+    if (mappedIndex == _currentIndex) {
+      if (_currentIndex == 0) {
+        AppNavigation.worksScrollController.scrollToTop();
+      } else {
+        AppNavigation.materialsScrollController.scrollToTop();
+      }
+      return;
+    }
+
+    setState(() {
+      _currentIndex = mappedIndex;
+    });
+    widget.onTabChanged?.call(_sectionFromTabIndex(mappedIndex));
+    _appBarCollapseController.bind(_activeScrollController);
+  }
+
+  List<ButtonSegment<int>> _buildDesktopSegments(bool showWelcome) {
+    return [
+      if (showWelcome)
+        const ButtonSegment<int>(
+          value: 0,
+          icon: Icon(Icons.home_outlined),
+          label: Text('Главная'),
+        ),
+      ButtonSegment<int>(
+        value: showWelcome ? 1 : 0,
+        icon: const Icon(Icons.handyman_outlined),
+        label: const Text('Работы'),
+      ),
+      ButtonSegment<int>(
+        value: showWelcome ? 2 : 1,
+        icon: const Icon(Icons.inventory_2_outlined),
+        label: const Text('Материалы'),
+      ),
+    ];
+  }
 
   void _handleAppBarCollapseChanged() {
     if (mounted) {
@@ -211,6 +256,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     final showWelcome = ref.watch(
       appSettingsProvider.select((value) => value.showWelcome),
     );
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
     // Backdrop filter when FAB is expanded
     // Backdrop filter when FAB is expanded
     return Scaffold(
@@ -275,98 +321,128 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          // Works Tab
-          EstimateTab(
-            scrollController: _worksScrollController,
-            items: _works,
-            title: 'Работы', // Determines view mode inside widget
-            showPrices: true,
-            onUpdate: _updateItemFromTab,
-            onDelete: _deleteItemFromTab,
-            note: _stage.workNotes,
-            remarks: _stage.workRemarks,
-            onSaveNote: (v) => _saveNotes('work', v),
-            onSaveRemarks: (v) => _saveNotes('work_remarks', v),
-            automationActionLabel: "Рассчитать по материалам",
-            onAutomationAction: _calculateWorksFromMaterials,
-            isAutomationLoading: _isCalculatingWorks,
-            onTemplatesAction: _showWorkTemplatesDialog,
-            isTemplatesLoading: _isApplyingTemplate,
-            onSaveAsTemplate: () => _showSaveTemplateDialog('work'),
-            hideTopActions: true,
-          ),
-          // Materials Tab
-          EstimateTab(
-            scrollController: _materialsScrollController,
-            items: _materials,
-            title: 'Материалы',
-            showPrices: _showPrices,
-            onUpdate: _updateItemFromTab,
-            onDelete: _deleteItemFromTab,
-            onShowPricesChanged: _setShowPrices,
-            markupPercent: _markupPercent,
-            onMarkupChanged: (val) {
-              setState(() => _markupPercent = val);
-              _saveMarkupDebounced(val);
-            },
-            note: _stage.materialNotes,
-            remarks: _stage.materialRemarks,
-            onSaveNote: (v) => _saveNotes('material', v),
-            onSaveRemarks: (v) => _saveNotes('material_remarks', v),
-            automationActionLabel: "Импорт из инженерки",
-            onAutomationAction: _importFromShields,
-            isAutomationLoading: _isImportingShields,
-            onTemplatesAction: _showMaterialTemplatesDialog,
-            isTemplatesLoading: _isApplyingTemplate,
-            onSaveAsTemplate: () => _showSaveTemplateDialog('material'),
-            hideTopActions: true,
-          ),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
-        onDestinationSelected: (index) {
-          if (showWelcome && index == 0) {
-            AppNavigation.goHome();
-            return;
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final content = IndexedStack(
+            index: _currentIndex,
+            children: [
+              // Works Tab
+              EstimateTab(
+                scrollController: _worksScrollController,
+                items: _works,
+                title: 'Работы', // Determines view mode inside widget
+                showPrices: true,
+                onUpdate: _updateItemFromTab,
+                onDelete: _deleteItemFromTab,
+                note: _stage.workNotes,
+                remarks: _stage.workRemarks,
+                onSaveNote: (v) => _saveNotes('work', v),
+                onSaveRemarks: (v) => _saveNotes('work_remarks', v),
+                automationActionLabel: "Рассчитать по материалам",
+                onAutomationAction: _calculateWorksFromMaterials,
+                isAutomationLoading: _isCalculatingWorks,
+                onTemplatesAction: _showWorkTemplatesDialog,
+                isTemplatesLoading: _isApplyingTemplate,
+                onSaveAsTemplate: () => _showSaveTemplateDialog('work'),
+                hideTopActions: true,
+              ),
+              // Materials Tab
+              EstimateTab(
+                scrollController: _materialsScrollController,
+                items: _materials,
+                title: 'Материалы',
+                showPrices: _showPrices,
+                onUpdate: _updateItemFromTab,
+                onDelete: _deleteItemFromTab,
+                onShowPricesChanged: _setShowPrices,
+                markupPercent: _markupPercent,
+                onMarkupChanged: (val) {
+                  setState(() => _markupPercent = val);
+                  _saveMarkupDebounced(val);
+                },
+                note: _stage.materialNotes,
+                remarks: _stage.materialRemarks,
+                onSaveNote: (v) => _saveNotes('material', v),
+                onSaveRemarks: (v) => _saveNotes('material_remarks', v),
+                automationActionLabel: "Импорт из инженерки",
+                onAutomationAction: _importFromShields,
+                isAutomationLoading: _isImportingShields,
+                onTemplatesAction: _showMaterialTemplatesDialog,
+                isTemplatesLoading: _isApplyingTemplate,
+                onSaveAsTemplate: () => _showSaveTemplateDialog('material'),
+                hideTopActions: true,
+              ),
+            ],
+          );
+
+          final framedContent = isDesktopWeb
+              ? DesktopWebPageFrame(
+                  maxWidth: 1320,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: SizedBox(
+                    width: constraints.maxWidth,
+                    child: content,
+                  ),
+                )
+              : content;
+
+          if (!isDesktopWeb) {
+            return framedContent;
           }
-          final mappedIndex = showWelcome ? index - 1 : index;
-          if (mappedIndex == _currentIndex) {
-            if (_currentIndex == 0) {
-              AppNavigation.worksScrollController.scrollToTop();
-            } else {
-              AppNavigation.materialsScrollController.scrollToTop();
-            }
-            return;
-          }
-          setState(() {
-            _currentIndex = mappedIndex;
-          });
-          widget.onTabChanged?.call(_sectionFromTabIndex(mappedIndex));
-          _appBarCollapseController.bind(_activeScrollController);
+
+          return Column(
+            children: [
+              DesktopWebPageFrame(
+                maxWidth: 1320,
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SegmentedButton<int>(
+                      showSelectedIcon: false,
+                      segments: _buildDesktopSegments(showWelcome),
+                      selected: {
+                        showWelcome ? _currentIndex + 1 : _currentIndex
+                      },
+                      onSelectionChanged: (selection) {
+                        _handleSectionSelection(selection.first, showWelcome);
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(child: framedContent),
+            ],
+          );
         },
-        destinations: [
-          if (showWelcome)
-            const NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
-            ),
-          const NavigationDestination(
-            icon: Icon(Icons.handyman_outlined),
-            selectedIcon: Icon(Icons.handyman),
-            label: '\u0420\u0430\u0431\u043e\u0442\u044b',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: '\u041c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u044b',
-          ),
-        ],
       ),
+      bottomNavigationBar: isDesktopWeb
+          ? null
+          : NavigationBar(
+              selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
+              onDestinationSelected: (index) =>
+                  _handleSectionSelection(index, showWelcome),
+              destinations: [
+                if (showWelcome)
+                  const NavigationDestination(
+                    icon: Icon(Icons.home_outlined),
+                    selectedIcon: Icon(Icons.home),
+                    label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+                  ),
+                const NavigationDestination(
+                  icon: Icon(Icons.handyman_outlined),
+                  selectedIcon: Icon(Icons.handyman),
+                  label: '\u0420\u0430\u0431\u043e\u0442\u044b',
+                ),
+                const NavigationDestination(
+                  icon: Icon(Icons.inventory_2_outlined),
+                  selectedIcon: Icon(Icons.inventory_2),
+                  label:
+                      '\u041c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u044b',
+                ),
+              ],
+            ),
       floatingActionButton: Tooltip(
         message: 'Добавить позицию',
         preferBelow: false,

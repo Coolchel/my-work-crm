@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
@@ -193,6 +194,59 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
     }
   }
 
+  void _handleSectionSelection(int index, bool showWelcome) {
+    if (showWelcome && index == 0) {
+      AppNavigation.goHome();
+      return;
+    }
+
+    final mappedIndex = showWelcome ? index - 1 : index;
+    if (mappedIndex == _currentIndex) {
+      _scrollCurrentTabToTop();
+      return;
+    }
+
+    setState(() {
+      _currentIndex = mappedIndex;
+    });
+    widget.onTabChanged?.call(_sectionFromTabIndex(mappedIndex));
+    _appBarCollapseController.bind(_activeScrollController);
+  }
+
+  List<ButtonSegment<int>> _buildDesktopSegments(bool showWelcome) {
+    final segments = <ButtonSegment<int>>[];
+
+    if (showWelcome) {
+      segments.add(
+        const ButtonSegment<int>(
+          value: 0,
+          icon: Icon(Icons.home_outlined),
+          label: Text('Главная'),
+        ),
+      );
+    }
+
+    segments.addAll([
+      ButtonSegment<int>(
+        value: showWelcome ? 1 : 0,
+        icon: const Icon(Icons.layers_outlined),
+        label: const Text('Этапы'),
+      ),
+      ButtonSegment<int>(
+        value: showWelcome ? 2 : 1,
+        icon: const Icon(Icons.settings_input_component_outlined),
+        label: const Text('Щиты'),
+      ),
+      ButtonSegment<int>(
+        value: showWelcome ? 3 : 2,
+        icon: const Icon(Icons.folder_open_outlined),
+        label: const Text('Файлы'),
+      ),
+    ]);
+
+    return segments;
+  }
+
   @override
   void dispose() {
     _appBarCollapseController.dispose();
@@ -207,6 +261,7 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
     final showWelcome = ref.watch(
       appSettingsProvider.select((value) => value.showWelcome),
     );
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
     final screens = [
       _StagesTab(
         project: widget.project,
@@ -240,49 +295,67 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
             subtitle: widget.project.address,
             icon: _tabIcons[_currentIndex],
           ),
-          body: child!,
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
-            onDestinationSelected: (index) {
-              if (showWelcome && index == 0) {
-                AppNavigation.goHome();
-                return;
-              }
-              final mappedIndex = showWelcome ? index - 1 : index;
-              if (mappedIndex == _currentIndex) {
-                _scrollCurrentTabToTop();
-                return;
-              }
-              setState(() {
-                _currentIndex = mappedIndex;
-              });
-              widget.onTabChanged?.call(_sectionFromTabIndex(mappedIndex));
-              _appBarCollapseController.bind(_activeScrollController);
-            },
-            destinations: [
-              if (showWelcome)
-                const NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home),
-                  label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+          body: isDesktopWeb
+              ? Column(
+                  children: [
+                    DesktopWebPageFrame(
+                      maxWidth: 1320,
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: SegmentedButton<int>(
+                            showSelectedIcon: false,
+                            segments: _buildDesktopSegments(showWelcome),
+                            selected: {
+                              showWelcome ? _currentIndex + 1 : _currentIndex
+                            },
+                            onSelectionChanged: (selection) {
+                              _handleSectionSelection(
+                                selection.first,
+                                showWelcome,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(child: child!),
+                  ],
+                )
+              : child!,
+          bottomNavigationBar: isDesktopWeb
+              ? null
+              : NavigationBar(
+                  selectedIndex:
+                      showWelcome ? _currentIndex + 1 : _currentIndex,
+                  onDestinationSelected: (index) =>
+                      _handleSectionSelection(index, showWelcome),
+                  destinations: [
+                    if (showWelcome)
+                      const NavigationDestination(
+                        icon: Icon(Icons.home_outlined),
+                        selectedIcon: Icon(Icons.home),
+                        label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+                      ),
+                    const NavigationDestination(
+                      icon: Icon(Icons.layers_outlined),
+                      selectedIcon: Icon(Icons.layers),
+                      label: '\u042d\u0442\u0430\u043f\u044b',
+                    ),
+                    const NavigationDestination(
+                      icon: Icon(Icons.settings_input_component_outlined),
+                      selectedIcon: Icon(Icons.settings_input_component),
+                      label: '\u0429\u0438\u0442\u044b',
+                    ),
+                    const NavigationDestination(
+                      icon: Icon(Icons.folder_open_outlined),
+                      selectedIcon: Icon(Icons.folder_open),
+                      label: '\u0424\u0430\u0439\u043b\u044b',
+                    ),
+                  ],
                 ),
-              const NavigationDestination(
-                icon: Icon(Icons.layers_outlined),
-                selectedIcon: Icon(Icons.layers),
-                label: '\u042d\u0442\u0430\u043f\u044b',
-              ),
-              const NavigationDestination(
-                icon: Icon(Icons.settings_input_component_outlined),
-                selectedIcon: Icon(Icons.settings_input_component),
-                label: '\u0429\u0438\u0442\u044b',
-              ),
-              const NavigationDestination(
-                icon: Icon(Icons.folder_open_outlined),
-                selectedIcon: Icon(Icons.folder_open),
-                label: '\u0424\u0430\u0439\u043b\u044b',
-              ),
-            ],
-          ),
         );
       },
       child: IndexedStack(
@@ -378,6 +451,8 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+
     return Scaffold(
       floatingActionButton: Tooltip(
         message: 'Добавить этап',
@@ -390,151 +465,170 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
           child: const Icon(Icons.add),
         ),
       ),
-      body: SingleChildScrollView(
-        controller: widget.scrollController,
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header "OBJECT"
-            Padding(
-              padding: const EdgeInsets.only(left: 4, bottom: 8),
-              child: Text(
-                'Об объекте',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-              ),
-            ),
-            // Premium Project Info Header
-            Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppDesignTokens.cardShadow(context),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-                border: Border.all(color: AppDesignTokens.softBorder(context)),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Stack(
-                children: [
-                  // Accent stripe
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: 5,
-                    child: Container(color: Colors.indigo),
-                  ),
-                  Positioned(
-                    top: 14,
-                    right: 14,
-                    child: Tooltip(
-                      message: 'Редактировать объект',
-                      child: SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.edit_outlined,
-                            size: 18,
-                            color: Colors.grey.shade400,
-                          ),
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) =>
-                                  AddProjectDialog(project: widget.project),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 20, 56, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Заказчик
-                        DetailInfoRow(
-                          icon: Icons.person_outline,
-                          label: 'ЗАКАЗЧИК',
-                          value: widget.project.clientInfo.isNotEmpty
-                              ? widget.project.clientInfo
-                              : '—',
-                          color: Colors.blue.shade600,
-                          selectable: true,
-                        ),
-                        const SizedBox(height: 16),
-                        // Источник
-                        DetailInfoRow(
-                          icon: Icons.info_outline,
-                          label: 'ИСТОЧНИК',
-                          value: widget.project.source.isNotEmpty
-                              ? widget.project.source
-                              : '—',
-                          color: Colors.teal.shade700,
-                          selectable: false,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            Row(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final content = SingleChildScrollView(
+            controller: widget.scrollController,
+            padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 20, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Этапы работ',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
+                // Header "OBJECT"
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 8),
+                  child: Text(
+                    'Об объекте',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                  ),
                 ),
+                // Premium Project Info Header
+                Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppDesignTokens.cardShadow(context),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                    border:
+                        Border.all(color: AppDesignTokens.softBorder(context)),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Stack(
+                    children: [
+                      // Accent stripe
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: 5,
+                        child: Container(color: Colors.indigo),
+                      ),
+                      Positioned(
+                        top: 14,
+                        right: 14,
+                        child: Tooltip(
+                          message: 'Редактировать объект',
+                          child: SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.edit_outlined,
+                                size: 18,
+                                color: Colors.grey.shade400,
+                              ),
+                              padding: EdgeInsets.zero,
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) =>
+                                      AddProjectDialog(project: widget.project),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(22, 20, 56, 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Заказчик
+                            DetailInfoRow(
+                              icon: Icons.person_outline,
+                              label: 'ЗАКАЗЧИК',
+                              value: widget.project.clientInfo.isNotEmpty
+                                  ? widget.project.clientInfo
+                                  : '—',
+                              color: Colors.blue.shade600,
+                              selectable: true,
+                            ),
+                            const SizedBox(height: 16),
+                            // Источник
+                            DetailInfoRow(
+                              icon: Icons.info_outline,
+                              label: 'ИСТОЧНИК',
+                              value: widget.project.source.isNotEmpty
+                                  ? widget.project.source
+                                  : '—',
+                              color: Colors.teal.shade700,
+                              selectable: false,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                Row(
+                  children: [
+                    Text(
+                      'Этапы работ',
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                if (widget.project.stages.isEmpty)
+                  const FriendlyEmptyState(
+                    icon: Icons.layers_clear_rounded,
+                    title: 'Этапы еще не созданы',
+                    subtitle:
+                        'Добавьте первый этап, чтобы продолжить работу по объекту.',
+                    accentColor: Colors.indigo,
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                  ),
+
+                // List of Stages
+                ...widget.project.stages.map((stage) {
+                  return StageCard(
+                    stage: stage,
+                    onTap: () {
+                      AppNavigation.openEstimate(
+                        context,
+                        projectId: widget.project.id.toString(),
+                        stageId: stage.id.toString(),
+                      );
+                    },
+                    onStatusChanged: (newStatus) => _updateStatus(
+                        context, ref, stage.id.toString(), newStatus),
+                    onDelete: () => _deleteStage(context, ref, stage),
+                  );
+                }),
+
+                const SizedBox(height: 80), // Space for FAB
               ],
             ),
-            const SizedBox(height: 16),
+          );
 
-            if (widget.project.stages.isEmpty)
-              const FriendlyEmptyState(
-                icon: Icons.layers_clear_rounded,
-                title: 'Этапы еще не созданы',
-                subtitle:
-                    'Добавьте первый этап, чтобы продолжить работу по объекту.',
-                accentColor: Colors.indigo,
-                padding: EdgeInsets.symmetric(vertical: 8),
-              ),
+          if (!isDesktopWeb) {
+            return content;
+          }
 
-            // List of Stages
-            ...widget.project.stages.map((stage) {
-              return StageCard(
-                stage: stage,
-                onTap: () {
-                  AppNavigation.openEstimate(
-                    context,
-                    projectId: widget.project.id.toString(),
-                    stageId: stage.id.toString(),
-                  );
-                },
-                onStatusChanged: (newStatus) =>
-                    _updateStatus(context, ref, stage.id.toString(), newStatus),
-                onDelete: () => _deleteStage(context, ref, stage),
-              );
-            }),
-
-            const SizedBox(height: 80), // Space for FAB
-          ],
-        ),
+          return DesktopWebPageFrame(
+            maxWidth: 1320,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: SizedBox(
+              width: constraints.maxWidth,
+              child: content,
+            ),
+          );
+        },
       ),
     );
   }
@@ -603,12 +697,14 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+
+    final content = Column(
       children: [
         Expanded(
           child: ListView(
             controller: widget.scrollController,
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+            padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 20, 16, 16),
             children: [
               _FileCategorySection(
                 title: "Проекты и схемы",
@@ -664,6 +760,24 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
           ),
         ),
       ],
+    );
+
+    if (!isDesktopWeb) {
+      return content;
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return DesktopWebPageFrame(
+          maxWidth: 1320,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SizedBox(
+            width: constraints.maxWidth,
+            height: constraints.maxHeight,
+            child: content,
+          ),
+        );
+      },
     );
   }
 

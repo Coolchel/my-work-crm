@@ -9,6 +9,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/navigation/app_navigation.dart';
 import '../../../../core/navigation/route_bootstrap_storage.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
+import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
 import '../../application/app_settings_controller.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 
@@ -78,6 +79,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final settingsNotifier = ref.read(appSettingsProvider.notifier);
     final userAsync = ref.watch(userProfileProvider);
     final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
     final themeSegments = <ButtonSegment<ThemeMode>>[
       const ButtonSegment(
         value: ThemeMode.light,
@@ -110,12 +112,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: 'Настройки',
             icon: Icons.settings_rounded,
           ),
-          body: child!,
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              if (!isDesktopWeb) {
+                return child!;
+              }
+
+              return DesktopWebPageFrame(
+                maxWidth: 1160,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: SizedBox(
+                  width: constraints.maxWidth,
+                  child: child!,
+                ),
+              );
+            },
+          ),
         );
       },
       child: ListView(
         controller: _scrollController,
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 16, 16, 16),
         children: [
           _buildSectionHeader('Внешний вид'),
           _HoverSettingsCard(

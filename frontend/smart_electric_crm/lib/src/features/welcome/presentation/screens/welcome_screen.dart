@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/navigation/app_navigation.dart';
 import '../../../../core/theme/app_design_tokens.dart';
+import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../widgets/new_project_card.dart';
 import '../widgets/quick_stats_row.dart';
@@ -329,6 +330,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final selectedStat = ref.watch(dashboardFilterProvider);
     final searchQuery = ref.watch(projectSearchQueryProvider);
     final isSearchActive = searchQuery != null && searchQuery.isNotEmpty;
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
     final hasProjectsLoadError = ref.watch(projectListProvider).maybeWhen(
           error: (_, __) => true,
           orElse: () => false,
@@ -361,7 +363,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         ),
                         Transform.translate(
                           offset: const Offset(0, -20),
-                          child: Padding(
+                          child: DesktopWebPageFrame(
+                            maxWidth: 1360,
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             child: Column(
                               children: [
@@ -374,7 +377,21 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   },
                                 ),
                                 const SizedBox(height: 24),
-                                _buildSearchBar(),
+                                if (isDesktopWeb)
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(child: _buildSearchBar()),
+                                      const SizedBox(width: 24),
+                                      const SizedBox(
+                                        width: 360,
+                                        child: NewProjectCard(),
+                                      ),
+                                    ],
+                                  )
+                                else
+                                  _buildSearchBar(),
                                 if (isSearchActive && _useInlineDesktopResults)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 16),
@@ -397,24 +414,53 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           opacity: isSearchActive ? 0 : 1,
                           child: IgnorePointer(
                             ignoring: isSearchActive,
-                            child: Column(
-                              children: [
-                                const SizedBox(height: 8),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: NewProjectCard(),
-                                ),
-                                if (hasProjectsLoadError)
-                                  const Padding(
-                                    padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                                    child: _WelcomeNetworkNotice(),
-                                  ),
-                                const SizedBox(height: 24),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: RecentProjectsList(),
-                                ),
-                              ],
+                            child: DesktopWebPageFrame(
+                              maxWidth: 1360,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: isDesktopWeb
+                                  ? Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: hasProjectsLoadError
+                                          ? const Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Expanded(
+                                                  child: RecentProjectsList(),
+                                                ),
+                                                SizedBox(width: 24),
+                                                SizedBox(
+                                                  width: 360,
+                                                  child:
+                                                      _WelcomeNetworkNotice(),
+                                                ),
+                                              ],
+                                            )
+                                          : const RecentProjectsList(),
+                                    )
+                                  : Column(
+                                      children: [
+                                        const SizedBox(height: 8),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 16),
+                                          child: NewProjectCard(),
+                                        ),
+                                        if (hasProjectsLoadError)
+                                          const Padding(
+                                            padding: EdgeInsets.fromLTRB(
+                                                16, 12, 16, 0),
+                                            child: _WelcomeNetworkNotice(),
+                                          ),
+                                        const SizedBox(height: 24),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 16),
+                                          child: RecentProjectsList(),
+                                        ),
+                                      ],
+                                    ),
                             ),
                           ),
                         ),
@@ -431,7 +477,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       child: Align(
                         alignment: Alignment.topLeft,
                         child: SizedBox(
-                          width: MediaQuery.of(context).size.width - 40,
+                          width: isDesktopWeb
+                              ? 720
+                              : MediaQuery.of(context).size.width - 40,
                           child: TapRegion(
                             groupId: _searchTapGroupId,
                             child: SearchResultsOverlay(

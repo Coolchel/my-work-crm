@@ -12,6 +12,7 @@ import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 // Filter enums
@@ -200,6 +201,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
       child: projectListAsync.when(
         data: (projects) {
           final filtered = _applyFilters(projects);
+          final useDesktopGrid =
+              DesktopWebFrame.isDesktop(context, minWidth: 1280);
           if (projects.isEmpty) {
             return const FriendlyEmptyState(
               icon: Icons.apartment_outlined,
@@ -224,20 +227,51 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             );
           }
 
-          return ListView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(
-              AppDesignTokens.spacingM,
-              16,
-              AppDesignTokens.spacingM,
-              120,
-            ),
-            itemCount: filtered.length,
-            physics: const AlwaysScrollableScrollPhysics(),
-            itemBuilder: (context, index) {
-              return _ProjectCard(
-                project: filtered[index],
-                workSumUsd: _calcWorkSumUsd(filtered[index]),
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              if (!useDesktopGrid || constraints.maxWidth < 1080) {
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.fromLTRB(
+                    AppDesignTokens.spacingM,
+                    16,
+                    AppDesignTokens.spacingM,
+                    120,
+                  ),
+                  itemCount: filtered.length,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemBuilder: (context, index) {
+                    return _ProjectCard(
+                      project: filtered[index],
+                      workSumUsd: _calcWorkSumUsd(filtered[index]),
+                    );
+                  },
+                );
+              }
+
+              final crossAxisCount = constraints.maxWidth >= 1520 ? 3 : 2;
+              return GridView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(
+                  AppDesignTokens.spacingM,
+                  16,
+                  AppDesignTokens.spacingM,
+                  120,
+                ),
+                itemCount: filtered.length,
+                physics: const AlwaysScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  mainAxisExtent: 190,
+                ),
+                itemBuilder: (context, index) {
+                  return _ProjectCard(
+                    project: filtered[index],
+                    workSumUsd: _calcWorkSumUsd(filtered[index]),
+                  );
+                },
               );
             },
           );
@@ -266,76 +300,93 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   Widget _buildSearchLayer(AsyncValue<List<ProjectModel>> searchResultsAsync) {
     return Material(
       color: Theme.of(context).scaffoldBackgroundColor,
-      child: RefreshIndicator(
-        onRefresh: () async {
-          return ref.refresh(objectsProjectSearchResultsProvider.future);
-        },
-        child: searchResultsAsync.when(
-          data: (projects) {
-            if (projects.isEmpty) {
-              return ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  _searchHorizontalPadding,
-                  16,
-                  _searchHorizontalPadding,
-                  120,
-                ),
-                children: const [
-                  FriendlyEmptyState(
-                    icon: Icons.search_off_rounded,
-                    title: ProjectSearchTexts.emptyTitle,
-                    subtitle: ProjectSearchTexts.emptySubtitle,
-                    accentColor: Colors.blueGrey,
-                  ),
-                ],
-              );
-            }
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxWidth = DesktopWebFrame.isDesktop(context, minWidth: 1180)
+              ? 1380.0
+              : constraints.maxWidth;
 
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(
-                _searchHorizontalPadding,
-                16,
-                _searchHorizontalPadding,
-                120,
-              ),
-              physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: projects.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final project = projects[index];
-                return ProjectSearchResultTile(
-                  project: project,
-                  margin: EdgeInsets.zero,
-                  onTap: () => _openProjectDetails(project),
-                );
-              },
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(
-              _searchHorizontalPadding,
-              16,
-              _searchHorizontalPadding,
-              120,
-            ),
-            children: [
-              FriendlyEmptyState(
-                icon: Icons.error_outline,
-                title: 'Не удалось выполнить поиск',
-                subtitle: '$error',
-                accentColor: Colors.redAccent,
-                action: TextButton(
-                  onPressed: () =>
-                      ref.invalidate(objectsProjectSearchResultsProvider),
-                  child: const Text('Повторить'),
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  return ref
+                      .refresh(objectsProjectSearchResultsProvider.future);
+                },
+                child: searchResultsAsync.when(
+                  data: (projects) {
+                    if (projects.isEmpty) {
+                      return ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(
+                          _searchHorizontalPadding,
+                          16,
+                          _searchHorizontalPadding,
+                          120,
+                        ),
+                        children: const [
+                          FriendlyEmptyState(
+                            icon: Icons.search_off_rounded,
+                            title: ProjectSearchTexts.emptyTitle,
+                            subtitle: ProjectSearchTexts.emptySubtitle,
+                            accentColor: Colors.blueGrey,
+                          ),
+                        ],
+                      );
+                    }
+
+                    return ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(
+                        _searchHorizontalPadding,
+                        16,
+                        _searchHorizontalPadding,
+                        120,
+                      ),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: projects.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final project = projects[index];
+                        return ProjectSearchResultTile(
+                          project: project,
+                          margin: EdgeInsets.zero,
+                          onTap: () => _openProjectDetails(project),
+                        );
+                      },
+                    );
+                  },
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) => ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(
+                      _searchHorizontalPadding,
+                      16,
+                      _searchHorizontalPadding,
+                      120,
+                    ),
+                    children: [
+                      FriendlyEmptyState(
+                        icon: Icons.error_outline,
+                        title: 'Не удалось выполнить поиск',
+                        subtitle: '$error',
+                        accentColor: Colors.redAccent,
+                        action: TextButton(
+                          onPressed: () => ref
+                              .invalidate(objectsProjectSearchResultsProvider),
+                          child: const Text('Повторить'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -351,6 +402,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final handleBack =
         widget.onBackPressed ?? () => Navigator.of(context).maybePop();
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    const desktopMaxWidth = 1380.0;
 
     return ListenableBuilder(
       listenable: _appBarCollapseController,
@@ -387,7 +440,24 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
               const SizedBox(width: 8),
             ],
           ),
-          body: child!,
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              if (!isDesktopWeb) {
+                return child!;
+              }
+
+              return Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: constraints.maxWidth < desktopMaxWidth
+                      ? constraints.maxWidth
+                      : desktopMaxWidth,
+                  height: constraints.maxHeight,
+                  child: child!,
+                ),
+              );
+            },
+          ),
           floatingActionButton: Tooltip(
             message: 'Добавить объект',
             preferBelow: false,
