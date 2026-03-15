@@ -718,9 +718,15 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     );
   }
 
-  Widget _buildItemsCaption(int itemCount) {
+  Widget _buildItemsCaption(int itemCount,
+      {required double horizontalPadding}) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+      padding: EdgeInsets.fromLTRB(
+        horizontalPadding,
+        4,
+        horizontalPadding,
+        4,
+      ),
       child: Row(
         children: [
           Icon(
@@ -843,7 +849,11 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
               if (!widget.hideTopActions)
                 SliverToBoxAdapter(child: _buildActionButtons()),
               SliverToBoxAdapter(
-                  child: _buildItemsCaption(widget.items.length)),
+                child: _buildItemsCaption(
+                  widget.items.length,
+                  horizontalPadding: horizontalPadding,
+                ),
+              ),
 
               if (widget.items.isEmpty)
                 const SliverToBoxAdapter(

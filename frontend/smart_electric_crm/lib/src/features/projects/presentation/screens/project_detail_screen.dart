@@ -268,6 +268,7 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
       appSettingsProvider.select((value) => value.showWelcome),
     );
     final isDesktopWeb = DesktopWebFrame.hasPersistentShellSidebar(context);
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     final isWideDesktopWeb = DesktopWebFrame.hasWideShellSidebar(context);
     final desktopMenuWidth =
         isWideDesktopWeb ? _desktopMenuWidth : _desktopCompactMenuWidth;
@@ -303,6 +304,7 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
             title: _tabTitles[_currentIndex],
             subtitle: widget.project.address,
             icon: _tabIcons[_currentIndex],
+            bottomGap: isMobileWeb ? 16 : 30,
           ),
           body: isDesktopWeb
               ? LayoutBuilder(
@@ -466,18 +468,26 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
   @override
   Widget build(BuildContext context) {
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
 
     return Scaffold(
       floatingActionButton: Tooltip(
         message: 'Добавить этап',
         preferBelow: false,
         verticalOffset: 32,
-        child: FloatingActionButton(
-          onPressed: () => _showAddStageDialog(context, ref),
-          backgroundColor: Colors.indigo,
-          foregroundColor: Theme.of(context).colorScheme.surface,
-          child: const Icon(Icons.add),
-        ),
+        child: isMobileWeb
+            ? FloatingActionButton.small(
+                onPressed: () => _showAddStageDialog(context, ref),
+                backgroundColor: Colors.indigo,
+                foregroundColor: Theme.of(context).colorScheme.surface,
+                child: const Icon(Icons.add),
+              )
+            : FloatingActionButton(
+                onPressed: () => _showAddStageDialog(context, ref),
+                backgroundColor: Colors.indigo,
+                foregroundColor: Theme.of(context).colorScheme.surface,
+                child: const Icon(Icons.add),
+              ),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -485,14 +495,15 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
           final horizontalPadding = DesktopWebFrame.centeredContentSidePadding(
             constraints.maxWidth,
             maxWidth: contentMaxWidth,
+            minPadding: 12,
           );
           final content = SingleChildScrollView(
             controller: widget.scrollController,
             padding: EdgeInsets.fromLTRB(
               horizontalPadding,
-              isDesktopWeb ? 20 : 20,
+              isMobileWeb ? 12 : 20,
               horizontalPadding,
-              16,
+              isMobileWeb ? 12 : 16,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -575,7 +586,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                               color: Colors.blue.shade600,
                               selectable: true,
                             ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: isMobileWeb ? 12 : 16),
                             // Источник
                             DetailInfoRow(
                               icon: Icons.info_outline,
@@ -592,7 +603,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: isMobileWeb ? 20 : 32),
 
                 Row(
                   children: [
@@ -606,7 +617,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: isMobileWeb ? 12 : 16),
 
                 if (widget.project.stages.isEmpty)
                   const FriendlyEmptyState(
@@ -671,7 +682,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                     );
                   }),
 
-                const SizedBox(height: 80), // Space for FAB
+                SizedBox(height: isMobileWeb ? 64 : 80), // Space for FAB
               ],
             ),
           );
@@ -753,6 +764,7 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     final content = Column(
       children: [
         Expanded(
@@ -762,15 +774,16 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
                   DesktopWebFrame.centeredContentSidePadding(
                 constraints.maxWidth,
                 maxWidth: 1380,
+                minPadding: 12,
               );
 
               return ListView(
                 controller: widget.scrollController,
                 padding: EdgeInsets.fromLTRB(
                   horizontalPadding,
-                  20,
+                  isMobileWeb ? 12 : 20,
                   horizontalPadding,
-                  16,
+                  isMobileWeb ? 12 : 16,
                 ),
                 children: [
                   _FileCategorySection(
@@ -817,9 +830,14 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
           ),
         ),
         Align(
-          alignment: Alignment.centerRight,
+          alignment: isMobileWeb ? Alignment.centerLeft : Alignment.centerRight,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              0,
+              16,
+              isMobileWeb ? 12 : 16,
+            ),
             child: Text(
               "Лимит загрузки: до 12 файлов на проект, до 20 МБ каждый",
               style: TextStyle(
@@ -1535,7 +1553,8 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isCompactHeader = MediaQuery.sizeOf(context).width < 360;
+    final isCompactHeader = MediaQuery.sizeOf(context).width < 360 ||
+        DesktopWebFrame.isMobileWeb(context, maxWidth: 440);
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -1575,7 +1594,12 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                     onTap: () => setState(() => _isExpanded = !_isExpanded),
                     mouseCursor: SystemMouseCursors.click,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(19, 14, 14, 14),
+                      padding: EdgeInsets.fromLTRB(
+                        19,
+                        isCompactHeader ? 12 : 14,
+                        14,
+                        isCompactHeader ? 12 : 14,
+                      ),
                       child: Column(
                         children: [
                           Row(
@@ -1664,7 +1688,12 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                   ),
                   if (_isExpanded)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      padding: EdgeInsets.fromLTRB(
+                        12,
+                        0,
+                        12,
+                        isCompactHeader ? 12 : 16,
+                      ),
                       child: widget.files.isEmpty
                           ? const FriendlyEmptyState(
                               icon: Icons.folder_open_rounded,

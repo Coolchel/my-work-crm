@@ -46,7 +46,7 @@ class FinanceScreen extends ConsumerStatefulWidget {
 class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   static const _financeAccent = Colors.green;
   static const _cardRadius = AppDesignTokens.radiusM;
-  static const _sectionHPadding = AppDesignTokens.spacingM;
+  static const _desktopSectionHPadding = AppDesignTokens.spacingM;
   // Контроллеры для глобальных полей
   final _estimateController = TextEditingController();
   final _notesController = TextEditingController();
@@ -131,6 +131,12 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       formatted = formatted.substring(0, formatted.length - 1);
     }
     return formatted;
+  }
+
+  double _sectionHPadding(BuildContext context) {
+    return DesktopWebFrame.isMobileWeb(context, maxWidth: 700)
+        ? 12
+        : _desktopSectionHPadding;
   }
 
   Widget _buildAmountDisplay(double usd, double byn,
@@ -284,9 +290,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   Widget _buildProjectsHeader(int projectsCount) {
+    final sectionHPadding = _sectionHPadding(context);
     return Padding(
-      padding:
-          const EdgeInsets.fromLTRB(_sectionHPadding, 10, _sectionHPadding, 4),
+      padding: EdgeInsets.fromLTRB(sectionHPadding, 10, sectionHPadding, 4),
       child: Row(
         children: [
           Text(
@@ -323,6 +329,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       AsyncValue<FinanceSettingsModel> settingsAsync) {
     // Инициализация контроллеров перенесена в build с использованием addPostFrameCallback
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1240);
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
+    final sectionHPadding = _sectionHPadding(context);
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -348,7 +356,12 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           padding: EdgeInsets.only(left: shellSidebarInset),
           child: DesktopWebPageFrame(
             maxWidth: 1380,
-            padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 0, 16, 0),
+            padding: EdgeInsets.fromLTRB(
+              isMobileWeb ? 0 : sectionHPadding,
+              isDesktopWeb ? 24 : 0,
+              isMobileWeb ? 0 : sectionHPadding,
+              0,
+            ),
             child: isDesktopWeb
                 ? Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -363,8 +376,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 children: [
                                   _buildProjectsHeader(data.projects.length),
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: _sectionHPadding,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: sectionHPadding,
                                       vertical: 8,
                                     ),
                                     child: Column(
@@ -415,8 +428,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                           children: [
                             _buildProjectsHeader(data.projects.length),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: _sectionHPadding,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: sectionHPadding,
                                 vertical: 8,
                               ),
                               child: Column(
@@ -474,10 +487,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     required Color accentColor,
     required IconData icon,
   }) {
+    final sectionHPadding = _sectionHPadding(context);
     return Container(
       width: double.infinity,
-      margin:
-          const EdgeInsets.fromLTRB(_sectionHPadding, 0, _sectionHPadding, 0),
+      margin: EdgeInsets.fromLTRB(sectionHPadding, 0, sectionHPadding, 0),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,

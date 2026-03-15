@@ -341,6 +341,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final searchQuery = ref.watch(projectSearchQueryProvider);
     final isSearchActive = searchQuery != null && searchQuery.isNotEmpty;
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -508,7 +509,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                 onSettingsPressed: widget.onSettingsPressed,
                               ),
                               Transform.translate(
-                                offset: const Offset(0, -20),
+                                offset: Offset(0, isMobileWeb ? -12 : -20),
                                 child: AnimatedPadding(
                                   duration: const Duration(milliseconds: 180),
                                   curve: Curves.easeOutCubic,
@@ -516,8 +517,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                       EdgeInsets.only(left: shellSidebarInset),
                                   child: DesktopWebPageFrame(
                                     maxWidth: 1360,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 20),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: isMobileWeb ? 12 : 20,
+                                    ),
                                     child: Column(
                                       children: [
                                         QuickStatsRow(
@@ -531,13 +533,14 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                                 .state = stat;
                                           },
                                         ),
-                                        const SizedBox(height: 24),
+                                        SizedBox(height: isMobileWeb ? 14 : 24),
                                         _buildSearchBar(),
                                         if (isSearchActive &&
                                             _useInlineDesktopResults)
                                           Padding(
-                                            padding:
-                                                const EdgeInsets.only(top: 16),
+                                            padding: EdgeInsets.only(
+                                              top: isMobileWeb ? 12 : 16,
+                                            ),
                                             child: SearchResultsOverlay(
                                               maxHeight: 520,
                                               queryProvider:
@@ -566,26 +569,34 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                         left: shellSidebarInset),
                                     child: DesktopWebPageFrame(
                                       maxWidth: 1360,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: isMobileWeb ? 12 : 16,
+                                      ),
                                       child: Column(
                                         children: [
-                                          const SizedBox(height: 8),
-                                          const Padding(
+                                          SizedBox(height: isMobileWeb ? 4 : 8),
+                                          Padding(
                                             padding: EdgeInsets.symmetric(
-                                                horizontal: 16),
+                                              horizontal: isMobileWeb ? 0 : 16,
+                                            ),
                                             child: NewProjectCard(),
                                           ),
                                           if (hasProjectsLoadError)
-                                            const Padding(
+                                            Padding(
                                               padding: EdgeInsets.fromLTRB(
-                                                  16, 12, 16, 0),
+                                                isMobileWeb ? 0 : 16,
+                                                isMobileWeb ? 10 : 12,
+                                                isMobileWeb ? 0 : 16,
+                                                0,
+                                              ),
                                               child: _WelcomeNetworkNotice(),
                                             ),
-                                          const SizedBox(height: 24),
-                                          const Padding(
+                                          SizedBox(
+                                              height: isMobileWeb ? 18 : 24),
+                                          Padding(
                                             padding: EdgeInsets.symmetric(
-                                                horizontal: 16),
+                                              horizontal: isMobileWeb ? 0 : 16,
+                                            ),
                                             child: RecentProjectsList(),
                                           ),
                                         ],
@@ -594,7 +605,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 100),
+                              SizedBox(height: isMobileWeb ? 76 : 100),
                             ],
                           ),
                         ),

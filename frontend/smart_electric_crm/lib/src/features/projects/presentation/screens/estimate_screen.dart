@@ -268,6 +268,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       appSettingsProvider.select((value) => value.showWelcome),
     );
     final isDesktopWeb = DesktopWebFrame.hasPersistentShellSidebar(context);
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     final isWideDesktopWeb = DesktopWebFrame.hasWideShellSidebar(context);
     final desktopMenuWidth =
         isWideDesktopWeb ? _desktopMenuWidth : _desktopCompactMenuWidth;
@@ -287,6 +288,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         title: 'Смета',
         subtitle: StageCard.getStageTitleDisplay(widget.stage.title),
         icon: Icons.request_quote_rounded,
+        bottomGap: isMobileWeb ? 16 : 30,
         actions: [
           EstimateAppBarActions(
             showPrices: _showPrices,

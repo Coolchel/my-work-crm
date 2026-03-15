@@ -79,6 +79,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final settingsNotifier = ref.read(appSettingsProvider.notifier);
     final userAsync = ref.watch(userProfileProvider);
     final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
@@ -132,7 +133,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 padding: EdgeInsets.only(left: shellSidebarInset),
                 child: DesktopWebPageFrame(
                   maxWidth: 1160,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobileWeb ? 12 : 20,
+                  ),
                   child: SizedBox(
                     width: constraints.maxWidth,
                     child: child!,
@@ -145,7 +148,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       },
       child: ListView(
         controller: _scrollController,
-        padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 16, 16, 16),
+        padding: EdgeInsets.fromLTRB(
+          isMobileWeb ? 12 : 16,
+          isDesktopWeb ? 24 : 16,
+          isMobileWeb ? 12 : 16,
+          16,
+        ),
         children: [
           _buildSectionHeader('Внешний вид'),
           _HoverSettingsCard(
@@ -518,15 +526,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showReferenceWarning(BuildContext context, WidgetRef ref) {
+    final screenContext = context;
     const themeColor = Colors.red;
     final passwordController = TextEditingController();
     bool isLoading = false;
     String? passwordError;
 
     showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+      context: screenContext,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => Dialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           child: Container(
@@ -651,9 +660,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     return;
                                   }
 
-                                  if (!context.mounted) return;
-                                  Navigator.pop(context);
-                                  AppNavigation.openCatalog(context);
+                                  if (!screenContext.mounted) return;
+                                  Navigator.pop(dialogContext);
+                                  AppNavigation.openCatalog(screenContext);
                                 } catch (_) {
                                   setDialogState(() {
                                     isLoading = false;

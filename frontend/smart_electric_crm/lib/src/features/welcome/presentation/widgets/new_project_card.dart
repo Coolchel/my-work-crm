@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 
 import '../../../projects/presentation/screens/add_project_screen.dart';
 
@@ -17,6 +18,7 @@ class _NewProjectCardState extends State<NewProjectCard> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
     final borderHovered = isDark ? false : _isHovered;
     final lightBaseCardBackground = AppDesignTokens.cardBackground(context);
 
@@ -38,6 +40,7 @@ class _NewProjectCardState extends State<NewProjectCard> {
     final subtitleColor = isDark
         ? scheme.onSurfaceVariant.withOpacity(_isHovered ? 0.98 : 0.9)
         : Colors.grey.shade600;
+    final radius = isMobileWeb ? 18.0 : 24.0;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -46,7 +49,7 @@ class _NewProjectCardState extends State<NewProjectCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(radius),
           border: Border.all(
             color: AppDesignTokens.cardBorder(
               context,
@@ -82,23 +85,26 @@ class _NewProjectCardState extends State<NewProjectCard> {
               }
               return Colors.transparent;
             }),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(radius),
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobileWeb ? 16 : 24,
+                vertical: isMobileWeb ? 16 : 24,
+              ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: bgGradient,
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(radius),
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 56,
-                    height: 56,
+                    width: isMobileWeb ? 48 : 56,
+                    height: isMobileWeb ? 48 : 56,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: isDark
@@ -119,10 +125,10 @@ class _NewProjectCardState extends State<NewProjectCard> {
                     child: Icon(
                       Icons.add,
                       color: scheme.onPrimary,
-                      size: 30,
+                      size: isMobileWeb ? 24 : 30,
                     ),
                   ),
-                  const SizedBox(width: 20),
+                  SizedBox(width: isMobileWeb ? 14 : 20),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,29 +136,32 @@ class _NewProjectCardState extends State<NewProjectCard> {
                         Text(
                           'Новый объект',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: isMobileWeb ? 16 : 18,
                             fontWeight: FontWeight.bold,
                             color: titleColor,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: isMobileWeb ? 2 : 4),
                         Text(
                           'Создать смету и инженерную карту',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: isMobileWeb ? 13 : 14,
                             color: subtitleColor,
                           ),
+                          maxLines: isMobileWeb ? 2 : 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: isDark
-                        ? scheme.onSurfaceVariant.withOpacity(0.8)
-                        : Colors.indigo.withOpacity(0.5),
-                  ),
+                  if (!isMobileWeb)
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: isDark
+                          ? scheme.onSurfaceVariant.withOpacity(0.8)
+                          : Colors.indigo.withOpacity(0.5),
+                    ),
                 ],
               ),
             ),
