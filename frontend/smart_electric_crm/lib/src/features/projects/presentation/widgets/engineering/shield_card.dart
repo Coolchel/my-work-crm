@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../engineering/data/models/shield_model.dart';
@@ -14,6 +15,7 @@ import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../../shared/presentation/dialogs/text_input_dialog.dart';
 import '../../dialogs/engineering/shield_notes_dialog.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
+import '../../../../../shared/presentation/widgets/desktop_web_frame.dart';
 
 class ShieldCard extends ConsumerStatefulWidget {
   final ShieldModel shield;
@@ -338,6 +340,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     final shield = widget.shield;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final isDesktopWeb =
+        kIsWeb && DesktopWebFrame.hasPersistentShellSidebar(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -473,8 +477,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  alignment: WrapAlignment.center,
-                  runAlignment: WrapAlignment.center,
+                  alignment:
+                      isDesktopWeb ? WrapAlignment.end : WrapAlignment.center,
+                  runAlignment:
+                      isDesktopWeb ? WrapAlignment.end : WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     // Template Button (only for Power/LED)
@@ -482,19 +488,14 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                         shield.shieldType == 'led') ...[
                       Tooltip(
                         message: 'Шаблоны',
-                        child: OutlinedButton(
+                        child: _buildActionButton(
+                          label: 'Шаблоны',
+                          icon: const Icon(Icons.copy_all_rounded, size: 18),
                           onPressed: () =>
                               _showTemplateDialog(context, ref, shield),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.grey.shade600,
-                            side:
-                                BorderSide(color: Colors.grey.withOpacity(0.3)),
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(36, 36),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: const Icon(Icons.copy_all_rounded, size: 18),
+                          foregroundColor: Colors.grey.shade600,
+                          sideColor: Colors.grey.withOpacity(0.3),
+                          expanded: isDesktopWeb,
                         ),
                       ),
                     ],
@@ -507,53 +508,56 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                         animation: _pulseAnimation,
                         builder: (context, child) {
                           final hasNotes = shield.notes.isNotEmpty;
-                          return Transform.scale(
-                            scale: hasNotes ? _pulseAnimation.value : 1.0,
-                            child: OutlinedButton(
-                              onPressed: () =>
-                                  _showNotesDialog(context, ref, shield),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: hasNotes
-                                    ? themeColor.withOpacity(0.8)
-                                    : Colors.grey.shade600,
-                                side: BorderSide(
-                                  color: hasNotes
-                                      ? themeColor.withOpacity(0.4)
-                                      : Colors.grey.withOpacity(0.3),
-                                ),
-                                backgroundColor: hasNotes
-                                    ? themeColor.withOpacity(0.05)
-                                    : Colors.transparent,
-                                padding: EdgeInsets.zero,
-                                minimumSize: const Size(36, 36),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8)),
-                              ),
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  const Icon(Icons.note_alt_outlined, size: 18),
-                                  if (hasNotes)
-                                    Positioned(
-                                      right: -2,
-                                      top: -2,
-                                      child: Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: BoxDecoration(
-                                          color: themeColor,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .surface,
-                                              width: 1.5),
-                                        ),
+                          final noteIcon = Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              if (isDesktopWeb && hasNotes)
+                                Transform.scale(
+                                  scale: _pulseAnimation.value,
+                                  child: const Icon(
+                                    Icons.note_alt_outlined,
+                                    size: 18,
+                                  ),
+                                )
+                              else
+                                const Icon(Icons.note_alt_outlined, size: 18),
+                              if (hasNotes)
+                                Positioned(
+                                  right: -2,
+                                  top: -2,
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: themeColor,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surface,
+                                        width: 1.5,
                                       ),
                                     ),
-                                ],
-                              ),
-                            ),
+                                  ),
+                                ),
+                            ],
+                          );
+
+                          return _buildActionButton(
+                            label: hasNotes ? 'Заметки' : 'Заметка',
+                            icon: noteIcon,
+                            onPressed: () =>
+                                _showNotesDialog(context, ref, shield),
+                            foregroundColor: hasNotes
+                                ? themeColor.withOpacity(0.8)
+                                : Colors.grey.shade600,
+                            sideColor: hasNotes
+                                ? themeColor.withOpacity(0.4)
+                                : Colors.grey.withOpacity(0.3),
+                            backgroundColor: hasNotes
+                                ? themeColor.withOpacity(0.05)
+                                : Colors.transparent,
+                            expanded: isDesktopWeb,
                           );
                         },
                       ),
@@ -561,34 +565,26 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     // Edit Button
                     Tooltip(
                       message: 'Редактировать щит',
-                      child: OutlinedButton(
+                      child: _buildActionButton(
+                        label: 'Редактировать',
+                        icon: const Icon(Icons.edit_outlined, size: 18),
                         onPressed: () =>
                             _showEditShieldDialog(context, ref, shield),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.grey.shade700,
-                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
-                          padding: EdgeInsets.zero, // Icon only
-                          minimumSize: const Size(36, 36), // Square 36x36
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: const Icon(Icons.edit_outlined, size: 18),
+                        foregroundColor: Colors.grey.shade700,
+                        sideColor: Colors.grey.withOpacity(0.3),
+                        expanded: isDesktopWeb,
                       ),
                     ),
                     // Delete Button
                     Tooltip(
                       message: 'Удалить щит',
-                      child: OutlinedButton(
+                      child: _buildActionButton(
+                        label: 'Удалить',
+                        icon: const Icon(Icons.close_rounded, size: 18),
                         onPressed: () => _deleteShield(context, ref),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.grey.shade600,
-                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(36, 36),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: const Icon(Icons.close_rounded, size: 18),
+                        foregroundColor: Colors.grey.shade600,
+                        sideColor: Colors.grey.withOpacity(0.3),
+                        expanded: isDesktopWeb,
                       ),
                     ),
                   ],
@@ -598,6 +594,46 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required Widget icon,
+    required VoidCallback onPressed,
+    required Color foregroundColor,
+    required Color sideColor,
+    bool expanded = false,
+    Color backgroundColor = Colors.transparent,
+  }) {
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: foregroundColor,
+        side: BorderSide(color: sideColor),
+        backgroundColor: backgroundColor,
+        padding: expanded
+            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 10)
+            : EdgeInsets.zero,
+        minimumSize: expanded ? const Size(0, 38) : const Size(36, 36),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: expanded
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                icon,
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            )
+          : icon,
     );
   }
 
