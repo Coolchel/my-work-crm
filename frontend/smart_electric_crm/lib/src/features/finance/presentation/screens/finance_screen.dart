@@ -134,9 +134,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   double _sectionHPadding(BuildContext context) {
-    return DesktopWebFrame.isMobileWeb(context, maxWidth: 700)
-        ? 12
-        : _desktopSectionHPadding;
+    return DesktopWebFrame.contentHorizontalPadding(
+      context,
+      desktop: _desktopSectionHPadding,
+    );
   }
 
   Widget _buildAmountDisplay(double usd, double byn,
@@ -329,8 +330,10 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       AsyncValue<FinanceSettingsModel> settingsAsync) {
     // Инициализация контроллеров перенесена в build с использованием addPostFrameCallback
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1240);
-    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     final sectionHPadding = _sectionHPadding(context);
+    final usesMobileContentPadding = DesktopWebFrame.usesMobileContentPadding(
+      context,
+    );
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -357,9 +360,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           child: DesktopWebPageFrame(
             maxWidth: 1380,
             padding: EdgeInsets.fromLTRB(
-              isMobileWeb ? 0 : sectionHPadding,
+              usesMobileContentPadding ? 0 : sectionHPadding,
               isDesktopWeb ? 24 : 0,
-              isMobileWeb ? 0 : sectionHPadding,
+              usesMobileContentPadding ? 0 : sectionHPadding,
               0,
             ),
             child: isDesktopWeb

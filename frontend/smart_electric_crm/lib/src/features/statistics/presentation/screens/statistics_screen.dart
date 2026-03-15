@@ -83,8 +83,11 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
   Widget build(BuildContext context) {
     final viewport = MediaQuery.sizeOf(context);
     final isMobile = viewport.width < 600;
-    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final horizontalContentPadding = DesktopWebFrame.contentHorizontalPadding(
+      context,
+      desktop: 16,
+    );
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -172,9 +175,9 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
               padding: EdgeInsets.only(left: shellSidebarInset),
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
-                  isMobileWeb ? 12 : 16,
+                  horizontalContentPadding,
                   isDesktopWeb ? 24 : 16,
-                  isMobileWeb ? 12 : 16,
+                  horizontalContentPadding,
                   16,
                 ),
                 child: DesktopWebPageFrame(
