@@ -1264,13 +1264,19 @@ class _ProjectCardState extends State<_ProjectCard> {
           ? start + columns
           : children.length;
       final rowChildren = children.sublist(start, end);
+      final trailingPlaceholders = columns - rowChildren.length;
       rows.add(
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (var i = 0; i < rowChildren.length; i++) ...[
               Expanded(child: rowChildren[i]),
-              if (i < rowChildren.length - 1)
+              if (i < rowChildren.length - 1 || trailingPlaceholders > 0)
+                const SizedBox(width: _metaBlockSpacing),
+            ],
+            for (var i = 0; i < trailingPlaceholders; i++) ...[
+              const Expanded(child: SizedBox.shrink()),
+              if (i < trailingPlaceholders - 1)
                 const SizedBox(width: _metaBlockSpacing),
             ],
           ],
