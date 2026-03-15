@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/project_model.dart';
@@ -46,6 +47,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   late AnimationController _searchAnimController;
   late Animation<double> _fadeAnimation;
   final _searchFocusNode = FocusNode();
+  bool _autofocusSearchOnOpen = false;
   final ScrollController _scrollController = ScrollController();
   final SectionAppBarCollapseController _appBarCollapseController =
       SectionAppBarCollapseController();
@@ -107,19 +109,50 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   }
 
   void _toggleSearch() {
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     if (_searchAnimController.isDismissed) {
-      _searchAnimController.forward().then((_) {
-        _searchFocusNode.requestFocus();
-      });
+      if (isMobileWeb) {
+        setState(() {
+          _autofocusSearchOnOpen = true;
+          _searchAnimController.value = 1;
+        });
+        _focusSearchField();
+      } else {
+        _searchAnimController.forward().then((_) {
+          _focusSearchField();
+        });
+      }
     } else {
       _closeSearch();
     }
+  }
+
+  void _focusSearchField() {
+    _searchFocusNode.requestFocus();
+    final shouldShowKeyboard = DesktopWebFrame.isMobileWeb(
+          context,
+          maxWidth: 700,
+        ) ||
+        (!kIsWeb &&
+            (defaultTargetPlatform == TargetPlatform.android ||
+                defaultTargetPlatform == TargetPlatform.iOS));
+    if (!shouldShowKeyboard) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _searchFocusNode.requestFocus();
+      SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+    });
   }
 
   void _closeSearch() {
     _searchController.clear();
     ref.read(objectsProjectSearchQueryProvider.notifier).state = null;
     _searchAnimController.reverse();
+    _autofocusSearchOnOpen = false;
     FocusScope.of(context).unfocus();
     if (mounted) {
       setState(() {});
@@ -518,7 +551,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                       child: TextField(
                         controller: _searchController,
                         focusNode: _searchFocusNode,
-                        autofocus: false,
+                        autofocus: isMobileWeb && _autofocusSearchOnOpen,
                         textAlignVertical: TextAlignVertical.center,
                         style: const TextStyle(fontSize: 16),
                         decoration: InputDecoration(

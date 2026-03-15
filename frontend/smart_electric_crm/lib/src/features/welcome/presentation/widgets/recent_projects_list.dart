@@ -278,6 +278,10 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
       context,
       maxWidth: 480,
     );
+    final isAndroidOrIos = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS);
+    final hideClientLine = isCompactMobileWeb || isAndroidOrIos;
     final clientLine = _buildClientLine(project);
     final intercomLine = _buildIntercomLine(project);
     final scheme = Theme.of(context).colorScheme;
@@ -334,72 +338,103 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
               child: Padding(
                 padding: EdgeInsets.all(isCompactMobileWeb ? 10 : 12),
                 child: isCompactMobileWeb
-                    ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.indigo.withOpacity(0.18)
-                                  : Colors.indigo.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              _getIcon(project.objectType),
-                              color: isDark
-                                  ? Colors.indigo.shade200
-                                  : Colors.indigo,
-                              size: 18,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
+                    ? IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Column(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  project.address,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 14,
-                                    color: scheme.onSurface,
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? Colors.indigo.withOpacity(0.18)
+                                        : Colors.indigo.shade50,
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (clientLine != null) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    clientLine,
-                                    style: secondaryInfoStyle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                                if (intercomLine != null) ...[
-                                  const SizedBox(height: 1),
-                                  Text(
-                                    intercomLine,
-                                    style: secondaryInfoStyle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                                const SizedBox(height: 6),
-                                Text(
-                                  _formatDate(lastActivity),
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: scheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w500,
+                                  child: Icon(
+                                    _getIcon(project.objectType),
+                                    color: isDark
+                                        ? Colors.indigo.shade200
+                                        : Colors.indigo,
+                                    size: 18,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Stack(
+                                children: [
+                                  Positioned.fill(
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                        right:
+                                            _dateColumnWidth + _contentDateGap,
+                                      ),
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              project.address,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 14,
+                                                color: scheme.onSurface,
+                                              ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            if (clientLine != null &&
+                                                !hideClientLine) ...[
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                clientLine,
+                                                style: secondaryInfoStyle,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                            if (intercomLine != null) ...[
+                                              const SizedBox(height: 1),
+                                              Text(
+                                                intercomLine,
+                                                style: secondaryInfoStyle,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 0,
+                                    right: 0,
+                                    child: SizedBox(
+                                      width: _dateColumnWidth,
+                                      child: Text(
+                                        _formatDate(lastActivity),
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 11.5,
+                                          color: scheme.onSurfaceVariant,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       )
                     : IntrinsicHeight(
                         child: Row(
@@ -453,7 +488,8 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                                               maxLines: 2,
                                               overflow: TextOverflow.ellipsis,
                                             ),
-                                            if (clientLine != null) ...[
+                                            if (clientLine != null &&
+                                                !hideClientLine) ...[
                                               const SizedBox(height: 2),
                                               Text(
                                                 clientLine,
