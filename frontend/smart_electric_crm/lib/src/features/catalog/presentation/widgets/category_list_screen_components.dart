@@ -151,7 +151,12 @@ class _SystemSectionsTabState extends ConsumerState<_SystemSectionsTab> {
 
         return ListView.builder(
           controller: widget.scrollController,
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 112),
+          padding: EdgeInsets.fromLTRB(
+            _catalogHorizontalContentPadding(context),
+            20,
+            _catalogHorizontalContentPadding(context),
+            112,
+          ),
           itemCount: sections.length,
           itemBuilder: (context, index) {
             final section = sections[index];
@@ -374,7 +379,12 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
 
           return ListView.builder(
             controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
+            padding: EdgeInsets.fromLTRB(
+              _catalogHorizontalContentPadding(context),
+              20,
+              _catalogHorizontalContentPadding(context),
+              100,
+            ),
             itemCount: entries.length,
             itemBuilder: (context, index) {
               final entry = entries[index];
@@ -581,7 +591,12 @@ class _CatalogTabState extends ConsumerState<_CatalogTab> {
 
         return ListView.builder(
           controller: widget.scrollController,
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
+          padding: EdgeInsets.fromLTRB(
+            _catalogHorizontalContentPadding(context),
+            20,
+            _catalogHorizontalContentPadding(context),
+            100,
+          ),
           itemCount: categories.length,
           itemBuilder: (context, index) {
             final category = categories[index];
@@ -805,7 +820,12 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
           }
           return ListView.builder(
             controller: _scrollController,
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 96),
+            padding: EdgeInsets.fromLTRB(
+              _catalogHorizontalContentPadding(context),
+              20,
+              _catalogHorizontalContentPadding(context),
+              96,
+            ),
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];

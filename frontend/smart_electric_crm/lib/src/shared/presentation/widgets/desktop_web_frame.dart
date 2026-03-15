@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 final class DesktopWebFrame {
   const DesktopWebFrame._();
 
+  static const double mobileContentHorizontalPadding = 12;
   static const double shellSidebarBreakpoint = 1180;
   static const double shellSidebarWideBreakpoint = 1450;
   static const double shellSidebarLeftOffset = 16;
@@ -21,6 +22,14 @@ final class DesktopWebFrame {
 
   static bool isMobileWeb(BuildContext context, {double maxWidth = 700}) {
     return kIsWeb && MediaQuery.sizeOf(context).width < maxWidth;
+  }
+
+  static bool usesMobileContentPadding(
+    BuildContext context, {
+    double maxWidth = 700,
+  }) {
+    return isMobileWeb(context, maxWidth: maxWidth) ||
+        (!kIsWeb && defaultTargetPlatform == TargetPlatform.android);
   }
 
   static bool hasPersistentShellSidebar(
@@ -77,6 +86,17 @@ final class DesktopWebFrame {
       horizontal: isDesktopWeb ? desktopHorizontal : mobileHorizontal,
       vertical: isDesktopWeb ? desktopVertical : mobileVertical,
     );
+  }
+
+  static double contentHorizontalPadding(
+    BuildContext context, {
+    double mobile = mobileContentHorizontalPadding,
+    double desktop = 16,
+    double maxWidth = 700,
+  }) {
+    return usesMobileContentPadding(context, maxWidth: maxWidth)
+        ? mobile
+        : desktop;
   }
 }
 

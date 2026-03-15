@@ -79,8 +79,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final settingsNotifier = ref.read(appSettingsProvider.notifier);
     final userAsync = ref.watch(userProfileProvider);
     final isMobile = MediaQuery.sizeOf(context).width < 600;
-    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final horizontalContentPadding = DesktopWebFrame.contentHorizontalPadding(
+      context,
+      desktop: 16,
+    );
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -134,7 +137,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 child: DesktopWebPageFrame(
                   maxWidth: 1160,
                   padding: EdgeInsets.symmetric(
-                    horizontal: isMobileWeb ? 12 : 20,
+                    horizontal: DesktopWebFrame.contentHorizontalPadding(
+                      context,
+                      desktop: 20,
+                    ),
                   ),
                   child: SizedBox(
                     width: constraints.maxWidth,
@@ -149,9 +155,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       child: ListView(
         controller: _scrollController,
         padding: EdgeInsets.fromLTRB(
-          isMobileWeb ? 12 : 16,
+          horizontalContentPadding,
           isDesktopWeb ? 24 : 16,
-          isMobileWeb ? 12 : 16,
+          horizontalContentPadding,
           16,
         ),
         children: [

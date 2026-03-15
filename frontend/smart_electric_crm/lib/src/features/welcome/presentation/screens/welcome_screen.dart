@@ -346,6 +346,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final isSearchActive = searchQuery != null && searchQuery.isNotEmpty;
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
+    final usesMobileContentPadding = DesktopWebFrame.usesMobileContentPadding(
+      context,
+    );
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -522,7 +525,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   child: DesktopWebPageFrame(
                                     maxWidth: 1360,
                                     padding: EdgeInsets.symmetric(
-                                      horizontal: isMobileWeb ? 12 : 20,
+                                      horizontal: DesktopWebFrame
+                                          .contentHorizontalPadding(
+                                        context,
+                                        desktop: 20,
+                                      ),
                                     ),
                                     child: Column(
                                       children: [
@@ -574,23 +581,34 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                     child: DesktopWebPageFrame(
                                       maxWidth: 1360,
                                       padding: EdgeInsets.symmetric(
-                                        horizontal: isMobileWeb ? 12 : 16,
+                                        horizontal: DesktopWebFrame
+                                            .contentHorizontalPadding(
+                                          context,
+                                          desktop: 16,
+                                        ),
                                       ),
                                       child: Column(
                                         children: [
                                           SizedBox(height: isMobileWeb ? 4 : 8),
                                           Padding(
                                             padding: EdgeInsets.symmetric(
-                                              horizontal: isMobileWeb ? 0 : 16,
+                                              horizontal:
+                                                  usesMobileContentPadding
+                                                      ? 0
+                                                      : 16,
                                             ),
                                             child: NewProjectCard(),
                                           ),
                                           if (hasProjectsLoadError)
                                             Padding(
                                               padding: EdgeInsets.fromLTRB(
-                                                isMobileWeb ? 0 : 16,
+                                                usesMobileContentPadding
+                                                    ? 0
+                                                    : 16,
                                                 isMobileWeb ? 10 : 12,
-                                                isMobileWeb ? 0 : 16,
+                                                usesMobileContentPadding
+                                                    ? 0
+                                                    : 16,
                                                 0,
                                               ),
                                               child: _WelcomeNetworkNotice(),
@@ -599,7 +617,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                               height: isMobileWeb ? 18 : 24),
                                           Padding(
                                             padding: EdgeInsets.symmetric(
-                                              horizontal: isMobileWeb ? 0 : 16,
+                                              horizontal:
+                                                  usesMobileContentPadding
+                                                      ? 0
+                                                      : 16,
                                             ),
                                             child: RecentProjectsList(),
                                           ),

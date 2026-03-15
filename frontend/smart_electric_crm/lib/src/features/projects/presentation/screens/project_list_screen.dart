@@ -649,168 +649,194 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             const themeColor = Colors.indigo;
             final isDark = AppDesignTokens.isDark(context);
             final scheme = Theme.of(context).colorScheme;
+            final viewInsets = MediaQuery.viewInsetsOf(context);
             return Dialog(
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24)),
+                borderRadius: BorderRadius.circular(24),
+              ),
               elevation: 0,
               backgroundColor: Colors.transparent,
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 400),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.34 : 0.12),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: themeColor.withOpacity(0.12),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(24),
-                          topRight: Radius.circular(24),
+              child: SafeArea(
+                child: AnimatedPadding(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  padding: EdgeInsets.only(bottom: viewInsets.bottom),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: 400,
+                        maxHeight: constraints.maxHeight * 0.9,
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black
+                                  .withOpacity(isDark ? 0.34 : 0.12),
+                              blurRadius: 18,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Header
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 16),
+                              decoration: BoxDecoration(
+                                color: themeColor.withOpacity(0.12),
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(24),
+                                  topRight: Radius.circular(24),
+                                ),
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Text(
+                                    'Фильтры',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark
+                                          ? scheme.onSurface
+                                          : themeColor.withOpacity(0.8),
+                                    ),
+                                  ),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Tooltip(
+                                      message: 'Закрыть',
+                                      child: IconButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        icon: const Icon(Icons.close,
+                                            color: themeColor),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        iconSize: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Content
+                            Flexible(
+                              child: SingleChildScrollView(
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _buildFilterLabel('Сортировка'),
+                                    const SizedBox(height: 8),
+                                    _buildFilterChipGroup<String>(
+                                      items: {
+                                        'newest': 'Сначала новые',
+                                        'oldest': 'Сначала старые',
+                                        'work_sum_desc': 'Наиболее прибыльные',
+                                        'work_sum_asc': 'Наименее прибыльные',
+                                      },
+                                      selected: _workSumSort != null
+                                          ? 'work_sum_$_workSumSort'
+                                          : (_sortOrder == SortOrder.newest
+                                              ? 'newest'
+                                              : 'oldest'),
+                                      onSelected: (val) {
+                                        setDialogState(() => setState(() {
+                                              if (val == 'work_sum_desc') {
+                                                _workSumSort = 'desc';
+                                              } else if (val ==
+                                                  'work_sum_asc') {
+                                                _workSumSort = 'asc';
+                                              } else {
+                                                _workSumSort = null;
+                                                _sortOrder = val == 'newest'
+                                                    ? SortOrder.newest
+                                                    : SortOrder.oldest;
+                                              }
+                                            }));
+                                      },
+                                      themeColor: themeColor,
+                                    ),
+                                    const SizedBox(height: 20),
+                                    _buildFilterLabel('Источник'),
+                                    const SizedBox(height: 8),
+                                    _buildFilterChipGroup<String?>(
+                                      items: {
+                                        null: 'Все',
+                                        for (final s in _sources) s: s,
+                                      },
+                                      selected: _filterSource,
+                                      onSelected: (val) {
+                                        setDialogState(() => setState(
+                                            () => _filterSource = val));
+                                      },
+                                      themeColor: themeColor,
+                                    ),
+                                    const SizedBox(height: 20),
+                                    _buildFilterLabel('Тип объекта'),
+                                    const SizedBox(height: 8),
+                                    _buildFilterChipGroup<String?>(
+                                      items: {
+                                        null: 'Все',
+                                        ..._objectTypes,
+                                      },
+                                      selected: _filterType,
+                                      onSelected: (val) {
+                                        setDialogState(() =>
+                                            setState(() => _filterType = val));
+                                      },
+                                      themeColor: themeColor,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Footer
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+                              child: Wrap(
+                                alignment: WrapAlignment.end,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  if (_hasActiveFilters)
+                                    TextButton(
+                                      onPressed: () =>
+                                          setDialogState(() => _resetFilters()),
+                                      style: TextButton.styleFrom(
+                                          foregroundColor: Colors.grey),
+                                      child: const Text('Сбросить'),
+                                    ),
+                                  FilledButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: themeColor,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(24),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 24, vertical: 12),
+                                    ),
+                                    child: const Text('Готово'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Text(
-                            'Фильтры',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: isDark
-                                  ? scheme.onSurface
-                                  : themeColor.withOpacity(0.8),
-                            ),
-                          ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Tooltip(
-                              message: 'Закрыть',
-                              child: IconButton(
-                                onPressed: () => Navigator.pop(context),
-                                icon:
-                                    const Icon(Icons.close, color: themeColor),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                iconSize: 20,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-                    // Content
-                    Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildFilterLabel('Сортировка'),
-                          const SizedBox(height: 8),
-                          _buildFilterChipGroup<String>(
-                            items: {
-                              'newest': 'Сначала новые',
-                              'oldest': 'Сначала старые',
-                              'work_sum_desc': 'Наиболее прибыльные',
-                              'work_sum_asc': 'Наименее прибыльные',
-                            },
-                            selected: _workSumSort != null
-                                ? 'work_sum_$_workSumSort'
-                                : (_sortOrder == SortOrder.newest
-                                    ? 'newest'
-                                    : 'oldest'),
-                            onSelected: (val) {
-                              setDialogState(() => setState(() {
-                                    if (val == 'work_sum_desc') {
-                                      _workSumSort = 'desc';
-                                    } else if (val == 'work_sum_asc') {
-                                      _workSumSort = 'asc';
-                                    } else {
-                                      _workSumSort = null;
-                                      _sortOrder = val == 'newest'
-                                          ? SortOrder.newest
-                                          : SortOrder.oldest;
-                                    }
-                                  }));
-                            },
-                            themeColor: themeColor,
-                          ),
-                          const SizedBox(height: 20),
-                          _buildFilterLabel('Источник'),
-                          const SizedBox(height: 8),
-                          _buildFilterChipGroup<String?>(
-                            items: {
-                              null: 'Все',
-                              for (final s in _sources) s: s,
-                            },
-                            selected: _filterSource,
-                            onSelected: (val) {
-                              setDialogState(
-                                  () => setState(() => _filterSource = val));
-                            },
-                            themeColor: themeColor,
-                          ),
-                          const SizedBox(height: 20),
-                          _buildFilterLabel('Тип объекта'),
-                          const SizedBox(height: 8),
-                          _buildFilterChipGroup<String?>(
-                            items: {
-                              null: 'Все',
-                              ..._objectTypes,
-                            },
-                            selected: _filterType,
-                            onSelected: (val) {
-                              setDialogState(
-                                  () => setState(() => _filterType = val));
-                            },
-                            themeColor: themeColor,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Footer
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-                      child: Row(
-                        children: [
-                          if (_hasActiveFilters)
-                            TextButton(
-                              onPressed: () =>
-                                  setDialogState(() => _resetFilters()),
-                              style: TextButton.styleFrom(
-                                  foregroundColor: Colors.grey),
-                              child: const Text('Сбросить'),
-                            ),
-                          const Spacer(),
-                          FilledButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: themeColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 12),
-                            ),
-                            child: const Text('Готово'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             );
