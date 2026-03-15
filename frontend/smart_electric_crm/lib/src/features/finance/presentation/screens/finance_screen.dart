@@ -384,6 +384,13 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                       width: 380,
                       child: Column(
                         children: [
+                          IgnorePointer(
+                            child: Opacity(
+                              opacity: 0,
+                              child: _buildProjectsHeader(data.projects.length),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
                           _buildTotalSection(data.totalUsd, data.totalByn),
                           _buildGlobalSettingsSection(),
                         ],
@@ -430,10 +437,39 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   Widget _buildTotalSection(double totalUsd, double totalByn) {
+    return Column(
+      children: [
+        _buildCurrencyTotalCard(
+          title: 'К получению USD',
+          amount: totalUsd,
+          symbol: '\$',
+          accentColor: Colors.green,
+          icon: Icons.attach_money_rounded,
+        ),
+        const SizedBox(height: 12),
+        _buildCurrencyTotalCard(
+          title: 'К получению BYN',
+          amount: totalByn,
+          symbol: 'р',
+          accentColor: Colors.indigo,
+          icon: Icons.payments_outlined,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCurrencyTotalCard({
+    required String title,
+    required double amount,
+    required String symbol,
+    required Color accentColor,
+    required IconData icon,
+  }) {
     return Container(
+      width: double.infinity,
       margin:
-          const EdgeInsets.fromLTRB(_sectionHPadding, 16, _sectionHPadding, 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          const EdgeInsets.fromLTRB(_sectionHPadding, 0, _sectionHPadding, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(_cardRadius),
@@ -450,59 +486,35 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: _financeAccent.withOpacity(0.12),
+              color: accentColor.withOpacity(0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
-              Icons.account_balance_wallet,
-              color: _financeAccent,
+            child: Icon(
+              icon,
+              color: accentColor,
               size: 20,
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            'Итого к получению',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface,
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
-          const Spacer(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (totalUsd > 0)
-                Text(
-                  '${_formatAmount(totalUsd)} \$',
-                  style: const TextStyle(
-                    color: _financeAccent,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              if (totalUsd > 0 && totalByn > 0) const SizedBox(height: 2),
-              if (totalByn > 0)
-                Text(
-                  '${_formatAmount(totalByn)} р',
-                  style: const TextStyle(
-                    color: _financeAccent,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              if (totalUsd == 0 && totalByn == 0)
-                Text(
-                  '0',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-            ],
+          Text(
+            amount > 0 ? '${_formatAmount(amount)} $symbol' : '0',
+            style: TextStyle(
+              color: accentColor,
+              fontSize: 19,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),

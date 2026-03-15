@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_side_menu.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
@@ -114,6 +115,9 @@ class _ProjectDetailContent extends ConsumerStatefulWidget {
 }
 
 class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
+  static const double _desktopMenuWidth = 224;
+  static const double _desktopMenuLeft = 16;
+  static const double _desktopMenuTop = 16;
   int _currentIndex = 0;
   final ScrollController _stagesScrollController = ScrollController();
   final ScrollController _shieldsScrollController = ScrollController();
@@ -213,38 +217,38 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
     _appBarCollapseController.bind(_activeScrollController);
   }
 
-  List<ButtonSegment<int>> _buildDesktopSegments(bool showWelcome) {
-    final segments = <ButtonSegment<int>>[];
-
-    if (showWelcome) {
-      segments.add(
-        const ButtonSegment<int>(
-          value: 0,
-          icon: Icon(Icons.home_outlined),
-          label: Text('Главная'),
+  List<DesktopSideMenuItem> _buildDesktopMenuItems(bool showWelcome) {
+    return [
+      if (showWelcome)
+        DesktopSideMenuItem(
+          label: 'Главная',
+          icon: const Icon(Icons.home_outlined),
+          selectedIcon: const Icon(Icons.home),
+          onTap: () => _handleSectionSelection(0, showWelcome),
+          isSelected: false,
         ),
-      );
-    }
-
-    segments.addAll([
-      ButtonSegment<int>(
-        value: showWelcome ? 1 : 0,
+      DesktopSideMenuItem(
+        label: 'Этапы',
         icon: const Icon(Icons.layers_outlined),
-        label: const Text('Этапы'),
+        selectedIcon: const Icon(Icons.layers),
+        onTap: () => _handleSectionSelection(showWelcome ? 1 : 0, showWelcome),
+        isSelected: showWelcome ? _currentIndex + 1 == 1 : _currentIndex == 0,
       ),
-      ButtonSegment<int>(
-        value: showWelcome ? 2 : 1,
+      DesktopSideMenuItem(
+        label: 'Щиты',
         icon: const Icon(Icons.settings_input_component_outlined),
-        label: const Text('Щиты'),
+        selectedIcon: const Icon(Icons.settings_input_component),
+        onTap: () => _handleSectionSelection(showWelcome ? 2 : 1, showWelcome),
+        isSelected: showWelcome ? _currentIndex + 1 == 2 : _currentIndex == 1,
       ),
-      ButtonSegment<int>(
-        value: showWelcome ? 3 : 2,
+      DesktopSideMenuItem(
+        label: 'Файлы',
         icon: const Icon(Icons.folder_open_outlined),
-        label: const Text('Файлы'),
+        selectedIcon: const Icon(Icons.folder_open),
+        onTap: () => _handleSectionSelection(showWelcome ? 3 : 2, showWelcome),
+        isSelected: showWelcome ? _currentIndex + 1 == 3 : _currentIndex == 2,
       ),
-    ]);
-
-    return segments;
+    ];
   }
 
   @override
@@ -261,7 +265,7 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
     final showWelcome = ref.watch(
       appSettingsProvider.select((value) => value.showWelcome),
     );
-    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1450);
     final screens = [
       _StagesTab(
         project: widget.project,
@@ -296,33 +300,35 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
             icon: _tabIcons[_currentIndex],
           ),
           body: isDesktopWeb
-              ? Column(
-                  children: [
-                    DesktopWebPageFrame(
-                      maxWidth: 1320,
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: SegmentedButton<int>(
-                            showSelectedIcon: false,
-                            segments: _buildDesktopSegments(showWelcome),
-                            selected: {
-                              showWelcome ? _currentIndex + 1 : _currentIndex
-                            },
-                            onSelectionChanged: (selection) {
-                              _handleSectionSelection(
-                                selection.first,
-                                showWelcome,
-                              );
-                            },
+              ? LayoutBuilder(
+                  builder: (context, constraints) {
+                    const contentMaxWidth = 1380.0;
+                    final contentWidth = constraints.maxWidth < contentMaxWidth
+                        ? constraints.maxWidth
+                        : contentMaxWidth;
+
+                    return Stack(
+                      children: [
+                        Align(
+                          alignment: Alignment.topCenter,
+                          child: SizedBox(
+                            width: contentWidth,
+                            height: constraints.maxHeight,
+                            child: child!,
                           ),
                         ),
-                      ),
-                    ),
-                    Expanded(child: child!),
-                  ],
+                        Positioned(
+                          left: _desktopMenuLeft,
+                          top: _desktopMenuTop,
+                          bottom: 16,
+                          child: DesktopSideMenu(
+                            width: _desktopMenuWidth,
+                            items: _buildDesktopMenuItems(showWelcome),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 )
               : child!,
           bottomNavigationBar: isDesktopWeb
@@ -469,7 +475,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
         builder: (context, constraints) {
           final content = SingleChildScrollView(
             controller: widget.scrollController,
-            padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 20, 16, 16),
+            padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 20 : 20, 16, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -594,22 +600,58 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                     padding: EdgeInsets.symmetric(vertical: 8),
                   ),
 
-                // List of Stages
-                ...widget.project.stages.map((stage) {
-                  return StageCard(
-                    stage: stage,
-                    onTap: () {
-                      AppNavigation.openEstimate(
-                        context,
-                        projectId: widget.project.id.toString(),
-                        stageId: stage.id.toString(),
+                if (isDesktopWeb && widget.project.stages.isNotEmpty)
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: constraints.maxWidth >= 1100 ? 2 : 1,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          mainAxisExtent: 190,
+                        ),
+                        itemCount: widget.project.stages.length,
+                        itemBuilder: (context, index) {
+                          final stage = widget.project.stages[index];
+                          return StageCard(
+                            stage: stage,
+                            onTap: () {
+                              AppNavigation.openEstimate(
+                                context,
+                                projectId: widget.project.id.toString(),
+                                stageId: stage.id.toString(),
+                              );
+                            },
+                            onStatusChanged: (newStatus) => _updateStatus(
+                              context,
+                              ref,
+                              stage.id.toString(),
+                              newStatus,
+                            ),
+                            onDelete: () => _deleteStage(context, ref, stage),
+                          );
+                        },
                       );
                     },
-                    onStatusChanged: (newStatus) => _updateStatus(
-                        context, ref, stage.id.toString(), newStatus),
-                    onDelete: () => _deleteStage(context, ref, stage),
-                  );
-                }),
+                  )
+                else
+                  ...widget.project.stages.map((stage) {
+                    return StageCard(
+                      stage: stage,
+                      onTap: () {
+                        AppNavigation.openEstimate(
+                          context,
+                          projectId: widget.project.id.toString(),
+                          stageId: stage.id.toString(),
+                        );
+                      },
+                      onStatusChanged: (newStatus) => _updateStatus(
+                          context, ref, stage.id.toString(), newStatus),
+                      onDelete: () => _deleteStage(context, ref, stage),
+                    );
+                  }),
 
                 const SizedBox(height: 80), // Space for FAB
               ],
@@ -620,13 +662,9 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
             return content;
           }
 
-          return DesktopWebPageFrame(
-            maxWidth: 1320,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: SizedBox(
-              width: constraints.maxWidth,
-              child: content,
-            ),
+          return SizedBox(
+            width: constraints.maxWidth,
+            child: content,
           );
         },
       ),
@@ -697,14 +735,12 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
-
     final content = Column(
       children: [
         Expanded(
           child: ListView(
             controller: widget.scrollController,
-            padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 20, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
             children: [
               _FileCategorySection(
                 title: "Проекты и схемы",
@@ -761,24 +797,7 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
         ),
       ],
     );
-
-    if (!isDesktopWeb) {
-      return content;
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return DesktopWebPageFrame(
-          maxWidth: 1320,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: SizedBox(
-            width: constraints.maxWidth,
-            height: constraints.maxHeight,
-            child: content,
-          ),
-        );
-      },
-    );
+    return content;
   }
 
   Future<void> _pickAndUploadFiles(

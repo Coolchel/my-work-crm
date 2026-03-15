@@ -88,7 +88,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     final isPhonePortrait = isMobile && orientation == Orientation.portrait;
     final isPhoneLandscape = isMobile && orientation == Orientation.landscape;
     final useVerticalPieCharts = viewport.width < 980;
-    final useWideWorkCharts = viewport.width >= 1280;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
     final statsAsync = ref.watch(statisticsDataProvider);
@@ -353,35 +352,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                   const SizedBox(height: 12),
                   if (isPhonePortrait)
                     _buildRotateDeviceNotice(context)
-                  else if (useWideWorkCharts)
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: _buildWorkDynamicsCard(
-                            stats: stats,
-                            currentPeriod: currentPeriod,
-                            isMobile: isMobile,
-                            workDynamicsTooltip: workDynamicsTooltip,
-                            currencyLabel: "USD",
-                            currencySymbol: "\$",
-                            isUsd: true,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildWorkDynamicsCard(
-                            stats: stats,
-                            currentPeriod: currentPeriod,
-                            isMobile: isMobile,
-                            workDynamicsTooltip: workDynamicsTooltip,
-                            currencyLabel: "BYN",
-                            currencySymbol: '\u0440',
-                            isUsd: false,
-                          ),
-                        ),
-                      ],
-                    )
                   else
                     Column(
                       children: [

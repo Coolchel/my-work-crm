@@ -292,6 +292,15 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
   }
 
+  double _resolveSearchOverlayWidth(BuildContext context) {
+    final anchorContext = _searchAnchorKey.currentContext;
+    final anchorBox = anchorContext?.findRenderObject() as RenderBox?;
+    if (anchorBox != null) {
+      return anchorBox.size.width;
+    }
+    return MediaQuery.of(context).size.width - 40;
+  }
+
   Widget _buildSearchBar() {
     return TapRegion(
       groupId: _searchTapGroupId,
@@ -377,21 +386,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   },
                                 ),
                                 const SizedBox(height: 24),
-                                if (isDesktopWeb)
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(child: _buildSearchBar()),
-                                      const SizedBox(width: 24),
-                                      const SizedBox(
-                                        width: 360,
-                                        child: NewProjectCard(),
-                                      ),
-                                    ],
-                                  )
-                                else
-                                  _buildSearchBar(),
+                                _buildSearchBar(),
+                                if (isDesktopWeb) ...[
+                                  const SizedBox(height: 18),
+                                  const NewProjectCard(),
+                                ],
                                 if (isSearchActive && _useInlineDesktopResults)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 16),
@@ -442,11 +441,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                   : Column(
                                       children: [
                                         const SizedBox(height: 8),
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          child: NewProjectCard(),
-                                        ),
+                                        if (!isDesktopWeb)
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: 16),
+                                            child: NewProjectCard(),
+                                          ),
                                         if (hasProjectsLoadError)
                                           const Padding(
                                             padding: EdgeInsets.fromLTRB(
@@ -477,9 +477,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       child: Align(
                         alignment: Alignment.topLeft,
                         child: SizedBox(
-                          width: isDesktopWeb
-                              ? 720
-                              : MediaQuery.of(context).size.width - 40,
+                          width: _resolveSearchOverlayWidth(context),
                           child: TapRegion(
                             groupId: _searchTapGroupId,
                             child: SearchResultsOverlay(

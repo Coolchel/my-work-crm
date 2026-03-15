@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
-import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 import '../../data/models/project_model.dart';
@@ -59,7 +58,6 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
     final sortedShields = List<ShieldModel>.from(widget.project.shields)
       ..sort((a, b) {
         final order = {'power': 0, 'multimedia': 1, 'led': 2};
@@ -86,7 +84,7 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
         builder: (context, constraints) {
           final content = SingleChildScrollView(
             controller: widget.scrollController,
-            padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 20, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
             child: Column(
               children: [
                 if (widget.project.shields.isEmpty)
@@ -106,19 +104,7 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
               ],
             ),
           );
-
-          if (!isDesktopWeb) {
-            return content;
-          }
-
-          return DesktopWebPageFrame(
-            maxWidth: 1320,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: SizedBox(
-              width: constraints.maxWidth,
-              child: content,
-            ),
-          );
+          return content;
         },
       ),
     );
