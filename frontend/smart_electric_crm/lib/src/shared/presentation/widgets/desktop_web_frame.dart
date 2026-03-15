@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 final class DesktopWebFrame {
   const DesktopWebFrame._();
 
-  static const double shellSidebarBreakpoint = 900;
+  static const double shellSidebarBreakpoint = 1180;
   static const double shellSidebarWideBreakpoint = 1450;
   static const double shellSidebarLeftOffset = 16;
   static const double shellSidebarGap = 16;
@@ -47,6 +47,18 @@ final class DesktopWebFrame {
     return shellSidebarLeftOffset +
         persistentShellSidebarWidth(context) +
         shellSidebarGap;
+  }
+
+  static double centeredContentSidePadding(
+    double availableWidth, {
+    required double maxWidth,
+    double minPadding = 16,
+  }) {
+    final extraWidth = availableWidth - maxWidth;
+    if (extraWidth <= 0) {
+      return minPadding;
+    }
+    return minPadding + (extraWidth / 2);
   }
 
   static EdgeInsets pagePadding(

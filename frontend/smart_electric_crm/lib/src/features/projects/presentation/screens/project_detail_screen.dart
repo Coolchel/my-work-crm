@@ -116,6 +116,7 @@ class _ProjectDetailContent extends ConsumerStatefulWidget {
 
 class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
   static const double _desktopMenuWidth = 224;
+  static const double _desktopCompactMenuWidth = 88;
   static const double _desktopMenuLeft = 16;
   static const double _desktopMenuTop = 16;
   static const double _desktopMenuGap = 16;
@@ -266,7 +267,10 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
     final showWelcome = ref.watch(
       appSettingsProvider.select((value) => value.showWelcome),
     );
-    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1450);
+    final isDesktopWeb = DesktopWebFrame.hasPersistentShellSidebar(context);
+    final isWideDesktopWeb = DesktopWebFrame.hasWideShellSidebar(context);
+    final desktopMenuWidth =
+        isWideDesktopWeb ? _desktopMenuWidth : _desktopCompactMenuWidth;
     final screens = [
       _StagesTab(
         project: widget.project,
@@ -303,29 +307,21 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
           body: isDesktopWeb
               ? LayoutBuilder(
                   builder: (context, constraints) {
-                    const contentMaxWidth = 1380.0;
-                    final contentWidth = (constraints.maxWidth -
-                            _desktopMenuLeft -
-                            _desktopMenuWidth -
-                            _desktopMenuGap)
-                        .clamp(0.0, contentMaxWidth)
-                        .toDouble();
-
                     return Stack(
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(
+                          padding: EdgeInsets.only(
                             left: _desktopMenuLeft +
-                                _desktopMenuWidth +
+                                desktopMenuWidth +
                                 _desktopMenuGap,
                           ),
-                          child: Align(
-                            alignment: Alignment.topCenter,
-                            child: SizedBox(
-                              width: contentWidth,
-                              height: constraints.maxHeight,
-                              child: child!,
-                            ),
+                          child: SizedBox(
+                            width: constraints.maxWidth -
+                                _desktopMenuLeft -
+                                desktopMenuWidth -
+                                _desktopMenuGap,
+                            height: constraints.maxHeight,
+                            child: child!,
                           ),
                         ),
                         Positioned(
@@ -333,6 +329,7 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
                           top: _desktopMenuTop,
                           bottom: 16,
                           child: DesktopSideMenu(
+                            compact: !isWideDesktopWeb,
                             width: _desktopMenuWidth,
                             items: _buildDesktopMenuItems(showWelcome),
                           ),
@@ -484,9 +481,19 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
+          const contentMaxWidth = 1380.0;
+          final horizontalPadding = DesktopWebFrame.centeredContentSidePadding(
+            constraints.maxWidth,
+            maxWidth: contentMaxWidth,
+          );
           final content = SingleChildScrollView(
             controller: widget.scrollController,
-            padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 20 : 20, 16, 16),
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              isDesktopWeb ? 20 : 20,
+              horizontalPadding,
+              16,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -749,48 +756,64 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
     final content = Column(
       children: [
         Expanded(
-          child: ListView(
-            controller: widget.scrollController,
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-            children: [
-              _FileCategorySection(
-                title: "Проекты и схемы",
-                icon: Icons.architecture_rounded,
-                color: Colors.blueGrey,
-                category: "PROJECT",
-                files: widget.project.files
-                    .where((f) => f.category == "PROJECT")
-                    .toList(),
-                onDelete: (fileId) => _deleteFile(context, ref, fileId),
-                onUpload: () => _pickAndUploadFiles(context, ref, "PROJECT"),
-                projectId: widget.project.id.toString(),
-              ),
-              _FileCategorySection(
-                title: "Реализация (Этапы 1-2)",
-                icon: Icons.construction_rounded,
-                color: Colors.blue,
-                category: "WORK",
-                files: widget.project.files
-                    .where((f) => f.category == "WORK")
-                    .toList(),
-                onDelete: (fileId) => _deleteFile(context, ref, fileId),
-                onUpload: () => _pickAndUploadFiles(context, ref, "WORK"),
-                projectId: widget.project.id.toString(),
-              ),
-              _FileCategorySection(
-                title: "Финишные фото",
-                icon: Icons.auto_awesome_rounded,
-                color: Colors.green,
-                category: "FINISH",
-                files: widget.project.files
-                    .where((f) => f.category == "FINISH")
-                    .toList(),
-                onDelete: (fileId) => _deleteFile(context, ref, fileId),
-                onUpload: () => _pickAndUploadFiles(context, ref, "FINISH"),
-                projectId: widget.project.id.toString(),
-              ),
-              const SizedBox(height: 8),
-            ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final horizontalPadding =
+                  DesktopWebFrame.centeredContentSidePadding(
+                constraints.maxWidth,
+                maxWidth: 1380,
+              );
+
+              return ListView(
+                controller: widget.scrollController,
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  20,
+                  horizontalPadding,
+                  16,
+                ),
+                children: [
+                  _FileCategorySection(
+                    title: "Проекты и схемы",
+                    icon: Icons.architecture_rounded,
+                    color: Colors.blueGrey,
+                    category: "PROJECT",
+                    files: widget.project.files
+                        .where((f) => f.category == "PROJECT")
+                        .toList(),
+                    onDelete: (fileId) => _deleteFile(context, ref, fileId),
+                    onUpload: () =>
+                        _pickAndUploadFiles(context, ref, "PROJECT"),
+                    projectId: widget.project.id.toString(),
+                  ),
+                  _FileCategorySection(
+                    title: "Реализация (Этапы 1-2)",
+                    icon: Icons.construction_rounded,
+                    color: Colors.blue,
+                    category: "WORK",
+                    files: widget.project.files
+                        .where((f) => f.category == "WORK")
+                        .toList(),
+                    onDelete: (fileId) => _deleteFile(context, ref, fileId),
+                    onUpload: () => _pickAndUploadFiles(context, ref, "WORK"),
+                    projectId: widget.project.id.toString(),
+                  ),
+                  _FileCategorySection(
+                    title: "Финишные фото",
+                    icon: Icons.auto_awesome_rounded,
+                    color: Colors.green,
+                    category: "FINISH",
+                    files: widget.project.files
+                        .where((f) => f.category == "FINISH")
+                        .toList(),
+                    onDelete: (fileId) => _deleteFile(context, ref, fileId),
+                    onUpload: () => _pickAndUploadFiles(context, ref, "FINISH"),
+                    projectId: widget.project.id.toString(),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              );
+            },
           ),
         ),
         Align(
