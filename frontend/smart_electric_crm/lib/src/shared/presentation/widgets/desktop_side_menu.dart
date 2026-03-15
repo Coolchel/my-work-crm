@@ -21,12 +21,16 @@ class DesktopSideMenu extends StatelessWidget {
     required this.items,
     super.key,
     this.width = 224,
+    this.compactWidth = 88,
     this.padding = const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+    this.compact = false,
   });
 
   final List<DesktopSideMenuItem> items;
   final double width;
+  final double compactWidth;
   final EdgeInsetsGeometry padding;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -52,14 +56,17 @@ class DesktopSideMenu extends StatelessWidget {
         ],
       ),
       child: SizedBox(
-        width: width,
+        width: compact ? compactWidth : width,
         child: Padding(
           padding: padding,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               for (var i = 0; i < items.length; i++) ...[
-                _DesktopSideMenuButton(item: items[i]),
+                _DesktopSideMenuButton(
+                  item: items[i],
+                  compact: compact,
+                ),
                 if (i < items.length - 1) const SizedBox(height: 6),
               ],
             ],
@@ -71,9 +78,13 @@ class DesktopSideMenu extends StatelessWidget {
 }
 
 class _DesktopSideMenuButton extends StatefulWidget {
-  const _DesktopSideMenuButton({required this.item});
+  const _DesktopSideMenuButton({
+    required this.item,
+    required this.compact,
+  });
 
   final DesktopSideMenuItem item;
+  final bool compact;
 
   @override
   State<_DesktopSideMenuButton> createState() => _DesktopSideMenuButtonState();
@@ -114,36 +125,55 @@ class _DesktopSideMenuButtonState extends State<_DesktopSideMenuButton> {
           borderRadius: BorderRadius.circular(16),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.compact ? 10 : 14,
+              vertical: 14,
+            ),
             decoration: BoxDecoration(
               color: backgroundColor,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: borderColor),
             ),
-            child: Row(
-              children: [
-                IconTheme(
-                  data: IconThemeData(
-                    size: 24,
-                    color: foregroundColor,
-                  ),
-                  child: isActive
-                      ? (widget.item.selectedIcon ?? widget.item.icon)
-                      : widget.item.icon,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    widget.item.label,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: foregroundColor,
+            child: widget.compact
+                ? Tooltip(
+                    message: widget.item.label,
+                    waitDuration: const Duration(milliseconds: 350),
+                    child: Center(
+                      child: IconTheme(
+                        data: IconThemeData(
+                          size: 24,
+                          color: foregroundColor,
+                        ),
+                        child: isActive
+                            ? (widget.item.selectedIcon ?? widget.item.icon)
+                            : widget.item.icon,
+                      ),
                     ),
+                  )
+                : Row(
+                    children: [
+                      IconTheme(
+                        data: IconThemeData(
+                          size: 24,
+                          color: foregroundColor,
+                        ),
+                        child: isActive
+                            ? (widget.item.selectedIcon ?? widget.item.icon)
+                            : widget.item.icon,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          widget.item.label,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: foregroundColor,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
         ),
       ),

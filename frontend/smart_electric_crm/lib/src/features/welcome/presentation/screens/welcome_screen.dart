@@ -340,6 +340,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final searchQuery = ref.watch(projectSearchQueryProvider);
     final isSearchActive = searchQuery != null && searchQuery.isNotEmpty;
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
+      context,
+    );
     final hasProjectsLoadError = ref.watch(projectListProvider).maybeWhen(
           error: (_, __) => true,
           orElse: () => false,
@@ -372,38 +375,47 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         ),
                         Transform.translate(
                           offset: const Offset(0, -20),
-                          child: DesktopWebPageFrame(
-                            maxWidth: 1360,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Column(
-                              children: [
-                                QuickStatsRow(
-                                  selectedStat: selectedStat,
-                                  onStatSelected: (stat) {
-                                    ref
-                                        .read(dashboardFilterProvider.notifier)
-                                        .state = stat;
-                                  },
-                                ),
-                                const SizedBox(height: 24),
-                                _buildSearchBar(),
-                                if (isDesktopWeb) ...[
-                                  const SizedBox(height: 18),
-                                  const NewProjectCard(),
-                                ],
-                                if (isSearchActive && _useInlineDesktopResults)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 16),
-                                    child: SearchResultsOverlay(
-                                      maxHeight: 520,
-                                      queryProvider: projectSearchQueryProvider,
-                                      resultsProvider:
-                                          projectSearchResultsProvider,
-                                      inline: true,
-                                      matchSearchWidth: true,
-                                    ),
+                          child: AnimatedPadding(
+                            duration: const Duration(milliseconds: 180),
+                            curve: Curves.easeOutCubic,
+                            padding: EdgeInsets.only(left: shellSidebarInset),
+                            child: DesktopWebPageFrame(
+                              maxWidth: 1360,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Column(
+                                children: [
+                                  QuickStatsRow(
+                                    selectedStat: selectedStat,
+                                    onStatSelected: (stat) {
+                                      ref
+                                          .read(
+                                              dashboardFilterProvider.notifier)
+                                          .state = stat;
+                                    },
                                   ),
-                              ],
+                                  const SizedBox(height: 24),
+                                  _buildSearchBar(),
+                                  if (isDesktopWeb) ...[
+                                    const SizedBox(height: 18),
+                                    const NewProjectCard(),
+                                  ],
+                                  if (isSearchActive &&
+                                      _useInlineDesktopResults)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 16),
+                                      child: SearchResultsOverlay(
+                                        maxHeight: 520,
+                                        queryProvider:
+                                            projectSearchQueryProvider,
+                                        resultsProvider:
+                                            projectSearchResultsProvider,
+                                        inline: true,
+                                        matchSearchWidth: true,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -413,54 +425,59 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           opacity: isSearchActive ? 0 : 1,
                           child: IgnorePointer(
                             ignoring: isSearchActive,
-                            child: DesktopWebPageFrame(
-                              maxWidth: 1360,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: isDesktopWeb
-                                  ? Padding(
-                                      padding: const EdgeInsets.only(top: 8),
-                                      child: hasProjectsLoadError
-                                          ? const Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Expanded(
-                                                  child: RecentProjectsList(),
-                                                ),
-                                                SizedBox(width: 24),
-                                                SizedBox(
-                                                  width: 360,
-                                                  child:
-                                                      _WelcomeNetworkNotice(),
-                                                ),
-                                              ],
-                                            )
-                                          : const RecentProjectsList(),
-                                    )
-                                  : Column(
-                                      children: [
-                                        const SizedBox(height: 8),
-                                        if (!isDesktopWeb)
+                            child: AnimatedPadding(
+                              duration: const Duration(milliseconds: 180),
+                              curve: Curves.easeOutCubic,
+                              padding: EdgeInsets.only(left: shellSidebarInset),
+                              child: DesktopWebPageFrame(
+                                maxWidth: 1360,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: isDesktopWeb
+                                    ? Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: hasProjectsLoadError
+                                            ? const Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Expanded(
+                                                    child: RecentProjectsList(),
+                                                  ),
+                                                  SizedBox(width: 24),
+                                                  SizedBox(
+                                                    width: 360,
+                                                    child:
+                                                        _WelcomeNetworkNotice(),
+                                                  ),
+                                                ],
+                                              )
+                                            : const RecentProjectsList(),
+                                      )
+                                    : Column(
+                                        children: [
+                                          const SizedBox(height: 8),
+                                          if (!isDesktopWeb)
+                                            const Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 16),
+                                              child: NewProjectCard(),
+                                            ),
+                                          if (hasProjectsLoadError)
+                                            const Padding(
+                                              padding: EdgeInsets.fromLTRB(
+                                                  16, 12, 16, 0),
+                                              child: _WelcomeNetworkNotice(),
+                                            ),
+                                          const SizedBox(height: 24),
                                           const Padding(
                                             padding: EdgeInsets.symmetric(
                                                 horizontal: 16),
-                                            child: NewProjectCard(),
+                                            child: RecentProjectsList(),
                                           ),
-                                        if (hasProjectsLoadError)
-                                          const Padding(
-                                            padding: EdgeInsets.fromLTRB(
-                                                16, 12, 16, 0),
-                                            child: _WelcomeNetworkNotice(),
-                                          ),
-                                        const SizedBox(height: 24),
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          child: RecentProjectsList(),
-                                        ),
-                                      ],
-                                    ),
+                                        ],
+                                      ),
+                              ),
                             ),
                           ),
                         ),

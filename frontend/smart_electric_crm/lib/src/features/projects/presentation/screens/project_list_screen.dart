@@ -403,6 +403,9 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     final handleBack =
         widget.onBackPressed ?? () => Navigator.of(context).maybePop();
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
+      context,
+    );
     const desktopMaxWidth = 1380.0;
 
     return ListenableBuilder(
@@ -443,17 +446,29 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
           body: LayoutBuilder(
             builder: (context, constraints) {
               if (!isDesktopWeb) {
-                return child!;
+                return AnimatedPadding(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  padding: EdgeInsets.only(left: shellSidebarInset),
+                  child: child!,
+                );
               }
 
-              return Align(
-                alignment: Alignment.topCenter,
-                child: SizedBox(
-                  width: constraints.maxWidth < desktopMaxWidth
-                      ? constraints.maxWidth
-                      : desktopMaxWidth,
-                  height: constraints.maxHeight,
-                  child: child!,
+              final availableWidth = (constraints.maxWidth - shellSidebarInset)
+                  .clamp(0.0, desktopMaxWidth)
+                  .toDouble();
+
+              return AnimatedPadding(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                padding: EdgeInsets.only(left: shellSidebarInset),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: availableWidth,
+                    height: constraints.maxHeight,
+                    child: child!,
+                  ),
                 ),
               );
             },

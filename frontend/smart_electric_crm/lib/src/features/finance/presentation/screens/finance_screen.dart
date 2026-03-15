@@ -323,6 +323,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       AsyncValue<FinanceSettingsModel> settingsAsync) {
     // Инициализация контроллеров перенесена в build с использованием addPostFrameCallback
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1240);
+    final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
+      context,
+    );
     final sortedProjects = data.projects.toList()
       ..sort((a, b) {
         final aDate = _getEarliestStageDate(a);
@@ -339,98 +342,104 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
       },
       child: SingleChildScrollView(
         controller: _scrollController,
-        child: DesktopWebPageFrame(
-          maxWidth: 1380,
-          padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 0, 16, 0),
-          child: isDesktopWeb
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        children: [
-                          if (data.projects.isEmpty)
-                            _buildEmptyState()
-                          else
-                            Column(
-                              children: [
-                                _buildProjectsHeader(data.projects.length),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: _sectionHPadding,
-                                    vertical: 8,
-                                  ),
-                                  child: Column(
-                                    children: sortedProjects
-                                        .asMap()
-                                        .entries
-                                        .map(
-                                          (entry) => _buildProjectCard(
-                                            entry.value,
-                                            entry.key + 1,
-                                          ),
-                                        )
-                                        .toList(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          const SizedBox(height: 80),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 24),
-                    SizedBox(
-                      width: 380,
-                      child: Column(
-                        children: [
-                          IgnorePointer(
-                            child: Opacity(
-                              opacity: 0,
-                              child: _buildProjectsHeader(data.projects.length),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          _buildTotalSection(data.totalUsd, data.totalByn),
-                          _buildGlobalSettingsSection(),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-              : Column(
-                  children: [
-                    if (data.projects.isEmpty)
-                      _buildEmptyState()
-                    else
-                      Column(
-                        children: [
-                          _buildProjectsHeader(data.projects.length),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: _sectionHPadding,
-                              vertical: 8,
-                            ),
-                            child: Column(
-                              children: sortedProjects
-                                  .asMap()
-                                  .entries
-                                  .map(
-                                    (entry) => _buildProjectCard(
-                                      entry.value,
-                                      entry.key + 1,
+        child: AnimatedPadding(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: EdgeInsets.only(left: shellSidebarInset),
+          child: DesktopWebPageFrame(
+            maxWidth: 1380,
+            padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 0, 16, 0),
+            child: isDesktopWeb
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            if (data.projects.isEmpty)
+                              _buildEmptyState()
+                            else
+                              Column(
+                                children: [
+                                  _buildProjectsHeader(data.projects.length),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: _sectionHPadding,
+                                      vertical: 8,
                                     ),
-                                  )
-                                  .toList(),
-                            ),
-                          ),
-                        ],
+                                    child: Column(
+                                      children: sortedProjects
+                                          .asMap()
+                                          .entries
+                                          .map(
+                                            (entry) => _buildProjectCard(
+                                              entry.value,
+                                              entry.key + 1,
+                                            ),
+                                          )
+                                          .toList(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 80),
+                          ],
+                        ),
                       ),
-                    _buildTotalSection(data.totalUsd, data.totalByn),
-                    _buildGlobalSettingsSection(),
-                    const SizedBox(height: 80),
-                  ],
-                ),
+                      const SizedBox(width: 24),
+                      SizedBox(
+                        width: 380,
+                        child: Column(
+                          children: [
+                            IgnorePointer(
+                              child: Opacity(
+                                opacity: 0,
+                                child:
+                                    _buildProjectsHeader(data.projects.length),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _buildTotalSection(data.totalUsd, data.totalByn),
+                            _buildGlobalSettingsSection(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      if (data.projects.isEmpty)
+                        _buildEmptyState()
+                      else
+                        Column(
+                          children: [
+                            _buildProjectsHeader(data.projects.length),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: _sectionHPadding,
+                                vertical: 8,
+                              ),
+                              child: Column(
+                                children: sortedProjects
+                                    .asMap()
+                                    .entries
+                                    .map(
+                                      (entry) => _buildProjectCard(
+                                        entry.value,
+                                        entry.key + 1,
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      _buildTotalSection(data.totalUsd, data.totalByn),
+                      _buildGlobalSettingsSection(),
+                      const SizedBox(height: 80),
+                    ],
+                  ),
+          ),
         ),
       ),
     );
