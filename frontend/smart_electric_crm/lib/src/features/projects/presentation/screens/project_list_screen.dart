@@ -539,86 +539,89 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                   }
                   return FadeTransition(
                     opacity: _fadeAnimation,
-                    child: Container(
+                    child: SizedBox(
                       width: double.infinity,
-                      color: Theme.of(context).colorScheme.surface,
-                      padding: EdgeInsets.fromLTRB(
-                        isMobileWeb ? 12 : _searchHorizontalPadding,
-                        isMobileWeb ? 6 : 8,
-                        isMobileWeb ? 12 : _searchHorizontalPadding,
-                        isMobileWeb ? 8 : 10,
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        focusNode: _searchFocusNode,
-                        autofocus: isMobileWeb && _autofocusSearchOnOpen,
-                        textAlignVertical: TextAlignVertical.center,
-                        style: const TextStyle(fontSize: 16),
-                        decoration: InputDecoration(
-                          isDense: true,
-                          hintText: ProjectSearchTexts.hint,
-                          hintStyle: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 15,
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: Colors.grey.shade600,
-                            size: 22,
-                          ),
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.close, size: 20),
-                                  color: Colors.grey.shade500,
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    ref
-                                        .read(
-                                          objectsProjectSearchQueryProvider
-                                              .notifier,
-                                        )
-                                        .state = null;
-                                    setState(() {});
-                                  },
-                                )
-                              : null,
-                          filled: true,
-                          fillColor: scheme.surfaceContainerHighest.withOpacity(
-                            isDark ? 0.40 : 0.56,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: scheme.outlineVariant.withOpacity(
-                                isDark ? 0.34 : 0.26,
-                              ),
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: scheme.outlineVariant.withOpacity(
-                                isDark ? 0.34 : 0.26,
-                              ),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide:
-                                BorderSide(color: scheme.primary, width: 1.5),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          isMobileWeb ? 12 : _searchHorizontalPadding,
+                          isMobileWeb ? 6 : 8,
+                          isMobileWeb ? 12 : _searchHorizontalPadding,
+                          isMobileWeb ? 8 : 10,
                         ),
-                        onChanged: (val) {
-                          ref
-                              .read(objectsProjectSearchQueryProvider.notifier)
-                              .state = normalizeProjectSearchQuery(val);
-                          setState(() {});
-                        },
-                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                        child: TextField(
+                          controller: _searchController,
+                          focusNode: _searchFocusNode,
+                          autofocus: isMobileWeb && _autofocusSearchOnOpen,
+                          textAlignVertical: TextAlignVertical.center,
+                          style: const TextStyle(fontSize: 16),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            hintText: ProjectSearchTexts.hint,
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 15,
+                            ),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: Colors.grey.shade600,
+                              size: 22,
+                            ),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.close, size: 20),
+                                    color: Colors.grey.shade500,
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      ref
+                                          .read(
+                                            objectsProjectSearchQueryProvider
+                                                .notifier,
+                                          )
+                                          .state = null;
+                                      setState(() {});
+                                    },
+                                  )
+                                : null,
+                            filled: true,
+                            fillColor:
+                                scheme.surfaceContainerHighest.withOpacity(
+                              isDark ? 0.40 : 0.56,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: scheme.outlineVariant.withOpacity(
+                                  isDark ? 0.34 : 0.26,
+                                ),
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: scheme.outlineVariant.withOpacity(
+                                  isDark ? 0.34 : 0.26,
+                                ),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: scheme.primary, width: 1.5),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          onChanged: (val) {
+                            ref
+                                .read(
+                                    objectsProjectSearchQueryProvider.notifier)
+                                .state = normalizeProjectSearchQuery(val);
+                            setState(() {});
+                          },
+                          onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                        ),
                       ),
                     ),
                   );
