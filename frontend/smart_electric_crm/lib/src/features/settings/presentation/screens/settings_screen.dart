@@ -80,6 +80,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final userAsync = ref.watch(userProfileProvider);
     final isMobile = MediaQuery.sizeOf(context).width < 600;
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
+      context,
+    );
     final themeSegments = <ButtonSegment<ThemeMode>>[
       const ButtonSegment(
         value: ThemeMode.light,
@@ -115,15 +118,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           body: LayoutBuilder(
             builder: (context, constraints) {
               if (!isDesktopWeb) {
-                return child!;
+                return AnimatedPadding(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  padding: EdgeInsets.only(left: shellSidebarInset),
+                  child: child!,
+                );
               }
 
-              return DesktopWebPageFrame(
-                maxWidth: 1160,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: SizedBox(
-                  width: constraints.maxWidth,
-                  child: child!,
+              return AnimatedPadding(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                padding: EdgeInsets.only(left: shellSidebarInset),
+                child: DesktopWebPageFrame(
+                  maxWidth: 1160,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: SizedBox(
+                    width: constraints.maxWidth,
+                    child: child!,
+                  ),
                 ),
               );
             },

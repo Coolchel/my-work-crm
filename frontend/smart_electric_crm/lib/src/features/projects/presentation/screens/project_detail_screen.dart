@@ -118,6 +118,7 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
   static const double _desktopMenuWidth = 224;
   static const double _desktopMenuLeft = 16;
   static const double _desktopMenuTop = 16;
+  static const double _desktopMenuGap = 16;
   int _currentIndex = 0;
   final ScrollController _stagesScrollController = ScrollController();
   final ScrollController _shieldsScrollController = ScrollController();
@@ -303,18 +304,28 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
               ? LayoutBuilder(
                   builder: (context, constraints) {
                     const contentMaxWidth = 1380.0;
-                    final contentWidth = constraints.maxWidth < contentMaxWidth
-                        ? constraints.maxWidth
-                        : contentMaxWidth;
+                    final contentWidth = (constraints.maxWidth -
+                            _desktopMenuLeft -
+                            _desktopMenuWidth -
+                            _desktopMenuGap)
+                        .clamp(0.0, contentMaxWidth)
+                        .toDouble();
 
                     return Stack(
                       children: [
-                        Align(
-                          alignment: Alignment.topCenter,
-                          child: SizedBox(
-                            width: contentWidth,
-                            height: constraints.maxHeight,
-                            child: child!,
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            left: _desktopMenuLeft +
+                                _desktopMenuWidth +
+                                _desktopMenuGap,
+                          ),
+                          child: Align(
+                            alignment: Alignment.topCenter,
+                            child: SizedBox(
+                              width: contentWidth,
+                              height: constraints.maxHeight,
+                              child: child!,
+                            ),
                           ),
                         ),
                         Positioned(

@@ -4,12 +4,49 @@ import 'package:flutter/material.dart';
 final class DesktopWebFrame {
   const DesktopWebFrame._();
 
+  static const double shellSidebarBreakpoint = 900;
+  static const double shellSidebarWideBreakpoint = 1450;
+  static const double shellSidebarLeftOffset = 16;
+  static const double shellSidebarGap = 16;
+  static const double shellSidebarWidth = 224;
+  static const double shellSidebarCompactWidth = 88;
+
   static bool isDesktop(BuildContext context, {double minWidth = 1100}) {
     return kIsWeb && MediaQuery.sizeOf(context).width >= minWidth;
   }
 
   static bool isWide(BuildContext context, {double minWidth = 1360}) {
     return kIsWeb && MediaQuery.sizeOf(context).width >= minWidth;
+  }
+
+  static bool hasPersistentShellSidebar(
+    BuildContext context, {
+    double minWidth = shellSidebarBreakpoint,
+  }) {
+    return kIsWeb && MediaQuery.sizeOf(context).width >= minWidth;
+  }
+
+  static bool hasWideShellSidebar(BuildContext context) {
+    return kIsWeb &&
+        MediaQuery.sizeOf(context).width >= shellSidebarWideBreakpoint;
+  }
+
+  static double persistentShellSidebarWidth(BuildContext context) {
+    if (!hasPersistentShellSidebar(context)) {
+      return 0;
+    }
+    return hasWideShellSidebar(context)
+        ? shellSidebarWidth
+        : shellSidebarCompactWidth;
+  }
+
+  static double persistentShellContentInset(BuildContext context) {
+    if (!hasPersistentShellSidebar(context)) {
+      return 0;
+    }
+    return shellSidebarLeftOffset +
+        persistentShellSidebarWidth(context) +
+        shellSidebarGap;
   }
 
   static EdgeInsets pagePadding(

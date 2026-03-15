@@ -84,6 +84,9 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     final viewport = MediaQuery.sizeOf(context);
     final isMobile = viewport.width < 600;
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
+      context,
+    );
     final orientation = MediaQuery.orientationOf(context);
     final isPhonePortrait = isMobile && orientation == Orientation.portrait;
     final isPhoneLandscape = isMobile && orientation == Orientation.landscape;
@@ -162,222 +165,233 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
           onRefresh: () async => ref.invalidate(statisticsDataProvider),
           child: SingleChildScrollView(
             controller: _scrollController,
-            padding: EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 16, 16, 16),
-            child: DesktopWebPageFrame(
-              maxWidth: 1380,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Переключатель периода
-                  Align(
-                    alignment: Alignment.center,
-                    child: SizedBox(
-                      width: periodSwitcherWidth,
-                      child: SegmentedButton<String>(
-                        segments: periodSegments,
-                        selected: {currentPeriod},
-                        showSelectedIcon: !isMobile,
-                        onSelectionChanged: (Set<String> newSelection) {
-                          ref
-                              .read(statisticsFilterProvider.notifier)
-                              .setPeriod(newSelection.first);
-                        },
-                        style: ButtonStyle(
-                          visualDensity: isMobile
-                              ? VisualDensity.compact
-                              : VisualDensity.standard,
-                          minimumSize: MaterialStateProperty.all(
-                            Size(periodSegmentWidth, isMobile ? 40 : 46),
-                          ),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          padding: MaterialStateProperty.all(
-                            EdgeInsets.symmetric(
-                              horizontal: isMobile ? 8 : 12,
-                              vertical: isMobile ? 8 : 10,
+            child: AnimatedPadding(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.only(left: shellSidebarInset),
+              child: Padding(
+                padding:
+                    EdgeInsets.fromLTRB(16, isDesktopWeb ? 24 : 16, 16, 16),
+                child: DesktopWebPageFrame(
+                  maxWidth: 1380,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Переключатель периода
+                      Align(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          width: periodSwitcherWidth,
+                          child: SegmentedButton<String>(
+                            segments: periodSegments,
+                            selected: {currentPeriod},
+                            showSelectedIcon: !isMobile,
+                            onSelectionChanged: (Set<String> newSelection) {
+                              ref
+                                  .read(statisticsFilterProvider.notifier)
+                                  .setPeriod(newSelection.first);
+                            },
+                            style: ButtonStyle(
+                              visualDensity: isMobile
+                                  ? VisualDensity.compact
+                                  : VisualDensity.standard,
+                              minimumSize: MaterialStateProperty.all(
+                                Size(periodSegmentWidth, isMobile ? 40 : 46),
+                              ),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: MaterialStateProperty.all(
+                                EdgeInsets.symmetric(
+                                  horizontal: isMobile ? 8 : 12,
+                                  vertical: isMobile ? 8 : 10,
+                                ),
+                              ),
+                              side:
+                                  MaterialStateProperty.resolveWith<BorderSide>(
+                                (states) {
+                                  if (states.contains(MaterialState.selected)) {
+                                    return BorderSide(
+                                      color: isDark
+                                          ? scheme.primary.withOpacity(0.66)
+                                          : statisticsAccent.withOpacity(0.85),
+                                    );
+                                  }
+                                  return BorderSide(
+                                    color: AppDesignTokens.cardBorder(context),
+                                  );
+                                },
+                              ),
+                              backgroundColor:
+                                  MaterialStateProperty.resolveWith<Color>(
+                                      (states) {
+                                if (states.contains(MaterialState.selected)) {
+                                  return isDark
+                                      ? scheme.primary.withOpacity(0.28)
+                                      : statisticsAccent.withOpacity(0.9);
+                                }
+                                return isDark
+                                    ? scheme.surfaceContainerHigh
+                                    : scheme.surface;
+                              }),
+                              foregroundColor:
+                                  MaterialStateProperty.resolveWith<Color>(
+                                      (states) {
+                                if (states.contains(MaterialState.selected)) {
+                                  return Colors.white;
+                                }
+                                return scheme.onSurface;
+                              }),
+                              iconColor:
+                                  MaterialStateProperty.resolveWith<Color>(
+                                      (states) {
+                                if (states.contains(MaterialState.selected)) {
+                                  return Colors.white;
+                                }
+                                return isDark
+                                    ? scheme.onSurfaceVariant
+                                    : Colors.grey;
+                              }),
+                              overlayColor:
+                                  MaterialStateProperty.resolveWith<Color?>(
+                                      (states) {
+                                if (states.contains(MaterialState.hovered)) {
+                                  return AppDesignTokens.hoverOverlay(context);
+                                }
+                                if (states.contains(MaterialState.pressed)) {
+                                  return AppDesignTokens.pressedOverlay(
+                                      context);
+                                }
+                                return null;
+                              }),
                             ),
                           ),
-                          side: MaterialStateProperty.resolveWith<BorderSide>(
-                            (states) {
-                              if (states.contains(MaterialState.selected)) {
-                                return BorderSide(
-                                  color: isDark
-                                      ? scheme.primary.withOpacity(0.66)
-                                      : statisticsAccent.withOpacity(0.85),
-                                );
-                              }
-                              return BorderSide(
-                                color: AppDesignTokens.cardBorder(context),
-                              );
-                            },
-                          ),
-                          backgroundColor:
-                              MaterialStateProperty.resolveWith<Color>(
-                                  (states) {
-                            if (states.contains(MaterialState.selected)) {
-                              return isDark
-                                  ? scheme.primary.withOpacity(0.28)
-                                  : statisticsAccent.withOpacity(0.9);
-                            }
-                            return isDark
-                                ? scheme.surfaceContainerHigh
-                                : scheme.surface;
-                          }),
-                          foregroundColor:
-                              MaterialStateProperty.resolveWith<Color>(
-                                  (states) {
-                            if (states.contains(MaterialState.selected)) {
-                              return Colors.white;
-                            }
-                            return scheme.onSurface;
-                          }),
-                          iconColor: MaterialStateProperty.resolveWith<Color>(
-                              (states) {
-                            if (states.contains(MaterialState.selected)) {
-                              return Colors.white;
-                            }
-                            return isDark
-                                ? scheme.onSurfaceVariant
-                                : Colors.grey;
-                          }),
-                          overlayColor:
-                              MaterialStateProperty.resolveWith<Color?>(
-                                  (states) {
-                            if (states.contains(MaterialState.hovered)) {
-                              return AppDesignTokens.hoverOverlay(context);
-                            }
-                            if (states.contains(MaterialState.pressed)) {
-                              return AppDesignTokens.pressedOverlay(context);
-                            }
-                            return null;
-                          }),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                  const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                  _buildHeader(
-                    context,
-                    'Финансы за ${_getPeriodTitle(currentPeriod)}',
-                    stripeColor: headerStripeColor,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildFinancialSummary(context, stats.finances),
-                  const SizedBox(height: 24),
-
-                  if (useVerticalPieCharts) ...[
-                    _buildHeader(
-                      context,
-                      'Откуда объекты',
-                      stripeColor: headerStripeColor,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildPieChartCard(
-                      context,
-                      stats.sources
-                          .map((e) => _ChartData(e.name, e.usd))
-                          .toList(),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildHeader(
-                      context,
-                      'Типы объектов',
-                      stripeColor: headerStripeColor,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildPieChartCard(
-                      context,
-                      stats.objectTypes
-                          .map((e) => _ChartData(e.name, e.usd))
-                          .toList(),
-                      paletteOffset: 2,
-                    ),
-                  ] else
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildHeader(
-                                  context,
-                                  'Откуда объекты',
-                                  stripeColor: headerStripeColor,
-                                ),
-                                const SizedBox(height: 12),
-                                _buildPieChartCard(
-                                  context,
-                                  stats.sources
-                                      .map((e) => _ChartData(e.name, e.usd))
-                                      .toList(),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildHeader(
-                                  context,
-                                  'Типы объектов',
-                                  stripeColor: headerStripeColor,
-                                ),
-                                const SizedBox(height: 12),
-                                _buildPieChartCard(
-                                  context,
-                                  stats.objectTypes
-                                      .map((e) => _ChartData(e.name, e.usd))
-                                      .toList(),
-                                  paletteOffset: 2,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                      _buildHeader(
+                        context,
+                        'Финансы за ${_getPeriodTitle(currentPeriod)}',
+                        stripeColor: headerStripeColor,
                       ),
-                    ),
-                  const SizedBox(height: 24),
+                      const SizedBox(height: 12),
+                      _buildFinancialSummary(context, stats.finances),
+                      const SizedBox(height: 24),
 
-                  _buildHeader(
-                    context,
-                    'Динамика работ',
-                    stripeColor: headerStripeColor,
-                  ),
-                  const SizedBox(height: 12),
-                  if (isPhonePortrait)
-                    _buildRotateDeviceNotice(context)
-                  else
-                    Column(
-                      children: [
-                        _buildWorkDynamicsCard(
-                          stats: stats,
-                          currentPeriod: currentPeriod,
-                          isMobile: isMobile,
-                          workDynamicsTooltip: workDynamicsTooltip,
-                          currencyLabel: "USD",
-                          currencySymbol: "\$",
-                          isUsd: true,
+                      if (useVerticalPieCharts) ...[
+                        _buildHeader(
+                          context,
+                          'Откуда объекты',
+                          stripeColor: headerStripeColor,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildPieChartCard(
+                          context,
+                          stats.sources
+                              .map((e) => _ChartData(e.name, e.usd))
+                              .toList(),
                         ),
                         const SizedBox(height: 16),
-                        _buildWorkDynamicsCard(
-                          stats: stats,
-                          currentPeriod: currentPeriod,
-                          isMobile: isMobile,
-                          workDynamicsTooltip: workDynamicsTooltip,
-                          currencyLabel: "BYN",
-                          currencySymbol: '\u0440',
-                          isUsd: false,
+                        _buildHeader(
+                          context,
+                          'Типы объектов',
+                          stripeColor: headerStripeColor,
                         ),
-                      ],
-                    ),
-                  const SizedBox(height: 24),
-                ],
+                        const SizedBox(height: 12),
+                        _buildPieChartCard(
+                          context,
+                          stats.objectTypes
+                              .map((e) => _ChartData(e.name, e.usd))
+                              .toList(),
+                          paletteOffset: 2,
+                        ),
+                      ] else
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildHeader(
+                                      context,
+                                      'Откуда объекты',
+                                      stripeColor: headerStripeColor,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildPieChartCard(
+                                      context,
+                                      stats.sources
+                                          .map((e) => _ChartData(e.name, e.usd))
+                                          .toList(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildHeader(
+                                      context,
+                                      'Типы объектов',
+                                      stripeColor: headerStripeColor,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildPieChartCard(
+                                      context,
+                                      stats.objectTypes
+                                          .map((e) => _ChartData(e.name, e.usd))
+                                          .toList(),
+                                      paletteOffset: 2,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      const SizedBox(height: 24),
+
+                      _buildHeader(
+                        context,
+                        'Динамика работ',
+                        stripeColor: headerStripeColor,
+                      ),
+                      const SizedBox(height: 12),
+                      if (isPhonePortrait)
+                        _buildRotateDeviceNotice(context)
+                      else
+                        Column(
+                          children: [
+                            _buildWorkDynamicsCard(
+                              stats: stats,
+                              currentPeriod: currentPeriod,
+                              isMobile: isMobile,
+                              workDynamicsTooltip: workDynamicsTooltip,
+                              currencyLabel: "USD",
+                              currencySymbol: "\$",
+                              isUsd: true,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildWorkDynamicsCard(
+                              stats: stats,
+                              currentPeriod: currentPeriod,
+                              isMobile: isMobile,
+                              workDynamicsTooltip: workDynamicsTooltip,
+                              currencyLabel: "BYN",
+                              currencySymbol: '\u0440',
+                              isUsd: false,
+                            ),
+                          ],
+                        ),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

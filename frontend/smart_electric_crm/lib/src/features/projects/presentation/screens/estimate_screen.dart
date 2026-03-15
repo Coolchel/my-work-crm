@@ -51,6 +51,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   static const double _desktopMenuWidth = 224;
   static const double _desktopMenuLeft = 16;
   static const double _desktopMenuTop = 16;
+  static const double _desktopMenuGap = 16;
   final ScrollController _worksScrollController = ScrollController();
   final ScrollController _materialsScrollController = ScrollController();
   final SectionAppBarCollapseController _appBarCollapseController =
@@ -389,18 +390,26 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           }
 
           const contentMaxWidth = 1380.0;
-          final contentWidth = constraints.maxWidth < contentMaxWidth
-              ? constraints.maxWidth
-              : contentMaxWidth;
+          final contentWidth = (constraints.maxWidth -
+                  _desktopMenuLeft -
+                  _desktopMenuWidth -
+                  _desktopMenuGap)
+              .clamp(0.0, contentMaxWidth)
+              .toDouble();
 
           return Stack(
             children: [
-              Align(
-                alignment: Alignment.topCenter,
-                child: SizedBox(
-                  width: contentWidth,
-                  height: constraints.maxHeight,
-                  child: content,
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: _desktopMenuLeft + _desktopMenuWidth + _desktopMenuGap,
+                ),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(
+                    width: contentWidth,
+                    height: constraints.maxHeight,
+                    child: content,
+                  ),
                 ),
               ),
               Positioned(

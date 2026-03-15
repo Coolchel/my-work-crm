@@ -202,7 +202,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final items = _buildDestinations(settings);
     final selectedIndex = _selectedVisibleIndex(items);
-    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1450);
+    final isDesktopWeb = DesktopWebFrame.hasPersistentShellSidebar(context);
+    final isWideDesktopWeb = DesktopWebFrame.hasWideShellSidebar(context);
     final desktopMenuTop = _isHomeBranchSelected(settings)
         ? _welcomeDesktopMenuTop
         : _defaultDesktopMenuTop;
@@ -213,12 +214,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               children: [
                 widget.navigationShell,
                 Positioned(
-                  left: 16,
+                  left: DesktopWebFrame.shellSidebarLeftOffset,
                   top: desktopMenuTop,
                   bottom: 16,
                   child: SafeArea(
                     top: false,
                     child: DesktopSideMenu(
+                      compact: !isWideDesktopWeb,
                       items: [
                         for (var i = 0; i < items.length; i++)
                           DesktopSideMenuItem(
