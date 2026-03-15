@@ -48,8 +48,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   bool _isSearchFocused = false;
   bool _useLightStatusBarIcons = true;
 
-  bool get _shouldAutoRepositionSearch =>
-      !kIsWeb && defaultTargetPlatform != TargetPlatform.windows;
+  bool _shouldAutoRepositionSearch(BuildContext context) {
+    return (!kIsWeb && defaultTargetPlatform != TargetPlatform.windows) ||
+        DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
+  }
+
   bool get _useInlineDesktopResults =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
 
@@ -240,7 +243,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         return;
       }
       _recalculateOverlayMaxHeight();
-      if (_shouldAutoRepositionSearch) {
+      if (_shouldAutoRepositionSearch(context)) {
         await _scrollSearchToTop();
       }
     });
@@ -251,7 +254,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     FocusScope.of(context).unfocus();
     if (_isSearchFocused) {
       setState(() => _isSearchFocused = false);
-      if (_shouldAutoRepositionSearch && _scrollController.hasClients) {
+      if (_shouldAutoRepositionSearch(context) &&
+          _scrollController.hasClients) {
         _scrollController.animateTo(
           0,
           duration: const Duration(milliseconds: 280),
