@@ -832,6 +832,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             maxWidth: 1380,
             minPadding: 12,
           );
+          final cardInset = horizontalPadding - 12;
 
           return CustomScrollView(
             controller: widget.scrollController,
@@ -900,26 +901,32 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
               // Total Section - Detailed Dashboard (Hidden if prices hidden)
               if (showPrices)
                 SliverToBoxAdapter(
-                  child: TotalDashboard(
-                    totalUsd: totalUsd,
-                    totalByn: totalByn,
-                    employerUsd: employerUsd,
-                    employerByn: employerByn,
-                    ourUsd: ourUsd,
-                    ourByn: ourByn,
-                    primaryColor: _primaryColor,
-                    primaryColorLight: _primaryColorLight,
-                    isWorkTab: _isWorkTab,
-                    isMarkupActive: !_isWorkTab && widget.markupPercent > 0,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: cardInset),
+                    child: TotalDashboard(
+                      totalUsd: totalUsd,
+                      totalByn: totalByn,
+                      employerUsd: employerUsd,
+                      employerByn: employerByn,
+                      ourUsd: ourUsd,
+                      ourByn: ourByn,
+                      primaryColor: _primaryColor,
+                      primaryColorLight: _primaryColorLight,
+                      isWorkTab: _isWorkTab,
+                      isMarkupActive: !_isWorkTab && widget.markupPercent > 0,
+                    ),
                   ),
                 ),
 
               // Markup Control (Spoiler style) - Hidden if prices hidden
               if (!_isWorkTab && showPrices)
                 SliverToBoxAdapter(
-                  child: AbsorbPointer(
-                    absorbing: widget.isDisabled,
-                    child: _buildMarkupControl(),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: cardInset),
+                    child: AbsorbPointer(
+                      absorbing: widget.isDisabled,
+                      child: _buildMarkupControl(),
+                    ),
                   ),
                 ),
 
