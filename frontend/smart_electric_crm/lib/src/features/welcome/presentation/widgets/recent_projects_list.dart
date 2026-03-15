@@ -335,7 +335,7 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                 padding: EdgeInsets.all(isCompactMobileWeb ? 10 : 12),
                 child: isCompactMobileWeb
                     ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Container(
                             padding: const EdgeInsets.all(8),
@@ -356,6 +356,7 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
