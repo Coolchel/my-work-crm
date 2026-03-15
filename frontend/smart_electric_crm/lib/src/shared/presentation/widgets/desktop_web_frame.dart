@@ -19,6 +19,10 @@ final class DesktopWebFrame {
     return kIsWeb && MediaQuery.sizeOf(context).width >= minWidth;
   }
 
+  static bool isMobileWeb(BuildContext context, {double maxWidth = 700}) {
+    return kIsWeb && MediaQuery.sizeOf(context).width < maxWidth;
+  }
+
   static bool hasPersistentShellSidebar(
     BuildContext context, {
     double minWidth = shellSidebarBreakpoint,

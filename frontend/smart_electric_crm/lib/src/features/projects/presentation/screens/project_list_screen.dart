@@ -32,7 +32,7 @@ class ProjectListScreen extends ConsumerStatefulWidget {
 
 class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     with SingleTickerProviderStateMixin {
-  static const double _searchHorizontalPadding = 16;
+  static const double _searchHorizontalPadding = 12;
 
   SortOrder _sortOrder = SortOrder.newest;
   String? _filterSource;
@@ -234,7 +234,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                   DesktopWebFrame.centeredContentSidePadding(
                 constraints.maxWidth,
                 maxWidth: contentMaxWidth,
-                minPadding: AppDesignTokens.spacingM,
+                minPadding: 12,
               );
 
               if (!useDesktopGrid || constraints.maxWidth < 1080) {
@@ -407,6 +407,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     final handleBack =
         widget.onBackPressed ?? () => Navigator.of(context).maybePop();
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -428,6 +429,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             title: 'Объекты',
             icon: Icons.apartment_rounded,
             gradientColors: AppDesignTokens.subtleSectionGradient,
+            bottomGap: isMobileWeb ? 16 : 30,
             actions: [
               IconButton(
                 icon: const Icon(Icons.search),
@@ -506,11 +508,11 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                     child: Container(
                       width: double.infinity,
                       color: Theme.of(context).colorScheme.surface,
-                      padding: const EdgeInsets.fromLTRB(
-                        _searchHorizontalPadding,
-                        8,
-                        _searchHorizontalPadding,
-                        10,
+                      padding: EdgeInsets.fromLTRB(
+                        isMobileWeb ? 12 : _searchHorizontalPadding,
+                        isMobileWeb ? 6 : 8,
+                        isMobileWeb ? 12 : _searchHorizontalPadding,
+                        isMobileWeb ? 8 : 10,
                       ),
                       child: TextField(
                         controller: _searchController,
@@ -897,6 +899,10 @@ class _ProjectCardState extends State<_ProjectCard> {
     final project = widget.project;
     final createdAt = project.createdAt;
     final updatedAt = project.updatedAt;
+    final isCompactMobileWeb = DesktopWebFrame.isMobileWeb(
+      context,
+      maxWidth: 520,
+    );
     final stripeColor = ProjectStageColorResolver.resolveStripeColor(
       project.stages,
     );
@@ -906,8 +912,9 @@ class _ProjectCardState extends State<_ProjectCard> {
     final isMobilePlatform = !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.android ||
             defaultTargetPlatform == TargetPlatform.iOS);
-    final useMobileLayout =
-        isMobilePlatform || MediaQuery.sizeOf(context).width < 380;
+    final useMobileLayout = isCompactMobileWeb ||
+        isMobilePlatform ||
+        MediaQuery.sizeOf(context).width < 380;
     final createdLabel = 'Создан: ${_formatDate(createdAt)}';
     final updatedLabel = isEdited ? 'Изменен: ${_formatDate(updatedAt)}' : null;
 
@@ -953,9 +960,12 @@ class _ProjectCardState extends State<_ProjectCard> {
                     child: Stack(
                       children: [
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: _cardHorizontalPadding,
-                            vertical: _cardVerticalPadding,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isCompactMobileWeb
+                                ? 12
+                                : _cardHorizontalPadding,
+                            vertical:
+                                isCompactMobileWeb ? 10 : _cardVerticalPadding,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -963,7 +973,9 @@ class _ProjectCardState extends State<_ProjectCard> {
                             children: [
                               // Header: address + action buttons (aligned on one line)
                               SizedBox(
-                                height: _headerBlockHeight,
+                                height: isCompactMobileWeb
+                                    ? null
+                                    : _headerBlockHeight,
                                 child: project.intercomCode.isEmpty
                                     ? Align(
                                         alignment: Alignment.centerLeft,
@@ -1045,7 +1057,7 @@ class _ProjectCardState extends State<_ProjectCard> {
                                       ),
                               ),
 
-                              const SizedBox(height: 12),
+                              SizedBox(height: isCompactMobileWeb ? 8 : 12),
 
                               useMobileLayout
                                   ? _buildMobileInfoSection(

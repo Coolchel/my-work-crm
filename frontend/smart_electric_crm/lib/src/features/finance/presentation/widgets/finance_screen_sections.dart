@@ -613,9 +613,9 @@ extension _FinanceScreenSections on _FinanceScreenState {
   }
 
   Widget _buildGlobalSettingsSection() {
+    final sectionHPadding = _sectionHPadding(context);
     return Container(
-      margin: const EdgeInsets.fromLTRB(_FinanceScreenState._sectionHPadding,
-          12, _FinanceScreenState._sectionHPadding, 12),
+      margin: EdgeInsets.fromLTRB(sectionHPadding, 12, sectionHPadding, 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/app_dialog_scrollbar.dart';
+import '../widgets/desktop_web_frame.dart';
 
 class TextInputDialog extends StatefulWidget {
   final String title;
@@ -53,9 +54,24 @@ class _TextInputDialogState extends State<TextInputDialog> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
+    final headerPadding = EdgeInsets.symmetric(
+      horizontal: isMobileWeb ? 16 : 20,
+      vertical: isMobileWeb ? 14 : 16,
+    );
+    final contentPadding = EdgeInsets.all(isMobileWeb ? 16 : 24);
+    final footerPadding = EdgeInsets.fromLTRB(
+      isMobileWeb ? 16 : 24,
+      0,
+      isMobileWeb ? 16 : 24,
+      isMobileWeb ? 16 : 24,
+    );
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isMobileWeb ? 10 : 16,
+        vertical: isMobileWeb ? 8 : 12,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 0,
       backgroundColor: Colors.transparent,
@@ -85,8 +101,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
                 children: [
                   // Header
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 16),
+                    padding: headerPadding,
                     decoration: BoxDecoration(
                       color: widget.themeColor.withOpacity(0.08),
                       borderRadius: const BorderRadius.only(
@@ -104,7 +119,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
                         Text(
                           widget.title,
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: isMobileWeb ? 16 : 18,
                             fontWeight: FontWeight.bold,
                             color: widget.themeColor.withOpacity(0.8),
                           ),
@@ -133,7 +148,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
                       controller: _scrollController,
                       child: SingleChildScrollView(
                         controller: _scrollController,
-                        padding: const EdgeInsets.all(24),
+                        padding: contentPadding,
                         child: Form(
                           key: _formKey,
                           child: Column(
@@ -159,42 +174,49 @@ class _TextInputDialogState extends State<TextInputDialog> {
                   ),
                   // Footer
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    padding: footerPadding,
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: isMobileWeb ? 0 : 8,
+                      runSpacing: 8,
                       children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: TextButton.styleFrom(
-                            foregroundColor: scheme.onSurfaceVariant,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                          ),
-                          child: Text(widget.cancelText),
-                        ),
-                        const SizedBox(width: 8),
-                        FilledButton(
-                          onPressed: _submit,
-                          style: ButtonStyle(
-                            backgroundColor:
-                                WidgetStateProperty.resolveWith((states) {
-                              if (states.contains(WidgetState.hovered) ||
-                                  states.contains(WidgetState.pressed)) {
-                                return widget.themeColor;
-                              }
-                              return widget.themeColor.withOpacity(0.8);
-                            }),
-                            padding: WidgetStateProperty.all(
-                              const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 12),
+                        SizedBox(
+                          width: isMobileWeb ? double.infinity : null,
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              foregroundColor: scheme.onSurfaceVariant,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
                             ),
-                            shape: WidgetStateProperty.all(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                            child: Text(widget.cancelText),
+                          ),
+                        ),
+                        SizedBox(
+                          width: isMobileWeb ? double.infinity : null,
+                          child: FilledButton(
+                            onPressed: _submit,
+                            style: ButtonStyle(
+                              backgroundColor:
+                                  WidgetStateProperty.resolveWith((states) {
+                                if (states.contains(WidgetState.hovered) ||
+                                    states.contains(WidgetState.pressed)) {
+                                  return widget.themeColor;
+                                }
+                                return widget.themeColor.withOpacity(0.8);
+                              }),
+                              padding: WidgetStateProperty.all(
+                                const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                              ),
+                              shape: WidgetStateProperty.all(
+                                RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                             ),
+                            child: Text(widget.confirmText),
                           ),
-                          child: Text(widget.confirmText),
                         ),
                       ],
                     ),
@@ -223,7 +245,8 @@ class _TextInputDialogState extends State<TextInputDialog> {
           label,
           style: TextStyle(
             color: scheme.onSurfaceVariant,
-            fontSize: 13,
+            fontSize:
+                DesktopWebFrame.isMobileWeb(context, maxWidth: 560) ? 12 : 13,
             fontWeight: FontWeight.w500,
           ),
         ),

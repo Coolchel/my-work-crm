@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:printing/printing.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import 'package:smart_electric_crm/src/shared/services/temp_file_service.dart';
 
@@ -44,19 +45,23 @@ mixin EstimateDialogHelpers {
     required Widget child,
     double maxWidth = 420,
   }) {
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(isMobileWeb ? 20 : 28),
+      ),
       elevation: 0,
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.all(16),
+      insetPadding: EdgeInsets.all(isMobileWeb ? 10 : 16),
       child: Container(
         constraints: BoxConstraints(
           maxWidth: maxWidth,
-          maxHeight: MediaQuery.sizeOf(context).height - 32,
+          maxHeight:
+              MediaQuery.sizeOf(context).height - (isMobileWeb ? 20 : 32),
         ),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(isMobileWeb ? 20 : 28),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -79,8 +84,12 @@ mixin EstimateDialogHelpers {
     required Color themeColor,
   }) {
     final theme = Theme.of(context);
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobileWeb ? 16 : 24,
+        vertical: isMobileWeb ? 14 : 20,
+      ),
       decoration: BoxDecoration(
         color: themeColor.withOpacity(0.08),
         border: Border(
@@ -98,6 +107,7 @@ mixin EstimateDialogHelpers {
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface,
                 height: 1.2,
+                fontSize: isMobileWeb ? 16 : null,
               ),
             ),
           ),
@@ -151,11 +161,15 @@ mixin EstimateDialogHelpers {
   }) {
     final theme = Theme.of(context);
     final effectiveColor = color ?? theme.colorScheme.primary;
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobileWeb ? 16 : 24,
+        vertical: isMobileWeb ? 4 : 6,
+      ),
       child: SizedBox(
-        height: 52,
+        height: isMobileWeb ? 46 : 52,
         child: OutlinedButton(
           onPressed: enabled ? onTap : null,
           style: OutlinedButton.styleFrom(
@@ -173,13 +187,13 @@ mixin EstimateDialogHelpers {
           ),
           child: Row(
             children: [
-              Icon(icon, size: 22),
-              const SizedBox(width: 16),
+              Icon(icon, size: isMobileWeb ? 20 : 22),
+              SizedBox(width: isMobileWeb ? 12 : 16),
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 15,
+                  style: TextStyle(
+                    fontSize: isMobileWeb ? 14 : 15,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -210,6 +224,7 @@ mixin EstimateDialogHelpers {
     final isDark = AppDesignTokens.isDark(context);
     final effectiveColor = color ?? theme.colorScheme.onSurface;
     final contentColor = enabled ? effectiveColor : theme.disabledColor;
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
     final menuHoverColor = isDark
         ? Colors.white.withOpacity(0.08)
         : Colors.black.withOpacity(0.045);
@@ -218,22 +233,22 @@ mixin EstimateDialogHelpers {
         : Colors.black.withOpacity(0.03);
 
     final triggerContent = Container(
-      height: 52,
+      height: isMobileWeb ? 46 : 52,
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: isMobileWeb ? 12 : 16),
       child: Row(
         children: [
-          Icon(icon, color: contentColor, size: 22),
-          const SizedBox(width: 16),
+          Icon(icon, color: contentColor, size: isMobileWeb ? 20 : 22),
+          SizedBox(width: isMobileWeb ? 12 : 16),
           Expanded(
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 15,
+                fontSize: isMobileWeb ? 14 : 15,
                 fontWeight: FontWeight.w500,
                 color: contentColor,
               ),
@@ -251,7 +266,10 @@ mixin EstimateDialogHelpers {
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobileWeb ? 16 : 24,
+        vertical: isMobileWeb ? 4 : 6,
+      ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final menuWidth = constraints.maxWidth;
@@ -1589,6 +1607,7 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
   Widget build(BuildContext context) {
     final themeColor = _themeColor;
     final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 600);
     final useCompactActionRow =
         (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) ||
             (kIsWeb && screenWidth < 600);
@@ -1599,7 +1618,7 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
       child: DefaultTabController(
         length: 1, // Just to satisfy if needed, but we use chips
         child: SizedBox(
-          height: 760,
+          height: isMobileWeb ? 660 : 760,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -1612,7 +1631,8 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
               const SizedBox(height: 16),
               if (_availableModes.isNotEmpty) ...[
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: isMobileWeb ? 16 : 24),
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -1651,16 +1671,19 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
                   ),
                 ),
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobileWeb ? 16 : 24,
+                    vertical: 12,
+                  ),
                   child:
                       Divider(height: 1, color: themeColor.withOpacity(0.15)),
                 ),
               ],
               Expanded(
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
-                  padding: const EdgeInsets.all(16),
+                  margin:
+                      EdgeInsets.symmetric(horizontal: isMobileWeb ? 16 : 24),
+                  padding: EdgeInsets.all(isMobileWeb ? 12 : 16),
                   decoration: BoxDecoration(
                     color: AppDesignTokens.isDark(context)
                         ? Theme.of(context).colorScheme.surfaceContainerHigh
@@ -1685,7 +1708,8 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
               ),
               const SizedBox(height: 24),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding:
+                    EdgeInsets.symmetric(horizontal: isMobileWeb ? 16 : 24),
                 child: Center(
                   child: useCompactActionRow
                       ? SizedBox(
@@ -1745,7 +1769,7 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
                         ),
                 ),
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: isMobileWeb ? 20 : 32),
             ],
           ),
         ),

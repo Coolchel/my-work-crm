@@ -59,6 +59,7 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     final sortedShields = List<ShieldModel>.from(widget.project.shields)
       ..sort((a, b) {
         final order = {'power': 0, 'multimedia': 1, 'led': 2};
@@ -70,16 +71,33 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
         message: 'Добавить щит',
         preferBelow: false,
         verticalOffset: 32,
-        child: FloatingActionButton(
-          heroTag: 'add_shield_fab',
-          onPressed: () =>
-              _showAddShieldDialog(context, ref, widget.project.id.toString()),
-          backgroundColor: Colors.indigo,
-          foregroundColor: Theme.of(context).colorScheme.surface,
-          elevation: 2,
-          tooltip: null,
-          child: const Icon(Icons.add),
-        ),
+        child: isMobileWeb
+            ? FloatingActionButton.small(
+                heroTag: 'add_shield_fab',
+                onPressed: () => _showAddShieldDialog(
+                  context,
+                  ref,
+                  widget.project.id.toString(),
+                ),
+                backgroundColor: Colors.indigo,
+                foregroundColor: Theme.of(context).colorScheme.surface,
+                elevation: 2,
+                tooltip: null,
+                child: const Icon(Icons.add),
+              )
+            : FloatingActionButton(
+                heroTag: 'add_shield_fab',
+                onPressed: () => _showAddShieldDialog(
+                  context,
+                  ref,
+                  widget.project.id.toString(),
+                ),
+                backgroundColor: Colors.indigo,
+                foregroundColor: Theme.of(context).colorScheme.surface,
+                elevation: 2,
+                tooltip: null,
+                child: const Icon(Icons.add),
+              ),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -87,14 +105,15 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
           final horizontalPadding = DesktopWebFrame.centeredContentSidePadding(
             constraints.maxWidth,
             maxWidth: contentMaxWidth,
+            minPadding: 12,
           );
           final content = SingleChildScrollView(
             controller: widget.scrollController,
             padding: EdgeInsets.fromLTRB(
               horizontalPadding,
-              20,
+              isMobileWeb ? 12 : 20,
               horizontalPadding,
-              16,
+              isMobileWeb ? 12 : 16,
             ),
             child: Column(
               children: [
@@ -111,7 +130,7 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
                         shield: shield,
                         projectId: widget.project.id.toString(),
                       )),
-                const SizedBox(height: 80),
+                SizedBox(height: isMobileWeb ? 64 : 80),
               ],
             ),
           );

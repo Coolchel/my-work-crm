@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/app_dialog_scrollbar.dart';
+import '../widgets/desktop_web_frame.dart';
 
 class ConfirmationDialog extends StatefulWidget {
   final String title;
@@ -39,9 +40,25 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final effectiveColor =
         widget.isDestructive ? Colors.red : widget.themeColor;
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
+    final headerPadding = EdgeInsets.symmetric(
+      horizontal: isMobileWeb ? 16 : 20,
+      vertical: isMobileWeb ? 14 : 16,
+    );
+    final contentPadding = EdgeInsets.all(isMobileWeb ? 16 : 24);
+    final footerPadding = EdgeInsets.fromLTRB(
+      isMobileWeb ? 16 : 24,
+      0,
+      isMobileWeb ? 16 : 24,
+      isMobileWeb ? 16 : 24,
+    );
+    final actionWidth = isMobileWeb ? double.infinity : 140.0;
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isMobileWeb ? 10 : 16,
+        vertical: isMobileWeb ? 8 : 12,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 0,
       backgroundColor: Colors.transparent,
@@ -71,8 +88,7 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
                 children: [
                   // Header
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 16),
+                    padding: headerPadding,
                     decoration: BoxDecoration(
                       color: effectiveColor.withOpacity(0.08),
                       borderRadius: const BorderRadius.only(
@@ -90,7 +106,7 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
                         Text(
                           widget.title,
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: isMobileWeb ? 16 : 18,
                             fontWeight: FontWeight.bold,
                             color: effectiveColor.withOpacity(0.8),
                           ),
@@ -119,11 +135,11 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
                       controller: _scrollController,
                       child: SingleChildScrollView(
                         controller: _scrollController,
-                        padding: const EdgeInsets.all(24),
+                        padding: contentPadding,
                         child: Text(
                           widget.content,
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: isMobileWeb ? 14 : 15,
                             height: 1.4,
                             color: scheme.onSurface,
                           ),
@@ -134,12 +150,15 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
                   ),
                   // Footer
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    padding: footerPadding,
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: isMobileWeb ? 0 : 12,
+                      runSpacing: 8,
                       children: [
                         if (widget.cancelText.isNotEmpty) ...[
-                          Expanded(
+                          SizedBox(
+                            width: actionWidth,
                             child: TextButton(
                               onPressed: () => Navigator.pop(context, false),
                               style: TextButton.styleFrom(
@@ -150,8 +169,8 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
                               child: Text(widget.cancelText),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
+                          SizedBox(
+                            width: actionWidth,
                             child: FilledButton(
                               onPressed: () => Navigator.pop(context, true),
                               style: ButtonStyle(
@@ -176,28 +195,31 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
                             ),
                           ),
                         ] else
-                          FilledButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            style: ButtonStyle(
-                              backgroundColor:
-                                  WidgetStateProperty.resolveWith((states) {
-                                if (states.contains(WidgetState.hovered) ||
-                                    states.contains(WidgetState.pressed)) {
-                                  return effectiveColor;
-                                }
-                                return effectiveColor.withOpacity(0.8);
-                              }),
-                              padding: WidgetStateProperty.all(
-                                const EdgeInsets.symmetric(
-                                    vertical: 12, horizontal: 24),
-                              ),
-                              shape: WidgetStateProperty.all(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                          SizedBox(
+                            width: actionWidth,
+                            child: FilledButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: ButtonStyle(
+                                backgroundColor:
+                                    WidgetStateProperty.resolveWith((states) {
+                                  if (states.contains(WidgetState.hovered) ||
+                                      states.contains(WidgetState.pressed)) {
+                                    return effectiveColor;
+                                  }
+                                  return effectiveColor.withOpacity(0.8);
+                                }),
+                                padding: WidgetStateProperty.all(
+                                  const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 24),
+                                ),
+                                shape: WidgetStateProperty.all(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                 ),
                               ),
+                              child: Text(widget.confirmText),
                             ),
-                            child: Text(widget.confirmText),
                           ),
                       ],
                     ),
