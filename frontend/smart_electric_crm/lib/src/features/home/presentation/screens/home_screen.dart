@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/navigation/app_navigation.dart';
 import '../../../settings/application/app_settings_controller.dart';
 import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
+import '../../../../shared/presentation/widgets/desktop_side_menu.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({
@@ -37,7 +38,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const int _financeBranchIndex = 2;
   static const int _statisticsBranchIndex = 3;
   static const int _settingsBranchIndex = 4;
-  static const double _defaultDesktopMenuTop = 132;
+  static const double _defaultDesktopMenuTop = 118;
   static const double _welcomeDesktopMenuTop = 220;
 
   @override
@@ -201,7 +202,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final items = _buildDestinations(settings);
     final selectedIndex = _selectedVisibleIndex(items);
-    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1450);
     final desktopMenuTop = _isHomeBranchSelected(settings)
         ? _welcomeDesktopMenuTop
         : _defaultDesktopMenuTop;
@@ -217,56 +218,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   bottom: 16,
                   child: SafeArea(
                     top: false,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? scheme.surfaceContainerHigh
-                            : scheme.surface.withOpacity(0.98),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: scheme.outlineVariant
-                              .withOpacity(isDark ? 0.5 : 0.35),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                Colors.black.withOpacity(isDark ? 0.22 : 0.05),
-                            blurRadius: 18,
-                            offset: const Offset(0, 8),
+                    child: DesktopSideMenu(
+                      items: [
+                        for (var i = 0; i < items.length; i++)
+                          DesktopSideMenuItem(
+                            label: items[i].destination.label,
+                            icon: items[i].destination.icon,
+                            selectedIcon: items[i].destination.selectedIcon,
+                            isSelected: i == selectedIndex,
+                            onTap: () => _handleDestinationSelected(
+                              i,
+                              settings,
+                              items,
+                            ),
                           ),
-                        ],
-                      ),
-                      child: SizedBox(
-                        width: 224,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 14,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              for (var i = 0; i < items.length; i++) ...[
-                                _DesktopNavigationButton(
-                                  label: items[i].destination.label,
-                                  icon: items[i].destination.icon,
-                                  selectedIcon:
-                                      items[i].destination.selectedIcon,
-                                  isSelected: i == selectedIndex,
-                                  onTap: () => _handleDestinationSelected(
-                                    i,
-                                    settings,
-                                    items,
-                                  ),
-                                ),
-                                if (i < items.length - 1)
-                                  const SizedBox(height: 6),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
@@ -312,98 +278,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _handleNativeBack(settings);
       },
       child: scaffold,
-    );
-  }
-}
-
-class _DesktopNavigationButton extends StatefulWidget {
-  const _DesktopNavigationButton({
-    required this.label,
-    required this.icon,
-    required this.selectedIcon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String label;
-  final Widget icon;
-  final Widget? selectedIcon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  State<_DesktopNavigationButton> createState() =>
-      _DesktopNavigationButtonState();
-}
-
-class _DesktopNavigationButtonState extends State<_DesktopNavigationButton> {
-  bool _isHovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isActive = widget.isSelected;
-    final backgroundColor = isActive
-        ? scheme.primary.withOpacity(isDark ? 0.24 : 0.12)
-        : _isHovered
-            ? scheme.primary.withOpacity(isDark ? 0.12 : 0.07)
-            : Colors.transparent;
-    final borderColor = isActive
-        ? scheme.primary.withOpacity(isDark ? 0.38 : 0.20)
-        : _isHovered
-            ? scheme.outlineVariant.withOpacity(isDark ? 0.36 : 0.28)
-            : Colors.transparent;
-    final foregroundColor = isActive
-        ? scheme.primary
-        : _isHovered
-            ? scheme.onSurface
-            : scheme.onSurfaceVariant;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: widget.onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            decoration: BoxDecoration(
-              color: backgroundColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: borderColor),
-            ),
-            child: Row(
-              children: [
-                IconTheme(
-                  data: IconThemeData(
-                    size: 24,
-                    color: foregroundColor,
-                  ),
-                  child: widget.isSelected
-                      ? (widget.selectedIcon ?? widget.icon)
-                      : widget.icon,
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    widget.label,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: foregroundColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

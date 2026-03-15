@@ -24,6 +24,7 @@ import 'package:smart_electric_crm/src/features/settings/application/app_setting
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_side_menu.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
@@ -47,6 +48,9 @@ class EstimateScreen extends ConsumerStatefulWidget {
 }
 
 class _EstimateScreenState extends ConsumerState<EstimateScreen> {
+  static const double _desktopMenuWidth = 224;
+  static const double _desktopMenuLeft = 16;
+  static const double _desktopMenuTop = 16;
   final ScrollController _worksScrollController = ScrollController();
   final ScrollController _materialsScrollController = ScrollController();
   final SectionAppBarCollapseController _appBarCollapseController =
@@ -119,23 +123,28 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     _appBarCollapseController.bind(_activeScrollController);
   }
 
-  List<ButtonSegment<int>> _buildDesktopSegments(bool showWelcome) {
+  List<DesktopSideMenuItem> _buildDesktopSegments(bool showWelcome) {
     return [
       if (showWelcome)
-        const ButtonSegment<int>(
-          value: 0,
-          icon: Icon(Icons.home_outlined),
-          label: Text('Главная'),
+        DesktopSideMenuItem(
+          label: 'Главная',
+          icon: const Icon(Icons.home_outlined),
+          selectedIcon: const Icon(Icons.home),
+          onTap: () => _handleSectionSelection(0, showWelcome),
         ),
-      ButtonSegment<int>(
-        value: showWelcome ? 1 : 0,
+      DesktopSideMenuItem(
+        label: 'Работы',
         icon: const Icon(Icons.handyman_outlined),
-        label: const Text('Работы'),
+        selectedIcon: const Icon(Icons.handyman),
+        onTap: () => _handleSectionSelection(showWelcome ? 1 : 0, showWelcome),
+        isSelected: showWelcome ? _currentIndex + 1 == 1 : _currentIndex == 0,
       ),
-      ButtonSegment<int>(
-        value: showWelcome ? 2 : 1,
+      DesktopSideMenuItem(
+        label: 'Материалы',
         icon: const Icon(Icons.inventory_2_outlined),
-        label: const Text('Материалы'),
+        selectedIcon: const Icon(Icons.inventory_2),
+        onTap: () => _handleSectionSelection(showWelcome ? 2 : 1, showWelcome),
+        isSelected: showWelcome ? _currentIndex + 1 == 2 : _currentIndex == 1,
       ),
     ];
   }
@@ -256,7 +265,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     final showWelcome = ref.watch(
       appSettingsProvider.select((value) => value.showWelcome),
     );
-    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1450);
     // Backdrop filter when FAB is expanded
     // Backdrop filter when FAB is expanded
     return Scaffold(
@@ -375,44 +384,34 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
             ],
           );
 
-          final framedContent = isDesktopWeb
-              ? DesktopWebPageFrame(
-                  maxWidth: 1320,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: SizedBox(
-                    width: constraints.maxWidth,
-                    child: content,
-                  ),
-                )
-              : content;
-
           if (!isDesktopWeb) {
-            return framedContent;
+            return content;
           }
 
-          return Column(
+          const contentMaxWidth = 1380.0;
+          final contentWidth = constraints.maxWidth < contentMaxWidth
+              ? constraints.maxWidth
+              : contentMaxWidth;
+
+          return Stack(
             children: [
-              DesktopWebPageFrame(
-                maxWidth: 1320,
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SegmentedButton<int>(
-                      showSelectedIcon: false,
-                      segments: _buildDesktopSegments(showWelcome),
-                      selected: {
-                        showWelcome ? _currentIndex + 1 : _currentIndex
-                      },
-                      onSelectionChanged: (selection) {
-                        _handleSectionSelection(selection.first, showWelcome);
-                      },
-                    ),
-                  ),
+              Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: contentWidth,
+                  height: constraints.maxHeight,
+                  child: content,
                 ),
               ),
-              Expanded(child: framedContent),
+              Positioned(
+                left: _desktopMenuLeft,
+                top: _desktopMenuTop,
+                bottom: 16,
+                child: DesktopSideMenu(
+                  width: _desktopMenuWidth,
+                  items: _buildDesktopSegments(showWelcome),
+                ),
+              ),
             ],
           );
         },

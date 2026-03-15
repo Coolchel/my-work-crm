@@ -62,14 +62,14 @@ class _AppDialogScrollbarState extends State<AppDialogScrollbar> {
         interactive: true,
         radius: const Radius.circular(999),
         minThumbLength: 44,
-        crossAxisMargin: 8,
+        crossAxisMargin: 12,
         mainAxisMargin: 12,
         thickness: WidgetStateProperty.resolveWith<double?>((states) {
           if (states.contains(WidgetState.hovered) ||
               states.contains(WidgetState.dragged)) {
-            return 10;
+            return 8;
           }
-          return 8;
+          return 6;
         }),
         thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
           if (states.contains(WidgetState.dragged)) {

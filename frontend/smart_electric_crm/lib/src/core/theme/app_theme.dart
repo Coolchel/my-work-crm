@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_design_tokens.dart';
@@ -5,7 +6,8 @@ import 'app_design_tokens.dart';
 class AppTheme {
   const AppTheme._();
 
-  static const String _baseFontFamily = 'Roboto';
+  static const String _androidFontFamily = 'Roboto';
+  static const String _desktopFontFamily = 'Segoe UI';
 
   static ThemeData light() {
     final scheme = ColorScheme.fromSeed(
@@ -54,8 +56,11 @@ class AppTheme {
     required Color cardShadow,
     required Color navIndicator,
   }) {
+    final typographyPlatform = _typographyPlatform();
+    final fontFamily = _fontFamilyForPlatform();
+    final fontFamilyFallback = _fontFallbackForPlatform();
     final typography = Typography.material2021(
-      platform: TargetPlatform.android,
+      platform: typographyPlatform,
       colorScheme: scheme,
     );
     final selectedNavColor = scheme.primary;
@@ -82,8 +87,14 @@ class AppTheme {
       useMaterial3: true,
       brightness: scheme.brightness,
       typography: typography,
-      fontFamily: _baseFontFamily,
-    ).textTheme.copyWith(
+      fontFamily: fontFamily,
+    )
+        .textTheme
+        .apply(
+          fontFamily: fontFamily,
+          fontFamilyFallback: fontFamilyFallback,
+        )
+        .copyWith(
           headlineSmall: TextStyle(
             color:
                 isDark ? scheme.onSurface.withOpacity(0.92) : scheme.onSurface,
@@ -111,8 +122,10 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
+      platform: typographyPlatform,
       typography: typography,
-      fontFamily: _baseFontFamily,
+      fontFamily: fontFamily,
+      fontFamilyFallback: fontFamilyFallback,
       textTheme: textTheme,
       scaffoldBackgroundColor: scaffoldBackground,
       dividerColor: scheme.outlineVariant,
@@ -243,5 +256,32 @@ class AppTheme {
       highlightColor: highlightOverlayColor,
       hoverColor: hoverOverlayColor,
     );
+  }
+
+  static TargetPlatform _typographyPlatform() {
+    if (kIsWeb || defaultTargetPlatform == TargetPlatform.windows) {
+      return TargetPlatform.windows;
+    }
+    return TargetPlatform.android;
+  }
+
+  static String _fontFamilyForPlatform() {
+    if (kIsWeb || defaultTargetPlatform == TargetPlatform.windows) {
+      return _desktopFontFamily;
+    }
+    return _androidFontFamily;
+  }
+
+  static List<String> _fontFallbackForPlatform() {
+    if (kIsWeb || defaultTargetPlatform == TargetPlatform.windows) {
+      return const [
+        'Segoe UI Variable',
+        'Roboto',
+        'Arial',
+      ];
+    }
+    return const [
+      'Arial',
+    ];
   }
 }

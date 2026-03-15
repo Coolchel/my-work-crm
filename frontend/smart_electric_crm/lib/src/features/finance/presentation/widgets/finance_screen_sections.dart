@@ -63,13 +63,13 @@ extension _FinanceScreenSections on _FinanceScreenState {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(10, 12, 10, 10),
+                            padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Container(
-                                  width: 22,
-                                  height: 22,
+                                  width: 24,
+                                  height: 24,
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
                                     color: _FinanceScreenState._financeAccent
@@ -82,7 +82,7 @@ extension _FinanceScreenSections on _FinanceScreenState {
                                       color: _FinanceScreenState._financeAccent
                                           .withOpacity(0.85),
                                       fontWeight: FontWeight.w700,
-                                      fontSize: 11.5,
+                                      fontSize: 12,
                                     ),
                                   ),
                                 ),
@@ -110,7 +110,7 @@ extension _FinanceScreenSections on _FinanceScreenState {
                                         _buildAmountDisplay(
                                           project.totalUsd,
                                           project.totalByn,
-                                          fontSize: 11.5,
+                                          fontSize: 12.5,
                                           color: Theme.of(context)
                                               .colorScheme
                                               .onSurface,
@@ -167,7 +167,7 @@ extension _FinanceScreenSections on _FinanceScreenState {
                                       _buildAmountDisplay(
                                         project.totalUsd,
                                         project.totalByn,
-                                        fontSize: 11.5,
+                                        fontSize: 12.5,
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface,
@@ -328,7 +328,7 @@ extension _FinanceScreenSections on _FinanceScreenState {
                         Text(
                           stage.titleDisplay,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -473,7 +473,7 @@ extension _FinanceScreenSections on _FinanceScreenState {
             overflow: singleLine ? TextOverflow.ellipsis : TextOverflow.visible,
             style: const TextStyle(
               fontWeight: FontWeight.w700,
-              fontSize: 13.5,
+              fontSize: 14.5,
               letterSpacing: -0.2,
             ),
           ),
