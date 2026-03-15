@@ -7,6 +7,7 @@ import 'package:smart_electric_crm/src/features/projects/presentation/providers/
 import 'package:smart_electric_crm/src/features/projects/presentation/screens/add_project_screen.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/search/project_search_texts.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/utils/project_stage_color_resolver.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/widgets/card_meta_info_block.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/project_search_result_tile.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
@@ -271,7 +272,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  mainAxisExtent: 190,
+                  mainAxisExtent: 152,
                 ),
                 itemBuilder: (context, index) {
                   return _ProjectCard(
@@ -847,51 +848,22 @@ class _ProjectCard extends StatefulWidget {
 }
 
 class _ProjectCardState extends State<_ProjectCard> {
-  static const double _titleFontSize = 16;
+  static const double _titleFontSize = 17;
   static const double _titleLineHeight = 1.2;
-  static const double _headerBlockHeight = 58;
-  static const double _intercomLineHeight = 14;
   static const double _actionButtonSize = 30;
   static const double _actionIconSize = 18;
   static const double _actionButtonsGap = 2;
-  static const double _titleActionsGap = 8;
+  static const double _mobileHeaderActionsWidth = 70;
   static const double _cardHorizontalPadding = 16;
-  static const double _cardVerticalPadding = 12;
-  static const double _actionIconVerticalInset =
-      (_actionButtonSize - _actionIconSize) / 2;
-  static const double _actionButtonsReservedWidth =
-      (_actionButtonSize * 2) + _actionButtonsGap;
+  static const double _metaBlockSpacing = 12;
+  static const double _mobileCardMinHeight = 168;
+  static const double _desktopCardMinHeight = 132;
+  static const double _mobileMetaSlotHeight = 42;
 
   bool _isHovered = false;
 
   String _formatDate(DateTime date) {
     return DateFormat('dd.MM.yyyy').format(date);
-  }
-
-  String _getObjectTypeDisplay(String type) {
-    const map = {
-      'new_building': 'Новостройка',
-      'secondary': 'Вторичка',
-      'cottage': 'Коттедж',
-      'office': 'Офис',
-      'other': 'Другое',
-    };
-    return map[type] ?? type;
-  }
-
-  IconData _getObjectTypeIcon(String type) {
-    switch (type) {
-      case 'new_building':
-        return Icons.apartment;
-      case 'secondary':
-        return Icons.home;
-      case 'cottage':
-        return Icons.villa;
-      case 'office':
-        return Icons.business;
-      default:
-        return Icons.category;
-    }
   }
 
   @override
@@ -914,9 +886,14 @@ class _ProjectCardState extends State<_ProjectCard> {
             defaultTargetPlatform == TargetPlatform.iOS);
     final useMobileLayout = isCompactMobileWeb ||
         isMobilePlatform ||
-        MediaQuery.sizeOf(context).width < 380;
-    final createdLabel = 'Создан: ${_formatDate(createdAt)}';
-    final updatedLabel = isEdited ? 'Изменен: ${_formatDate(updatedAt)}' : null;
+        MediaQuery.sizeOf(context).width < 480;
+    final createdValue = _formatDate(createdAt);
+    final updatedValue = isEdited ? _formatDate(updatedAt) : null;
+    final infoBlocks = _buildDesktopInfoBlocks(
+      project: project,
+      createdValue: createdValue,
+      updatedValue: updatedValue,
+    );
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -925,6 +902,10 @@ class _ProjectCardState extends State<_ProjectCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 12),
+        constraints: BoxConstraints(
+          minHeight:
+              useMobileLayout ? _mobileCardMinHeight : _desktopCardMinHeight,
+        ),
         decoration: BoxDecoration(
           color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
           borderRadius: BorderRadius.circular(16),
@@ -953,167 +934,35 @@ class _ProjectCardState extends State<_ProjectCard> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Accent Stripe
                   Container(width: 5, color: stripeColor),
-                  // Content
                   Expanded(
-                    child: Stack(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isCompactMobileWeb
-                                ? 12
-                                : _cardHorizontalPadding,
-                            vertical:
-                                isCompactMobileWeb ? 10 : _cardVerticalPadding,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Header: address + action buttons (aligned on one line)
-                              SizedBox(
-                                height: isCompactMobileWeb
-                                    ? null
-                                    : _headerBlockHeight,
-                                child: project.intercomCode.isEmpty
-                                    ? Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(
-                                            right: _actionButtonsReservedWidth +
-                                                _titleActionsGap,
-                                          ),
-                                          child: Text(
-                                            project.address,
-                                            style: TextStyle(
-                                              fontSize: _titleFontSize,
-                                              height: _titleLineHeight,
-                                              fontWeight: FontWeight.bold,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface,
-                                              letterSpacing: -0.3,
-                                            ),
-                                            strutStyle: const StrutStyle(
-                                              fontSize: _titleFontSize,
-                                              height: _titleLineHeight,
-                                              forceStrutHeight: true,
-                                            ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      )
-                                    : Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              right:
-                                                  _actionButtonsReservedWidth +
-                                                      _titleActionsGap,
-                                            ),
-                                            child: Text(
-                                              project.address,
-                                              style: TextStyle(
-                                                fontSize: _titleFontSize,
-                                                height: _titleLineHeight,
-                                                fontWeight: FontWeight.bold,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface,
-                                                letterSpacing: -0.3,
-                                              ),
-                                              strutStyle: const StrutStyle(
-                                                fontSize: _titleFontSize,
-                                                height: _titleLineHeight,
-                                                forceStrutHeight: true,
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          SizedBox(
-                                            height: _intercomLineHeight,
-                                            child: Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text(
-                                                '\u0434\u043e\u043c\u043e\u0444\u043e\u043d: ${project.intercomCode}',
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Colors.grey.shade500,
-                                                  letterSpacing: 0.3,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                              ),
-
-                              SizedBox(height: isCompactMobileWeb ? 8 : 12),
-
-                              useMobileLayout
-                                  ? _buildMobileInfoSection(
-                                      project: project,
-                                      createdLabel: createdLabel,
-                                      updatedLabel: updatedLabel,
-                                    )
-                                  : _buildWideInfoSection(
-                                      project: project,
-                                      createdLabel: createdLabel,
-                                      updatedLabel: updatedLabel,
-                                    ),
-                            ],
-                          ),
-                        ),
-                        Positioned(
-                          top: _cardVerticalPadding - _actionIconVerticalInset,
-                          right: _cardHorizontalPadding,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _ActionButton(
-                                icon: Icons.edit_outlined,
-                                tooltip:
-                                    '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
-                                color: Colors.grey.shade400,
-                                hoverColor: Colors.indigo,
-                                size: _actionButtonSize,
-                                iconSize: _actionIconSize,
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) =>
-                                        AddProjectDialog(project: project),
-                                  );
-                                },
-                              ),
-                              const SizedBox(width: _actionButtonsGap),
-                              Consumer(
-                                builder: (context, ref, child) {
-                                  return _ActionButton(
-                                    icon: Icons.close,
-                                    tooltip:
-                                        '\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
-                                    color: Colors.grey.shade400,
-                                    hoverColor: Colors.grey.shade600,
-                                    size: _actionButtonSize,
-                                    iconSize: _actionIconSize,
-                                    onTap: () => deleteProject(context, ref),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        useMobileLayout ? 12 : _cardHorizontalPadding,
+                        useMobileLayout ? 20 : 0,
+                        useMobileLayout ? 12 : _cardHorizontalPadding,
+                        useMobileLayout ? 12 : 2,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: useMobileLayout
+                            ? MainAxisAlignment.start
+                            : MainAxisAlignment.center,
+                        children: [
+                          useMobileLayout
+                              ? _buildMobileHeader(project)
+                              : _buildDesktopHeader(project),
+                          SizedBox(height: isCompactMobileWeb ? 12 : 20),
+                          useMobileLayout
+                              ? _buildMobileInfoSection(
+                                  project: project,
+                                  createdValue: createdValue,
+                                  updatedValue: updatedValue,
+                                )
+                              : _buildMetaSection(children: infoBlocks),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -1129,165 +978,314 @@ class _ProjectCardState extends State<_ProjectCard> {
     required IconData icon,
     required String label,
     required String value,
+    bool compact = false,
   }) {
+    return CardMetaInfoBlock(
+      icon: icon,
+      label: label,
+      value: value,
+      color: Colors.indigo,
+      compact: compact,
+    );
+  }
+
+  Widget _buildDesktopHeader(ProjectModel project) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.indigo.withOpacity(0.08),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: Colors.indigo,
+        Expanded(
+          child: Text(
+            project.address,
+            style: TextStyle(
+              fontSize: _titleFontSize,
+              height: _titleLineHeight,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+              letterSpacing: -0.3,
+            ),
+            strutStyle: const StrutStyle(
+              fontSize: _titleFontSize,
+              height: _titleLineHeight,
+              forceStrutHeight: true,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey.shade500,
-                fontWeight: FontWeight.w500,
+        const SizedBox(width: 8),
+        Transform.translate(
+          offset: const Offset(0, -10),
+          child: _ActionButton(
+            icon: Icons.edit_outlined,
+            tooltip:
+                '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
+            color: Colors.grey.shade400,
+            hoverColor: Colors.indigo,
+            size: _actionButtonSize,
+            iconSize: _actionIconSize,
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AddProjectDialog(project: project),
+              );
+            },
+          ),
+        ),
+        const SizedBox(width: _actionButtonsGap),
+        Consumer(
+          builder: (context, ref, child) {
+            return Transform.translate(
+              offset: const Offset(0, -10),
+              child: _ActionButton(
+                icon: Icons.close,
+                tooltip:
+                    '\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
+                color: Colors.grey.shade400,
+                hoverColor: Colors.grey.shade600,
+                size: _actionButtonSize,
+                iconSize: _actionIconSize,
+                onTap: () => deleteProject(context, ref),
               ),
-            ),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade800,
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ],
     );
+  }
+
+  Widget _buildMobileHeader(ProjectModel project) {
+    return SizedBox(
+      width: double.infinity,
+      child: Stack(
+        alignment: Alignment.topRight,
+        children: [
+          Align(
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(right: _mobileHeaderActionsWidth),
+              child: Text(
+                project.address,
+                style: TextStyle(
+                  fontSize: _titleFontSize,
+                  height: _titleLineHeight,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  letterSpacing: -0.3,
+                ),
+                strutStyle: const StrutStyle(
+                  fontSize: _titleFontSize,
+                  height: _titleLineHeight,
+                  forceStrutHeight: true,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+          Transform.translate(
+            offset: const Offset(0, -2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _ActionButton(
+                  icon: Icons.edit_outlined,
+                  tooltip:
+                      '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
+                  color: Colors.grey.shade400,
+                  hoverColor: Colors.indigo,
+                  size: _actionButtonSize,
+                  iconSize: _actionIconSize,
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AddProjectDialog(project: project),
+                    );
+                  },
+                ),
+                const SizedBox(width: _actionButtonsGap),
+                Consumer(
+                  builder: (context, ref, child) {
+                    return _ActionButton(
+                      icon: Icons.close,
+                      tooltip:
+                          '\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043e\u0431\u044a\u0435\u043a\u0442',
+                      color: Colors.grey.shade400,
+                      hoverColor: Colors.grey.shade600,
+                      size: _actionButtonSize,
+                      iconSize: _actionIconSize,
+                      onTap: () => deleteProject(context, ref),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildDesktopInfoBlocks({
+    required ProjectModel project,
+    required String createdValue,
+    required String? updatedValue,
+  }) {
+    final blocks = <Widget>[
+      _buildInfoItem(
+        icon: Icons.layers_outlined,
+        label: 'Этапов',
+        value: '${project.stages.length}',
+      ),
+    ];
+
+    final intercomValue = project.intercomCode.trim();
+    if (intercomValue.isNotEmpty) {
+      blocks.insert(
+        1,
+        _buildInfoItem(
+          icon: Icons.dialpad_rounded,
+          label: 'Домофон',
+          value: intercomValue,
+        ),
+      );
+    }
+
+    blocks.add(
+      _buildInfoItem(
+        icon: Icons.event_available_outlined,
+        label: 'Создан',
+        value: createdValue,
+      ),
+    );
+
+    if (updatedValue != null) {
+      blocks.add(
+        _buildInfoItem(
+          icon: Icons.update_outlined,
+          label: 'Изменен',
+          value: updatedValue,
+        ),
+      );
+    }
+
+    return blocks;
   }
 
   Widget _buildMobileInfoSection({
     required ProjectModel project,
-    required String createdLabel,
-    String? updatedLabel,
+    required String createdValue,
+    required String? updatedValue,
   }) {
+    final intercomValue = project.intercomCode.trim();
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Wrap(
-          spacing: 20,
-          runSpacing: 10,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildInfoItem(
-              icon: _getObjectTypeIcon(project.objectType),
-              label: 'Тип',
-              value: _getObjectTypeDisplay(project.objectType),
+            Expanded(
+              child: _buildMobileMetaSlot(
+                _buildInfoItem(
+                  icon: Icons.layers_outlined,
+                  label: 'Этапов',
+                  value: '${project.stages.length}',
+                  compact: true,
+                ),
+              ),
             ),
-            _buildInfoItem(
-              icon: Icons.layers_outlined,
-              label: 'Этапов',
-              value: '${project.stages.length}',
+            const SizedBox(width: _metaBlockSpacing),
+            Expanded(
+              child: _buildMobileMetaSlot(
+                intercomValue.isEmpty
+                    ? null
+                    : _buildInfoItem(
+                        icon: Icons.dialpad_rounded,
+                        label: 'Домофон',
+                        value: intercomValue,
+                        compact: true,
+                      ),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        _buildMobileDateSection(
-          createdLabel: createdLabel,
-          updatedLabel: updatedLabel,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWideInfoSection({
-    required ProjectModel project,
-    required String createdLabel,
-    String? updatedLabel,
-  }) {
-    return Row(
-      children: [
-        _buildInfoItem(
-          icon: _getObjectTypeIcon(project.objectType),
-          label: 'Тип',
-          value: _getObjectTypeDisplay(project.objectType),
-        ),
-        const SizedBox(width: 24),
-        _buildInfoItem(
-          icon: Icons.layers_outlined,
-          label: 'Этапов',
-          value: '${project.stages.length}',
-        ),
-        const Spacer(),
-        _buildDateColumn(
-          createdLabel: createdLabel,
-          updatedLabel: updatedLabel,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMobileDateSection({
-    required String createdLabel,
-    String? updatedLabel,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.only(top: 10),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey.withOpacity(0.18),
-          ),
-        ),
-      ),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: _buildDateColumn(
-          createdLabel: createdLabel,
-          updatedLabel: updatedLabel,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDateColumn({
-    required String createdLabel,
-    String? updatedLabel,
-    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.end,
-  }) {
-    final hasUpdated = updatedLabel != null;
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment:
-            hasUpdated ? MainAxisAlignment.start : MainAxisAlignment.center,
-        crossAxisAlignment: crossAxisAlignment,
-        children: [
-          Text(
-            createdLabel,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.grey.shade400,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          if (hasUpdated)
-            Text(
-              updatedLabel,
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey.shade400,
-                fontWeight: FontWeight.w500,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildMobileMetaSlot(
+                _buildInfoItem(
+                  icon: Icons.event_available_outlined,
+                  label: 'Создан',
+                  value: createdValue,
+                  compact: true,
+                ),
               ),
             ),
+            const SizedBox(width: _metaBlockSpacing),
+            Expanded(
+              child: _buildMobileMetaSlot(
+                updatedValue == null
+                    ? null
+                    : _buildInfoItem(
+                        icon: Icons.update_outlined,
+                        label: 'Изменен',
+                        value: updatedValue,
+                        compact: true,
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileMetaSlot(Widget? child) {
+    return SizedBox(
+      height: _mobileMetaSlotHeight,
+      child: child ?? const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildMetaSection({
+    required List<Widget> children,
+  }) {
+    if (children.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final rows = <Widget>[];
+    const columns = 4;
+
+    for (var start = 0; start < children.length; start += columns) {
+      final end = (start + columns < children.length)
+          ? start + columns
+          : children.length;
+      final rowChildren = children.sublist(start, end);
+      rows.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var i = 0; i < rowChildren.length; i++) ...[
+              Expanded(child: rowChildren[i]),
+              if (i < rowChildren.length - 1)
+                const SizedBox(width: _metaBlockSpacing),
+            ],
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          rows[i],
+          if (i < rows.length - 1) const SizedBox(height: 12),
         ],
-      ),
+      ],
     );
   }
 

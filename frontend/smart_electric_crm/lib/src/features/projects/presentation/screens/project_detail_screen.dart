@@ -639,7 +639,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                           crossAxisCount: constraints.maxWidth >= 1100 ? 2 : 1,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          mainAxisExtent: 190,
+                          mainAxisExtent: 152,
                         ),
                         itemCount: widget.project.stages.length,
                         itemBuilder: (context, index) {

@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/widgets/card_meta_info_block.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
+
 import '../../../data/models/stage_model.dart';
 
 class StageCard extends StatefulWidget {
@@ -36,9 +39,13 @@ class StageCard extends StatefulWidget {
 }
 
 class _StageCardState extends State<StageCard> {
+  static const double _metaBlockSpacing = 12;
+  static const double _mobileCardMinHeight = 168;
+  static const double _mobileMetaSlotHeight = 42;
+  static const double _mobileHeaderActionWidth = 32;
+
   bool _isHovered = false;
 
-  // Helpers for display
   String _formatDate(DateTime date) {
     return DateFormat('dd.MM.yyyy').format(date);
   }
@@ -66,19 +73,28 @@ class _StageCardState extends State<StageCard> {
     final stageColor = _getStageColor(widget.stage.title);
     final createdAt = widget.stage.createdAt;
     final updatedAt = widget.stage.updatedAt;
+    final isDesktopWeb =
+        kIsWeb && DesktopWebFrame.isDesktop(context, minWidth: 1280);
+    final isCompactMobileWeb = DesktopWebFrame.isMobileWeb(
+      context,
+      maxWidth: 520,
+    );
     final isMobilePlatform = !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.android ||
             defaultTargetPlatform == TargetPlatform.iOS);
-    final useMobileLayout =
-        isMobilePlatform || MediaQuery.sizeOf(context).width < 380;
+    final useMobileLayout = isCompactMobileWeb ||
+        isMobilePlatform ||
+        MediaQuery.sizeOf(context).width < 480;
+    final desktopCardHeight = isDesktopWeb ? 152.0 : 132.0;
 
-    // Check if updated date is different from created date (threshold 10 seconds to avoid drift)
     final isEdited = createdAt != null &&
         updatedAt != null &&
         updatedAt.difference(createdAt).abs().inSeconds > 10;
-    final createdLabel =
-        createdAt != null ? 'Создан: ${_formatDate(createdAt)}' : null;
-    final updatedLabel = isEdited ? 'Изменен: ${_formatDate(updatedAt)}' : null;
+    final updatedValue = isEdited ? _formatDate(updatedAt) : null;
+    final metaBlocks = _buildDesktopMetaBlocks(
+      createdAt: createdAt,
+      updatedValue: updatedValue,
+    );
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -86,13 +102,17 @@ class _StageCardState extends State<StageCard> {
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        constraints: const BoxConstraints(minHeight: 100),
+        constraints: BoxConstraints(
+          minHeight: useMobileLayout ? _mobileCardMinHeight : desktopCardHeight,
+          maxHeight: useMobileLayout ? double.infinity : desktopCardHeight,
+        ),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: AppDesignTokens.cardBackground(context, hovered: _isHovered),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-              color: AppDesignTokens.cardBorder(context, hovered: _isHovered)),
+            color: AppDesignTokens.cardBorder(context, hovered: _isHovered),
+          ),
           boxShadow: [
             BoxShadow(
               color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
@@ -111,237 +131,75 @@ class _StageCardState extends State<StageCard> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Accent Stripe
                   Container(
                     width: 5,
                     color: stageColor,
                   ),
-                  // Content
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 12.0),
+                      padding: EdgeInsets.fromLTRB(
+                        useMobileLayout ? 12 : 16,
+                        useMobileLayout ? 20 : 0,
+                        useMobileLayout ? 12 : 16,
+                        useMobileLayout ? 12 : 2,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: useMobileLayout
+                            ? MainAxisAlignment.start
+                            : MainAxisAlignment.center,
                         children: [
-                          // Header with Title and Delete Button
                           useMobileLayout
-                              ? Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                StageCard.getStageTitleDisplay(
-                                                    widget.stage.title),
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: -0.3,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        // Delete Button (Cross)
-                                        SizedBox(
-                                          width: 28,
-                                          height: 28,
-                                          child: IconButton(
-                                            icon: Icon(Icons.close,
-                                                size: 18,
-                                                color: Colors.grey.shade400),
-                                            padding: EdgeInsets.zero,
-                                            onPressed: widget.onDelete,
-                                            tooltip:
-                                                "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u044d\u0442\u0430\u043f",
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    if (widget.stage.isPaid) ...[
-                                      const SizedBox(height: 8),
-                                      Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.green.withOpacity(0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                            border: Border.all(
-                                                color: Colors.green
-                                                    .withOpacity(0.2)),
-                                          ),
-                                          child: const Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.check_circle_rounded,
-                                                  size: 10,
-                                                  color: Colors.green),
-                                              SizedBox(width: 3),
-                                              Text(
-                                                '\u041e\u041f\u041b\u0410\u0427\u0415\u041d\u041e',
-                                                style: TextStyle(
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.green,
-                                                  letterSpacing: 0.3,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                )
+                              ? _buildMobileHeader()
                               : Row(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            StageCard.getStageTitleDisplay(
-                                                widget.stage.title),
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: -0.3,
-                                            ),
-                                          ),
-                                        ],
+                                      child: Text(
+                                        StageCard.getStageTitleDisplay(
+                                          widget.stage.title,
+                                        ),
+                                        style: const TextStyle(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: -0.3,
+                                        ),
                                       ),
                                     ),
                                     if (widget.stage.isPaid) ...[
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: Colors.green.withOpacity(0.1),
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                          border: Border.all(
-                                              color: Colors.green
-                                                  .withOpacity(0.2)),
-                                        ),
-                                        child: const Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.check_circle_rounded,
-                                                size: 10, color: Colors.green),
-                                            SizedBox(width: 3),
-                                            Text(
-                                              'ОПЛАЧЕНО',
-                                              style: TextStyle(
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.green,
-                                                letterSpacing: 0.3,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                      Transform.translate(
+                                        offset: const Offset(0, -10),
+                                        child: _buildPaidBadge(),
                                       ),
                                       const SizedBox(width: 8),
                                     ],
-                                    // Delete Button (Cross)
-                                    SizedBox(
-                                      width: 28,
-                                      height: 28,
-                                      child: IconButton(
-                                        icon: Icon(Icons.close,
+                                    Transform.translate(
+                                      offset: const Offset(0, -10),
+                                      child: SizedBox(
+                                        width: 28,
+                                        height: 28,
+                                        child: IconButton(
+                                          icon: Icon(
+                                            Icons.close,
                                             size: 18,
-                                            color: Colors.grey.shade400),
-                                        padding: EdgeInsets.zero,
-                                        onPressed: widget.onDelete,
-                                        tooltip: "Удалить этап",
+                                            color: Colors.grey.shade400,
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          onPressed: widget.onDelete,
+                                          tooltip: 'Удалить этап',
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
-
-                          const SizedBox(height: 16),
-
-                          // Stats Rows
+                          SizedBox(height: useMobileLayout ? 16 : 20),
                           useMobileLayout
-                              ? Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: _buildStatItem(
-                                            icon: Icons.handyman_outlined,
-                                            label:
-                                                '\u0420\u0430\u0431\u043e\u0442\u044b',
-                                            value:
-                                                '${widget.stage.totalAmountUsd.toStringAsFixed(0)} \$',
-                                            color: Colors.green,
-                                            compact: true,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: _buildStatItem(
-                                            icon: Icons.inventory_2_outlined,
-                                            label:
-                                                '\u041c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u044b',
-                                            value:
-                                                '${widget.stage.totalAmountMaterialsUsd.toStringAsFixed(0)} \$',
-                                            color: Colors.blue,
-                                            compact: true,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    if (createdLabel != null) ...[
-                                      const SizedBox(height: 12),
-                                      _buildMobileDateSection(
-                                        createdLabel: createdLabel,
-                                        updatedLabel: updatedLabel,
-                                      ),
-                                    ],
-                                  ],
+                              ? _buildMobileMetaSection(
+                                  createdAt: createdAt,
+                                  updatedValue: updatedValue,
                                 )
-                              : Row(
-                                  children: [
-                                    _buildStatItem(
-                                      icon: Icons.handyman_outlined,
-                                      label: 'Работы',
-                                      value:
-                                          '${widget.stage.totalAmountUsd.toStringAsFixed(0)} \$',
-                                      color: Colors.green,
-                                    ),
-                                    const SizedBox(width: 24),
-                                    _buildStatItem(
-                                      icon: Icons.inventory_2_outlined,
-                                      label: 'Материалы',
-                                      value:
-                                          '${widget.stage.totalAmountMaterialsUsd.toStringAsFixed(0)} \$',
-                                      color: Colors.blue,
-                                    ),
-                                    const Spacer(),
-                                    if (createdLabel != null)
-                                      _buildDateColumn(
-                                        createdLabel: createdLabel,
-                                        updatedLabel: updatedLabel,
-                                      ),
-                                  ],
-                                ),
+                              : _buildMetaSection(children: metaBlocks),
                         ],
                       ),
                     ),
@@ -355,47 +213,187 @@ class _StageCardState extends State<StageCard> {
     );
   }
 
-  Widget _buildStatItem({
+  Widget _buildMetaBlock({
     required IconData icon,
     required String label,
     required String value,
     required Color color,
-    bool compact = false,
+    required bool compact,
   }) {
-    final iconPadding = compact ? 6.0 : 8.0;
-    final iconSize = compact ? 16.0 : 18.0;
-    final labelSize = compact ? 10.0 : 11.0;
-    final valueSize = compact ? 13.0 : 14.0;
-    final spacing = compact ? 8.0 : 12.0;
+    return CardMetaInfoBlock(
+      icon: icon,
+      label: label,
+      value: value,
+      color: color,
+      compact: compact,
+    );
+  }
 
-    return Row(
+  Widget _buildMobileHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: EdgeInsets.all(iconPadding),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
-            shape: BoxShape.circle,
+        SizedBox(
+          width: double.infinity,
+          child: Stack(
+            alignment: Alignment.topRight,
+            children: [
+              Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.only(right: _mobileHeaderActionWidth),
+                  child: Text(
+                    StageCard.getStageTitleDisplay(widget.stage.title),
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ),
+              ),
+              Transform.translate(
+                offset: const Offset(0, -2),
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.close,
+                      size: 18,
+                      color: Colors.grey.shade400,
+                    ),
+                    padding: EdgeInsets.zero,
+                    onPressed: widget.onDelete,
+                    tooltip: 'Удалить этап',
+                  ),
+                ),
+              ),
+            ],
           ),
-          child: Icon(icon, size: iconSize, color: color),
         ),
-        SizedBox(width: spacing),
-        Column(
+        if (widget.stage.isPaid) ...[
+          const SizedBox(height: 8),
+          _buildPaidBadge(),
+        ],
+      ],
+    );
+  }
+
+  List<Widget> _buildDesktopMetaBlocks({
+    required DateTime? createdAt,
+    required String? updatedValue,
+  }) {
+    final blocks = <Widget>[
+      _buildMetaBlock(
+        icon: Icons.handyman_outlined,
+        label: 'Работы',
+        value: '${widget.stage.totalAmountUsd.toStringAsFixed(0)} \$',
+        color: Colors.green,
+        compact: false,
+      ),
+      _buildMetaBlock(
+        icon: Icons.inventory_2_outlined,
+        label: 'Материалы',
+        value: '${widget.stage.totalAmountMaterialsUsd.toStringAsFixed(0)} \$',
+        color: Colors.blue,
+        compact: false,
+      ),
+    ];
+
+    if (createdAt != null) {
+      blocks.add(
+        _buildMetaBlock(
+          icon: Icons.event_available_outlined,
+          label: 'Создан',
+          value: _formatDate(createdAt),
+          color: Colors.indigo,
+          compact: false,
+        ),
+      );
+    }
+
+    if (updatedValue != null) {
+      blocks.add(
+        _buildMetaBlock(
+          icon: Icons.update_outlined,
+          label: 'Изменен',
+          value: updatedValue,
+          color: Colors.blueGrey,
+          compact: false,
+        ),
+      );
+    }
+
+    return blocks;
+  }
+
+  Widget _buildMobileMetaSection({
+    required DateTime? createdAt,
+    required String? updatedValue,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: labelSize,
-                color: Colors.grey.shade500,
-                fontWeight: FontWeight.w500,
+            Expanded(
+              child: _buildMobileMetaSlot(
+                _buildMetaBlock(
+                  icon: Icons.handyman_outlined,
+                  label: 'Работы',
+                  value: '${widget.stage.totalAmountUsd.toStringAsFixed(0)} \$',
+                  color: Colors.green,
+                  compact: true,
+                ),
               ),
             ),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: valueSize,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade800,
+            const SizedBox(width: _metaBlockSpacing),
+            Expanded(
+              child: _buildMobileMetaSlot(
+                _buildMetaBlock(
+                  icon: Icons.inventory_2_outlined,
+                  label: 'Материалы',
+                  value:
+                      '${widget.stage.totalAmountMaterialsUsd.toStringAsFixed(0)} \$',
+                  color: Colors.blue,
+                  compact: true,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildMobileMetaSlot(
+                createdAt == null
+                    ? null
+                    : _buildMetaBlock(
+                        icon: Icons.event_available_outlined,
+                        label: 'Создан',
+                        value: _formatDate(createdAt),
+                        color: Colors.indigo,
+                        compact: true,
+                      ),
+              ),
+            ),
+            const SizedBox(width: _metaBlockSpacing),
+            Expanded(
+              child: _buildMobileMetaSlot(
+                updatedValue == null
+                    ? null
+                    : _buildMetaBlock(
+                        icon: Icons.update_outlined,
+                        label: 'Изменен',
+                        value: updatedValue,
+                        color: Colors.blueGrey,
+                        compact: true,
+                      ),
               ),
             ),
           ],
@@ -404,60 +402,84 @@ class _StageCardState extends State<StageCard> {
     );
   }
 
-  Widget _buildDateColumn({
-    required String createdLabel,
-    String? updatedLabel,
-  }) {
-    final hasUpdated = updatedLabel != null;
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment:
-            hasUpdated ? MainAxisAlignment.start : MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            createdLabel,
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.grey.shade400,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          if (hasUpdated)
-            Text(
-              updatedLabel,
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey.shade400,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-        ],
-      ),
+  Widget _buildMobileMetaSlot(Widget? child) {
+    return SizedBox(
+      height: _mobileMetaSlotHeight,
+      child: child ?? const SizedBox.shrink(),
     );
   }
 
-  Widget _buildMobileDateSection({
-    required String createdLabel,
-    String? updatedLabel,
+  Widget _buildMetaSection({
+    required List<Widget> children,
   }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.only(top: 10),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey.withOpacity(0.18),
+    if (children.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final rows = <Widget>[];
+    const columns = 4;
+
+    for (var start = 0; start < children.length; start += columns) {
+      final end = (start + columns < children.length)
+          ? start + columns
+          : children.length;
+      final rowChildren = children.sublist(start, end);
+      rows.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var i = 0; i < rowChildren.length; i++) ...[
+              Expanded(child: rowChildren[i]),
+              if (i < rowChildren.length - 1)
+                const SizedBox(width: _metaBlockSpacing),
+            ],
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          rows[i],
+          if (i < rows.length - 1) const SizedBox(height: 12),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPaidBadge() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Colors.green.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: Colors.green.withOpacity(0.2),
           ),
         ),
-      ),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: _buildDateColumn(
-          createdLabel: createdLabel,
-          updatedLabel: updatedLabel,
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.check_circle_rounded,
+              size: 10,
+              color: Colors.green,
+            ),
+            SizedBox(width: 3),
+            Text(
+              'ОПЛАЧЕНО',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
         ),
       ),
     );
