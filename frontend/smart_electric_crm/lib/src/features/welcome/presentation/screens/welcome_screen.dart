@@ -34,6 +34,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   static const double _overlayMinHeight = 120;
   static const double _overlayMaxHeightCap = 520;
   static const double _searchTopMargin = 8;
+  static const double _desktopScrollRightPadding = 16;
 
   final LayerLink _layerLink = LayerLink();
   final Object _searchTapGroupId = Object();
@@ -360,66 +361,53 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: Column(
-          children: [
-            Expanded(
-              child: Stack(
+        body: isDesktopWeb
+            ? Stack(
                 children: [
-                  SingleChildScrollView(
-                    controller: _scrollController,
-                    child: Column(
-                      children: [
-                        WelcomeHeader(
-                          key: _headerKey,
-                          onSettingsPressed: widget.onSettingsPressed,
-                        ),
-                        Transform.translate(
-                          offset: const Offset(0, -20),
-                          child: AnimatedPadding(
-                            duration: const Duration(milliseconds: 180),
-                            curve: Curves.easeOutCubic,
-                            padding: EdgeInsets.only(left: shellSidebarInset),
-                            child: DesktopWebPageFrame(
-                              maxWidth: 1360,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              child: Column(
-                                children: [
-                                  QuickStatsRow(
-                                    selectedStat: selectedStat,
-                                    onStatSelected: (stat) {
-                                      ref
-                                          .read(
-                                              dashboardFilterProvider.notifier)
-                                          .state = stat;
-                                    },
-                                  ),
-                                  const SizedBox(height: 24),
-                                  _buildSearchBar(),
-                                  if (isDesktopWeb) ...[
-                                    const SizedBox(height: 18),
-                                    const NewProjectCard(),
-                                  ],
-                                  if (isSearchActive &&
-                                      _useInlineDesktopResults)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 16),
-                                      child: SearchResultsOverlay(
-                                        maxHeight: 520,
-                                        queryProvider:
-                                            projectSearchQueryProvider,
-                                        resultsProvider:
-                                            projectSearchResultsProvider,
-                                        inline: true,
-                                        matchSearchWidth: true,
-                                      ),
+                  Column(
+                    children: [
+                      WelcomeHeader(
+                        key: _headerKey,
+                        onSettingsPressed: widget.onSettingsPressed,
+                      ),
+                      Transform.translate(
+                        offset: const Offset(0, -20),
+                        child: AnimatedPadding(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOutCubic,
+                          padding: EdgeInsets.only(left: shellSidebarInset),
+                          child: DesktopWebPageFrame(
+                            maxWidth: 1360,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Column(
+                              children: [
+                                QuickStatsRow(
+                                  selectedStat: selectedStat,
+                                  onStatSelected: (stat) {
+                                    ref
+                                        .read(dashboardFilterProvider.notifier)
+                                        .state = stat;
+                                  },
+                                ),
+                                if (isSearchActive && _useInlineDesktopResults)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 24),
+                                    child: SearchResultsOverlay(
+                                      maxHeight: 520,
+                                      queryProvider: projectSearchQueryProvider,
+                                      resultsProvider:
+                                          projectSearchResultsProvider,
+                                      inline: true,
+                                      matchSearchWidth: true,
                                     ),
-                                ],
-                              ),
+                                  ),
+                              ],
                             ),
                           ),
                         ),
-                        AnimatedOpacity(
+                      ),
+                      Expanded(
+                        child: AnimatedOpacity(
                           duration: const Duration(milliseconds: 180),
                           curve: Curves.easeOut,
                           opacity: isSearchActive ? 0 : 1,
@@ -429,15 +417,30 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                               duration: const Duration(milliseconds: 180),
                               curve: Curves.easeOutCubic,
                               padding: EdgeInsets.only(left: shellSidebarInset),
-                              child: DesktopWebPageFrame(
-                                maxWidth: 1360,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: isDesktopWeb
-                                    ? Padding(
-                                        padding: const EdgeInsets.only(top: 8),
-                                        child: hasProjectsLoadError
-                                            ? const Row(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return DesktopWebPageFrame(
+                                    maxWidth: 1360,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
+                                    child: SizedBox(
+                                      height: constraints.maxHeight,
+                                      child: SingleChildScrollView(
+                                        controller: _scrollController,
+                                        padding: const EdgeInsets.only(
+                                          top: 8,
+                                          right: _desktopScrollRightPadding,
+                                          bottom: 100,
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            _buildSearchBar(),
+                                            const SizedBox(height: 18),
+                                            const NewProjectCard(),
+                                            const SizedBox(height: 24),
+                                            if (hasProjectsLoadError)
+                                              const Row(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
@@ -452,38 +455,20 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                                   ),
                                                 ],
                                               )
-                                            : const RecentProjectsList(),
-                                      )
-                                    : Column(
-                                        children: [
-                                          const SizedBox(height: 8),
-                                          if (!isDesktopWeb)
-                                            const Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 16),
-                                              child: NewProjectCard(),
-                                            ),
-                                          if (hasProjectsLoadError)
-                                            const Padding(
-                                              padding: EdgeInsets.fromLTRB(
-                                                  16, 12, 16, 0),
-                                              child: _WelcomeNetworkNotice(),
-                                            ),
-                                          const SizedBox(height: 24),
-                                          const Padding(
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 16),
-                                            child: RecentProjectsList(),
-                                          ),
-                                        ],
+                                            else
+                                              const RecentProjectsList(),
+                                          ],
+                                        ),
                                       ),
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 100),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                   _buildStatusBarBackdrop(context),
                   if (isSearchActive && !_useInlineDesktopResults)
@@ -508,10 +493,139 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                       ),
                     ),
                 ],
+              )
+            : Column(
+                children: [
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        SingleChildScrollView(
+                          controller: _scrollController,
+                          child: Column(
+                            children: [
+                              WelcomeHeader(
+                                key: _headerKey,
+                                onSettingsPressed: widget.onSettingsPressed,
+                              ),
+                              Transform.translate(
+                                offset: const Offset(0, -20),
+                                child: AnimatedPadding(
+                                  duration: const Duration(milliseconds: 180),
+                                  curve: Curves.easeOutCubic,
+                                  padding:
+                                      EdgeInsets.only(left: shellSidebarInset),
+                                  child: DesktopWebPageFrame(
+                                    maxWidth: 1360,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    child: Column(
+                                      children: [
+                                        QuickStatsRow(
+                                          selectedStat: selectedStat,
+                                          onStatSelected: (stat) {
+                                            ref
+                                                .read(
+                                                  dashboardFilterProvider
+                                                      .notifier,
+                                                )
+                                                .state = stat;
+                                          },
+                                        ),
+                                        const SizedBox(height: 24),
+                                        _buildSearchBar(),
+                                        if (isSearchActive &&
+                                            _useInlineDesktopResults)
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 16),
+                                            child: SearchResultsOverlay(
+                                              maxHeight: 520,
+                                              queryProvider:
+                                                  projectSearchQueryProvider,
+                                              resultsProvider:
+                                                  projectSearchResultsProvider,
+                                              inline: true,
+                                              matchSearchWidth: true,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              AnimatedOpacity(
+                                duration: const Duration(milliseconds: 180),
+                                curve: Curves.easeOut,
+                                opacity: isSearchActive ? 0 : 1,
+                                child: IgnorePointer(
+                                  ignoring: isSearchActive,
+                                  child: AnimatedPadding(
+                                    duration: const Duration(milliseconds: 180),
+                                    curve: Curves.easeOutCubic,
+                                    padding: EdgeInsets.only(
+                                        left: shellSidebarInset),
+                                    child: DesktopWebPageFrame(
+                                      maxWidth: 1360,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      child: Column(
+                                        children: [
+                                          const SizedBox(height: 8),
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: 16),
+                                            child: NewProjectCard(),
+                                          ),
+                                          if (hasProjectsLoadError)
+                                            const Padding(
+                                              padding: EdgeInsets.fromLTRB(
+                                                  16, 12, 16, 0),
+                                              child: _WelcomeNetworkNotice(),
+                                            ),
+                                          const SizedBox(height: 24),
+                                          const Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: 16),
+                                            child: RecentProjectsList(),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 100),
+                            ],
+                          ),
+                        ),
+                        _buildStatusBarBackdrop(context),
+                        if (isSearchActive && !_useInlineDesktopResults)
+                          CompositedTransformFollower(
+                            link: _layerLink,
+                            showWhenUnlinked: false,
+                            offset: Offset(0, _searchOverlayOffsetY),
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: SizedBox(
+                                width: _resolveSearchOverlayWidth(context),
+                                child: TapRegion(
+                                  groupId: _searchTapGroupId,
+                                  child: SearchResultsOverlay(
+                                    maxHeight: _searchOverlayMaxHeight,
+                                    queryProvider: projectSearchQueryProvider,
+                                    resultsProvider:
+                                        projectSearchResultsProvider,
+                                    matchSearchWidth: true,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

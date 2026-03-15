@@ -49,6 +49,7 @@ class EstimateScreen extends ConsumerStatefulWidget {
 
 class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   static const double _desktopMenuWidth = 224;
+  static const double _desktopCompactMenuWidth = 88;
   static const double _desktopMenuLeft = 16;
   static const double _desktopMenuTop = 16;
   static const double _desktopMenuGap = 16;
@@ -266,7 +267,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     final showWelcome = ref.watch(
       appSettingsProvider.select((value) => value.showWelcome),
     );
-    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1450);
+    final isDesktopWeb = DesktopWebFrame.hasPersistentShellSidebar(context);
+    final isWideDesktopWeb = DesktopWebFrame.hasWideShellSidebar(context);
+    final desktopMenuWidth =
+        isWideDesktopWeb ? _desktopMenuWidth : _desktopCompactMenuWidth;
     // Backdrop filter when FAB is expanded
     // Backdrop filter when FAB is expanded
     return Scaffold(
@@ -389,27 +393,19 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
             return content;
           }
 
-          const contentMaxWidth = 1380.0;
-          final contentWidth = (constraints.maxWidth -
-                  _desktopMenuLeft -
-                  _desktopMenuWidth -
-                  _desktopMenuGap)
-              .clamp(0.0, contentMaxWidth)
-              .toDouble();
-
           return Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.only(
-                  left: _desktopMenuLeft + _desktopMenuWidth + _desktopMenuGap,
+                padding: EdgeInsets.only(
+                  left: _desktopMenuLeft + desktopMenuWidth + _desktopMenuGap,
                 ),
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: SizedBox(
-                    width: contentWidth,
-                    height: constraints.maxHeight,
-                    child: content,
-                  ),
+                child: SizedBox(
+                  width: constraints.maxWidth -
+                      _desktopMenuLeft -
+                      desktopMenuWidth -
+                      _desktopMenuGap,
+                  height: constraints.maxHeight,
+                  child: content,
                 ),
               ),
               Positioned(
@@ -417,6 +413,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                 top: _desktopMenuTop,
                 bottom: 16,
                 child: DesktopSideMenu(
+                  compact: !isWideDesktopWeb,
                   width: _desktopMenuWidth,
                   items: _buildDesktopSegments(showWelcome),
                 ),

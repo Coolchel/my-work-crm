@@ -8,6 +8,7 @@ import 'package:smart_electric_crm/src/features/projects/presentation/widgets/es
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/inline_save_button.dart';
 
 /// Tab widget for displaying estimate items (Materials or Works)
@@ -824,141 +825,163 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     return GestureDetector(
       onTap: widget.isDisabled ? widget.onDismissRequest : null,
       behavior: HitTestBehavior.translucent,
-      child: CustomScrollView(
-        controller: widget.scrollController,
-        primary: false,
-        slivers: [
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPadding = DesktopWebFrame.centeredContentSidePadding(
+            constraints.maxWidth,
+            maxWidth: 1380,
+            minPadding: 12,
+          );
 
-          if (!widget.hideTopActions)
-            SliverToBoxAdapter(child: _buildActionButtons()),
-          SliverToBoxAdapter(child: _buildItemsCaption(widget.items.length)),
+          return CustomScrollView(
+            controller: widget.scrollController,
+            primary: false,
+            slivers: [
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-          if (widget.items.isEmpty)
-            const SliverToBoxAdapter(
-              child: FriendlyEmptyState(
-                icon: Icons.inventory_2_outlined,
-                title: 'Нет позиций',
-                subtitle:
-                    'Добавьте первую позицию вручную или через автоматизацию.',
-                accentColor: Colors.blueGrey,
-                iconSize: 66,
-                padding: EdgeInsets.all(8),
-              ),
-            )
-          else
-            for (var category in sortedCategories) ...[
+              if (!widget.hideTopActions)
+                SliverToBoxAdapter(child: _buildActionButtons()),
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: GroupHeader(
-                    title: category,
-                    color: _primaryColor,
-                    itemCount: groupedItems[category]?.length,
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final item = groupedItems[category]![index];
-                      return EstimateListTile(
-                        item: item,
-                        onUpdate: widget.onUpdate,
-                        onDelete: () => widget.onDelete(item),
-                        primaryColor: _primaryColor,
-                        isMarkupActive: (widget.markupPercent > 0) == true,
-                        hidePrices: (!showPrices) == true,
-                        isDisabled: widget.isDisabled == true,
-                      );
-                    },
-                    childCount: groupedItems[category]!.length,
-                  ),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 2)),
-            ],
+                  child: _buildItemsCaption(widget.items.length)),
 
-          // Total Section - Detailed Dashboard (Hidden if prices hidden)
-          if (showPrices)
-            SliverToBoxAdapter(
-              child: TotalDashboard(
-                totalUsd: totalUsd,
-                totalByn: totalByn,
-                employerUsd: employerUsd,
-                employerByn: employerByn,
-                ourUsd: ourUsd,
-                ourByn: ourByn,
-                primaryColor: _primaryColor,
-                primaryColorLight: _primaryColorLight,
-                isWorkTab: _isWorkTab,
-                isMarkupActive: !_isWorkTab && widget.markupPercent > 0,
-              ),
-            ),
-
-          // Markup Control (Spoiler style) - Hidden if prices hidden
-          if (!_isWorkTab && showPrices)
-            SliverToBoxAdapter(
-              child: AbsorbPointer(
-                absorbing: widget.isDisabled,
-                child: _buildMarkupControl(),
-              ),
-            ),
-
-          // Notes & Remarks Section - at the bottom
-          // Notes & Remarks Section - at the bottom
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-              decoration: BoxDecoration(
-                color: scheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppDesignTokens.softBorder(context),
-                  width: 0.8,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isDark
-                        ? Colors.black.withOpacity(0.24)
-                        : Colors.black.withOpacity(0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
+              if (widget.items.isEmpty)
+                const SliverToBoxAdapter(
+                  child: FriendlyEmptyState(
+                    icon: Icons.inventory_2_outlined,
+                    title: 'Нет позиций',
+                    subtitle:
+                        'Добавьте первую позицию вручную или через автоматизацию.',
+                    accentColor: Colors.blueGrey,
+                    iconSize: 66,
+                    padding: EdgeInsets.all(8),
                   ),
+                )
+              else
+                for (var category in sortedCategories) ...[
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: horizontalPadding),
+                      child: GroupHeader(
+                        title: category,
+                        color: _primaryColor,
+                        itemCount: groupedItems[category]?.length,
+                      ),
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      0,
+                      horizontalPadding,
+                      0,
+                    ),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final item = groupedItems[category]![index];
+                          return EstimateListTile(
+                            item: item,
+                            onUpdate: widget.onUpdate,
+                            onDelete: () => widget.onDelete(item),
+                            primaryColor: _primaryColor,
+                            isMarkupActive: (widget.markupPercent > 0) == true,
+                            hidePrices: (!showPrices) == true,
+                            isDisabled: widget.isDisabled == true,
+                          );
+                        },
+                        childCount: groupedItems[category]!.length,
+                      ),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 2)),
                 ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildInputField(
-                    label: "Примечания (для сметы)",
-                    controller: _remarksCtrl,
-                    onChanged: _onRemarksChanged,
-                    suffix: _buildSuffix(isSaving: _savingRemarks),
+
+              // Total Section - Detailed Dashboard (Hidden if prices hidden)
+              if (showPrices)
+                SliverToBoxAdapter(
+                  child: TotalDashboard(
+                    totalUsd: totalUsd,
+                    totalByn: totalByn,
+                    employerUsd: employerUsd,
+                    employerByn: employerByn,
+                    ourUsd: ourUsd,
+                    ourByn: ourByn,
+                    primaryColor: _primaryColor,
+                    primaryColorLight: _primaryColorLight,
+                    isWorkTab: _isWorkTab,
+                    isMarkupActive: !_isWorkTab && widget.markupPercent > 0,
                   ),
-                  const SizedBox(height: 12),
-                  _buildInputField(
-                    label: "Заметки (для себя)",
-                    controller: _noteCtrl,
-                    onChanged: _onNoteChanged,
-                    suffix: _buildSuffix(isSaving: _savingNote),
+                ),
+
+              // Markup Control (Spoiler style) - Hidden if prices hidden
+              if (!_isWorkTab && showPrices)
+                SliverToBoxAdapter(
+                  child: AbsorbPointer(
+                    absorbing: widget.isDisabled,
+                    child: _buildMarkupControl(),
                   ),
-                  InlineSaveActionsRow(
-                    actions: [
-                      if (notesSaveButton != null) notesSaveButton,
+                ),
+
+              // Notes & Remarks Section - at the bottom
+              // Notes & Remarks Section - at the bottom
+              SliverToBoxAdapter(
+                child: Container(
+                  margin: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    4,
+                    horizontalPadding,
+                    12,
+                  ),
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  decoration: BoxDecoration(
+                    color: scheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppDesignTokens.softBorder(context),
+                      width: 0.8,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark
+                            ? Colors.black.withOpacity(0.24)
+                            : Colors.black.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
                     ],
                   ),
-                ],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInputField(
+                        label: "Примечания (для сметы)",
+                        controller: _remarksCtrl,
+                        onChanged: _onRemarksChanged,
+                        suffix: _buildSuffix(isSaving: _savingRemarks),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildInputField(
+                        label: "Заметки (для себя)",
+                        controller: _noteCtrl,
+                        onChanged: _onNoteChanged,
+                        suffix: _buildSuffix(isSaving: _savingNote),
+                      ),
+                      InlineSaveActionsRow(
+                        actions: [
+                          if (notesSaveButton != null) notesSaveButton,
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
 
-          // Bottom Padding for FAB
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
-        ],
+              // Bottom Padding for FAB
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
+          );
+        },
       ),
     );
   }

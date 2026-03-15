@@ -229,13 +229,21 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
 
           return LayoutBuilder(
             builder: (context, constraints) {
+              const contentMaxWidth = 1380.0;
+              final horizontalPadding =
+                  DesktopWebFrame.centeredContentSidePadding(
+                constraints.maxWidth,
+                maxWidth: contentMaxWidth,
+                minPadding: AppDesignTokens.spacingM,
+              );
+
               if (!useDesktopGrid || constraints.maxWidth < 1080) {
                 return ListView.builder(
                   controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(
-                    AppDesignTokens.spacingM,
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
                     16,
-                    AppDesignTokens.spacingM,
+                    horizontalPadding,
                     120,
                   ),
                   itemCount: filtered.length,
@@ -249,19 +257,18 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                 );
               }
 
-              final crossAxisCount = constraints.maxWidth >= 1520 ? 3 : 2;
               return GridView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.fromLTRB(
-                  AppDesignTokens.spacingM,
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
                   16,
-                  AppDesignTokens.spacingM,
+                  horizontalPadding,
                   120,
                 ),
                 itemCount: filtered.length,
                 physics: const AlwaysScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                   mainAxisExtent: 190,
@@ -305,84 +312,81 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
           final maxWidth = DesktopWebFrame.isDesktop(context, minWidth: 1180)
               ? 1380.0
               : constraints.maxWidth;
+          final horizontalPadding = DesktopWebFrame.centeredContentSidePadding(
+            constraints.maxWidth,
+            maxWidth: maxWidth,
+            minPadding: _searchHorizontalPadding,
+          );
 
-          return Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  return ref
-                      .refresh(objectsProjectSearchResultsProvider.future);
-                },
-                child: searchResultsAsync.when(
-                  data: (projects) {
-                    if (projects.isEmpty) {
-                      return ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(
-                          _searchHorizontalPadding,
-                          16,
-                          _searchHorizontalPadding,
-                          120,
-                        ),
-                        children: const [
-                          FriendlyEmptyState(
-                            icon: Icons.search_off_rounded,
-                            title: ProjectSearchTexts.emptyTitle,
-                            subtitle: ProjectSearchTexts.emptySubtitle,
-                            accentColor: Colors.blueGrey,
-                          ),
-                        ],
-                      );
-                    }
-
-                    return ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(
-                        _searchHorizontalPadding,
-                        16,
-                        _searchHorizontalPadding,
-                        120,
-                      ),
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      itemCount: projects.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final project = projects[index];
-                        return ProjectSearchResultTile(
-                          project: project,
-                          margin: EdgeInsets.zero,
-                          onTap: () => _openProjectDetails(project),
-                        );
-                      },
-                    );
-                  },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => ListView(
+          return RefreshIndicator(
+            onRefresh: () async {
+              return ref.refresh(objectsProjectSearchResultsProvider.future);
+            },
+            child: searchResultsAsync.when(
+              data: (projects) {
+                if (projects.isEmpty) {
+                  return ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(
-                      _searchHorizontalPadding,
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
                       16,
-                      _searchHorizontalPadding,
+                      horizontalPadding,
                       120,
                     ),
-                    children: [
+                    children: const [
                       FriendlyEmptyState(
-                        icon: Icons.error_outline,
-                        title: 'Не удалось выполнить поиск',
-                        subtitle: '$error',
-                        accentColor: Colors.redAccent,
-                        action: TextButton(
-                          onPressed: () => ref
-                              .invalidate(objectsProjectSearchResultsProvider),
-                          child: const Text('Повторить'),
-                        ),
+                        icon: Icons.search_off_rounded,
+                        title: ProjectSearchTexts.emptyTitle,
+                        subtitle: ProjectSearchTexts.emptySubtitle,
+                        accentColor: Colors.blueGrey,
                       ),
                     ],
+                  );
+                }
+
+                return ListView.separated(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    16,
+                    horizontalPadding,
+                    120,
                   ),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: projects.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final project = projects[index];
+                    return ProjectSearchResultTile(
+                      project: project,
+                      margin: EdgeInsets.zero,
+                      onTap: () => _openProjectDetails(project),
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  16,
+                  horizontalPadding,
+                  120,
                 ),
+                children: [
+                  FriendlyEmptyState(
+                    icon: Icons.error_outline,
+                    title: 'Не удалось выполнить поиск',
+                    subtitle: '$error',
+                    accentColor: Colors.redAccent,
+                    action: TextButton(
+                      onPressed: () =>
+                          ref.invalidate(objectsProjectSearchResultsProvider),
+                      child: const Text('Повторить'),
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -406,7 +410,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
-    const desktopMaxWidth = 1380.0;
 
     return ListenableBuilder(
       listenable: _appBarCollapseController,
@@ -454,21 +457,14 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                 );
               }
 
-              final availableWidth = (constraints.maxWidth - shellSidebarInset)
-                  .clamp(0.0, desktopMaxWidth)
-                  .toDouble();
-
               return AnimatedPadding(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOutCubic,
                 padding: EdgeInsets.only(left: shellSidebarInset),
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: SizedBox(
-                    width: availableWidth,
-                    height: constraints.maxHeight,
-                    child: child!,
-                  ),
+                child: SizedBox(
+                  width: constraints.maxWidth - shellSidebarInset,
+                  height: constraints.maxHeight,
+                  child: child!,
                 ),
               );
             },

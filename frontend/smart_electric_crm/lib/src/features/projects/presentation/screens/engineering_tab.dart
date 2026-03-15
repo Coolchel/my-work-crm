@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 import '../../data/models/project_model.dart';
@@ -82,9 +83,19 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
+          const contentMaxWidth = 1380.0;
+          final horizontalPadding = DesktopWebFrame.centeredContentSidePadding(
+            constraints.maxWidth,
+            maxWidth: contentMaxWidth,
+          );
           final content = SingleChildScrollView(
             controller: widget.scrollController,
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              20,
+              horizontalPadding,
+              16,
+            ),
             child: Column(
               children: [
                 if (widget.project.shields.isEmpty)
