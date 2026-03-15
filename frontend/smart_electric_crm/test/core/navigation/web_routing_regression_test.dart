@@ -35,6 +35,7 @@ class _BootstrapAuthNotifier extends Auth {
 }
 
 class _SuccessfulAuthRepository extends AuthRepository {
+  // ignore: use_super_parameters
   _SuccessfulAuthRepository(Dio dio, SharedPreferences prefs)
       : _prefs = prefs,
         super(dio, prefs);

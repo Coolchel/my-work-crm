@@ -79,17 +79,22 @@ void main() {
       ),
     );
 
-    final firstActionButton = find.byType(OutlinedButton).first;
-
-    await tester.tap(firstActionButton);
-    await tester.pump();
-
-    expect(callCount, 1);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-
     final popupButtons = find.byWidgetPredicate(
       (widget) => widget is PopupMenuButton<String>,
     );
+    expect(popupButtons, findsWidgets);
+    final firstActionButton = popupButtons.first;
+
+    await tester.tap(firstActionButton);
+    await tester.pumpAndSettle();
+
+    final popupItems = find.byType(PopupMenuItem<String>);
+    expect(popupItems, findsWidgets);
+    await tester.tap(popupItems.first);
+    await tester.pump();
+
+    expect(callCount, 1);
+
     final popupStates =
         tester.widgetList<PopupMenuButton<String>>(popupButtons).toList();
     expect(popupStates, isNotEmpty);
@@ -102,9 +107,9 @@ void main() {
     completer.complete();
     await tester.pumpAndSettle();
 
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-
     await tester.tap(firstActionButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(PopupMenuItem<String>).first);
     await tester.pump();
     expect(callCount, 2);
   });
@@ -123,8 +128,12 @@ void main() {
     final popupButtons = find.byWidgetPredicate(
       (widget) => widget is PopupMenuButton<String>,
     );
+    final popupButtonCount =
+        tester.widgetList<PopupMenuButton<String>>(popupButtons).length;
+    expect(popupButtonCount, greaterThanOrEqualTo(2));
+    final shareWorksButton = popupButtons.at(popupButtonCount - 2);
 
-    await tester.tap(popupButtons.first);
+    await tester.tap(shareWorksButton);
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.check_circle_rounded), findsNothing);

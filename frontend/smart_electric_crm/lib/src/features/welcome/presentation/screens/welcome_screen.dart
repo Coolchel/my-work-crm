@@ -597,7 +597,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                                       ? 0
                                                       : 16,
                                             ),
-                                            child: NewProjectCard(),
+                                            child: const NewProjectCard(),
                                           ),
                                           if (hasProjectsLoadError)
                                             Padding(
@@ -611,7 +611,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                                     : 16,
                                                 0,
                                               ),
-                                              child: _WelcomeNetworkNotice(),
+                                              child:
+                                                  const _WelcomeNetworkNotice(),
                                             ),
                                           SizedBox(
                                               height: isMobileWeb ? 18 : 24),
@@ -622,7 +623,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                                       ? 0
                                                       : 16,
                                             ),
-                                            child: RecentProjectsList(),
+                                            child: const RecentProjectsList(),
                                           ),
                                         ],
                                       ),

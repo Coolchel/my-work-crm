@@ -97,7 +97,7 @@ class FileViewerScreen extends StatelessWidget {
           IconButton(
             tooltip:
                 usesCopyLinkShareAction ? 'Скопировать ссылку' : 'Поделиться',
-            icon: Icon(
+            icon: const Icon(
               kIsWeb ? Icons.link_rounded : Icons.share,
             ),
             onPressed: () => _shareFile(context),

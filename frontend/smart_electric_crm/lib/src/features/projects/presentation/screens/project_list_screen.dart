@@ -920,7 +920,7 @@ class _ProjectCardState extends State<_ProjectCard> {
   static const double _metaBlockSpacing = 12;
   static const double _mobileCardMinHeight = 168;
   static const double _desktopCardMinHeight = 132;
-  static const double _mobileMetaSlotHeight = 42;
+  static const double _mobileMetaSlotHeight = 46;
 
   bool _isHovered = false;
 
@@ -1076,7 +1076,7 @@ class _ProjectCardState extends State<_ProjectCard> {
         ),
         const SizedBox(width: 8),
         Transform.translate(
-          offset: const Offset(0, -10),
+          offset: const Offset(0, -14),
           child: _ActionButton(
             icon: Icons.edit_outlined,
             tooltip:
@@ -1097,7 +1097,7 @@ class _ProjectCardState extends State<_ProjectCard> {
         Consumer(
           builder: (context, ref, child) {
             return Transform.translate(
-              offset: const Offset(0, -10),
+              offset: const Offset(0, -14),
               child: _ActionButton(
                 icon: Icons.close,
                 tooltip:
@@ -1145,7 +1145,7 @@ class _ProjectCardState extends State<_ProjectCard> {
             ),
           ),
           Transform.translate(
-            offset: const Offset(0, -2),
+            offset: const Offset(0, -6),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
