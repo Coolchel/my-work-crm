@@ -63,3 +63,18 @@ flutter:
   assets:
     - FontManifest.json
     - fonts/MaterialIcons-Regular.otf
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: fonts/inter/Inter-Regular.ttf
+          weight: 400
+        - asset: fonts/inter/Inter-Medium.ttf
+          weight: 500
+        - asset: fonts/inter/Inter-SemiBold.ttf
+          weight: 600
+        - asset: fonts/inter/Inter-Bold.ttf
+          weight: 700
+        - asset: fonts/inter/Inter-ExtraBold.ttf
+          weight: 800
+        - asset: fonts/inter/Inter-Black.ttf
+          weight: 900
