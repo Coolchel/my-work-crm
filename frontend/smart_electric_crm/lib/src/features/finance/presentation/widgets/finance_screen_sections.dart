@@ -2,6 +2,7 @@ part of '../screens/finance_screen.dart';
 
 extension _FinanceScreenSections on _FinanceScreenState {
   Widget _buildProjectCard(UnpaidProjectModel project, int index) {
+    final textStyles = context.appTextStyles;
     final isExpanded = _expandedProjects[project.id] ?? false;
     final isHovered = _hoveredProjects[project.id] ?? false;
     final shouldHighlight = isHovered;
@@ -78,10 +79,9 @@ extension _FinanceScreenSections on _FinanceScreenState {
                                   ),
                                   child: Text(
                                     '$index',
-                                    style: TextStyle(
+                                    style: textStyles.captionStrong.copyWith(
                                       color: _FinanceScreenState._financeAccent
                                           .withOpacity(0.85),
-                                      fontWeight: FontWeight.w700,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -234,6 +234,10 @@ extension _FinanceScreenSections on _FinanceScreenState {
   }
 
   Widget _buildStageRow(UnpaidProjectModel project, UnpaidStageModel stage) {
+    final textStyles = context.appTextStyles;
+    final stageDateInfo = stage.updatedAt == null
+        ? null
+        : _getStageDateInfo(context, stage.updatedAt!);
     final hasExternalAmount =
         stage.externalAmountUsd > 0 || stage.externalAmountByn > 0;
     final stageHoverKey = '${project.id}_${stage.id}';
@@ -327,21 +331,18 @@ extension _FinanceScreenSections on _FinanceScreenState {
                       children: [
                         Text(
                           stage.titleDisplay,
-                          style: const TextStyle(
+                          style: textStyles.cardTitle.copyWith(
                             fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        if (stage.updatedAt != null)
+                        if (stageDateInfo != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 2),
                             child: Text(
-                              _getStageDateInfo(context, stage.updatedAt!).text,
-                              style: TextStyle(
+                              stageDateInfo.text,
+                              style: textStyles.chartLabel.copyWith(
                                 fontSize: 10,
-                                color:
-                                    _getStageDateInfo(context, stage.updatedAt!)
-                                        .color,
+                                color: stageDateInfo.color,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -379,6 +380,8 @@ extension _FinanceScreenSections on _FinanceScreenState {
 
   Widget _buildStageAmountSummary(
       UnpaidStageModel stage, bool hasExternalAmount) {
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -390,9 +393,9 @@ extension _FinanceScreenSections on _FinanceScreenState {
             padding: const EdgeInsets.only(top: 2),
             child: Text(
               'из ${_formatExternalAmount(stage.ourAmountUsd + stage.externalAmountUsd, stage.ourAmountByn + stage.externalAmountByn)}',
-              style: TextStyle(
+              style: textStyles.chartLabel.copyWith(
                 fontSize: 10,
-                color: Colors.grey[600],
+                color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -429,6 +432,8 @@ extension _FinanceScreenSections on _FinanceScreenState {
 
   Widget _buildSourceSuperscript(String text) {
     final isDark = AppDesignTokens.isDark(context);
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
     return Container(
       constraints: const BoxConstraints(maxWidth: 130),
       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
@@ -446,10 +451,10 @@ extension _FinanceScreenSections on _FinanceScreenState {
         text,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(
+        style: textStyles.chartLabel.copyWith(
           fontSize: 9,
           fontWeight: FontWeight.w600,
-          color: Colors.grey.shade700,
+          color: scheme.onSurfaceVariant,
           height: 1.0,
         ),
       ),
@@ -461,6 +466,8 @@ extension _FinanceScreenSections on _FinanceScreenState {
     required String? source,
     required bool singleLine,
   }) {
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisSize: MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,9 +478,10 @@ extension _FinanceScreenSections on _FinanceScreenState {
             address,
             maxLines: singleLine ? 1 : null,
             overflow: singleLine ? TextOverflow.ellipsis : TextOverflow.visible,
-            style: const TextStyle(
+            style: textStyles.cardTitle.copyWith(
+              fontSize: 14,
               fontWeight: FontWeight.w700,
-              fontSize: 14.5,
+              color: scheme.onSurface,
               letterSpacing: -0.2,
             ),
           ),
@@ -495,6 +503,7 @@ extension _FinanceScreenSections on _FinanceScreenState {
     required bool active,
     double? maxTextWidth,
   }) {
+    final textStyles = context.appTextStyles;
     final isDark = AppDesignTokens.isDark(context);
     final background = active
         ? _FinanceScreenState._financeAccent.withOpacity(isDark ? 0.22 : 0.1)
@@ -511,7 +520,7 @@ extension _FinanceScreenSections on _FinanceScreenState {
       text,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: TextStyle(
+      style: textStyles.metricLabel.copyWith(
         fontSize: 11.5,
         fontWeight: FontWeight.w600,
         color: foreground,
@@ -544,8 +553,8 @@ extension _FinanceScreenSections on _FinanceScreenState {
 
   String _formatExternalAmount(double usd, double byn) {
     final parts = <String>[];
-    if (usd > 0) parts.add('${usd.toStringAsFixed(0)}\$');
-    if (byn > 0) parts.add('${byn.toStringAsFixed(0)}р');
+    if (usd > 0) parts.add('${_formatAmount(usd)}\$');
+    if (byn > 0) parts.add('${_formatAmount(byn)}р');
     return parts.join(' + ');
   }
 
@@ -614,6 +623,7 @@ extension _FinanceScreenSections on _FinanceScreenState {
 
   Widget _buildGlobalSettingsSection() {
     final sectionHPadding = _sectionHPadding(context);
+    final textStyles = context.appTextStyles;
     return Container(
       margin: EdgeInsets.fromLTRB(sectionHPadding, 12, sectionHPadding, 12),
       padding: const EdgeInsets.all(16),
@@ -632,19 +642,18 @@ extension _FinanceScreenSections on _FinanceScreenState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.notes,
                 size: 18,
                 color: _FinanceScreenState._financeAccent,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 'Финансовые заметки',
-                style: TextStyle(
+                style: textStyles.sectionTitle.copyWith(
                   fontSize: 15,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -686,15 +695,16 @@ extension _FinanceScreenSections on _FinanceScreenState {
     int minLines = 1,
     int? maxLines = 1,
   }) {
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: textStyles.fieldLabel.copyWith(
             fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            color: scheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 5),
@@ -705,7 +715,10 @@ extension _FinanceScreenSections on _FinanceScreenState {
           keyboardType:
               maxLines == 1 ? TextInputType.text : TextInputType.multiline,
           textAlignVertical: TextAlignVertical.top,
-          style: const TextStyle(fontSize: 14),
+          style: textStyles.input.copyWith(
+            fontSize: 14,
+            color: scheme.onSurface,
+          ),
           decoration: InputDecoration(
             isDense: true,
             contentPadding:
@@ -758,6 +771,7 @@ class _PayStageButtonState extends State<_PayStageButton> {
   @override
   Widget build(BuildContext context) {
     const accent = _FinanceScreenState._financeAccent;
+    final textStyles = context.appTextStyles;
     final isDark = AppDesignTokens.isDark(context);
     final backgroundColor = _isHovered
         ? accent.withOpacity(isDark ? 0.22 : 0.14)
@@ -826,10 +840,11 @@ class _PayStageButtonState extends State<_PayStageButton> {
                     const SizedBox(width: 6),
                     Text(
                       _isHovered ? 'Оплачено' : 'Не оплачено',
-                      style: TextStyle(
+                      style: textStyles.chartLabel.copyWith(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         color: textColor,
+                        height: 1.0,
                       ),
                     ),
                   ],

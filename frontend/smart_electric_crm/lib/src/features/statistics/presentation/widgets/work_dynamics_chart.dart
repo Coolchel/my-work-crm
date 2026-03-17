@@ -1,7 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:smart_electric_crm/src/features/statistics/data/models/statistics_model.dart';
 import 'package:intl/intl.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
+import 'package:smart_electric_crm/src/features/statistics/data/models/statistics_model.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class WorkDynamicsChart extends StatefulWidget {
@@ -32,6 +33,9 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
+    final isCompact = MediaQuery.sizeOf(context).width < 600;
     if (widget.data.isEmpty) {
       return const FriendlyEmptyState(
         icon: Icons.show_chart_rounded,
@@ -130,7 +134,7 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
                       showTitles: true,
                       interval: maxY / 5,
                       getTitlesWidget: _leftTitleWidgets,
-                      reservedSize: 45,
+                      reservedSize: isCompact ? 54 : 48,
                     ),
                   ),
                 ),
@@ -177,9 +181,9 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
                       return touchedSpots.map((LineBarSpot touchedSpot) {
                         final index = touchedSpot.x.toInt();
                         if (index < 0 || index >= widget.data.length) {
-                          return const LineTooltipItem(
+                          return LineTooltipItem(
                             '',
-                            TextStyle(),
+                            textStyles.chartLabel,
                           );
                         }
 
@@ -202,20 +206,20 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
 
                         return LineTooltipItem(
                           '$formattedDate\n',
-                          TextStyle(
-                            color: Theme.of(context).colorScheme.surface,
-                            fontWeight: FontWeight.bold,
+                          textStyles.chartLabel.copyWith(
+                            color: scheme.surface,
+                            fontWeight: FontWeight.w700,
                             fontSize: 10,
                           ),
                           children: [
                             TextSpan(
                               text:
-                                  '${value.toStringAsFixed(0)} ${widget.currencySymbol}',
-                              style: TextStyle(
+                                  '${_formatAmount(value)} ${widget.currencySymbol}',
+                              style: textStyles.chartLabel.copyWith(
                                 color: widget.isUsd
                                     ? Colors.green
                                     : Colors.indigoAccent.shade100,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w700,
                                 fontSize: 12,
                               ),
                             ),
@@ -237,6 +241,7 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
   Widget _buildLegendItem(String label, Color color) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textStyles = context.appTextStyles;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -261,9 +266,9 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: textStyles.chartLabel.copyWith(
               fontSize: 12,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: scheme.onSurface,
               letterSpacing: -0.1,
             ),
@@ -275,6 +280,9 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
 
   Widget _bottomTitleWidgets(double value, TitleMeta meta,
       List<WorkDynamicsData> data, bool isMonthly) {
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
+    final isCompact = MediaQuery.sizeOf(context).width < 600;
     final index = value.toInt();
     if (index < 0 || index >= data.length) return const SizedBox.shrink();
 
@@ -287,7 +295,7 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
     try {
       if (isMonthly) {
         final date = DateFormat("yyyy-MM").parse(dateStr);
-        label = DateFormat("MM.yyyy").format(date);
+        label = DateFormat(isCompact ? "MM.yy" : "MM.yyyy").format(date);
       } else {
         DateTime? date;
         try {
@@ -299,7 +307,7 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
         }
 
         if (date != null) {
-          label = DateFormat("dd.MM.yyyy").format(date);
+          label = DateFormat(isCompact ? "dd.MM" : "dd.MM.yyyy").format(date);
         } else {
           label = dateStr;
         }
@@ -310,34 +318,28 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
 
     return Padding(
       padding: const EdgeInsets.only(top: 6.0),
-      child: Transform.translate(
-        offset: Offset(index == data.length - 1 ? -14 : 0, 0),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 10,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+      child: Text(
+        label,
+        style: textStyles.chartLabel.copyWith(
+          fontSize: isCompact ? 9 : 10,
+          fontWeight: FontWeight.w600,
+          color: scheme.onSurfaceVariant,
         ),
       ),
     );
   }
 
   Widget _leftTitleWidgets(double value, TitleMeta meta) {
-    String text;
-    if (value >= 1000) {
-      text = '${(value / 1000).toStringAsFixed(1)}k';
-    } else {
-      text = value.toInt().toString();
-    }
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
+    final text = _formatAmount(value);
 
     return Text(
       text,
-      style: TextStyle(
+      style: textStyles.chartLabel.copyWith(
         fontSize: 10,
         fontWeight: FontWeight.w500,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        color: scheme.onSurfaceVariant,
       ),
       textAlign: TextAlign.left,
     );
@@ -348,5 +350,27 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
     if (length <= 10) return 2;
     if (length <= 20) return 4;
     return (length / 5).toDouble();
+  }
+
+  String _formatAmount(double value) {
+    final sign = value < 0 ? '-' : '';
+    final grouped = _groupThousands(value.abs().round().toString());
+    return '$sign$grouped';
+  }
+
+  String _groupThousands(String digits) {
+    if (digits.length <= 3) {
+      return digits;
+    }
+
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      final positionFromEnd = digits.length - i;
+      buffer.write(digits[i]);
+      if (positionFromEnd > 1 && positionFromEnd % 3 == 1) {
+        buffer.write(' ');
+      }
+    }
+    return buffer.toString();
   }
 }

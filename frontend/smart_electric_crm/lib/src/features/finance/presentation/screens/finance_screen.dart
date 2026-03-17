@@ -12,6 +12,7 @@ import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
 import '../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../../../core/theme/app_design_tokens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/navigation/app_navigation.dart';
 
 part 'finance_screen.g.dart';
@@ -120,17 +121,32 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
   }
 
   String _formatAmount(double amount) {
-    if (amount == amount.roundToDouble()) {
-      return amount.toInt().toString();
+    final sign = amount < 0 ? '-' : '';
+    final fixed = amount.abs().toStringAsFixed(2);
+    final parts = fixed.split('.');
+    final integerPart = _groupThousands(parts[0]);
+    final decimalPart = parts[1].replaceFirst(RegExp(r'0+$'), '');
+
+    if (decimalPart.isEmpty) {
+      return '$sign$integerPart';
     }
-    String formatted = amount.toStringAsFixed(2);
-    if (formatted.endsWith('0')) {
-      formatted = formatted.substring(0, formatted.length - 1);
+    return '$sign$integerPart.$decimalPart';
+  }
+
+  String _groupThousands(String digits) {
+    if (digits.length <= 3) {
+      return digits;
     }
-    if (formatted.endsWith('.')) {
-      formatted = formatted.substring(0, formatted.length - 1);
+
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      final positionFromEnd = digits.length - i;
+      buffer.write(digits[i]);
+      if (positionFromEnd > 1 && positionFromEnd % 3 == 1) {
+        buffer.write(' ');
+      }
     }
-    return formatted;
+    return buffer.toString();
   }
 
   double _sectionHPadding(BuildContext context) {
@@ -142,41 +158,48 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildAmountDisplay(double usd, double byn,
       {double fontSize = 13, Color? color}) {
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
     final List<TextSpan> spans = [];
     final effectiveColor = color ?? _financeAccent;
+    final amountStyle = textStyles.bodyStrong.copyWith(
+      color: effectiveColor,
+      fontWeight: FontWeight.w600,
+      fontSize: fontSize,
+      height: 1.15,
+    );
+    final separatorStyle = textStyles.chartLabel.copyWith(
+      color: scheme.onSurfaceVariant,
+      fontSize: fontSize * 0.85,
+    );
+    final emptyStyle = textStyles.secondaryBody.copyWith(
+      color: scheme.onSurfaceVariant.withOpacity(0.8),
+      fontSize: fontSize,
+    );
 
     if (usd > 0) {
       spans.add(TextSpan(
         text: '${_formatAmount(usd)} \$',
-        style: TextStyle(
-          color: effectiveColor,
-          fontWeight: FontWeight.w600,
-          fontSize: fontSize,
-        ),
+        style: amountStyle,
       ));
     }
 
     if (usd > 0 && byn > 0) {
       spans.add(TextSpan(
         text: ' + ',
-        style: TextStyle(color: Colors.grey[500], fontSize: fontSize * 0.85),
+        style: separatorStyle,
       ));
     }
 
     if (byn > 0) {
       spans.add(TextSpan(
         text: '${_formatAmount(byn)} р',
-        style: TextStyle(
-          color: effectiveColor,
-          fontWeight: FontWeight.w600,
-          fontSize: fontSize,
-        ),
+        style: amountStyle,
       ));
     }
 
     if (spans.isEmpty) {
-      return Text('0',
-          style: TextStyle(color: Colors.grey[400], fontSize: fontSize));
+      return Text('0', style: emptyStyle);
     }
 
     return RichText(text: TextSpan(children: spans));
@@ -292,16 +315,18 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
 
   Widget _buildProjectsHeader(int projectsCount) {
     final sectionHPadding = _sectionHPadding(context);
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
     return Padding(
       padding: EdgeInsets.fromLTRB(sectionHPadding, 10, sectionHPadding, 4),
       child: Row(
         children: [
           Text(
             'Неоплаченные объекты',
-            style: TextStyle(
+            style: textStyles.sectionTitle.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: Colors.grey.shade800,
+              color: scheme.onSurface,
             ),
           ),
           const Spacer(),
@@ -314,7 +339,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             ),
             child: Text(
               '$projectsCount',
-              style: const TextStyle(
+              style: textStyles.metricLabel.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: _financeAccent,
@@ -465,7 +490,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     return Column(
       children: [
         _buildCurrencyTotalCard(
-          title: 'К получению USD',
+          title: 'Итого USD',
           amount: totalUsd,
           symbol: '\$',
           accentColor: Colors.green,
@@ -473,7 +498,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         ),
         const SizedBox(height: 12),
         _buildCurrencyTotalCard(
-          title: 'К получению BYN',
+          title: 'Итого BYN',
           amount: totalByn,
           symbol: 'р',
           accentColor: Colors.indigo,
@@ -491,6 +516,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     required IconData icon,
   }) {
     final sectionHPadding = _sectionHPadding(context);
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
     return Container(
       width: double.infinity,
       margin: EdgeInsets.fromLTRB(sectionHPadding, 0, sectionHPadding, 0),
@@ -526,19 +553,19 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           Expanded(
             child: Text(
               title,
-              style: TextStyle(
+              style: textStyles.cardTitle.copyWith(
                 fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: scheme.onSurface,
               ),
             ),
           ),
           Text(
             amount > 0 ? '${_formatAmount(amount)} $symbol' : '0',
-            style: TextStyle(
+            style: textStyles.metricValue.copyWith(
               color: accentColor,
-              fontSize: 19,
-              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              height: 1.0,
+              letterSpacing: -0.25,
             ),
           ),
         ],

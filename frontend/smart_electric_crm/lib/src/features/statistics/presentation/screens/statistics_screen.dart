@@ -67,21 +67,37 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
   }
 
   String _formatAmount(double amount) {
-    if (amount == amount.roundToDouble()) {
-      return amount.toInt().toString();
+    final sign = amount < 0 ? '-' : '';
+    final fixed = amount.abs().toStringAsFixed(2);
+    final parts = fixed.split('.');
+    final integerPart = _groupThousands(parts[0]);
+    final decimalPart = parts[1].replaceFirst(RegExp(r'0+$'), '');
+
+    if (decimalPart.isEmpty) {
+      return '$sign$integerPart';
     }
-    String formatted = amount.toStringAsFixed(2);
-    if (formatted.endsWith('0')) {
-      formatted = formatted.substring(0, formatted.length - 1);
+    return '$sign$integerPart.$decimalPart';
+  }
+
+  String _groupThousands(String digits) {
+    if (digits.length <= 3) {
+      return digits;
     }
-    if (formatted.endsWith('.')) {
-      formatted = formatted.substring(0, formatted.length - 1);
+
+    final buffer = StringBuffer();
+    for (var i = 0; i < digits.length; i++) {
+      final positionFromEnd = digits.length - i;
+      buffer.write(digits[i]);
+      if (positionFromEnd > 1 && positionFromEnd % 3 == 1) {
+        buffer.write(' ');
+      }
     }
-    return formatted;
+    return buffer.toString();
   }
 
   @override
   Widget build(BuildContext context) {
+    final textStyles = context.appTextStyles;
     final viewport = MediaQuery.sizeOf(context);
     final isMobile = viewport.width < 600;
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
@@ -201,6 +217,11 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                                   .setPeriod(newSelection.first);
                             },
                             style: ButtonStyle(
+                              textStyle: WidgetStatePropertyAll(
+                                textStyles.button.copyWith(
+                                  fontSize: isMobile ? 13 : 14,
+                                ),
+                              ),
                               visualDensity: isMobile
                                   ? VisualDensity.compact
                                   : VisualDensity.standard,
@@ -469,6 +490,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
   Widget _buildRotateDeviceNotice(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
 
     return _HoverStatsCard(
       borderRadius: 16,
@@ -497,10 +519,9 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
             Text(
               '\u041f\u043e\u0432\u0435\u0440\u043d\u0438\u0442\u0435 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e \u0433\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u0430\u043b\u044c\u043d\u043e \u0434\u043b\u044f \u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u0430 \u0433\u0440\u0430\u0444\u0438\u043a\u043e\u0432',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: textStyles.sectionTitle.copyWith(
                 fontSize: 15,
                 height: 1.35,
-                fontWeight: FontWeight.w700,
                 color: scheme.onSurface,
               ),
             ),
@@ -508,10 +529,9 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
             Text(
               '\u0412 \u0433\u043e\u0440\u0438\u0437\u043e\u043d\u0442\u0430\u043b\u044c\u043d\u043e\u0439 \u043e\u0440\u0438\u0435\u043d\u0442\u0430\u0446\u0438\u0438 \u0433\u0440\u0430\u0444\u0438\u043a\u0438 \u0431\u0443\u0434\u0443\u0442 \u0447\u0438\u0442\u0430\u0442\u044c\u0441\u044f \u043b\u0443\u0447\u0448\u0435.',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: textStyles.secondaryBody.copyWith(
                 fontSize: 12,
                 height: 1.35,
-                fontWeight: FontWeight.w500,
                 color: scheme.onSurfaceVariant,
               ),
             ),
@@ -539,6 +559,8 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     String title, {
     required Color stripeColor,
   }) {
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Container(
@@ -550,10 +572,10 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
         const SizedBox(width: 8),
         Text(
           title,
-          style: TextStyle(
+          style: textStyles.sectionTitle.copyWith(
             fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w700,
+            color: scheme.onSurface,
           ),
         ),
       ],
@@ -609,6 +631,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
       String symbol, Color color,
       {bool compact = false}) {
     final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
     final amountText = '${_formatAmount(amount)} $symbol';
 
     return _HoverStatsCard(
@@ -622,10 +645,9 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
             children: [
               Text(
                 title,
-                style: TextStyle(
+                style: textStyles.metricLabel.copyWith(
                   fontSize: 14,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
               Container(
@@ -642,7 +664,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             height: compact ? 40 : 44,
@@ -653,11 +675,12 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                 amountText,
                 maxLines: 1,
                 softWrap: false,
-                style: TextStyle(
-                  fontSize: compact ? 28 : 30,
+                style: textStyles.metricValue.copyWith(
+                  fontSize: compact ? 26 : 28,
                   fontWeight: FontWeight.bold,
                   color: scheme.onSurface,
                   letterSpacing: -0.6,
+                  height: 1.0,
                 ),
               ),
             ),
@@ -671,6 +694,8 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
 
   Widget _buildPieChartCard(BuildContext context, List<_ChartData> data,
       {int paletteOffset = 0}) {
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
     final List<Color> palette = [
       Colors.indigo,
       Colors.teal,
@@ -713,47 +738,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
       ));
     }
 
-    final legendWidget = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: chartData.asMap().entries.map((entry) {
-        final index = entry.key;
-        final item = entry.value;
-        final color = palette[(index + paletteOffset) % palette.length];
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  item.original.name,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '${_formatAmount(item.original.value)}\$',
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-
     return SizedBox(
       height: _pieChartCardHeight,
       child: _HoverStatsCard(
@@ -761,42 +745,110 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
         padding: const EdgeInsets.all(16),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final legendMaxWidth = (constraints.maxWidth * 0.42)
-                .clamp(150.0, constraints.maxWidth - 24)
-                .toDouble();
+            final isCompact = constraints.maxWidth < 560;
+            final legendMaxWidth =
+                (constraints.maxWidth * (isCompact ? 0.56 : 0.42))
+                    .clamp(150.0, constraints.maxWidth - 24)
+                    .toDouble();
+            final legendWidget = Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: chartData.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                final color = palette[(index + paletteOffset) % palette.length];
+                final amountLabel = '${_formatAmount(item.original.value)}\$';
 
-            return Stack(
-              children: [
-                Center(
-                  child: SizedBox.square(
-                    dimension: 170,
-                    child: PieChart(
-                      PieChartData(
-                        sectionsSpace: 2,
-                        centerSpaceRadius: 25,
-                        sections: chartData.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final item = entry.value;
-                          final color =
-                              palette[(index + paletteOffset) % palette.length];
+                final nameText = Text(
+                  item.original.name,
+                  maxLines: isCompact ? 3 : 2,
+                  softWrap: true,
+                  style: textStyles.chartLabel.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurface,
+                  ),
+                  textAlign: TextAlign.right,
+                );
 
-                          return PieChartSectionData(
-                            color: color,
-                            value: item.visualValue,
-                            title:
-                                '${item.realPercent.toStringAsFixed(1).replaceAll('.0', '')}%',
-                            radius: 50,
-                            titleStyle: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                final amountText = Text(
+                  amountLabel,
+                  style: textStyles.chartLabel.copyWith(
+                    fontSize: 11,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                );
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: IntrinsicWidth(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                              ),
                             ),
-                          );
-                        }).toList(),
+                          ),
+                          const SizedBox(width: 6),
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: legendMaxWidth - 54,
+                            ),
+                            child: nameText,
+                          ),
+                          const SizedBox(width: 8),
+                          amountText,
+                        ],
                       ),
                     ),
                   ),
+                );
+              }).toList(),
+            );
+            final pieChart = Center(
+              child: SizedBox.square(
+                dimension: isCompact ? 148 : 170,
+                child: PieChart(
+                  PieChartData(
+                    sectionsSpace: 2,
+                    centerSpaceRadius: 25,
+                    sections: chartData.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final item = entry.value;
+                      final color =
+                          palette[(index + paletteOffset) % palette.length];
+
+                      return PieChartSectionData(
+                        color: color,
+                        value: item.visualValue,
+                        title:
+                            '${item.realPercent.toStringAsFixed(1).replaceAll('.0', '')}%',
+                        radius: 50,
+                        titleStyle: textStyles.chartLabel.copyWith(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
+              ),
+            );
+
+            return Stack(
+              children: [
+                pieChart,
                 Positioned(
                   right: 0,
                   bottom: 0,
