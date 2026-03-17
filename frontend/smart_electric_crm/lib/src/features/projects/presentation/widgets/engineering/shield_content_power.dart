@@ -11,6 +11,123 @@ import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../../core/theme/app_typography.dart';
 // import '../../dialogs/engineering/apply_template_dialog.dart'; // Removed
 
+class _PowerGroupHeader extends StatelessWidget {
+  final String title;
+  final int totalModules;
+  final Color accentColor;
+  final bool isDark;
+
+  const _PowerGroupHeader({
+    required this.title,
+    required this.totalModules,
+    required this.accentColor,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
+    final titleStyle = textStyles.bodyStrong.copyWith(
+      color: isDark ? scheme.onSurface : const Color(0xFF374151),
+      fontSize: 11,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.5,
+      height: 1.15,
+    );
+    final counterStyle = textStyles.bodyStrong.copyWith(
+      fontSize: 10.5,
+      fontWeight: FontWeight.w700,
+      color: accentColor.withOpacity(0.5),
+    );
+    final counterText = '$totalModules мод';
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final counterPainter = TextPainter(
+          text: TextSpan(text: counterText, style: counterStyle),
+          textDirection: Directionality.of(context),
+          maxLines: 1,
+        )..layout();
+
+        const markerWidth = 4.0;
+        const gapAfterMarker = 8.0;
+        const gapBeforeLine = 8.0;
+        const gapBeforeCounter = 8.0;
+
+        final maxTitleWidth = (constraints.maxWidth -
+                markerWidth -
+                gapAfterMarker -
+                gapBeforeCounter -
+                counterPainter.width)
+            .clamp(0.0, double.infinity);
+
+        final titlePainter = TextPainter(
+          text: TextSpan(text: title, style: titleStyle),
+          textDirection: Directionality.of(context),
+          maxLines: 2,
+          ellipsis: '…',
+        )..layout(maxWidth: maxTitleWidth);
+
+        final lineMetrics = titlePainter.computeLineMetrics();
+        final lineCount = lineMetrics.isEmpty ? 1 : lineMetrics.length;
+        final markerHeight =
+            (titlePainter.preferredLineHeight * lineCount).clamp(14.0, 28.0);
+        final dividerTop = titlePainter.preferredLineHeight * 0.55;
+        final titleWidth = titlePainter.width;
+        final shouldShowDivider =
+            maxTitleWidth - titleWidth > gapBeforeLine + 6;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: markerWidth,
+              height: markerHeight,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    accentColor.withOpacity(0.7),
+                    accentColor.withOpacity(0.3),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: gapAfterMarker),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxTitleWidth),
+              child: Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: titleStyle,
+              ),
+            ),
+            if (shouldShowDivider) ...[
+              const SizedBox(width: gapBeforeLine),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(top: dividerTop),
+                  child: Divider(
+                    color: accentColor.withOpacity(0.1),
+                    thickness: 1,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(width: gapBeforeCounter),
+            Text(counterText, style: counterStyle),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class ShieldContentPower extends ConsumerWidget {
   final ShieldModel shield;
   final String projectId;
@@ -57,7 +174,7 @@ class ShieldContentPower extends ConsumerWidget {
                   size: 16, color: themeColor.withOpacity(0.7)),
               label: Text('Добавить',
                   style: textStyles.bodyStrong.copyWith(
-                    fontSize: 12,
+                    fontSize: 12.5,
                     color: isDark ? scheme.onSurface : Colors.grey.shade700,
                   )),
               style: OutlinedButton.styleFrom(
@@ -96,52 +213,11 @@ class ShieldContentPower extends ConsumerWidget {
                 // Group Header (Estimate style)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(4, 12, 4, 8),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 4,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              _getDeviceTypeColor(type).withOpacity(0.7),
-                              _getDeviceTypeColor(type).withOpacity(0.3),
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          typeName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: textStyles.captionStrong.copyWith(
-                            color: isDark
-                                ? scheme.onSurface
-                                : const Color(0xFF374151),
-                            fontSize: 10,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Divider(
-                            color: themeColor.withOpacity(0.1), thickness: 1),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '$totalModules мод',
-                        style: textStyles.captionStrong.copyWith(
-                          fontSize: 9.5,
-                          color: themeColor.withOpacity(0.5),
-                        ),
-                      ),
-                    ],
+                  child: _PowerGroupHeader(
+                    title: typeName,
+                    totalModules: totalModules,
+                    accentColor: _getDeviceTypeColor(type),
+                    isDark: isDark,
                   ),
                 ),
                 // Group Items (ListTile style)
@@ -210,7 +286,7 @@ class ShieldContentPower extends ConsumerWidget {
                                         Text(
                                           group.device,
                                           style: textStyles.bodyStrong.copyWith(
-                                            fontSize: 12,
+                                            fontSize: 11,
                                             height: 1.2,
                                             color: isDark
                                                 ? scheme.onSurface
@@ -226,7 +302,7 @@ class ShieldContentPower extends ConsumerWidget {
                                             color: isDark
                                                 ? scheme.onSurfaceVariant
                                                 : Colors.grey.shade600,
-                                            fontSize: 10.5,
+                                            fontSize: 10,
                                           ),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,

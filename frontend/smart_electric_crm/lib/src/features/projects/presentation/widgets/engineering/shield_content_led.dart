@@ -41,7 +41,7 @@ class ShieldContentLed extends ConsumerWidget {
                   size: 16, color: themeColor.withOpacity(0.7)),
               label: Text('Добавить',
                   style: textStyles.bodyStrong.copyWith(
-                    fontSize: 12,
+                    fontSize: 12.5,
                     color: isDark ? scheme.onSurface : Colors.grey.shade700,
                   )),
               style: OutlinedButton.styleFrom(
@@ -125,7 +125,7 @@ class ShieldContentLed extends ConsumerWidget {
                                   Text(
                                     zone.transformer,
                                     style: textStyles.bodyStrong.copyWith(
-                                      fontSize: 12,
+                                      fontSize: 11,
                                       height: 1.2,
                                       color: isDark
                                           ? scheme.onSurface
@@ -140,7 +140,7 @@ class ShieldContentLed extends ConsumerWidget {
                                       color: isDark
                                           ? scheme.onSurfaceVariant
                                           : Colors.grey.shade600,
-                                      fontSize: 10.5,
+                                      fontSize: 10,
                                     ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,

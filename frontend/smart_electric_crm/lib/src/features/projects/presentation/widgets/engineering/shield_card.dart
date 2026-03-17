@@ -225,12 +225,11 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                           children: [
                                             Text(
                                               _getTypeName(shield.shieldType),
-                                              style: textStyles.captionStrong
+                                              style: textStyles.bodyStrong
                                                   .copyWith(
                                                 color:
                                                     themeColor.withOpacity(0.7),
-                                                fontSize: 9.5,
-                                                letterSpacing: 0.5,
+                                                fontSize: 10.5,
                                               ),
                                             ),
                                             Padding(
@@ -250,10 +249,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                               (shield.mounting == 'internal'
                                                   ? 'Встроенный'
                                                   : 'Навесной'),
-                                              style: textStyles.captionStrong
+                                              style: textStyles.bodyStrong
                                                   .copyWith(
                                                 color: scheme.onSurfaceVariant,
-                                                fontSize: 10.5,
+                                                fontSize: 11,
                                               ),
                                             ),
                                           ],
@@ -379,10 +378,9 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                             _getStatsTitle(shield),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 9.5,
-                              letterSpacing: 0.8,
+                            style: textStyles.bodyStrong.copyWith(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
                               color: scheme.onSurface,
                             ),
                           ),
@@ -394,10 +392,11 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                       padding: const EdgeInsets.only(left: 20.0),
                       child: Text(
                         _getStatsSubtitle(shield),
-                        style: TextStyle(
-                            color: scheme.onSurfaceVariant,
-                            fontSize: 10.5,
-                            height: 1.1),
+                        style: textStyles.secondaryBody.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontSize: 11.5,
+                          height: 1.15,
+                        ),
                       ),
                     ),
                   ],
@@ -415,10 +414,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                     children: [
                       Text(
                         'Монтаж:',
-                        style: textStyles.captionStrong.copyWith(
+                        style: textStyles.bodyStrong.copyWith(
                           color: scheme.onSurfaceVariant,
-                          fontSize: 9.5,
-                          letterSpacing: 0.8,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       _buildMountingSegmented(themeColor,
@@ -462,17 +461,24 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                           size: 16, color: Colors.grey.shade400),
                       RichText(
                         text: TextSpan(
-                          style: textStyles.caption.copyWith(
-                            fontSize: 11,
+                          style: textStyles.body.copyWith(
+                            fontSize: 11.5,
                             color: scheme.onSurfaceVariant,
                           ),
                           children: [
-                            const TextSpan(text: 'Рекомендовано: '),
+                            TextSpan(
+                              text: 'Корпус: ',
+                              style: textStyles.bodyStrong.copyWith(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: scheme.onSurface,
+                              ),
+                            ),
                             TextSpan(
                               text: _formatSuggestedSize(shield.suggestedSize),
-                              style: TextStyle(
+                              style: textStyles.bodyStrong.copyWith(
+                                fontSize: 11.5,
                                 color: themeColor.withOpacity(0.8),
-                                fontWeight: FontWeight.w600,
                                 letterSpacing: 0.2,
                                 height: 1.1,
                               ),
@@ -642,7 +648,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                 Text(
                   label,
                   style: context.appTextStyles.captionStrong.copyWith(
-                    fontSize: 10.5,
+                    fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -943,7 +949,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   String _getStatsTitle(ShieldModel shield) {
     switch (shield.shieldType) {
       case 'power':
-        return 'Устройства щита:';
+        return 'Устройство щита:';
       case 'led':
         return 'Зоны управления:';
       case 'multimedia':

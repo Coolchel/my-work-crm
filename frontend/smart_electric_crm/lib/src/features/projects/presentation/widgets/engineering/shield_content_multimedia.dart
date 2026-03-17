@@ -40,7 +40,7 @@ class ShieldContentMultimedia extends ConsumerWidget {
                   size: 16, color: themeColor.withOpacity(0.7)),
               label: Text('Добавить',
                   style: textStyles.bodyStrong.copyWith(
-                    fontSize: 12,
+                    fontSize: 12.5,
                     color: isDark ? scheme.onSurface : const Color(0xFF616161),
                   )),
               style: OutlinedButton.styleFrom(
@@ -116,7 +116,7 @@ class ShieldContentMultimedia extends ConsumerWidget {
                             Text(
                               'Ethernet кабель',
                               style: textStyles.bodyStrong.copyWith(
-                                fontSize: 12,
+                                fontSize: 11,
                                 height: 1.2,
                                 color: isDark
                                     ? scheme.onSurface
@@ -128,7 +128,7 @@ class ShieldContentMultimedia extends ConsumerWidget {
                             Text(
                               'Линий: ${shield.internetLinesCount}',
                               style: textStyles.caption.copyWith(
-                                fontSize: 10.5,
+                                fontSize: 10,
                                 color: isDark
                                     ? scheme.onSurfaceVariant
                                     : Colors.grey.shade600,
