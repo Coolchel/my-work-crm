@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/features/statistics/data/models/statistics_model.dart';
 import 'package:smart_electric_crm/src/features/statistics/data/repositories/statistics_repository.dart';
 import 'package:smart_electric_crm/src/features/statistics/presentation/widgets/work_dynamics_chart.dart';
@@ -815,6 +816,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
   }
 
   Widget _buildPieChartEmptyState(BuildContext context) {
+    final textStyles = context.appTextStyles;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
 
@@ -842,21 +844,13 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
           Text(
             'Нет данных для диаграммы',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15,
-              height: 1.35,
-              fontWeight: FontWeight.w700,
-              color: scheme.onSurface,
-            ),
+            style: textStyles.sectionTitle.copyWith(color: scheme.onSurface),
           ),
           const SizedBox(height: 8),
           Text(
             'Карточка заполнится, когда в статистике появятся ненулевые значения.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              height: 1.35,
-              fontWeight: FontWeight.w500,
+            style: textStyles.secondaryBody.copyWith(
               color: scheme.onSurfaceVariant,
             ),
           ),

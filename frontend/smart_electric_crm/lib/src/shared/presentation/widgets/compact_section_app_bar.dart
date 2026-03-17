@@ -156,27 +156,20 @@ class CompactSectionAppBar extends StatelessWidget
     final badgeRadius = lerpDouble(9, 6, progress)!;
     final badgeIconSize = lerpDouble(17, 14, progress)!;
     final titleGap = lerpDouble(10, 6, progress)!;
-    final titleFontSize = lerpDouble(20, 17, progress)!;
-    final titleLineHeight = lerpDouble(1.1, 0.98, progress)!;
     final subtitleOpacity =
         (1 - Curves.easeOut.transform((progress * 1.2).clamp(0.0, 1.0)))
             .clamp(0.0, 1.0);
     final titleSpacing = lerpDouble(2, 0, progress)!;
     final bottomRadius = lerpDouble(AppDesignTokens.radiusM, 10, progress)!;
-    final baseTitleStyle = TextStyle.lerp(
-            textStyles.pageTitle, textStyles.sectionTitle, progress) ??
-        textStyles.pageTitle;
-    final titleTextStyle = baseTitleStyle.copyWith(
-      color: foreground,
-      fontSize: titleFontSize,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.2,
-      height: titleLineHeight,
-    );
+    final titleTextStyle = (TextStyle.lerp(
+              textStyles.pageTitle,
+              textStyles.sectionTitle,
+              progress,
+            ) ??
+            textStyles.pageTitle)
+        .copyWith(color: foreground);
     final subtitleTextStyle = textStyles.secondaryBody.copyWith(
-      fontSize: 13,
       color: subtitleColor,
-      height: 1.1,
     );
 
     return AppBar(

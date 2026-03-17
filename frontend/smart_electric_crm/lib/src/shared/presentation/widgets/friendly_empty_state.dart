@@ -30,9 +30,8 @@ class FriendlyEmptyState extends StatelessWidget {
     final titleStyle = textStyles.sectionTitle.copyWith(
       color: scheme.onSurface,
     );
-    final subtitleStyle = textStyles.body.copyWith(
+    final subtitleStyle = textStyles.secondaryBody.copyWith(
       color: scheme.onSurfaceVariant,
-      height: 1.35,
     );
 
     return Center(
