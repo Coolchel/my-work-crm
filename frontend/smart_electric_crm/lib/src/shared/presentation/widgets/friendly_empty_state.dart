@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_typography.dart';
+
 class FriendlyEmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -22,15 +24,16 @@ class FriendlyEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: scheme.onSurface,
-        );
-    final subtitleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: scheme.onSurfaceVariant,
-          height: 1.35,
-        );
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final textStyles = context.appTextStyles;
+    final titleStyle = textStyles.sectionTitle.copyWith(
+      color: scheme.onSurface,
+    );
+    final subtitleStyle = textStyles.body.copyWith(
+      color: scheme.onSurfaceVariant,
+      height: 1.35,
+    );
 
     return Center(
       child: Padding(
@@ -44,7 +47,7 @@ class FriendlyEmptyState extends StatelessWidget {
                 icon,
                 size: iconSize,
                 color: accentColor.withOpacity(
-                  Theme.of(context).brightness == Brightness.dark ? 0.48 : 0.28,
+                  theme.brightness == Brightness.dark ? 0.48 : 0.28,
                 ),
               ),
               const SizedBox(height: 14),
