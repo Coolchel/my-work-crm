@@ -6,9 +6,7 @@ import 'app_design_tokens.dart';
 class AppTheme {
   const AppTheme._();
 
-  // Temporary preview switch for evaluating Inter without touching feature UI.
-  static const bool _useInterPreview = true;
-  static const String _previewFontFamily = 'Inter';
+  static const String _appFontFamily = 'Inter';
   static const String _androidFontFamily = 'Roboto';
   static const String _desktopFontFamily = 'Segoe UI';
 
@@ -269,11 +267,7 @@ class AppTheme {
   }
 
   static String _fontFamilyForPlatform() {
-    if (_useInterPreview) {
-      return _previewFontFamily;
-    }
-    final platformFontFamily = _platformFontFamily();
-    return platformFontFamily;
+    return _appFontFamily;
   }
 
   static String _platformFontFamily() {
@@ -285,28 +279,16 @@ class AppTheme {
 
   static List<String> _fontFallbackForPlatform() {
     final platformFontFamily = _platformFontFamily();
-    if (_useInterPreview) {
-      if (kIsWeb || defaultTargetPlatform == TargetPlatform.windows) {
-        return [
-          platformFontFamily,
-          'Segoe UI Variable',
-          'Roboto',
-          'Arial',
-        ];
-      }
+    if (kIsWeb || defaultTargetPlatform == TargetPlatform.windows) {
       return [
         platformFontFamily,
-        'Arial',
-      ];
-    }
-    if (kIsWeb || defaultTargetPlatform == TargetPlatform.windows) {
-      return const [
         'Segoe UI Variable',
         'Roboto',
         'Arial',
       ];
     }
-    return const [
+    return [
+      platformFontFamily,
       'Arial',
     ];
   }
