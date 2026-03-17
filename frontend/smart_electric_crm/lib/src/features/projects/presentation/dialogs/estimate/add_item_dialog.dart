@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
@@ -77,6 +78,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
     final themeColor = _primaryColor;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     final headerColor =
         isDark ? AppDesignTokens.surface3(context) : _lightColor;
 
@@ -122,9 +124,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                       Center(
                         child: Text(
                           "Добавить ${widget.itemType == 'work' ? 'работу' : 'материал'}",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          style: textStyles.dialogTitle.copyWith(
                             color: isDark
                                 ? scheme.onSurface
                                 : themeColor.withOpacity(0.8),
@@ -149,10 +149,10 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                   TextField(
                     controller: _searchController,
                     autofocus: true,
-                    style: const TextStyle(fontSize: 14),
+                    style: textStyles.input.copyWith(color: scheme.onSurface),
                     decoration: InputDecoration(
                       hintText: "Начните вводить название...",
-                      hintStyle: TextStyle(
+                      hintStyle: textStyles.secondaryBody.copyWith(
                         color: scheme.onSurfaceVariant.withOpacity(0.72),
                       ),
                       prefixIcon:
@@ -276,6 +276,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
   }
 
   Widget _buildItemCard(CatalogItem item, Color themeColor) {
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
     return Material(
       color: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
@@ -320,18 +322,16 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                   children: [
                     Text(
                       item.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                      style: textStyles.bodyStrong.copyWith(
+                        color: scheme.onSurface,
                       ),
                     ),
                     if (!widget.hidePrices) ...[
                       const SizedBox(height: 2),
                       Text(
                         "${item.defaultPrice} ${item.defaultCurrency} / ${item.unit}",
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 11,
+                        style: textStyles.caption.copyWith(
+                          color: scheme.onSurfaceVariant,
                         ),
                       ),
                     ],

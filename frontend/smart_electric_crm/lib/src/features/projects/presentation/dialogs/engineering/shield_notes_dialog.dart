@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
@@ -45,6 +46,7 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
     final themeColor = widget.themeColor;
     final isDark = AppDesignTokens.isDark(context);
     final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -97,9 +99,7 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
                           const SizedBox(width: 8),
                           Text(
                             "Заметка",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                            style: textStyles.dialogTitle.copyWith(
                               color: themeColor.withOpacity(0.8),
                             ),
                           ),
@@ -133,7 +133,7 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
                       minLines: 4,
                       decoration: InputDecoration(
                         hintText: "Введите заметку для этого щита...",
-                        hintStyle: TextStyle(
+                        hintStyle: textStyles.secondaryBody.copyWith(
                           color: scheme.onSurfaceVariant.withOpacity(0.8),
                         ),
                         border: OutlineInputBorder(

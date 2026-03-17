@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../../../../engineering/data/models/led_zone_model.dart';
@@ -55,6 +56,8 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
     final isEdit = widget.zone != null;
     final themeColor = widget.themeColor;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -101,9 +104,7 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                     Center(
                       child: Text(
                         isEdit ? "Редактировать LED зону" : "Добавить LED зону",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                        style: textStyles.dialogTitle.copyWith(
                           color: themeColor.withOpacity(0.8),
                         ),
                       ),
@@ -138,8 +139,8 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                             labelText: "Трансформатор / Блок питания",
                             floatingLabelBehavior: FloatingLabelBehavior.always,
                             hintText: "Например: 12V 60W",
-                            hintStyle: TextStyle(
-                              color: Colors.grey.withOpacity(0.35),
+                            hintStyle: textStyles.secondaryBody.copyWith(
+                              color: scheme.onSurfaceVariant.withOpacity(0.72),
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -165,8 +166,8 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                             labelText: "Зона подсветки / Лента",
                             floatingLabelBehavior: FloatingLabelBehavior.always,
                             hintText: "Например: Потолок",
-                            hintStyle: TextStyle(
-                              color: Colors.grey.withOpacity(0.35),
+                            hintStyle: textStyles.secondaryBody.copyWith(
+                              color: scheme.onSurfaceVariant.withOpacity(0.72),
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:flutter/services.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 
 class Stage3ArmatureCalculatorResult {
@@ -284,6 +285,7 @@ class _Stage3ArmatureCalculatorDialogState
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     final missingItems = _targetPositions
         .where(_isMissingCatalogItem)
         .map((position) => position.label)
@@ -339,9 +341,7 @@ class _Stage3ArmatureCalculatorDialogState
                         Expanded(
                           child: Text(
                             'Калькулятор арматуры (Этап 3)',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
+                            style: textStyles.dialogTitle.copyWith(
                               color: isDark ? scheme.onSurface : Colors.blue,
                             ),
                           ),
@@ -371,7 +371,9 @@ class _Stage3ArmatureCalculatorDialogState
                       ),
                       child: Text(
                         'Не найдены в каталоге: ${missingItems.join(', ')}',
-                        style: const TextStyle(fontSize: 12.5),
+                        style: textStyles.caption.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   Expanded(
@@ -396,10 +398,8 @@ class _Stage3ArmatureCalculatorDialogState
                         alignment: Alignment.centerLeft,
                         child: Text(
                           _inlineError!,
-                          style: TextStyle(
+                          style: textStyles.captionStrong.copyWith(
                             color: Colors.red.shade600,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
@@ -443,6 +443,7 @@ class _Stage3ArmatureCalculatorDialogState
     final textController = _controllers[position.mappingKey]!;
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textStyles = context.appTextStyles;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -511,9 +512,7 @@ class _Stage3ArmatureCalculatorDialogState
                         position.label,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
+                        style: textStyles.bodyStrong.copyWith(
                           color: disabled
                               ? Colors.grey.shade500
                               : scheme.onSurface,
@@ -564,9 +563,7 @@ class _Stage3ArmatureCalculatorDialogState
                   position.label,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
+                  style: textStyles.bodyStrong.copyWith(
                     color: disabled ? Colors.grey.shade500 : scheme.onSurface,
                   ),
                 ),
@@ -588,6 +585,7 @@ class _Stage3ArmatureCalculatorDialogState
   Widget _quickBtn(_ArmaturePosition position, int delta, bool disabled,
       {bool compact = false}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textStyles = context.appTextStyles;
     return OutlinedButton(
       onPressed: disabled ? null : () => _increment(position, delta),
       style: OutlinedButton.styleFrom(
@@ -605,8 +603,7 @@ class _Stage3ArmatureCalculatorDialogState
       ),
       child: Text(
         '+$delta',
-        style: const TextStyle(
-          fontWeight: FontWeight.w700,
+        style: textStyles.captionStrong.copyWith(
           color: Colors.blue,
         ),
       ),

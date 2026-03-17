@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
@@ -20,6 +21,7 @@ class ApplyTemplateDialog extends ConsumerWidget {
     final templatesAsync = type == 'shield'
         ? ref.watch(shieldTemplatesProvider)
         : ref.watch(ledTemplatesProvider);
+    final textStyles = context.appTextStyles;
 
     return AlertDialog(
       title: const Text('Применить шаблон'),
@@ -35,8 +37,8 @@ class ApplyTemplateDialog extends ConsumerWidget {
                   // Dynamic cast hack for brevity
                   final t = templates[index] as dynamic;
                   return ListTile(
-                    title: Text(t.name),
-                    subtitle: Text(t.description),
+                    title: Text(t.name, style: textStyles.bodyStrong),
+                    subtitle: Text(t.description, style: textStyles.caption),
                     onTap: () async {
                       Navigator.pop(context);
                       if (type == 'shield') {
@@ -56,7 +58,7 @@ class ApplyTemplateDialog extends ConsumerWidget {
             )),
         loading: () => const SizedBox(
             height: 100, child: Center(child: CircularProgressIndicator())),
-        error: (e, _) => Text('Error: $e'),
+        error: (e, _) => Text('Error: $e', style: textStyles.body),
       ),
       actions: [
         TextButton(

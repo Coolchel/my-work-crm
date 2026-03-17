@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../../../../engineering/data/models/shield_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
@@ -31,6 +32,8 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
   Widget build(BuildContext context) {
     const themeColor = Colors.indigo;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -79,9 +82,7 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                     Center(
                       child: Text(
                         "Редактировать щит",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                        style: textStyles.dialogTitle.copyWith(
                           color: themeColor.withOpacity(0.8),
                         ),
                       ),
@@ -112,11 +113,8 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                         labelText: "Название щита",
                         floatingLabelBehavior: FloatingLabelBehavior.always,
                         hintText: "Щит квартирный",
-                        hintStyle: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant
-                              .withOpacity(0.75),
+                        hintStyle: textStyles.secondaryBody.copyWith(
+                          color: scheme.onSurfaceVariant.withOpacity(0.75),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -144,12 +142,8 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Text(
                             "Монтаж",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
+                            style: textStyles.fieldLabel.copyWith(
+                              color: scheme.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -285,6 +279,7 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
     const bg = Colors.indigo;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     final menuBackgroundColor =
         isDark ? scheme.surfaceContainerHigh : scheme.surfaceContainer;
 
@@ -331,10 +326,8 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                           children: [
                             Text(
                               label,
-                              style: TextStyle(
+                              style: textStyles.bodyStrong.copyWith(
                                 color: isDark ? scheme.onSurface : bg.shade800,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             Icon(Icons.arrow_drop_down,

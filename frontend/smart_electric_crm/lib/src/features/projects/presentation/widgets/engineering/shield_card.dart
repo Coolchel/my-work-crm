@@ -15,6 +15,7 @@ import '../../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../../shared/presentation/dialogs/text_input_dialog.dart';
 import '../../dialogs/engineering/shield_notes_dialog.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
+import '../../../../../core/theme/app_typography.dart';
 import '../../../../../shared/presentation/widgets/desktop_web_frame.dart';
 
 class ShieldCard extends ConsumerStatefulWidget {
@@ -101,6 +102,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
     final isCompactMobile = MediaQuery.of(context).size.width < 560;
+    final textStyles = context.appTextStyles;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -206,12 +208,13 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                       children: [
                                         Text(
                                           shield.name,
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
+                                          style: textStyles.cardTitle.copyWith(
+                                            fontSize: isCompactMobile ? 14 : 15,
                                             color: scheme.onSurface,
                                             letterSpacing: -0.4,
                                           ),
+                                          maxLines: isCompactMobile ? 2 : 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 2),
                                         Wrap(
@@ -221,13 +224,12 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                               WrapCrossAlignment.center,
                                           children: [
                                             Text(
-                                              _getTypeName(shield.shieldType)
-                                                  .toUpperCase(),
-                                              style: TextStyle(
+                                              _getTypeName(shield.shieldType),
+                                              style: textStyles.captionStrong
+                                                  .copyWith(
                                                 color:
                                                     themeColor.withOpacity(0.7),
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w700,
+                                                fontSize: 9.5,
                                                 letterSpacing: 0.5,
                                               ),
                                             ),
@@ -237,9 +239,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                                       horizontal: 6),
                                               child: Text(
                                                 '•',
-                                                style: TextStyle(
+                                                style:
+                                                    textStyles.caption.copyWith(
                                                   color: Colors.grey.shade400,
-                                                  fontSize: 10,
+                                                  fontSize: 9.5,
                                                 ),
                                               ),
                                             ),
@@ -247,10 +250,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                               (shield.mounting == 'internal'
                                                   ? 'Встроенный'
                                                   : 'Навесной'),
-                                              style: TextStyle(
+                                              style: textStyles.captionStrong
+                                                  .copyWith(
                                                 color: scheme.onSurfaceVariant,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w500,
+                                                fontSize: 10.5,
                                               ),
                                             ),
                                           ],
@@ -342,6 +345,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     final isDark = AppDesignTokens.isDark(context);
     final isDesktopWeb =
         kIsWeb && DesktopWebFrame.hasPersistentShellSidebar(context);
+    final isWindowsDesktop =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
+    final useExpandedActionButtons = isDesktopWeb || isWindowsDesktop;
+    final textStyles = context.appTextStyles;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -367,13 +374,17 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                         Icon(Icons.tune_rounded,
                             size: 14, color: Colors.grey.shade500),
                         const SizedBox(width: 6),
-                        Text(
-                          _getStatsTitle(shield),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 10,
-                            letterSpacing: 0.8,
-                            color: scheme.onSurface,
+                        Expanded(
+                          child: Text(
+                            _getStatsTitle(shield),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 9.5,
+                              letterSpacing: 0.8,
+                              color: scheme.onSurface,
+                            ),
                           ),
                         ),
                       ],
@@ -385,7 +396,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                         _getStatsSubtitle(shield),
                         style: TextStyle(
                             color: scheme.onSurfaceVariant,
-                            fontSize: 11,
+                            fontSize: 10.5,
                             height: 1.1),
                       ),
                     ),
@@ -397,21 +408,21 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                 child: Align(
                   alignment: Alignment.topRight,
                   child: Wrap(
-                    spacing: isCompactMobile ? 8 : 12,
+                    spacing: isCompactMobile ? 6 : 10,
                     runSpacing: isCompactMobile ? 6 : 8,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     alignment: WrapAlignment.end,
                     children: [
                       Text(
-                        'МОНТАЖ:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 10,
-                          letterSpacing: 0.8,
+                        'Монтаж:',
+                        style: textStyles.captionStrong.copyWith(
                           color: scheme.onSurfaceVariant,
+                          fontSize: 9.5,
+                          letterSpacing: 0.8,
                         ),
                       ),
-                      _buildMountingSegmented(themeColor),
+                      _buildMountingSegmented(themeColor,
+                          compact: isCompactMobile),
                     ],
                   ),
                 ),
@@ -451,8 +462,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                           size: 16, color: Colors.grey.shade400),
                       RichText(
                         text: TextSpan(
-                          style: TextStyle(
-                              fontSize: 12, color: scheme.onSurfaceVariant),
+                          style: textStyles.caption.copyWith(
+                            fontSize: 11,
+                            color: scheme.onSurfaceVariant,
+                          ),
                           children: [
                             const TextSpan(text: 'Рекомендовано: '),
                             TextSpan(
@@ -477,10 +490,12 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                 child: Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  alignment:
-                      isDesktopWeb ? WrapAlignment.end : WrapAlignment.center,
-                  runAlignment:
-                      isDesktopWeb ? WrapAlignment.end : WrapAlignment.center,
+                  alignment: useExpandedActionButtons
+                      ? WrapAlignment.end
+                      : WrapAlignment.center,
+                  runAlignment: useExpandedActionButtons
+                      ? WrapAlignment.end
+                      : WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     // Template Button (only for Power/LED)
@@ -495,7 +510,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                               _showTemplateDialog(context, ref, shield),
                           foregroundColor: Colors.grey.shade600,
                           sideColor: Colors.grey.withOpacity(0.3),
-                          expanded: isDesktopWeb,
+                          expanded: useExpandedActionButtons,
                         ),
                       ),
                     ],
@@ -557,7 +572,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                             backgroundColor: hasNotes
                                 ? themeColor.withOpacity(0.05)
                                 : Colors.transparent,
-                            expanded: isDesktopWeb,
+                            expanded: useExpandedActionButtons,
                           );
                         },
                       ),
@@ -572,7 +587,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                             _showEditShieldDialog(context, ref, shield),
                         foregroundColor: Colors.grey.shade700,
                         sideColor: Colors.grey.withOpacity(0.3),
-                        expanded: isDesktopWeb,
+                        expanded: useExpandedActionButtons,
                       ),
                     ),
                     // Delete Button
@@ -584,7 +599,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                         onPressed: () => _deleteShield(context, ref),
                         foregroundColor: Colors.grey.shade600,
                         sideColor: Colors.grey.withOpacity(0.3),
-                        expanded: isDesktopWeb,
+                        expanded: useExpandedActionButtons,
                       ),
                     ),
                   ],
@@ -613,9 +628,9 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
         side: BorderSide(color: sideColor),
         backgroundColor: backgroundColor,
         padding: expanded
-            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 10)
+            ? const EdgeInsets.symmetric(horizontal: 10, vertical: 8)
             : EdgeInsets.zero,
-        minimumSize: expanded ? const Size(0, 38) : const Size(36, 36),
+        minimumSize: expanded ? const Size(0, 34) : const Size(36, 36),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       child: expanded
@@ -623,11 +638,11 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
               mainAxisSize: MainAxisSize.min,
               children: [
                 icon,
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 12,
+                  style: context.appTextStyles.captionStrong.copyWith(
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -653,21 +668,27 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     return "модулей";
   }
 
-  Widget _buildMountingSegmented(Color themeColor) {
+  Widget _buildMountingSegmented(Color themeColor, {bool compact = false}) {
     final shield = widget.shield;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: SegmentedButton<String>(
-        segments: const [
+        segments: [
           ButtonSegment(
             value: 'internal',
             label: Text('Внутр.',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                  fontSize: compact ? 9 : 9.5,
+                  fontWeight: FontWeight.bold,
+                )),
           ),
           ButtonSegment(
             value: 'external',
             label: Text('Наруж.',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                  fontSize: compact ? 9 : 9.5,
+                  fontWeight: FontWeight.bold,
+                )),
           ),
         ],
         selected: {shield.mounting},
@@ -689,7 +710,9 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
         showSelectedIcon: false,
         style: SegmentedButton.styleFrom(
           visualDensity: VisualDensity.compact,
-          padding: EdgeInsets.zero,
+          padding: compact
+              ? const EdgeInsets.symmetric(horizontal: 2)
+              : EdgeInsets.zero,
           selectedBackgroundColor: themeColor.withOpacity(0.1),
           selectedForegroundColor: themeColor,
           side: BorderSide(color: Colors.grey.withOpacity(0.1)),
@@ -920,13 +943,13 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   String _getStatsTitle(ShieldModel shield) {
     switch (shield.shieldType) {
       case 'power':
-        return 'УСТРОЙСТВА ЩИТА:';
+        return 'Устройства щита:';
       case 'led':
-        return 'ЗОНЫ УПРАВЛЕНИЯ:';
+        return 'Зоны управления:';
       case 'multimedia':
-        return 'СЛАБОТОЧНЫЙ ЩИТ';
+        return 'Слаботочный щит';
       default:
-        return 'УСТРОЙСТВА:';
+        return 'Устройства:';
     }
   }
 

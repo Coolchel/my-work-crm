@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
@@ -52,6 +53,8 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
   Widget build(BuildContext context) {
     final themeColor = widget.themeColor;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -98,9 +101,7 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                     Center(
                       child: Text(
                         "Ethernet линии",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                        style: textStyles.dialogTitle.copyWith(
                           color: themeColor.withOpacity(0.8),
                         ),
                       ),
@@ -133,10 +134,8 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                         // Quick selection buttons
                         Text(
                           "Быстрый выбор:",
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade700,
+                          style: textStyles.captionStrong.copyWith(
+                            color: scheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -166,9 +165,7 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                                         ),
                                         child: Text(
                                           '$value',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
+                                          style: textStyles.bodyStrong.copyWith(
                                             color: themeColor.withOpacity(0.8),
                                           ),
                                         ),
@@ -203,9 +200,7 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                                         ),
                                         child: Text(
                                           '$value',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w500,
+                                          style: textStyles.bodyStrong.copyWith(
                                             color: themeColor.withOpacity(0.8),
                                           ),
                                         ),
@@ -231,8 +226,8 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                             labelText: "Количество линий UTP-5e",
                             floatingLabelBehavior: FloatingLabelBehavior.always,
                             hintText: "Например: 12",
-                            hintStyle: TextStyle(
-                              color: Colors.grey.withOpacity(0.35),
+                            hintStyle: textStyles.secondaryBody.copyWith(
+                              color: scheme.onSurfaceVariant.withOpacity(0.72),
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),

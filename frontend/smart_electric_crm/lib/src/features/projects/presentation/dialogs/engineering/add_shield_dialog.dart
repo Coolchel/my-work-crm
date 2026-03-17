@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
@@ -31,6 +32,8 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
   Widget build(BuildContext context) {
     const themeColor = Colors.indigo;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -86,9 +89,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                           Center(
                             child: Text(
                               "Добавить щит",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                              style: textStyles.dialogTitle.copyWith(
                                 color: themeColor.withOpacity(0.8),
                               ),
                             ),
@@ -128,10 +129,8 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                                   floatingLabelBehavior:
                                       FloatingLabelBehavior.always,
                                   hintText: "Щит квартирный",
-                                  hintStyle: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant
+                                  hintStyle: textStyles.secondaryBody.copyWith(
+                                    color: scheme.onSurfaceVariant
                                         .withOpacity(0.75),
                                   ),
                                   border: OutlineInputBorder(
@@ -160,12 +159,8 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                                     padding: const EdgeInsets.only(bottom: 8),
                                     child: Text(
                                       "Тип",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
+                                      style: textStyles.fieldLabel.copyWith(
+                                        color: scheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ),
@@ -248,12 +243,8 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                                     padding: const EdgeInsets.only(bottom: 8),
                                     child: Text(
                                       "Монтаж",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
+                                      style: textStyles.fieldLabel.copyWith(
+                                        color: scheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ),
@@ -412,6 +403,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
     const bg = Colors.indigo;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     final menuBackgroundColor =
         isDark ? scheme.surfaceContainerHigh : scheme.surfaceContainer;
 
@@ -469,10 +461,8 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                   children: [
                     Text(
                       label,
-                      style: TextStyle(
+                      style: textStyles.bodyStrong.copyWith(
                         color: isDark ? scheme.onSurface : bg.shade800,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Icon(Icons.arrow_drop_down,

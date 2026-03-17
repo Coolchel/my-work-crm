@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/utils/decimal_input_formatter.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/marquee_text.dart';
@@ -144,6 +145,8 @@ class _EditItemDialogState extends State<EditItemDialog> {
     final isWork = widget.item.itemType == 'work';
     final themeColor = isWork ? Colors.green : Colors.indigo;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -191,26 +194,20 @@ class _EditItemDialogState extends State<EditItemDialog> {
                       child: isNewManual
                           ? Text(
                               "Новая позиция",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                              style: textStyles.dialogTitle.copyWith(
                                 color: themeColor.withOpacity(0.8),
                               ),
                             )
                           : (widget.item.name.length > 25
                               ? MarqueeText(
                                   text: widget.item.name,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                  style: textStyles.dialogTitle.copyWith(
                                     color: themeColor.withOpacity(0.8),
                                   ),
                                 )
                               : Text(
                                   widget.item.name,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                  style: textStyles.dialogTitle.copyWith(
                                     color: themeColor.withOpacity(0.8),
                                   ),
                                 )),
@@ -250,8 +247,9 @@ class _EditItemDialogState extends State<EditItemDialog> {
                               floatingLabelBehavior:
                                   FloatingLabelBehavior.always,
                               hintText: isWork ? "Штроба" : "Кабель",
-                              hintStyle: TextStyle(
-                                color: Colors.grey.withOpacity(0.35),
+                              hintStyle: textStyles.secondaryBody.copyWith(
+                                color:
+                                    scheme.onSurfaceVariant.withOpacity(0.72),
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -278,8 +276,9 @@ class _EditItemDialogState extends State<EditItemDialog> {
                               floatingLabelBehavior:
                                   FloatingLabelBehavior.always,
                               hintText: "шт",
-                              hintStyle: TextStyle(
-                                color: Colors.grey.withOpacity(0.35),
+                              hintStyle: textStyles.secondaryBody.copyWith(
+                                color:
+                                    scheme.onSurfaceVariant.withOpacity(0.72),
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -503,9 +502,8 @@ class _EditItemDialogState extends State<EditItemDialog> {
                             alignment: Alignment.centerLeft,
                             child: Text(
                               _validationError!,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                                fontSize: 12,
+                              style: textStyles.caption.copyWith(
+                                color: scheme.error,
                               ),
                             ),
                           ),

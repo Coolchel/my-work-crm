@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../../../../engineering/data/models/shield_group_model.dart';
@@ -72,6 +73,8 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
     final isEdit = widget.group != null;
     final themeColor = widget.themeColor;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -118,9 +121,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                     Center(
                       child: Text(
                         isEdit ? "Редактировать группу" : "Добавить группу",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                        style: textStyles.dialogTitle.copyWith(
                           color: themeColor.withOpacity(0.8),
                         ),
                       ),
@@ -157,12 +158,8 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Text(
                                 "Тип устройства",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
+                                style: textStyles.fieldLabel.copyWith(
+                                  color: scheme.onSurfaceVariant,
                                 ),
                               ),
                             ),
@@ -215,12 +212,8 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                     padding: const EdgeInsets.only(bottom: 8),
                                     child: Text(
                                       "Номинал",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
+                                      style: textStyles.fieldLabel.copyWith(
+                                        color: scheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ),
@@ -281,12 +274,8 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                     padding: const EdgeInsets.only(bottom: 8),
                                     child: Text(
                                       "Полюса",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
+                                      style: textStyles.fieldLabel.copyWith(
+                                        color: scheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ),
@@ -336,11 +325,8 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                             labelText: "Зона / Потребитель",
                             floatingLabelBehavior: FloatingLabelBehavior.always,
                             hintText: "Например: Кухня",
-                            hintStyle: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant
-                                  .withOpacity(0.75),
+                            hintStyle: textStyles.secondaryBody.copyWith(
+                              color: scheme.onSurfaceVariant.withOpacity(0.75),
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -469,6 +455,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
     const bg = Colors.brown;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     final popupBackgroundColor =
         (isDark ? scheme.surfaceContainerHigh : scheme.surface).withOpacity(1);
 
@@ -526,10 +513,8 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                   children: [
                     Text(
                       label,
-                      style: TextStyle(
+                      style: textStyles.bodyStrong.copyWith(
                         color: isDark ? scheme.onSurface : bg.shade800,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Icon(Icons.arrow_drop_down,

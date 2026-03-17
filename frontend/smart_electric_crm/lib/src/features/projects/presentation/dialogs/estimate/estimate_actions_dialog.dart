@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import 'package:printing/printing.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
@@ -84,6 +85,7 @@ mixin EstimateDialogHelpers {
     required Color themeColor,
   }) {
     final theme = Theme.of(context);
+    final textStyles = context.appTextStyles;
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
     return Container(
       padding: EdgeInsets.symmetric(
@@ -103,8 +105,7 @@ mixin EstimateDialogHelpers {
           Expanded(
             child: Text(
               title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+              style: textStyles.dialogTitle.copyWith(
                 color: theme.colorScheme.onSurface,
                 height: 1.2,
                 fontSize: isMobileWeb ? 16 : null,
@@ -160,6 +161,7 @@ mixin EstimateDialogHelpers {
     bool enabled = true,
   }) {
     final theme = Theme.of(context);
+    final textStyles = context.appTextStyles;
     final effectiveColor = color ?? theme.colorScheme.primary;
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
 
@@ -192,9 +194,8 @@ mixin EstimateDialogHelpers {
               Expanded(
                 child: Text(
                   label,
-                  style: TextStyle(
+                  style: textStyles.bodyStrong.copyWith(
                     fontSize: isMobileWeb ? 14 : 15,
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -222,6 +223,7 @@ mixin EstimateDialogHelpers {
   }) {
     final theme = Theme.of(context);
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     final effectiveColor = color ?? theme.colorScheme.onSurface;
     final contentColor = enabled ? effectiveColor : theme.disabledColor;
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
@@ -247,9 +249,8 @@ mixin EstimateDialogHelpers {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(
+              style: textStyles.bodyStrong.copyWith(
                 fontSize: isMobileWeb ? 14 : 15,
-                fontWeight: FontWeight.w500,
                 color: contentColor,
               ),
               maxLines: 1,
@@ -328,11 +329,13 @@ mixin EstimateDialogHelpers {
 
   /// Helper for building standard popup menu items with icon and checkmark support
   PopupMenuItem<String> buildPopupMenuItem({
+    required BuildContext context,
     required String value,
     required IconData icon,
     required String text,
     required Color color,
   }) {
+    final textStyle = context.appTextStyles.body;
     return PopupMenuItem<String>(
       value: value,
       height: 56,
@@ -344,10 +347,8 @@ mixin EstimateDialogHelpers {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
+              style: textStyle.copyWith(
                 color: color,
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
               ),
             ),
           ),
@@ -895,6 +896,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
             color: Colors.green,
             items: buildPopupMenuItemsWithDividers([
               buildPopupMenuItem(
+                context: context,
                 value: 'total',
                 icon: Icons.person_rounded,
                 text: "Для Заказчика",
@@ -902,6 +904,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
               ),
               if (hasPartnerWorks)
                 buildPopupMenuItem(
+                  context: context,
                   value: 'employer',
                   icon: Icons.handshake_rounded,
                   text: "Для Контрагента",
@@ -909,6 +912,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
                 ),
               if (hasPartnerWorks)
                 buildPopupMenuItem(
+                  context: context,
                   value: 'our',
                   icon: Icons.engineering_rounded,
                   text: "Наши (Остаток)",
@@ -936,12 +940,14 @@ class EstimateTextActionsDialog extends ConsumerWidget
             color: Colors.blue.shade700,
             items: buildPopupMenuItemsWithDividers([
               buildPopupMenuItem(
+                context: context,
                 value: 'noprice',
                 icon: Icons.list_alt_rounded,
                 text: "Без цен",
                 color: Colors.blue.shade700,
               ),
               buildPopupMenuItem(
+                context: context,
                 value: 'price',
                 icon: Icons.attach_money_rounded,
                 text: "С ценами",
@@ -949,6 +955,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
               ),
               if (markupPercent > 0)
                 buildPopupMenuItem(
+                  context: context,
                   value: 'markup',
                   icon: Icons.trending_up_rounded,
                   text: "С наценкой (+${markupPercent.toStringAsFixed(0)}%)",
@@ -1189,6 +1196,7 @@ class _EstimatePdfActionsDialogState
             enabled: !_isBusy,
             items: buildPopupMenuItemsWithDividers([
               buildPopupMenuItem(
+                context: context,
                 value: 'total',
                 icon: Icons.person_rounded,
                 text: "Для Заказчика",
@@ -1196,6 +1204,7 @@ class _EstimatePdfActionsDialogState
               ),
               if (hasPartnerWorks)
                 buildPopupMenuItem(
+                  context: context,
                   value: 'employer',
                   icon: Icons.handshake_rounded,
                   text: "Для Контрагента",
@@ -1203,6 +1212,7 @@ class _EstimatePdfActionsDialogState
                 ),
               if (hasPartnerWorks)
                 buildPopupMenuItem(
+                  context: context,
                   value: 'our',
                   icon: Icons.engineering_rounded,
                   text: "Наши (Остаток)",
@@ -1227,12 +1237,14 @@ class _EstimatePdfActionsDialogState
             enabled: !_isBusy,
             items: buildPopupMenuItemsWithDividers([
               buildPopupMenuItem(
+                context: context,
                 value: 'noprice',
                 icon: Icons.list_alt_rounded,
                 text: "Без цен",
                 color: Colors.blue.shade700,
               ),
               buildPopupMenuItem(
+                context: context,
                 value: 'price',
                 icon: Icons.attach_money_rounded,
                 text: "С ценами",
@@ -1240,6 +1252,7 @@ class _EstimatePdfActionsDialogState
               ),
               if (widget.markupPercent > 0)
                 buildPopupMenuItem(
+                  context: context,
                   value: 'markup',
                   icon: Icons.trending_up_rounded,
                   text:
@@ -1789,12 +1802,11 @@ class _ReportPreviewDialogState extends State<ReportPreviewDialog>
       selectedColor: color.shade100,
       backgroundColor:
           isDark ? color.shade900.withOpacity(0.18) : color.shade50,
-      labelStyle: TextStyle(
+      labelStyle: context.appTextStyles.captionStrong.copyWith(
         color: isSelected
             ? color.shade900
             : (isDark ? color.shade100 : color.shade800),
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-        fontSize: 13,
       ),
       side: BorderSide(
         color: isSelected

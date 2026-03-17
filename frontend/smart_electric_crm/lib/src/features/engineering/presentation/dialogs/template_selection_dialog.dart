@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../shared/presentation/widgets/friendly_empty_state.dart';
@@ -30,6 +31,7 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       elevation: 0,
@@ -71,9 +73,7 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                   Center(
                     child: Text(
                       title,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                      style: textStyles.dialogTitle.copyWith(
                         color: isDark
                             ? scheme.onSurface
                             : themeColor.withOpacity(0.8),
@@ -167,6 +167,7 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
   Widget _buildTemplateCard(BuildContext context, T template) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     return Material(
       color: scheme.surface,
       shape: RoundedRectangleBorder(
@@ -208,9 +209,8 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                   children: [
                     Text(
                       getName(template),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                      style: textStyles.bodyStrong.copyWith(
+                        color: scheme.onSurface,
                       ),
                     ),
                     if (getDescription(template).isNotEmpty) ...[
@@ -219,9 +219,8 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                         getDescription(template),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 11,
+                        style: textStyles.caption.copyWith(
+                          color: scheme.onSurfaceVariant,
                         ),
                       ),
                     ],

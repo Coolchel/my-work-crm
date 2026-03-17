@@ -8,6 +8,7 @@ import '../../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/shield_group_dialog.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
+import '../../../../../core/theme/app_typography.dart';
 // import '../../dialogs/engineering/apply_template_dialog.dart'; // Removed
 
 class ShieldContentPower extends ConsumerWidget {
@@ -25,6 +26,7 @@ class ShieldContentPower extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textStyles = context.appTextStyles;
     // ... (same as before until Row with buttons)
     final groups = shield.groups;
 
@@ -54,9 +56,8 @@ class ShieldContentPower extends ConsumerWidget {
               icon: Icon(Icons.add_rounded,
                   size: 16, color: themeColor.withOpacity(0.7)),
               label: Text('Добавить',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
+                  style: textStyles.bodyStrong.copyWith(
+                    fontSize: 12,
                     color: isDark ? scheme.onSurface : Colors.grey.shade700,
                   )),
               style: OutlinedButton.styleFrom(
@@ -113,28 +114,30 @@ class ShieldContentPower extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        typeName.toUpperCase(),
-                        style: TextStyle(
-                          color: isDark
-                              ? scheme.onSurface
-                              : const Color(0xFF374151),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
-                          letterSpacing: 0.5,
+                      Expanded(
+                        child: Text(
+                          typeName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textStyles.captionStrong.copyWith(
+                            color: isDark
+                                ? scheme.onSurface
+                                : const Color(0xFF374151),
+                            fontSize: 10,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Expanded(
+                      Flexible(
                         child: Divider(
                             color: themeColor.withOpacity(0.1), thickness: 1),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         '$totalModules мод',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                        style: textStyles.captionStrong.copyWith(
+                          fontSize: 9.5,
                           color: themeColor.withOpacity(0.5),
                         ),
                       ),
@@ -206,9 +209,8 @@ class ShieldContentPower extends ConsumerWidget {
                                       children: [
                                         Text(
                                           group.device,
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 13,
+                                          style: textStyles.bodyStrong.copyWith(
+                                            fontSize: 12,
                                             height: 1.2,
                                             color: isDark
                                                 ? scheme.onSurface
@@ -220,12 +222,14 @@ class ShieldContentPower extends ConsumerWidget {
                                         ),
                                         Text(
                                           group.zone,
-                                          style: TextStyle(
+                                          style: textStyles.caption.copyWith(
                                             color: isDark
                                                 ? scheme.onSurfaceVariant
                                                 : Colors.grey.shade600,
-                                            fontSize: 11,
+                                            fontSize: 10.5,
                                           ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
                                     ),

@@ -8,6 +8,7 @@ import '../../../../../shared/presentation/widgets/friendly_empty_state.dart';
 import '../../providers/project_providers.dart';
 import '../../dialogs/engineering/led_zone_dialog.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
+import '../../../../../core/theme/app_typography.dart';
 // import '../../dialogs/engineering/apply_template_dialog.dart';
 
 class ShieldContentLed extends ConsumerWidget {
@@ -26,6 +27,7 @@ class ShieldContentLed extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final zones = shield.ledZones;
+    final textStyles = context.appTextStyles;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,9 +40,8 @@ class ShieldContentLed extends ConsumerWidget {
               icon: Icon(Icons.add_rounded,
                   size: 16, color: themeColor.withOpacity(0.7)),
               label: Text('Добавить',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
+                  style: textStyles.bodyStrong.copyWith(
+                    fontSize: 12,
                     color: isDark ? scheme.onSurface : Colors.grey.shade700,
                   )),
               style: OutlinedButton.styleFrom(
@@ -123,9 +124,8 @@ class ShieldContentLed extends ConsumerWidget {
                                 children: [
                                   Text(
                                     zone.transformer,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 13,
+                                    style: textStyles.bodyStrong.copyWith(
+                                      fontSize: 12,
                                       height: 1.2,
                                       color: isDark
                                           ? scheme.onSurface
@@ -136,12 +136,14 @@ class ShieldContentLed extends ConsumerWidget {
                                   ),
                                   Text(
                                     zone.zone,
-                                    style: TextStyle(
+                                    style: textStyles.caption.copyWith(
                                       color: isDark
                                           ? scheme.onSurfaceVariant
                                           : Colors.grey.shade600,
-                                      fontSize: 11,
+                                      fontSize: 10.5,
                                     ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),

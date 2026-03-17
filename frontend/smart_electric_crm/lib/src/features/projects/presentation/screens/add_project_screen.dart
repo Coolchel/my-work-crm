@@ -164,6 +164,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
   Widget build(BuildContext context) {
     const themeColor = Colors.indigo;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -219,9 +220,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                               _isEditing
                                   ? 'Редактировать объект'
                                   : 'Новый объект',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                              style: textStyles.dialogTitle.copyWith(
                                 color: themeColor.withOpacity(0.8),
                               ),
                             ),
@@ -313,9 +312,15 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                                                       size: 20,
                                                     ),
                                                     const SizedBox(width: 12),
-                                                    Text(e.value,
-                                                        style: const TextStyle(
-                                                            fontSize: 13)),
+                                                    Text(
+                                                      e.value,
+                                                      style: textStyles.body
+                                                          .copyWith(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface,
+                                                      ),
+                                                    ),
                                                   ],
                                                 ),
                                               ),
@@ -348,9 +353,15 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                                                       size: 20,
                                                     ),
                                                     const SizedBox(width: 12),
-                                                    Text(s,
-                                                        style: const TextStyle(
-                                                            fontSize: 13)),
+                                                    Text(
+                                                      s,
+                                                      style: textStyles.body
+                                                          .copyWith(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface,
+                                                      ),
+                                                    ),
                                                   ],
                                                 ),
                                               ),
@@ -442,6 +453,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
     const themeColor = Colors.indigo;
     final isDark = AppDesignTokens.isDark(context);
     final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
     return TextFormField(
       controller: controller,
       validator: validator,
@@ -449,7 +461,9 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
         labelText: label,
         floatingLabelBehavior: FloatingLabelBehavior.always,
         hintText: hint,
-        hintStyle: TextStyle(color: scheme.onSurfaceVariant.withOpacity(0.75)),
+        hintStyle: textStyles.secondaryBody.copyWith(
+          color: scheme.onSurfaceVariant.withOpacity(0.75),
+        ),
         fillColor: isDark
             ? scheme.surfaceContainerHigh
             : scheme.surfaceContainer.withOpacity(0.4),
@@ -490,6 +504,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
     const bg = Colors.indigo;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     final popupBackgroundColor =
         isDark ? AppDesignTokens.surface2(context) : scheme.surfaceContainer;
 
@@ -544,10 +559,8 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                   children: [
                     Text(
                       label,
-                      style: TextStyle(
+                      style: textStyles.bodyStrong.copyWith(
                         color: isDark ? scheme.onSurface : bg.shade800,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Icon(Icons.arrow_drop_down,
@@ -591,6 +604,7 @@ class _StageToggleChipState extends State<_StageToggleChip> {
     const themeColor = Colors.indigo;
     final isDark = AppDesignTokens.isDark(context);
     final isSelected = widget.isSelected;
+    final textStyles = context.appTextStyles;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -630,8 +644,7 @@ class _StageToggleChipState extends State<_StageToggleChip> {
               const SizedBox(width: 6),
               Text(
                 widget.label,
-                style: TextStyle(
-                  fontSize: 12,
+                style: textStyles.captionStrong.copyWith(
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color:
                       isSelected ? themeColor.shade700 : Colors.grey.shade600,
