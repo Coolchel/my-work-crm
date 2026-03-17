@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 
 import '../../../projects/presentation/screens/add_project_screen.dart';
@@ -18,6 +19,7 @@ class _NewProjectCardState extends State<NewProjectCard> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
     final borderHovered = isDark ? false : _isHovered;
     final lightBaseCardBackground = AppDesignTokens.cardBackground(context);
@@ -135,16 +137,15 @@ class _NewProjectCardState extends State<NewProjectCard> {
                       children: [
                         Text(
                           'Новый объект',
-                          style: TextStyle(
+                          style: textStyles.sectionTitle.copyWith(
                             fontSize: isMobileWeb ? 16 : 18,
-                            fontWeight: FontWeight.bold,
                             color: titleColor,
                           ),
                         ),
                         SizedBox(height: isMobileWeb ? 2 : 4),
                         Text(
                           'Создать смету и инженерную карту',
-                          style: TextStyle(
+                          style: textStyles.secondaryBody.copyWith(
                             fontSize: isMobileWeb ? 13 : 14,
                             color: subtitleColor,
                           ),

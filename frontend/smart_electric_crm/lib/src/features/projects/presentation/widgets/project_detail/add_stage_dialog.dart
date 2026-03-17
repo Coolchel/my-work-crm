@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 
@@ -79,6 +80,7 @@ class _AddStageDialogState extends ConsumerState<AddStageDialog> {
   Widget build(BuildContext context) {
     final stages = _availableStages;
     const themeColor = Colors.indigo;
+    final textStyles = context.appTextStyles;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -119,9 +121,7 @@ class _AddStageDialogState extends ConsumerState<AddStageDialog> {
                 children: [
                   Text(
                     'Выберите этап',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                    style: textStyles.dialogTitle.copyWith(
                       color: themeColor.withOpacity(0.8),
                     ),
                     textAlign: TextAlign.center,
@@ -234,6 +234,8 @@ class _StageChoiceTileState extends State<_StageChoiceTile> {
 
   @override
   Widget build(BuildContext context) {
+    final textStyles = context.appTextStyles;
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
@@ -267,9 +269,8 @@ class _StageChoiceTileState extends State<_StageChoiceTile> {
                   Expanded(
                     child: Text(
                       widget.title,
-                      style: TextStyle(
+                      style: textStyles.cardTitle.copyWith(
                         fontSize: 14,
-                        fontWeight: FontWeight.w600,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),

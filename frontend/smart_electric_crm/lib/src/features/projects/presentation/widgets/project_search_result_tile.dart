@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 
 import '../../data/models/project_model.dart';
 
@@ -70,6 +71,7 @@ class _ProjectSearchResultTileState extends State<ProjectSearchResultTile> {
   Widget build(BuildContext context) {
     final project = widget.project;
     final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
     final onSurfaceVariant = scheme.onSurfaceVariant;
     final activityDate = project.updatedAt ?? project.createdAt;
     final clientLine = _buildClientLine(project);
@@ -150,8 +152,7 @@ class _ProjectSearchResultTileState extends State<ProjectSearchResultTile> {
                                         project.address,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
+                                        style: textStyles.cardTitle.copyWith(
                                           fontSize: 14,
                                           height: 1.1,
                                         ),
@@ -162,11 +163,11 @@ class _ProjectSearchResultTileState extends State<ProjectSearchResultTile> {
                                           clientLine,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
+                                          style:
+                                              textStyles.captionStrong.copyWith(
                                             fontSize: 12,
                                             height: 1.1,
                                             color: onSurfaceVariant,
-                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                       ],
@@ -176,11 +177,11 @@ class _ProjectSearchResultTileState extends State<ProjectSearchResultTile> {
                                           intercomLine,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
+                                          style:
+                                              textStyles.captionStrong.copyWith(
                                             fontSize: 12,
                                             height: 1.1,
                                             color: onSurfaceVariant,
-                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                       ],
@@ -197,10 +198,9 @@ class _ProjectSearchResultTileState extends State<ProjectSearchResultTile> {
                                 child: Text(
                                   _formatDate(activityDate),
                                   textAlign: TextAlign.right,
-                                  style: TextStyle(
+                                  style: textStyles.captionStrong.copyWith(
                                     fontSize: 11,
                                     color: onSurfaceVariant,
-                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),

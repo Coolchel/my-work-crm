@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/help_tooltip_icon.dart';
 
 import '../../../projects/presentation/providers/project_providers.dart';
@@ -168,6 +169,7 @@ class _StatCardState extends State<_StatCard> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     final effectiveHover = _isHovered;
     final compact = widget.compact;
     final baseGradient = isDark
@@ -292,9 +294,8 @@ class _StatCardState extends State<_StatCard> {
                     children: [
                       Text(
                         widget.value,
-                        style: TextStyle(
-                          fontSize: compact ? 21 : 24,
-                          fontWeight: FontWeight.w800,
+                        style: textStyles.metricValue.copyWith(
+                          fontSize: compact ? 22 : 24,
                           color: scheme.onSurface,
                           height: 1.0,
                         ),
@@ -302,7 +303,7 @@ class _StatCardState extends State<_StatCard> {
                       const SizedBox(height: 4),
                       Text(
                         widget.title,
-                        style: TextStyle(
+                        style: textStyles.metricLabel.copyWith(
                           fontSize: compact ? 11 : 12,
                           color: scheme.onSurfaceVariant,
                           fontWeight: FontWeight.w600,

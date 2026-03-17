@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_quotes.dart';
 import '../../../../core/theme/app_design_tokens.dart';
+import '../../../../core/theme/app_typography.dart';
 
 class WelcomeHeader extends StatefulWidget {
   final VoidCallback onSettingsPressed;
@@ -40,6 +41,7 @@ class _WelcomeHeaderState extends State<WelcomeHeader> {
     final dateStr =
         DateFormat('d MMMM yyyy, EEEE', 'ru').format(DateTime.now());
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
 
     final gradientColors = isDark
         ? const [
@@ -77,10 +79,10 @@ class _WelcomeHeaderState extends State<WelcomeHeader> {
                 Expanded(
                   child: Text(
                     _getGreeting(),
-                    style: const TextStyle(
+                    style: textStyles.heroTitle.copyWith(
+                      fontSize: 28,
                       color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -96,17 +98,17 @@ class _WelcomeHeaderState extends State<WelcomeHeader> {
             const SizedBox(height: 8),
             Text(
               dateStr,
-              style: TextStyle(
+              style: textStyles.bodyStrong.copyWith(
                 color: Colors.white.withOpacity(isDark ? 0.74 : 0.9),
-                fontSize: 16,
+                fontSize: 15,
               ),
             ),
             const SizedBox(height: 16),
             Text(
               '"$_quote"',
-              style: TextStyle(
+              style: textStyles.secondaryBody.copyWith(
                 color: Colors.white.withOpacity(isDark ? 0.62 : 0.8),
-                fontSize: 14,
+                fontSize: 13,
                 fontStyle: FontStyle.italic,
               ),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/card_meta_info_block.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 
@@ -73,6 +74,7 @@ class _StageCardState extends State<StageCard> {
     final stageColor = _getStageColor(widget.stage.title);
     final createdAt = widget.stage.createdAt;
     final updatedAt = widget.stage.updatedAt;
+    final textStyles = context.appTextStyles;
     final isDesktopWeb =
         kIsWeb && DesktopWebFrame.isDesktop(context, minWidth: 1280);
     final isCompactMobileWeb = DesktopWebFrame.isMobileWeb(
@@ -160,9 +162,8 @@ class _StageCardState extends State<StageCard> {
                                         StageCard.getStageTitleDisplay(
                                           widget.stage.title,
                                         ),
-                                        style: const TextStyle(
+                                        style: textStyles.sectionTitle.copyWith(
                                           fontSize: 17,
-                                          fontWeight: FontWeight.bold,
                                           letterSpacing: -0.3,
                                         ),
                                       ),
@@ -245,9 +246,8 @@ class _StageCardState extends State<StageCard> {
                       const EdgeInsets.only(right: _mobileHeaderActionWidth),
                   child: Text(
                     StageCard.getStageTitleDisplay(widget.stage.title),
-                    style: const TextStyle(
+                    style: context.appTextStyles.sectionTitle.copyWith(
                       fontSize: 17,
-                      fontWeight: FontWeight.bold,
                       letterSpacing: -0.3,
                     ),
                   ),
@@ -467,20 +467,20 @@ class _StageCardState extends State<StageCard> {
             color: Colors.green.withOpacity(0.2),
           ),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.check_circle_rounded,
               size: 10,
               color: Colors.green,
             ),
-            SizedBox(width: 3),
+            const SizedBox(width: 3),
             Text(
               'ОПЛАЧЕНО',
-              style: TextStyle(
+              style: context.appTextStyles.captionStrong.copyWith(
                 fontSize: 9,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w700,
                 color: Colors.green,
                 letterSpacing: 0.3,
               ),

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/navigation/app_navigation.dart';
 import '../../../../core/theme/app_design_tokens.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../widgets/new_project_card.dart';
@@ -674,6 +675,7 @@ class _WelcomeNetworkNotice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     final borderColor = isDark
         ? Colors.deepOrangeAccent.withOpacity(0.35)
         : Colors.deepOrange.withOpacity(0.28);
@@ -704,7 +706,7 @@ class _WelcomeNetworkNotice extends StatelessWidget {
           Expanded(
             child: Text(
               'РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ. РќРµРєРѕС‚РѕСЂС‹Рµ Р±Р»РѕРєРё РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРЅС‹.',
-              style: TextStyle(
+              style: textStyles.secondaryBody.copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.onSurface,

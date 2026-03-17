@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 
 class DetailInfoRow extends StatelessWidget {
   final IconData icon;
@@ -18,6 +19,13 @@ class DetailInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
+    final valueStyle = textStyles.bodyStrong.copyWith(
+      fontSize: 14,
+      color: scheme.onSurface,
+    );
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -36,30 +44,23 @@ class DetailInfoRow extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
+                style: textStyles.captionStrong.copyWith(
                   fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.grey.shade500,
+                  color: scheme.onSurfaceVariant,
                   letterSpacing: 0.3,
                 ),
               ),
               const SizedBox(height: 2),
               selectable
-                  ? SelectableText(
-                      value,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
+                  ? SelectionArea(
+                      child: Text(
+                        value,
+                        style: valueStyle,
                       ),
                     )
                   : Text(
                       value,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade800,
-                      ),
+                      style: valueStyle,
                     ),
             ],
           ),

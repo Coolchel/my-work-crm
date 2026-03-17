@@ -14,6 +14,7 @@ import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
@@ -438,6 +439,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     final searchResultsAsync = ref.watch(objectsProjectSearchResultsProvider);
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textStyles = context.appTextStyles;
     final handleBack =
         widget.onBackPressed ?? () => Navigator.of(context).maybePop();
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
@@ -553,11 +555,11 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                           focusNode: _searchFocusNode,
                           autofocus: isMobileWeb && _autofocusSearchOnOpen,
                           textAlignVertical: TextAlignVertical.center,
-                          style: const TextStyle(fontSize: 16),
+                          style: textStyles.input.copyWith(fontSize: 16),
                           decoration: InputDecoration(
                             isDense: true,
                             hintText: ProjectSearchTexts.hint,
-                            hintStyle: TextStyle(
+                            hintStyle: textStyles.secondaryBody.copyWith(
                               color: Colors.grey.shade500,
                               fontSize: 15,
                             ),
@@ -705,9 +707,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                                 children: [
                                   Text(
                                     'Фильтры',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
+                                    style: context.appTextStyles.dialogTitle
+                                        .copyWith(
                                       color: isDark
                                           ? scheme.onSurface
                                           : themeColor.withOpacity(0.8),
@@ -852,9 +853,8 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   Widget _buildFilterLabel(String text) {
     return Text(
       text,
-      style: TextStyle(
+      style: context.appTextStyles.captionStrong.copyWith(
         fontSize: 12,
-        fontWeight: FontWeight.w500,
         color: Colors.indigo.shade700,
       ),
     );
@@ -1058,10 +1058,9 @@ class _ProjectCardState extends State<_ProjectCard> {
         Expanded(
           child: Text(
             project.address,
-            style: TextStyle(
+            style: context.appTextStyles.sectionTitle.copyWith(
               fontSize: _titleFontSize,
               height: _titleLineHeight,
-              fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.onSurface,
               letterSpacing: -0.3,
             ),
@@ -1127,10 +1126,9 @@ class _ProjectCardState extends State<_ProjectCard> {
               padding: const EdgeInsets.only(right: _mobileHeaderActionsWidth),
               child: Text(
                 project.address,
-                style: TextStyle(
+                style: context.appTextStyles.sectionTitle.copyWith(
                   fontSize: _titleFontSize,
                   height: _titleLineHeight,
-                  fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.onSurface,
                   letterSpacing: -0.3,
                 ),
@@ -1493,11 +1491,12 @@ class _HoverableFilterChipState extends State<_HoverableFilterChip> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             child: Text(
               widget.label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.w500,
-                color: widget.textColor,
-              ),
+              style: Theme.of(context).appTextStyles.captionStrong.copyWith(
+                    fontSize: 12,
+                    fontWeight:
+                        widget.isActive ? FontWeight.w600 : FontWeight.w500,
+                    color: widget.textColor,
+                  ),
             ),
           ),
         ),

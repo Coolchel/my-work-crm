@@ -16,6 +16,7 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_side_
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/constants/api_urls.dart';
 import '../../../settings/application/app_settings_controller.dart';
@@ -513,10 +514,9 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                   padding: const EdgeInsets.only(left: 4, bottom: 8),
                   child: Text(
                     'Об объекте',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
+                    style: context.appTextStyles.pageTitle.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                 ),
                 // Premium Project Info Header
@@ -609,11 +609,9 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                   children: [
                     Text(
                       'Этапы работ',
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
+                      style: context.appTextStyles.pageTitle.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
                   ],
                 ),

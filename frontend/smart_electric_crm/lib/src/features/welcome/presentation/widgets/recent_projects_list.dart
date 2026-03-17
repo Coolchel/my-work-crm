@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
@@ -25,6 +26,7 @@ class RecentProjectsList extends ConsumerWidget {
     VoidCallback? onClear,
   }) {
     final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
     final showClear = onClear != null;
 
     return Padding(
@@ -59,9 +61,8 @@ class RecentProjectsList extends ConsumerWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(
+                  style: textStyles.sectionTitle.copyWith(
                     fontSize: 17,
-                    fontWeight: FontWeight.w700,
                     color: scheme.onSurface,
                     letterSpacing: -0.2,
                   ),
@@ -286,10 +287,10 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
     final intercomLine = _buildIntercomLine(project);
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
-    final secondaryInfoStyle = TextStyle(
+    final textStyles = context.appTextStyles;
+    final secondaryInfoStyle = textStyles.captionStrong.copyWith(
       fontSize: 12,
       color: scheme.onSurfaceVariant,
-      fontWeight: FontWeight.w500,
     );
 
     return MouseRegion(
@@ -382,8 +383,8 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                                           children: [
                                             Text(
                                               project.address,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w700,
+                                              style:
+                                                  textStyles.cardTitle.copyWith(
                                                 fontSize: 14,
                                                 color: scheme.onSurface,
                                               ),
@@ -422,10 +423,10 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                                       child: Text(
                                         _formatDate(lastActivity),
                                         textAlign: TextAlign.right,
-                                        style: TextStyle(
+                                        style:
+                                            textStyles.captionStrong.copyWith(
                                           fontSize: 11.5,
                                           color: scheme.onSurfaceVariant,
-                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                     ),
@@ -480,8 +481,8 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                                           children: [
                                             Text(
                                               project.address,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w700,
+                                              style:
+                                                  textStyles.cardTitle.copyWith(
                                                 fontSize: 14,
                                                 color: scheme.onSurface,
                                               ),
@@ -520,10 +521,10 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                                       child: Text(
                                         _formatDate(lastActivity),
                                         textAlign: TextAlign.right,
-                                        style: TextStyle(
+                                        style:
+                                            textStyles.captionStrong.copyWith(
                                           fontSize: 12,
                                           color: scheme.onSurfaceVariant,
-                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                     ),

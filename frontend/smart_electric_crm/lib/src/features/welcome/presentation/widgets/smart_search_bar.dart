@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/search/project_search_texts.dart';
 
 import '../../../projects/presentation/providers/project_providers.dart';
@@ -72,19 +73,23 @@ class _SmartSearchBarState extends ConsumerState<SmartSearchBar> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 140),
       child: TextField(
         controller: _searchController,
         focusNode: _searchFocusNode,
-        style: TextStyle(color: scheme.onSurface, fontSize: 16),
+        style: textStyles.input.copyWith(
+          color: scheme.onSurface,
+          fontSize: 16,
+        ),
         cursorColor: scheme.primary,
         textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
           isDense: true,
           hintText: widget.hintText,
-          hintStyle: TextStyle(
+          hintStyle: textStyles.secondaryBody.copyWith(
             color: scheme.onSurfaceVariant.withOpacity(0.75),
             fontSize: 15,
           ),
