@@ -17,12 +17,37 @@ class DetailInfoRow extends StatelessWidget {
     this.selectable = false,
   });
 
+  String _normalizeLabel(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) {
+      return raw;
+    }
+
+    final isAllCaps =
+        trimmed == trimmed.toUpperCase() && trimmed != trimmed.toLowerCase();
+    if (!isAllCaps) {
+      return raw;
+    }
+
+    final lower = trimmed.toLowerCase();
+    return '${lower[0].toUpperCase()}${lower.substring(1)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textStyles = context.appTextStyles;
-    final valueStyle = textStyles.bodyStrong.copyWith(
+    final normalizedLabel = _normalizeLabel(label);
+
+    final labelStyle = textStyles.bodyStrong.copyWith(
+      fontSize: 12,
+      color: scheme.onSurface,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0,
+    );
+    final valueStyle = textStyles.body.copyWith(
       fontSize: 14,
+      fontWeight: FontWeight.w500,
       color: scheme.onSurface,
     );
 
@@ -43,25 +68,14 @@ class DetailInfoRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
-                style: textStyles.captionStrong.copyWith(
-                  fontSize: 10,
-                  color: scheme.onSurfaceVariant,
-                  letterSpacing: 0.3,
-                ),
+                normalizedLabel,
+                style: labelStyle,
               ),
               const SizedBox(height: 2),
-              selectable
-                  ? SelectionArea(
-                      child: Text(
-                        value,
-                        style: valueStyle,
-                      ),
-                    )
-                  : Text(
-                      value,
-                      style: valueStyle,
-                    ),
+              Text(
+                value,
+                style: valueStyle,
+              ),
             ],
           ),
         ),

@@ -705,7 +705,7 @@ class _WelcomeNetworkNotice extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє РёРЅС‚РµСЂРЅРµС‚Сѓ. РќРµРєРѕС‚РѕСЂС‹Рµ Р±Р»РѕРєРё РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРЅС‹.',
+              'Нет подключения к интернету. Некоторые блоки временно недоступны.',
               style: textStyles.secondaryBody.copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,

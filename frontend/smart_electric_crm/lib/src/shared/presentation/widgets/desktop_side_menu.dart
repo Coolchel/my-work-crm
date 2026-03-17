@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_typography.dart';
@@ -116,9 +117,10 @@ class _DesktopSideMenuButtonState extends State<_DesktopSideMenuButton> {
         : _isHovered
             ? scheme.onSurface
             : scheme.onSurfaceVariant;
+    final desktopWebLabelSize = !widget.compact && kIsWeb ? 16.0 : 13.0;
     final labelStyle = textStyles.navLabel.copyWith(
       color: foregroundColor,
-      fontSize: 13,
+      fontSize: desktopWebLabelSize,
       fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
     );
 

@@ -1,11 +1,13 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_quotes.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
 
 class WelcomeHeader extends StatefulWidget {
   final VoidCallback onSettingsPressed;
@@ -42,6 +44,12 @@ class _WelcomeHeaderState extends State<WelcomeHeader> {
         DateFormat('d MMMM yyyy, EEEE', 'ru').format(DateTime.now());
     final isDark = AppDesignTokens.isDark(context);
     final textStyles = context.appTextStyles;
+    final isDesktopLike =
+        (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) ||
+            DesktopWebFrame.isDesktop(context, minWidth: 1180);
+    final greetingFontSize = isDesktopLike ? 26.0 : 28.0;
+    final dateFontSize = isDesktopLike ? 14.0 : 15.0;
+    final quoteFontSize = isDesktopLike ? 12.0 : 13.0;
 
     final gradientColors = isDark
         ? const [
@@ -80,7 +88,7 @@ class _WelcomeHeaderState extends State<WelcomeHeader> {
                   child: Text(
                     _getGreeting(),
                     style: textStyles.heroTitle.copyWith(
-                      fontSize: 28,
+                      fontSize: greetingFontSize,
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
                     ),
@@ -100,7 +108,7 @@ class _WelcomeHeaderState extends State<WelcomeHeader> {
               dateStr,
               style: textStyles.bodyStrong.copyWith(
                 color: Colors.white.withOpacity(isDark ? 0.74 : 0.9),
-                fontSize: 15,
+                fontSize: dateFontSize,
               ),
             ),
             const SizedBox(height: 16),
@@ -108,7 +116,7 @@ class _WelcomeHeaderState extends State<WelcomeHeader> {
               '"$_quote"',
               style: textStyles.secondaryBody.copyWith(
                 color: Colors.white.withOpacity(isDark ? 0.62 : 0.8),
-                fontSize: 13,
+                fontSize: quoteFontSize,
                 fontStyle: FontStyle.italic,
               ),
             ),
