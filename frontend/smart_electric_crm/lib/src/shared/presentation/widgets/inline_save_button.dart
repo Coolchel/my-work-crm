@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_design_tokens.dart';
+import '../../../core/theme/app_typography.dart';
 
 class InlineSaveButton extends StatelessWidget {
   const InlineSaveButton({
@@ -24,6 +25,7 @@ class InlineSaveButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final textStyles = context.appTextStyles;
     final isDark = AppDesignTokens.isDark(context);
     final isInteractive = enabled && !saving && onPressed != null;
     final baseSurface = isDark ? scheme.surfaceContainerHigh : scheme.surface;
@@ -101,11 +103,9 @@ class InlineSaveButton extends StatelessWidget {
                   const SizedBox(width: 10),
                   Text(
                     effectiveLabel,
-                    style: TextStyle(
+                    style: textStyles.navLabel.copyWith(
                       color: textColor,
                       fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.1,
                     ),
                   ),
                 ],

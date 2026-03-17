@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/errors/user_friendly_error_mapper.dart';
+import '../../../core/theme/app_typography.dart';
 
 class ErrorFeedback {
   static Future<void> show(
@@ -42,6 +43,8 @@ class ErrorFeedback {
         context: context,
         useRootNavigator: true,
         builder: (dialogContext) {
+          final scheme = Theme.of(dialogContext).colorScheme;
+          final textStyles = dialogContext.appTextStyles;
           final isNetworkIssue =
               message.toLowerCase().contains('нет подключения');
           final isFailure = title.toLowerCase().contains('ошибка') ||
@@ -61,7 +64,7 @@ class ErrorFeedback {
             child: Container(
               constraints: const BoxConstraints(maxWidth: 420),
               decoration: BoxDecoration(
-                color: Theme.of(dialogContext).colorScheme.surface,
+                color: scheme.surface,
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
@@ -104,9 +107,7 @@ class ErrorFeedback {
                         Expanded(
                           child: Text(
                             title,
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
+                            style: textStyles.dialogTitle.copyWith(
                               color: themeColor.withOpacity(0.95),
                             ),
                           ),
@@ -118,9 +119,8 @@ class ErrorFeedback {
                     padding: const EdgeInsets.fromLTRB(18, 16, 18, 10),
                     child: Text(
                       message,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(dialogContext).colorScheme.onSurface,
+                      style: textStyles.body.copyWith(
+                        color: scheme.onSurface,
                         height: 1.35,
                       ),
                     ),

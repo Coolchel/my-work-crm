@@ -1275,6 +1275,7 @@ InputDecoration _dialogInputDecoration(String label) {
     floatingLabelStyle: const TextStyle(
       color: Colors.indigo,
       fontWeight: FontWeight.w600,
+      fontSize: 13.5,
     ),
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     isDense: true,

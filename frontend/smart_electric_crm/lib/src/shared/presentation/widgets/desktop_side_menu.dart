@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_typography.dart';
+
 class DesktopSideMenuItem {
   const DesktopSideMenuItem({
     required this.label,
@@ -96,6 +98,7 @@ class _DesktopSideMenuButtonState extends State<_DesktopSideMenuButton> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isActive = widget.item.isSelected;
     final backgroundColor = isActive
@@ -165,9 +168,7 @@ class _DesktopSideMenuButtonState extends State<_DesktopSideMenuButton> {
                       Expanded(
                         child: Text(
                           widget.item.label,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                          style: textStyles.cardTitle.copyWith(
                             color: foregroundColor,
                           ),
                         ),

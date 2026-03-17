@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_typography.dart';
 import '../widgets/app_dialog_scrollbar.dart';
 import '../widgets/desktop_web_frame.dart';
 
@@ -36,8 +37,10 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final textStyles = context.appTextStyles;
+    final isDark = theme.brightness == Brightness.dark;
     final effectiveColor =
         widget.isDestructive ? Colors.red : widget.themeColor;
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
@@ -105,9 +108,8 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
                       children: [
                         Text(
                           widget.title,
-                          style: TextStyle(
+                          style: textStyles.dialogTitle.copyWith(
                             fontSize: isMobileWeb ? 16 : 18,
-                            fontWeight: FontWeight.bold,
                             color: effectiveColor.withOpacity(0.8),
                           ),
                           textAlign: TextAlign.center,
@@ -138,7 +140,7 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
                         padding: contentPadding,
                         child: Text(
                           widget.content,
-                          style: TextStyle(
+                          style: textStyles.body.copyWith(
                             fontSize: isMobileWeb ? 14 : 15,
                             height: 1.4,
                             color: scheme.onSurface,

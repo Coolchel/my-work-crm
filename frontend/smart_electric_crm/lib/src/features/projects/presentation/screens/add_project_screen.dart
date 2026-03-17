@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../providers/project_providers.dart';
@@ -470,13 +471,14 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
   }
 
   Widget _buildFieldLabel(String text) {
+    final textStyles = context.appTextStyles;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+        style: textStyles.fieldLabel.copyWith(
+          fontSize: 12.5,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),

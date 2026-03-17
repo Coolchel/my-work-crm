@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_typography.dart';
 import '../widgets/app_dialog_scrollbar.dart';
 import '../widgets/desktop_web_frame.dart';
 
@@ -52,8 +53,10 @@ class _TextInputDialogState extends State<TextInputDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final textStyles = context.appTextStyles;
+    final isDark = theme.brightness == Brightness.dark;
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
     final headerPadding = EdgeInsets.symmetric(
       horizontal: isMobileWeb ? 16 : 20,
@@ -118,9 +121,8 @@ class _TextInputDialogState extends State<TextInputDialog> {
                       children: [
                         Text(
                           widget.title,
-                          style: TextStyle(
+                          style: textStyles.dialogTitle.copyWith(
                             fontSize: isMobileWeb ? 16 : 18,
-                            fontWeight: FontWeight.bold,
                             color: widget.themeColor.withOpacity(0.8),
                           ),
                           textAlign: TextAlign.center,
@@ -236,18 +238,19 @@ class _TextInputDialogState extends State<TextInputDialog> {
     bool autoFocus = false,
     int maxLines = 1,
   }) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final textStyles = context.appTextStyles;
+    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 560);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: textStyles.fieldLabel.copyWith(
             color: scheme.onSurfaceVariant,
-            fontSize:
-                DesktopWebFrame.isMobileWeb(context, maxWidth: 560) ? 12 : 13,
-            fontWeight: FontWeight.w500,
+            fontSize: isMobileWeb ? 12.5 : 13.5,
           ),
         ),
         const SizedBox(height: 6),
@@ -255,7 +258,7 @@ class _TextInputDialogState extends State<TextInputDialog> {
           controller: controller,
           autofocus: autoFocus,
           maxLines: maxLines,
-          style: TextStyle(fontSize: 14, color: scheme.onSurface),
+          style: textStyles.input.copyWith(color: scheme.onSurface),
           decoration: InputDecoration(
             filled: true,
             fillColor: scheme.surfaceContainer.withOpacity(0.5),

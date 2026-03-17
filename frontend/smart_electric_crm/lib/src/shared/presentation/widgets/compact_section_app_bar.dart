@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 
 class SectionAppBarCollapseController extends ChangeNotifier {
   SectionAppBarCollapseController({
@@ -135,8 +136,10 @@ class CompactSectionAppBar extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final textStyles = context.appTextStyles;
+    final isDark = theme.brightness == Brightness.dark;
     final colors = gradientColors ??
         (isDark
             ? AppDesignTokens.subtleSectionGradientDark
@@ -160,6 +163,21 @@ class CompactSectionAppBar extends StatelessWidget
             .clamp(0.0, 1.0);
     final titleSpacing = lerpDouble(2, 0, progress)!;
     final bottomRadius = lerpDouble(AppDesignTokens.radiusM, 10, progress)!;
+    final baseTitleStyle = TextStyle.lerp(
+            textStyles.pageTitle, textStyles.sectionTitle, progress) ??
+        textStyles.pageTitle;
+    final titleTextStyle = baseTitleStyle.copyWith(
+      color: foreground,
+      fontSize: titleFontSize,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.2,
+      height: titleLineHeight,
+    );
+    final subtitleTextStyle = textStyles.secondaryBody.copyWith(
+      fontSize: 13,
+      color: subtitleColor,
+      height: 1.1,
+    );
 
     return AppBar(
       automaticallyImplyLeading: leading == null,
@@ -223,12 +241,7 @@ class CompactSectionAppBar extends StatelessWidget
             ),
       iconTheme: IconThemeData(color: foreground),
       actionsIconTheme: IconThemeData(color: foreground),
-      titleTextStyle: TextStyle(
-        color: foreground,
-        fontSize: titleFontSize,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.2,
-      ),
+      titleTextStyle: titleTextStyle,
       title: SizedBox(
         height: _totalHeight,
         child: Row(
@@ -254,12 +267,7 @@ class CompactSectionAppBar extends StatelessWidget
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: titleFontSize,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.2,
-                      height: titleLineHeight,
-                    ),
+                    style: titleTextStyle,
                   ),
                   if (subtitle != null && subtitle!.trim().isNotEmpty)
                     ClipRect(
@@ -274,12 +282,7 @@ class CompactSectionAppBar extends StatelessWidget
                               subtitle!,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: subtitleColor,
-                                fontWeight: FontWeight.w400,
-                                height: 1.1,
-                              ),
+                              style: subtitleTextStyle,
                             ),
                           ),
                         ),

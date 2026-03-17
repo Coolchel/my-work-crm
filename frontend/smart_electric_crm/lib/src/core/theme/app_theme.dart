@@ -212,9 +212,11 @@ class AppTheme {
             ? scheme.surfaceContainerHigh
             : scheme.surfaceContainer.withOpacity(0.45),
         labelStyle: appTextStyles.fieldLabel.copyWith(
+          fontSize: 13.5,
           color: scheme.onSurfaceVariant,
         ),
         floatingLabelStyle: appTextStyles.fieldLabel.copyWith(
+          fontSize: 13.5,
           color: scheme.primary,
         ),
         hintStyle: appTextStyles.secondaryBody.copyWith(
