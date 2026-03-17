@@ -103,10 +103,7 @@ class InlineSaveButton extends StatelessWidget {
                   const SizedBox(width: 10),
                   Text(
                     effectiveLabel,
-                    style: textStyles.button.copyWith(
-                      color: textColor,
-                      fontSize: 13,
-                    ),
+                    style: textStyles.button.copyWith(color: textColor),
                   ),
                 ],
               ),

@@ -116,6 +116,11 @@ class _DesktopSideMenuButtonState extends State<_DesktopSideMenuButton> {
         : _isHovered
             ? scheme.onSurface
             : scheme.onSurfaceVariant;
+    final labelStyle = textStyles.navLabel.copyWith(
+      color: foregroundColor,
+      fontSize: 13,
+      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+    );
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -168,9 +173,9 @@ class _DesktopSideMenuButtonState extends State<_DesktopSideMenuButton> {
                       Expanded(
                         child: Text(
                           widget.item.label,
-                          style: textStyles.cardTitle.copyWith(
-                            color: foregroundColor,
-                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: labelStyle,
                         ),
                       ),
                     ],
