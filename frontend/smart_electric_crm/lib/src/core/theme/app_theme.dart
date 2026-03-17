@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'app_design_tokens.dart';
+import 'app_typography.dart';
 
 class AppTheme {
   const AppTheme._();
@@ -64,11 +65,14 @@ class AppTheme {
       platform: typographyPlatform,
       colorScheme: scheme,
     );
+    final appTextStyles = AppTypography.build(
+      scheme: scheme,
+      fontFamily: fontFamily,
+      fontFamilyFallback: fontFamilyFallback,
+    );
     final selectedNavColor = scheme.primary;
     final unselectedNavColor = scheme.onSurfaceVariant;
     final isDark = scheme.brightness == Brightness.dark;
-    final bodyColor =
-        isDark ? scheme.onSurface.withOpacity(0.76) : scheme.onSurface;
     final secondaryColor =
         isDark ? scheme.onSurface.withOpacity(0.62) : scheme.onSurfaceVariant;
     final hoverOverlayColor = isDark
@@ -89,36 +93,14 @@ class AppTheme {
       brightness: scheme.brightness,
       typography: typography,
       fontFamily: fontFamily,
-    )
-        .textTheme
-        .apply(
+    ).textTheme.apply(
           fontFamily: fontFamily,
           fontFamilyFallback: fontFamilyFallback,
-        )
-        .copyWith(
-          headlineSmall: TextStyle(
-            color:
-                isDark ? scheme.onSurface.withOpacity(0.92) : scheme.onSurface,
-            fontWeight: FontWeight.w700,
-          ),
-          titleLarge: TextStyle(
-            color:
-                isDark ? scheme.onSurface.withOpacity(0.90) : scheme.onSurface,
-            fontWeight: FontWeight.w700,
-          ),
-          titleMedium: TextStyle(
-            color:
-                isDark ? scheme.onSurface.withOpacity(0.88) : scheme.onSurface,
-            fontWeight: FontWeight.w600,
-          ),
-          bodyLarge: TextStyle(color: bodyColor),
-          bodyMedium: TextStyle(color: bodyColor),
-          bodySmall: TextStyle(color: secondaryColor),
-          labelLarge: TextStyle(
-            color:
-                isDark ? scheme.onSurface.withOpacity(0.88) : scheme.onSurface,
-          ),
         );
+    final resolvedTextTheme = AppTypography.buildTextTheme(
+      baseTextTheme: textTheme,
+      textStyles: appTextStyles,
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -127,7 +109,8 @@ class AppTheme {
       typography: typography,
       fontFamily: fontFamily,
       fontFamilyFallback: fontFamilyFallback,
-      textTheme: textTheme,
+      textTheme: resolvedTextTheme,
+      extensions: <ThemeExtension<dynamic>>[appTextStyles],
       scaffoldBackgroundColor: scaffoldBackground,
       dividerColor: scheme.outlineVariant,
       appBarTheme: AppBarTheme(
@@ -153,10 +136,9 @@ class AppTheme {
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
-          return TextStyle(
+          return appTextStyles.navLabel.copyWith(
             color: isSelected ? selectedNavColor : unselectedNavColor,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            fontSize: 12,
           );
         }),
       ),
@@ -229,8 +211,18 @@ class AppTheme {
         fillColor: isDark
             ? scheme.surfaceContainerHigh
             : scheme.surfaceContainer.withOpacity(0.45),
-        labelStyle: TextStyle(color: scheme.onSurfaceVariant),
-        hintStyle: TextStyle(color: scheme.onSurfaceVariant.withOpacity(0.8)),
+        labelStyle: appTextStyles.fieldLabel.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
+        floatingLabelStyle: appTextStyles.fieldLabel.copyWith(
+          color: scheme.primary,
+        ),
+        hintStyle: appTextStyles.secondaryBody.copyWith(
+          color: scheme.onSurfaceVariant.withOpacity(0.8),
+        ),
+        helperStyle: appTextStyles.caption.copyWith(color: secondaryColor),
+        errorStyle: appTextStyles.caption.copyWith(color: scheme.error),
+        counterStyle: appTextStyles.caption.copyWith(color: secondaryColor),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
@@ -250,7 +242,7 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: scheme.surfaceContainerHigh,
-        contentTextStyle: TextStyle(color: scheme.onSurface),
+        contentTextStyle: appTextStyles.body.copyWith(color: scheme.onSurface),
         behavior: SnackBarBehavior.fixed,
       ),
       splashColor: highlightOverlayColor,
