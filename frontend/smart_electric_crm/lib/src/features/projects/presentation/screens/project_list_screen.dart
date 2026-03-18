@@ -15,6 +15,7 @@ import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
+import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
@@ -1194,7 +1195,7 @@ class _ProjectCardState extends State<_ProjectCard> {
       _buildInfoItem(
         icon: Icons.layers_outlined,
         label: 'Этапов',
-        value: '${project.stages.length}',
+        value: AppNumberFormatter.integer(project.stages.length),
       ),
     ];
 
@@ -1249,7 +1250,7 @@ class _ProjectCardState extends State<_ProjectCard> {
                 _buildInfoItem(
                   icon: Icons.layers_outlined,
                   label: 'Этапов',
-                  value: '${project.stages.length}',
+                  value: AppNumberFormatter.integer(project.stages.length),
                   compact: true,
                 ),
               ),

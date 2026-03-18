@@ -16,6 +16,7 @@ import '../../../../../shared/presentation/dialogs/text_input_dialog.dart';
 import '../../dialogs/engineering/shield_notes_dialog.dart';
 import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../../core/theme/app_typography.dart';
+import '../../../../../core/utils/app_number_formatter.dart';
 import '../../../../../shared/presentation/widgets/desktop_web_frame.dart';
 
 class ShieldCard extends ConsumerStatefulWidget {
@@ -662,7 +663,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     if (size == null) return '';
     final count = int.tryParse(size);
     if (count == null) return size; // E.g. "Индивидуальный расчет"
-    return '$count ${_getModulesText(count)}';
+    return '${AppNumberFormatter.integer(count)} ${_getModulesText(count)}';
   }
 
   String _getModulesText(int count) {

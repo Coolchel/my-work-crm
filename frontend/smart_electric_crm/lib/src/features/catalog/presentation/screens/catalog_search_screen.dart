@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import '../../data/catalog_repository.dart';
 import '../../domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
@@ -97,8 +98,8 @@ class _CatalogSearchScreenState extends ConsumerState<CatalogSearchScreen> {
           decoration: InputDecoration(
             hintText: "Поиск в каталоге...",
             border: InputBorder.none,
-            hintStyle:
-                TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            hintStyle: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
@@ -147,7 +148,7 @@ class _CatalogSearchScreenState extends ConsumerState<CatalogSearchScreen> {
                             style:
                                 const TextStyle(fontWeight: FontWeight.w500)),
                         subtitle: Text(
-                            "${item.defaultPrice} ${item.defaultCurrency} / ${item.unit}"),
+                            "${AppNumberFormatter.decimal(item.defaultPrice)} ${item.defaultCurrency} / ${item.unit}"),
                         trailing: const Icon(Icons.add_circle_outline,
                             color: Colors.grey),
                         onTap: () {

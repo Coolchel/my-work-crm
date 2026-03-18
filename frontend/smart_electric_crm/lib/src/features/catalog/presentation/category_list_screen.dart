@@ -11,6 +11,7 @@ import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart
 import 'package:smart_electric_crm/src/features/catalog/domain/directory_models.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
+import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
+import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
@@ -329,7 +330,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                     if (!widget.hidePrices) ...[
                       const SizedBox(height: 2),
                       Text(
-                        "${item.defaultPrice} ${item.defaultCurrency} / ${item.unit}",
+                        "${AppNumberFormatter.decimal(item.defaultPrice)} ${item.defaultCurrency} / ${item.unit}",
                         style: textStyles.caption.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),

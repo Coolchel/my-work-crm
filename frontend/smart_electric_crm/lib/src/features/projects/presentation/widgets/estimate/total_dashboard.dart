@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 
 /// Comprehensive dashboard for summary totals.
 class TotalDashboard extends StatelessWidget {
@@ -173,8 +174,8 @@ class TotalDashboard extends StatelessWidget {
 
   Widget _amount(double value, Color color, bool isBold, {required bool show}) {
     final formattedValue = isWorkTab
-        ? value.toStringAsFixed(0)
-        : value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
+        ? AppNumberFormatter.integer(value)
+        : AppNumberFormatter.decimal(value);
 
     return SizedBox(
       width: 70,

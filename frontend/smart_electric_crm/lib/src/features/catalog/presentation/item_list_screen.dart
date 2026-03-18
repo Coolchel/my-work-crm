@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
@@ -41,7 +42,7 @@ class ItemListScreen extends ConsumerWidget {
                     const Icon(Icons.inventory_2_outlined, color: Colors.blue),
                 title: Text(item.name),
                 trailing: Text(
-                  '${item.defaultPrice.toStringAsFixed(2)}\$ / ${item.unit}',
+                  '${AppNumberFormatter.decimal(item.defaultPrice)}\$ / ${item.unit}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

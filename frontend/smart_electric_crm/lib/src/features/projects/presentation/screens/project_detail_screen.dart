@@ -19,6 +19,7 @@ import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/constants/api_urls.dart';
+import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import '../../../settings/application/app_settings_controller.dart';
 import 'dart:io';
 import '../../data/models/project_file_model.dart';
@@ -942,7 +943,7 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
 
         if (sizeInMb > 20) {
           sizeErrors.add(
-            '${pickedFile.name} (${sizeInMb.toStringAsFixed(1)} МБ)',
+            '${pickedFile.name} (${AppNumberFormatter.decimal(sizeInMb, maxFractionDigits: 1, minFractionDigits: 1)} МБ)',
           );
           continue;
         }
@@ -1862,7 +1863,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
           ),
           const SizedBox(width: 6),
           Text(
-            '$count',
+            AppNumberFormatter.integer(count),
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,

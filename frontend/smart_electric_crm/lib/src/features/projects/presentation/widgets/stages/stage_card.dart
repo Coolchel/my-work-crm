@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
+import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/card_meta_info_block.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 
@@ -289,14 +290,15 @@ class _StageCardState extends State<StageCard> {
       _buildMetaBlock(
         icon: Icons.handyman_outlined,
         label: 'Работы',
-        value: '${widget.stage.totalAmountUsd.toStringAsFixed(0)} \$',
+        value: '${AppNumberFormatter.integer(widget.stage.totalAmountUsd)} \$',
         color: Colors.green,
         compact: false,
       ),
       _buildMetaBlock(
         icon: Icons.inventory_2_outlined,
         label: 'Материалы',
-        value: '${widget.stage.totalAmountMaterialsUsd.toStringAsFixed(0)} \$',
+        value:
+            '${AppNumberFormatter.integer(widget.stage.totalAmountMaterialsUsd)} \$',
         color: Colors.blue,
         compact: false,
       ),
@@ -344,7 +346,8 @@ class _StageCardState extends State<StageCard> {
                 _buildMetaBlock(
                   icon: Icons.handyman_outlined,
                   label: 'Работы',
-                  value: '${widget.stage.totalAmountUsd.toStringAsFixed(0)} \$',
+                  value:
+                      '${AppNumberFormatter.integer(widget.stage.totalAmountUsd)} \$',
                   color: Colors.green,
                   compact: true,
                 ),
@@ -357,7 +360,7 @@ class _StageCardState extends State<StageCard> {
                   icon: Icons.inventory_2_outlined,
                   label: 'Материалы',
                   value:
-                      '${widget.stage.totalAmountMaterialsUsd.toStringAsFixed(0)} \$',
+                      '${AppNumberFormatter.integer(widget.stage.totalAmountMaterialsUsd)} \$',
                   color: Colors.blue,
                   compact: true,
                 ),

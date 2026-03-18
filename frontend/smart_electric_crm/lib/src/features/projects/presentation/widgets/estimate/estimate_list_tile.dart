@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/estimate/edit_item_dialog.dart';
 
@@ -37,13 +38,13 @@ class _EstimateListTileState extends State<EstimateListTile> {
 
   String _formatQuantity(double value) {
     if (widget.item.itemType == 'work') {
-      return value.toStringAsFixed(0);
+      return AppNumberFormatter.integer(value);
     }
-    return value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
+    return AppNumberFormatter.decimal(value);
   }
 
   String _formatMoney(double value) {
-    return value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
+    return AppNumberFormatter.decimal(value);
   }
 
   String _formatCurrencyAmount(double value, bool isUsd) {

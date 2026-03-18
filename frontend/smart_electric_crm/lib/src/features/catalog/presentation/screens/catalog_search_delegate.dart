@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import '../../data/catalog_repository.dart';
 import '../../domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
@@ -84,7 +85,7 @@ class CatalogSearchDelegate extends SearchDelegate<CatalogItem?> {
               ),
               title: Text(item.name),
               subtitle: Text(
-                  "${item.defaultPrice} ${item.defaultCurrency} / ${item.unit}"),
+                  "${AppNumberFormatter.decimal(item.defaultPrice)} ${item.defaultCurrency} / ${item.unit}"),
               onTap: () {
                 close(context, item);
               },

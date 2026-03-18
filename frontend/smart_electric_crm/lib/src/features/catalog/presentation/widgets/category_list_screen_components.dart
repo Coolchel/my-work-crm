@@ -606,7 +606,7 @@ class _CatalogTabState extends ConsumerState<_CatalogTab> {
               title: category.name,
               subtitle: 'slug: ${category.slug}',
               extraText:
-                  'Коэффициент труда: ${category.laborCoefficient.toStringAsFixed(2)}',
+                  'Коэффициент труда: ${AppNumberFormatter.decimal(category.laborCoefficient)}',
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -837,7 +837,7 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
                     : Icons.inventory_2_outlined,
                 title: item.name,
                 subtitle:
-                    '${item.itemType} | ${item.defaultPrice.toStringAsFixed(2)} ${item.defaultCurrency} / ${item.unit}',
+                    '${item.itemType} | ${AppNumberFormatter.decimal(item.defaultPrice)} ${item.defaultCurrency} / ${item.unit}',
                 extraText: _itemDetails(item),
                 onTap: () async {
                   final workItems =

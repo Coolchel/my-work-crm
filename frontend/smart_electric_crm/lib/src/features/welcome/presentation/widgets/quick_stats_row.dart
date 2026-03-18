@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
+import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/help_tooltip_icon.dart';
 
 import '../../../projects/presentation/providers/project_providers.dart';
@@ -77,7 +78,7 @@ class QuickStatsRow extends ConsumerWidget {
                   Expanded(
                     child: _StatCard(
                       title: 'Предпросчеты',
-                      value: preCalcCount.toString(),
+                      value: AppNumberFormatter.integer(preCalcCount),
                       icon: Icons.calculate_outlined,
                       color: Colors.blue,
                       onTap: () => onStatSelected?.call(
@@ -92,7 +93,7 @@ class QuickStatsRow extends ConsumerWidget {
                   Expanded(
                     child: _StatCard(
                       title: 'Текущие',
-                      value: activeObjectsCount.toString(),
+                      value: AppNumberFormatter.integer(activeObjectsCount),
                       icon: Icons.engineering,
                       color: Colors.orange,
                       onTap: () => onStatSelected?.call(
@@ -110,7 +111,7 @@ class QuickStatsRow extends ConsumerWidget {
                   Expanded(
                     child: _StatCard(
                       title: 'Оплачено',
-                      value: paidCount.toString(),
+                      value: AppNumberFormatter.integer(paidCount),
                       icon: Icons.check_circle_outline,
                       color: Colors.green,
                       onTap: () => onStatSelected
