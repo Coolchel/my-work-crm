@@ -1373,33 +1373,7 @@ class _PopupSelectOption<T> {
   });
 }
 
-bool _isCatalogPopupTouchPlatform() {
-  switch (defaultTargetPlatform) {
-    case TargetPlatform.android:
-    case TargetPlatform.iOS:
-    case TargetPlatform.fuchsia:
-      return true;
-    case TargetPlatform.linux:
-    case TargetPlatform.macOS:
-    case TargetPlatform.windows:
-      return false;
-  }
-}
-
-List<PopupMenuEntry<T>> _buildPopupMenuEntriesWithDividers<T>(
-  List<PopupMenuEntry<T>> entries,
-) {
-  final result = <PopupMenuEntry<T>>[];
-  for (var index = 0; index < entries.length; index++) {
-    if (index > 0) {
-      result.add(const PopupMenuDivider(height: 1));
-    }
-    result.add(entries[index]);
-  }
-  return result;
-}
-
-class _DialogPopupSelectField<T> extends StatefulWidget {
+class _DialogPopupSelectField<T> extends StatelessWidget {
   final String label;
   final T value;
   final List<_PopupSelectOption<T>> options;
@@ -1415,159 +1389,33 @@ class _DialogPopupSelectField<T> extends StatefulWidget {
   });
 
   @override
-  State<_DialogPopupSelectField<T>> createState() =>
-      _DialogPopupSelectFieldState<T>();
-}
-
-class _DialogPopupSelectFieldState<T>
-    extends State<_DialogPopupSelectField<T>> {
-  bool _isHovered = false;
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final textStyles = context.appTextStyles;
-    final scheme = Theme.of(context).colorScheme;
-    final isTouchPlatform = _isCatalogPopupTouchPlatform();
-    final menuHoverColor = AppDesignTokens.isDark(context)
-        ? Colors.white.withOpacity(0.08)
-        : Colors.black.withOpacity(0.045);
-    final selected = widget.options.cast<_PopupSelectOption<T>?>().firstWhere(
-          (option) => option?.value == widget.value,
+    final selected = options.cast<_PopupSelectOption<T>?>().firstWhere(
+          (option) => option?.value == value,
           orElse: () => null,
         );
-    final displayText = selected?.label ?? widget.placeholder ?? '';
-    if (_controller.text != displayText) {
-      _controller.value = TextEditingValue(
-        text: displayText,
-        selection: TextSelection.collapsed(offset: displayText.length),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return MouseRegion(
-          onEnter: (_) => setState(() => _isHovered = true),
-          onExit: (_) => setState(() => _isHovered = false),
-          cursor: SystemMouseCursors.click,
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              hoverColor: menuHoverColor,
-              highlightColor: menuHoverColor,
-              splashColor: menuHoverColor,
-              popupMenuTheme: Theme.of(context).popupMenuTheme.copyWith(
-                    color: Theme.of(context).colorScheme.surface,
-                    surfaceTintColor: Colors.transparent,
-                    mouseCursor: const WidgetStatePropertyAll<MouseCursor>(
-                      SystemMouseCursors.click,
-                    ),
-                  ),
-            ),
-            child: PopupMenuButton<T>(
-              tooltip: '',
-              padding: EdgeInsets.zero,
-              menuPadding: EdgeInsets.zero,
-              elevation: 6,
-              shadowColor: AppDesignTokens.cardShadow(context),
-              surfaceTintColor: Colors.transparent,
-              color: Theme.of(context).colorScheme.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: AppDesignTokens.softBorder(context),
-                ),
-              ),
-              clipBehavior: Clip.antiAlias,
-              position: isTouchPlatform
-                  ? PopupMenuPosition.under
-                  : PopupMenuPosition.over,
-              offset: Offset(
-                0,
-                isTouchPlatform ? 2 : 48,
-              ),
-              constraints: BoxConstraints(
-                minWidth: constraints.maxWidth,
-                maxWidth: constraints.maxWidth,
-              ),
-              onSelected: widget.onChanged,
-              itemBuilder: (context) => _buildPopupMenuEntriesWithDividers(
-                widget.options
-                    .map(
-                      (option) => PopupMenuItem<T>(
-                        value: option.value,
-                        height: 40,
-                        mouseCursor: SystemMouseCursors.click,
-                        textStyle: textStyles.body.copyWith(
-                          color: scheme.onSurface,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Text(
-                            option.label,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-              child: IgnorePointer(
-                child: TextField(
-                  controller: _controller,
-                  readOnly: true,
-                  showCursor: false,
-                  enableInteractiveSelection: false,
-                  textAlignVertical: TextAlignVertical.center,
-                  style: textStyles.input.copyWith(
-                    color: scheme.onSurface,
-                  ),
-                  decoration: _dialogInputDecoration(
-                    context,
-                    label: widget.label,
-                    constraints: const BoxConstraints(
-                      minHeight: _catalogDialogSingleLineFieldHeight,
-                      maxHeight: _catalogDialogSingleLineFieldHeight,
-                    ),
-                    contentPadding: const EdgeInsets.fromLTRB(16, 18, 12, 10),
-                  ).copyWith(
-                    fillColor: _isHovered
-                        ? Colors.indigo.withOpacity(0.04)
-                        : _dialogFieldFillColor(context),
-                    suffixIcon: Align(
-                      widthFactor: 1,
-                      heightFactor: 1,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 22,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                    suffixIconConstraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 24,
-                    ),
+    return AppPopupSelectField<T>(
+      fieldLabel: label,
+      valueLabel: selected?.label ?? placeholder ?? '',
+      items: buildPopupMenuEntriesWithDividers(
+        options
+            .map(
+              (option) => PopupMenuItem<T>(
+                value: option.value,
+                height: 40,
+                mouseCursor: SystemMouseCursors.click,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    option.label,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
-            ),
-          ),
-        );
-      },
+            )
+            .toList(),
+      ),
+      onSelected: onChanged,
     );
   }
 }

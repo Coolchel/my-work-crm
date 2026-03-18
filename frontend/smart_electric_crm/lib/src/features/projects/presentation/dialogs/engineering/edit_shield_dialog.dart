@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
 import '../../../../engineering/data/models/shield_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
@@ -135,62 +136,46 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
                     ),
                     const SizedBox(height: 16),
                     // Mounting Dropdown
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Text(
-                            "Монтаж",
-                            style: textStyles.fieldLabel.copyWith(
-                              color: scheme.onSurfaceVariant,
+                    AppPopupSelectField<String>(
+                      fieldLabel: "Монтаж",
+                      valueLabel: _getMountingLabel(_mounting),
+                      items: buildPopupMenuEntriesWithDividers([
+                        PopupMenuItem(
+                          value: 'internal',
+                          height: 40,
+                          mouseCursor: SystemMouseCursors.click,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              children: [
+                                Icon(Icons.door_front_door,
+                                    color: Colors.indigo.shade400, size: 20),
+                                const SizedBox(width: 12),
+                                const Text('Внутренний',
+                                    style: TextStyle(fontSize: 13)),
+                              ],
                             ),
                           ),
                         ),
-                        _buildPopupBtn(
-                          _getMountingLabel(_mounting),
-                          [
-                            PopupMenuItem(
-                              value: 'internal',
-                              height: 40,
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.door_front_door,
-                                        color: Colors.indigo.shade400,
-                                        size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('Внутренний',
-                                        style: TextStyle(fontSize: 13)),
-                                  ],
-                                ),
-                              ),
+                        PopupMenuItem(
+                          value: 'external',
+                          height: 40,
+                          mouseCursor: SystemMouseCursors.click,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Row(
+                              children: [
+                                Icon(Icons.apartment,
+                                    color: Colors.indigo.shade400, size: 20),
+                                const SizedBox(width: 12),
+                                const Text('Наружный',
+                                    style: TextStyle(fontSize: 13)),
+                              ],
                             ),
-                            const PopupMenuDivider(),
-                            PopupMenuItem(
-                              value: 'external',
-                              height: 40,
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.apartment,
-                                        color: Colors.indigo.shade400,
-                                        size: 20),
-                                    const SizedBox(width: 12),
-                                    const Text('Наружный',
-                                        style: TextStyle(fontSize: 13)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                          (value) => setState(() => _mounting = value),
+                          ),
                         ),
-                      ],
+                      ]),
+                      onSelected: (value) => setState(() => _mounting = value),
                     ),
                   ],
                 ),
@@ -272,78 +257,5 @@ class _EditShieldDialogState extends State<EditShieldDialog> {
       default:
         return '';
     }
-  }
-
-  Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,
-      ValueChanged<String> onSelected) {
-    const bg = Colors.indigo;
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = AppDesignTokens.isDark(context);
-    final textStyles = context.appTextStyles;
-    final menuBackgroundColor =
-        isDark ? scheme.surfaceContainerHigh : scheme.surfaceContainer;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppDesignTokens.surface2(context),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppDesignTokens.softBorder(context)),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Material(
-              color: Colors.transparent,
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  popupMenuTheme: PopupMenuThemeData(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    elevation: 4,
-                    color: menuBackgroundColor,
-                    surfaceTintColor: Colors.transparent,
-                  ),
-                ),
-                child: PopupMenuButton<String>(
-                  tooltip: '', // Remove tooltip
-                  offset: const Offset(0, 48),
-                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  onSelected: onSelected,
-                  itemBuilder: (context) => items,
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: InkWell(
-                      onTap: null, // PopupMenuButton handles tap
-                      hoverColor: bg.shade700.withOpacity(isDark ? 0.12 : 0.05),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              label,
-                              style: textStyles.bodyStrong.copyWith(
-                                color: isDark ? scheme.onSurface : bg.shade800,
-                              ),
-                            ),
-                            Icon(Icons.arrow_drop_down,
-                                color: isDark ? scheme.onSurface : bg.shade800,
-                                size: 24),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 }

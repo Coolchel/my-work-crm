@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../../../../engineering/data/models/shield_group_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
@@ -36,7 +37,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
   final Map<String, String> _deviceTypes = {
     'circuit_breaker': 'Автомат',
     'diff_breaker': 'Диф.автомат',
-    'rcd': 'РЈР—Рћ',
+    'rcd': 'УЗО',
     'relay': 'Реле напряжения',
     'contactor': 'Контактор',
     'load_switch': 'Выключатель нагрузки',
@@ -151,180 +152,142 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Device Type Dropdown
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        AppPopupSelectField<String>(
+                          fieldLabel: "Тип устройства",
+                          valueLabel: _deviceTypes[_selectedDeviceType] ??
+                              'Диф.автомат',
+                          items: buildPopupMenuEntriesWithDividers(
+                            _deviceTypes.entries
+                                .map((e) => PopupMenuItem<String>(
+                                      value: e.key,
+                                      height: 40,
+                                      mouseCursor: SystemMouseCursors.click,
+                                      padding: EdgeInsets.zero,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              _getDeviceIcon(e.key),
+                                              size: 18,
+                                              color: _getDeviceTypeColor(e.key)
+                                                  .withOpacity(0.7),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            Text(e.value,
+                                                style: const TextStyle(
+                                                    fontSize: 13)),
+                                          ],
+                                        ),
+                                      ),
+                                    ))
+                                .toList(),
+                          ),
+                          onSelected: (value) =>
+                              setState(() => _selectedDeviceType = value),
+                        ),
+                        const SizedBox(height: 10),
+                        // Rating and Poles Row
+                        Row(
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Text(
-                                "Тип устройства",
-                                style: textStyles.fieldLabel.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-                            _buildPopupBtn(
-                              _deviceTypes[_selectedDeviceType] ??
-                                  'Диф.автомат',
-                              _withMenuDividers(
-                                _deviceTypes.entries
-                                    .map((e) => PopupMenuItem<String>(
-                                          value: e.key,
+                            Expanded(
+                              child: AppPopupSelectField<String>(
+                                fieldLabel: "Номинал",
+                                valueLabel: _selectedRating,
+                                items: buildPopupMenuEntriesWithDividers(
+                                  [
+                                    '6A',
+                                    '10A',
+                                    '16A',
+                                    '20A',
+                                    '25A',
+                                    '32A',
+                                    '40A',
+                                    '50A',
+                                    '63A',
+                                    '80A'
+                                  ]
+                                      .map(
+                                        (choice) => PopupMenuItem<String>(
+                                          value: choice,
                                           height: 40,
+                                          mouseCursor: SystemMouseCursors.click,
                                           padding: EdgeInsets.zero,
-                                          child: Container(
+                                          child: Padding(
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 16),
-                                            alignment: Alignment.centerLeft,
                                             child: Row(
                                               children: [
-                                                Icon(
-                                                  _getDeviceIcon(e.key),
-                                                  size: 18,
-                                                  color:
-                                                      _getDeviceTypeColor(e.key)
-                                                          .withOpacity(0.7),
-                                                ),
-                                                const SizedBox(width: 10),
-                                                Text(e.value,
+                                                Icon(Icons.flash_on,
+                                                    color:
+                                                        Colors.orange.shade600,
+                                                    size: 18),
+                                                const SizedBox(width: 8),
+                                                Text(choice,
                                                     style: const TextStyle(
                                                         fontSize: 13)),
                                               ],
                                             ),
                                           ),
-                                        ))
-                                    .toList(),
-                              ),
-                              (value) =>
-                                  setState(() => _selectedDeviceType = value),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        // Rating and Poles Row
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    child: Text(
-                                      "Номинал",
-                                      style: textStyles.fieldLabel.copyWith(
-                                        color: scheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ),
-                                  _buildPopupBtn(
-                                    _selectedRating,
-                                    _withMenuDividers(
-                                      [
-                                        '6A',
-                                        '10A',
-                                        '16A',
-                                        '20A',
-                                        '25A',
-                                        '32A',
-                                        '40A',
-                                        '50A',
-                                        '63A',
-                                        '80A'
-                                      ]
-                                          .map((choice) =>
-                                              PopupMenuItem<String>(
-                                                value: choice,
-                                                height: 40,
-                                                padding: EdgeInsets.zero,
-                                                child: Container(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 16),
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.flash_on,
-                                                          color: Colors
-                                                              .orange.shade600,
-                                                          size: 18),
-                                                      const SizedBox(width: 8),
-                                                      Text(choice,
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontSize:
-                                                                      13)),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ))
-                                          .toList(),
-                                    ),
-                                    (value) =>
-                                        setState(() => _selectedRating = value),
-                                  ),
-                                ],
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                                onSelected: (value) =>
+                                    setState(() => _selectedRating = value),
                               ),
                             ),
-                            const SizedBox(width: 16),
+                            const SizedBox(width: 10),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    child: Text(
-                                      "Полюса",
-                                      style: textStyles.fieldLabel.copyWith(
-                                        color: scheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ),
-                                  _buildPopupBtn(
-                                    _selectedPoles,
-                                    _withMenuDividers(
-                                      ['1P', '2P', '3P', '4P']
-                                          .map((choice) =>
-                                              PopupMenuItem<String>(
-                                                value: choice,
-                                                height: 40,
-                                                padding: EdgeInsets.zero,
-                                                child: Container(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 16),
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.electric_bolt,
-                                                          color: Colors
-                                                              .blue.shade600,
-                                                          size: 18),
-                                                      const SizedBox(width: 8),
-                                                      Text(choice,
-                                                          style:
-                                                              const TextStyle(
-                                                                  fontSize:
-                                                                      13)),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ))
-                                          .toList(),
-                                    ),
-                                    (value) =>
-                                        setState(() => _selectedPoles = value),
-                                  ),
-                                ],
+                              child: AppPopupSelectField<String>(
+                                fieldLabel: "Полюса",
+                                valueLabel: _selectedPoles,
+                                items: buildPopupMenuEntriesWithDividers(
+                                  ['1P', '2P', '3P', '4P']
+                                      .map(
+                                        (choice) => PopupMenuItem<String>(
+                                          value: choice,
+                                          height: 40,
+                                          mouseCursor: SystemMouseCursors.click,
+                                          padding: EdgeInsets.zero,
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 16),
+                                            child: Row(
+                                              children: [
+                                                Icon(Icons.electric_bolt,
+                                                    color: Colors.blue.shade600,
+                                                    size: 18),
+                                                const SizedBox(width: 8),
+                                                Text(choice,
+                                                    style: const TextStyle(
+                                                        fontSize: 13)),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                                onSelected: (value) =>
+                                    setState(() => _selectedPoles = value),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 10),
                         TextField(
                           controller: _zoneController,
+                          textAlignVertical: TextAlignVertical.center,
                           decoration: InputDecoration(
                             labelText: "Зона / Потребитель",
                             floatingLabelBehavior: FloatingLabelBehavior.always,
                             hintText: "Например: Кухня",
+                            constraints: const BoxConstraints(
+                              minHeight: appPopupSelectFieldHeight,
+                              maxHeight: appPopupSelectFieldHeight,
+                            ),
                             hintStyle: textStyles.secondaryBody.copyWith(
                               color: scheme.onSurfaceVariant.withOpacity(0.75),
                             ),
@@ -435,98 +398,6 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
           ),
         ),
       ),
-    );
-  }
-
-  List<PopupMenuEntry<String>> _withMenuDividers(
-      List<PopupMenuEntry<String>> entries) {
-    final result = <PopupMenuEntry<String>>[];
-    for (var i = 0; i < entries.length; i++) {
-      result.add(entries[i]);
-      if (i < entries.length - 1) {
-        result.add(const PopupMenuDivider(height: 1));
-      }
-    }
-    return result;
-  }
-
-  Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,
-      ValueChanged<String> onSelected) {
-    const bg = Colors.brown;
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = AppDesignTokens.isDark(context);
-    final textStyles = context.appTextStyles;
-    final popupBackgroundColor =
-        (isDark ? scheme.surfaceContainerHigh : scheme.surface).withOpacity(1);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          height: 44,
-          decoration: BoxDecoration(
-            color: popupBackgroundColor,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppDesignTokens.softBorder(context)),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              onTap: () {
-                final RenderBox box = context.findRenderObject() as RenderBox;
-                final Offset position = box.localToGlobal(Offset.zero);
-                final Size size = box.size;
-
-                // Configure Theme to remove dividers/decorations from showMenu
-                showMenu<String>(
-                  context: context,
-                  position: RelativeRect.fromLTRB(
-                    position.dx,
-                    position.dy + size.height + 4, // 4px offset
-                    position.dx + size.width,
-                    position.dy + size.height + 300,
-                  ),
-                  items: items,
-                  elevation: 4,
-                  shadowColor: AppDesignTokens.cardShadow(context),
-                  surfaceTintColor: Colors.transparent, // Disable M3 tint
-                  color: popupBackgroundColor,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  constraints: BoxConstraints(
-                    minWidth: size.width,
-                    maxWidth: size.width,
-                  ),
-                ).then((value) {
-                  if (value != null) {
-                    onSelected(value);
-                  }
-                });
-              },
-              borderRadius: BorderRadius.circular(12),
-              mouseCursor: SystemMouseCursors.click,
-              hoverColor: bg.shade700.withOpacity(isDark ? 0.12 : 0.05),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      label,
-                      style: textStyles.bodyStrong.copyWith(
-                        color: isDark ? scheme.onSurface : bg.shade800,
-                      ),
-                    ),
-                    Icon(Icons.arrow_drop_down,
-                        color: isDark ? scheme.onSurface : bg.shade800,
-                        size: 24),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 

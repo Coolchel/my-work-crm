@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
@@ -152,151 +153,123 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                               ),
                               const SizedBox(height: 16),
                               // Type Dropdown
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    child: Text(
-                                      "Тип",
-                                      style: textStyles.fieldLabel.copyWith(
-                                        color: scheme.onSurfaceVariant,
+                              AppPopupSelectField<String>(
+                                fieldLabel: "Тип",
+                                valueLabel: _getTypeLabel(_type),
+                                items: buildPopupMenuEntriesWithDividers([
+                                  PopupMenuItem(
+                                    value: 'power',
+                                    height: 40,
+                                    mouseCursor: SystemMouseCursors.click,
+                                    padding: EdgeInsets.zero,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.bolt,
+                                              color: Colors.indigo.shade400,
+                                              size: 20),
+                                          const SizedBox(width: 12),
+                                          const Text('Силовой',
+                                              style: TextStyle(fontSize: 13)),
+                                        ],
                                       ),
                                     ),
                                   ),
-                                  _buildPopupBtn(
-                                    _getTypeLabel(_type),
-                                    [
-                                      PopupMenuItem(
-                                        value: 'power',
-                                        height: 40,
-                                        padding: EdgeInsets.zero,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.bolt,
-                                                  color: Colors.indigo.shade400,
-                                                  size: 20),
-                                              const SizedBox(width: 12),
-                                              const Text('Силовой',
-                                                  style:
-                                                      TextStyle(fontSize: 13)),
-                                            ],
-                                          ),
-                                        ),
+                                  PopupMenuItem(
+                                    value: 'multimedia',
+                                    height: 40,
+                                    mouseCursor: SystemMouseCursors.click,
+                                    padding: EdgeInsets.zero,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.router,
+                                              color: Colors.indigo.shade400,
+                                              size: 20),
+                                          const SizedBox(width: 12),
+                                          const Text('Слаботочный',
+                                              style: TextStyle(fontSize: 13)),
+                                        ],
                                       ),
-                                      const PopupMenuDivider(),
-                                      PopupMenuItem(
-                                        value: 'multimedia',
-                                        height: 40,
-                                        padding: EdgeInsets.zero,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.router,
-                                                  color: Colors.indigo.shade400,
-                                                  size: 20),
-                                              const SizedBox(width: 12),
-                                              const Text('Слаботочный',
-                                                  style:
-                                                      TextStyle(fontSize: 13)),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      const PopupMenuDivider(),
-                                      PopupMenuItem(
-                                        value: 'led',
-                                        height: 40,
-                                        padding: EdgeInsets.zero,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.lightbulb,
-                                                  color: Colors.indigo.shade400,
-                                                  size: 20),
-                                              const SizedBox(width: 12),
-                                              const Text('LED',
-                                                  style:
-                                                      TextStyle(fontSize: 13)),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                    (value) => setState(() => _type = value),
+                                    ),
                                   ),
-                                ],
+                                  PopupMenuItem(
+                                    value: 'led',
+                                    height: 40,
+                                    mouseCursor: SystemMouseCursors.click,
+                                    padding: EdgeInsets.zero,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.lightbulb,
+                                              color: Colors.indigo.shade400,
+                                              size: 20),
+                                          const SizedBox(width: 12),
+                                          const Text('LED',
+                                              style: TextStyle(fontSize: 13)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ]),
+                                onSelected: (value) =>
+                                    setState(() => _type = value),
                               ),
                               const SizedBox(height: 16),
                               // Mounting Dropdown
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    child: Text(
-                                      "Монтаж",
-                                      style: textStyles.fieldLabel.copyWith(
-                                        color: scheme.onSurfaceVariant,
+                              AppPopupSelectField<String>(
+                                fieldLabel: "Монтаж",
+                                valueLabel: _getMountingLabel(_mounting),
+                                items: buildPopupMenuEntriesWithDividers([
+                                  PopupMenuItem(
+                                    value: 'internal',
+                                    height: 40,
+                                    mouseCursor: SystemMouseCursors.click,
+                                    padding: EdgeInsets.zero,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.door_front_door,
+                                              color: Colors.indigo.shade400,
+                                              size: 20),
+                                          const SizedBox(width: 12),
+                                          const Text('Внутренний',
+                                              style: TextStyle(fontSize: 13)),
+                                        ],
                                       ),
                                     ),
                                   ),
-                                  _buildPopupBtn(
-                                    _getMountingLabel(_mounting),
-                                    [
-                                      PopupMenuItem(
-                                        value: 'internal',
-                                        height: 40,
-                                        padding: EdgeInsets.zero,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.door_front_door,
-                                                  color: Colors.indigo.shade400,
-                                                  size: 20),
-                                              const SizedBox(width: 12),
-                                              const Text('Внутренний',
-                                                  style:
-                                                      TextStyle(fontSize: 13)),
-                                            ],
-                                          ),
-                                        ),
+                                  PopupMenuItem(
+                                    value: 'external',
+                                    height: 40,
+                                    mouseCursor: SystemMouseCursors.click,
+                                    padding: EdgeInsets.zero,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.apartment,
+                                              color: Colors.indigo.shade400,
+                                              size: 20),
+                                          const SizedBox(width: 12),
+                                          const Text('Наружный',
+                                              style: TextStyle(fontSize: 13)),
+                                        ],
                                       ),
-                                      const PopupMenuDivider(),
-                                      PopupMenuItem(
-                                        value: 'external',
-                                        height: 40,
-                                        padding: EdgeInsets.zero,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.apartment,
-                                                  color: Colors.indigo.shade400,
-                                                  size: 20),
-                                              const SizedBox(width: 12),
-                                              const Text('Наружный',
-                                                  style:
-                                                      TextStyle(fontSize: 13)),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                    (value) =>
-                                        setState(() => _mounting = value),
+                                    ),
                                   ),
-                                ],
+                                ]),
+                                onSelected: (value) =>
+                                    setState(() => _mounting = value),
                               ),
                             ],
                           ),
@@ -396,85 +369,5 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
       default:
         return '';
     }
-  }
-
-  Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,
-      ValueChanged<String> onSelected) {
-    const bg = Colors.indigo;
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = AppDesignTokens.isDark(context);
-    final textStyles = context.appTextStyles;
-    final menuBackgroundColor =
-        isDark ? scheme.surfaceContainerHigh : scheme.surfaceContainer;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppDesignTokens.surface2(context),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppDesignTokens.softBorder(context)),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              onTap: () {
-                final RenderBox box = context.findRenderObject() as RenderBox;
-                final Offset position = box.localToGlobal(Offset.zero);
-                final Size size = box.size;
-
-                // Configure Theme to remove dividers/decorations from showMenu
-                showMenu<String>(
-                  context: context,
-                  position: RelativeRect.fromLTRB(
-                    position.dx,
-                    position.dy + size.height + 4, // 4px offset
-                    position.dx + size.width,
-                    position.dy + size.height + 300,
-                  ),
-                  items: items,
-                  elevation: 4,
-                  shadowColor: AppDesignTokens.cardShadow(context),
-                  surfaceTintColor: Colors.transparent, // Disable M3 tint
-                  color: menuBackgroundColor,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  constraints: BoxConstraints(
-                    minWidth: size.width,
-                    maxWidth: size.width,
-                  ),
-                ).then((value) {
-                  if (value != null) {
-                    onSelected(value);
-                  }
-                });
-              },
-              borderRadius: BorderRadius.circular(12),
-              mouseCursor: SystemMouseCursors.click,
-              hoverColor: bg.shade700.withOpacity(isDark ? 0.12 : 0.05),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      label,
-                      style: textStyles.bodyStrong.copyWith(
-                        color: isDark ? scheme.onSurface : bg.shade800,
-                      ),
-                    ),
-                    Icon(Icons.arrow_drop_down,
-                        color: isDark ? scheme.onSurface : bg.shade800,
-                        size: 24),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 }

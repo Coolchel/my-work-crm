@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
@@ -6,6 +5,7 @@ import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
 class ItemListScreen extends ConsumerWidget {
@@ -95,33 +95,7 @@ Color _catalogDialogFieldFillColor(BuildContext context) {
       : scheme.surfaceContainer.withOpacity(0.4);
 }
 
-const double _catalogDialogSingleLineFieldHeight = 56;
-
-bool _isCatalogPopupTouchPlatform() {
-  switch (defaultTargetPlatform) {
-    case TargetPlatform.android:
-    case TargetPlatform.iOS:
-    case TargetPlatform.fuchsia:
-      return true;
-    case TargetPlatform.linux:
-    case TargetPlatform.macOS:
-    case TargetPlatform.windows:
-      return false;
-  }
-}
-
-List<PopupMenuEntry<T>> _buildPopupMenuEntriesWithDividers<T>(
-  List<PopupMenuEntry<T>> entries,
-) {
-  final result = <PopupMenuEntry<T>>[];
-  for (var index = 0; index < entries.length; index++) {
-    if (index > 0) {
-      result.add(const PopupMenuDivider(height: 1));
-    }
-    result.add(entries[index]);
-  }
-  return result;
-}
+const double _catalogDialogSingleLineFieldHeight = appPopupSelectFieldHeight;
 
 InputDecoration _catalogDialogInputDecoration(
   BuildContext context, {
@@ -195,7 +169,7 @@ class _CatalogDialogTextField extends StatelessWidget {
   }
 }
 
-class _PopupSelectField<T> extends StatefulWidget {
+class _PopupSelectField<T> extends StatelessWidget {
   final String label;
   final T value;
   final List<_PopupSelectOption<T>> options;
@@ -209,145 +183,28 @@ class _PopupSelectField<T> extends StatefulWidget {
   });
 
   @override
-  State<_PopupSelectField<T>> createState() => _PopupSelectFieldState<T>();
-}
-
-class _PopupSelectFieldState<T> extends State<_PopupSelectField<T>> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final textStyles = context.appTextStyles;
-    final isTouchPlatform = _isCatalogPopupTouchPlatform();
-    final menuHoverColor = AppDesignTokens.isDark(context)
-        ? Colors.white.withOpacity(0.08)
-        : Colors.black.withOpacity(0.045);
-    final selected = widget.options.cast<_PopupSelectOption<T>?>().firstWhere(
-          (option) => option?.value == widget.value,
+    final selected = options.cast<_PopupSelectOption<T>?>().firstWhere(
+          (option) => option?.value == value,
           orElse: () => null,
         );
     final displayText = selected?.label ?? '';
-    if (_controller.text != displayText) {
-      _controller.value = TextEditingValue(
-        text: displayText,
-        selection: TextSelection.collapsed(offset: displayText.length),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: Theme(
-            data: theme.copyWith(
-              hoverColor: menuHoverColor,
-              highlightColor: menuHoverColor,
-              splashColor: menuHoverColor,
-              popupMenuTheme: theme.popupMenuTheme.copyWith(
-                color: theme.colorScheme.surface,
-                surfaceTintColor: Colors.transparent,
-                mouseCursor: const WidgetStatePropertyAll<MouseCursor>(
-                  SystemMouseCursors.click,
-                ),
+    return AppPopupSelectField<T>(
+      fieldLabel: label,
+      valueLabel: displayText,
+      items: buildPopupMenuEntriesWithDividers(
+        options
+            .map(
+              (option) => PopupMenuItem<T>(
+                value: option.value,
+                height: 40,
+                mouseCursor: SystemMouseCursors.click,
+                child: Text(option.label),
               ),
-            ),
-            child: PopupMenuButton<T>(
-              tooltip: '',
-              padding: EdgeInsets.zero,
-              menuPadding: EdgeInsets.zero,
-              elevation: 4,
-              shadowColor: AppDesignTokens.cardShadow(context),
-              surfaceTintColor: Colors.transparent,
-              color: theme.colorScheme.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: AppDesignTokens.softBorder(context),
-                ),
-              ),
-              clipBehavior: Clip.antiAlias,
-              position: isTouchPlatform
-                  ? PopupMenuPosition.under
-                  : PopupMenuPosition.over,
-              offset: Offset(
-                0,
-                isTouchPlatform ? 2 : 48,
-              ),
-              constraints: BoxConstraints(
-                minWidth: constraints.maxWidth,
-                maxWidth: constraints.maxWidth,
-              ),
-              onSelected: widget.onChanged,
-              itemBuilder: (context) => _buildPopupMenuEntriesWithDividers(
-                widget.options
-                    .map(
-                      (option) => PopupMenuItem<T>(
-                        value: option.value,
-                        height: 40,
-                        mouseCursor: SystemMouseCursors.click,
-                        textStyle: textStyles.body.copyWith(
-                          color: theme.colorScheme.onSurface,
-                        ),
-                        child: Text(option.label),
-                      ),
-                    )
-                    .toList(),
-              ),
-              child: IgnorePointer(
-                child: TextField(
-                  controller: _controller,
-                  readOnly: true,
-                  showCursor: false,
-                  enableInteractiveSelection: false,
-                  textAlignVertical: TextAlignVertical.center,
-                  style: textStyles.input.copyWith(
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  decoration: _catalogDialogInputDecoration(
-                    context,
-                    label: widget.label,
-                    constraints: const BoxConstraints(
-                      minHeight: _catalogDialogSingleLineFieldHeight,
-                      maxHeight: _catalogDialogSingleLineFieldHeight,
-                    ),
-                    contentPadding: const EdgeInsets.fromLTRB(16, 18, 12, 10),
-                  ).copyWith(
-                    suffixIcon: Align(
-                      widthFactor: 1,
-                      heightFactor: 1,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: theme.colorScheme.onSurfaceVariant,
-                          size: 22,
-                        ),
-                      ),
-                    ),
-                    suffixIconConstraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 24,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+            )
+            .toList(),
+      ),
+      onSelected: onChanged,
     );
   }
 }
