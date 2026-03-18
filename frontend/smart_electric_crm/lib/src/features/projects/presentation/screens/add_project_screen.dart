@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
@@ -6,6 +7,84 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_sc
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../providers/project_providers.dart';
 import '../../data/models/project_model.dart';
+
+const double _projectDialogSingleLineFieldHeight = 56;
+
+bool _isProjectDialogTouchPlatform() {
+  switch (defaultTargetPlatform) {
+    case TargetPlatform.android:
+    case TargetPlatform.iOS:
+    case TargetPlatform.fuchsia:
+      return true;
+    case TargetPlatform.linux:
+    case TargetPlatform.macOS:
+    case TargetPlatform.windows:
+      return false;
+  }
+}
+
+Color _projectDialogFieldFillColor(BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
+  return AppDesignTokens.isDark(context)
+      ? scheme.surfaceContainerHigh
+      : scheme.surfaceContainer.withOpacity(0.4);
+}
+
+InputDecoration _projectDialogInputDecoration(
+  BuildContext context, {
+  required String label,
+  String? hint,
+  BoxConstraints? constraints,
+  EdgeInsetsGeometry? contentPadding,
+}) {
+  final scheme = Theme.of(context).colorScheme;
+  final textStyles = context.appTextStyles;
+  final labelStyle = textStyles.fieldLabel.copyWith(
+    fontSize: 12.5,
+    color: Colors.indigo.shade400,
+  );
+
+  return InputDecoration(
+    labelText: label,
+    labelStyle: labelStyle,
+    floatingLabelStyle: labelStyle,
+    floatingLabelBehavior: FloatingLabelBehavior.always,
+    constraints: constraints,
+    isDense: true,
+    filled: true,
+    fillColor: _projectDialogFieldFillColor(context),
+    hintText: hint,
+    hintStyle: textStyles.secondaryBody.copyWith(
+      color: scheme.onSurfaceVariant.withOpacity(0.75),
+    ),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: AppDesignTokens.softBorder(context)),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: AppDesignTokens.softBorder(context)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Colors.indigo, width: 2),
+    ),
+    contentPadding: contentPadding ?? const EdgeInsets.fromLTRB(16, 18, 16, 10),
+  );
+}
+
+List<PopupMenuEntry<String>> _buildProjectPopupEntriesWithDividers(
+  List<PopupMenuEntry<String>> entries,
+) {
+  final result = <PopupMenuEntry<String>>[];
+  for (var index = 0; index < entries.length; index++) {
+    if (index > 0) {
+      result.add(const PopupMenuDivider(height: 1));
+    }
+    result.add(entries[index]);
+  }
+  return result;
+}
 
 /// Premium Dialog for creating/editing a project.
 /// Style consistent with AddShieldDialog.
@@ -271,7 +350,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                                         ? 'Введите адрес'
                                         : null,
                                   ),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 10),
 
                                   // 2. Intercom code
                                   _buildTextField(
@@ -279,7 +358,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                                     label: 'Код домофона',
                                     hint: '123',
                                   ),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 10),
 
                                   // 3. Client
                                   _buildTextField(
@@ -287,18 +366,21 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                                     label: 'Заказчик',
                                     hint: 'Имя, телефон...',
                                   ),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 10),
 
                                   // 4. Object type
-                                  _buildFieldLabel('Тип объекта'),
                                   _buildPopupBtn(
-                                    _objectTypes[_objectType] ?? _objectType,
-                                    _objectTypes.entries
+                                    fieldLabel: 'Тип объекта',
+                                    valueLabel: _objectTypes[_objectType] ??
+                                        _objectType,
+                                    items: _objectTypes.entries
                                         .map((e) => PopupMenuItem(
                                               value: e.key,
                                               height: 40,
+                                              mouseCursor:
+                                                  SystemMouseCursors.click,
                                               padding: EdgeInsets.zero,
-                                              child: Container(
+                                              child: Padding(
                                                 padding:
                                                     const EdgeInsets.symmetric(
                                                         horizontal: 16),
@@ -312,13 +394,18 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                                                       size: 20,
                                                     ),
                                                     const SizedBox(width: 12),
-                                                    Text(
-                                                      e.value,
-                                                      style: textStyles.body
-                                                          .copyWith(
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .onSurface,
+                                                    Expanded(
+                                                      child: Text(
+                                                        e.value,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: textStyles.body
+                                                            .copyWith(
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .onSurface,
+                                                        ),
                                                       ),
                                                     ),
                                                   ],
@@ -326,20 +413,23 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                                               ),
                                             ))
                                         .toList(),
-                                    (v) => setState(() => _objectType = v),
+                                    onSelected: (v) =>
+                                        setState(() => _objectType = v),
                                   ),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 10),
 
                                   // 5. Source
-                                  _buildFieldLabel('Источник'),
                                   _buildPopupBtn(
-                                    _source,
-                                    _sourceItems
+                                    fieldLabel: 'Источник',
+                                    valueLabel: _source,
+                                    items: _sourceItems
                                         .map((s) => PopupMenuItem(
                                               value: s,
                                               height: 40,
+                                              mouseCursor:
+                                                  SystemMouseCursors.click,
                                               padding: EdgeInsets.zero,
-                                              child: Container(
+                                              child: Padding(
                                                 padding:
                                                     const EdgeInsets.symmetric(
                                                         horizontal: 16),
@@ -353,13 +443,18 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                                                       size: 20,
                                                     ),
                                                     const SizedBox(width: 12),
-                                                    Text(
-                                                      s,
-                                                      style: textStyles.body
-                                                          .copyWith(
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .onSurface,
+                                                    Expanded(
+                                                      child: Text(
+                                                        s,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: textStyles.body
+                                                            .copyWith(
+                                                          color:
+                                                              Theme.of(context)
+                                                                  .colorScheme
+                                                                  .onSurface,
+                                                        ),
                                                       ),
                                                     ),
                                                   ],
@@ -367,12 +462,13 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                                               ),
                                             ))
                                         .toList(),
-                                    (v) => setState(() => _source = v),
+                                    onSelected: (v) =>
+                                        setState(() => _source = v),
                                   ),
 
                                   // Stages selection (creation only) - toggle chips
                                   if (!_isEditing) ...[
-                                    const SizedBox(height: 20),
+                                    const SizedBox(height: 10),
                                     _buildFieldLabel('Начальные этапы'),
                                     const SizedBox(height: 4),
                                     Wrap(
@@ -450,35 +546,18 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
     required String hint,
     String? Function(String?)? validator,
   }) {
-    const themeColor = Colors.indigo;
-    final isDark = AppDesignTokens.isDark(context);
-    final scheme = Theme.of(context).colorScheme;
-    final textStyles = context.appTextStyles;
     return TextFormField(
       controller: controller,
       validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        floatingLabelBehavior: FloatingLabelBehavior.always,
-        hintText: hint,
-        hintStyle: textStyles.secondaryBody.copyWith(
-          color: scheme.onSurfaceVariant.withOpacity(0.75),
-        ),
-        fillColor: isDark
-            ? scheme.surfaceContainerHigh
-            : scheme.surfaceContainer.withOpacity(0.4),
-        filled: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppDesignTokens.softBorder(context)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppDesignTokens.softBorder(context)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: themeColor, width: 2),
+      textAlignVertical: TextAlignVertical.center,
+      style: context.appTextStyles.input,
+      decoration: _projectDialogInputDecoration(
+        context,
+        label: label,
+        hint: hint,
+        constraints: const BoxConstraints(
+          minHeight: _projectDialogSingleLineFieldHeight,
+          maxHeight: _projectDialogSingleLineFieldHeight,
         ),
       ),
     );
@@ -499,74 +578,136 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
     );
   }
 
-  Widget _buildPopupBtn(String label, List<PopupMenuEntry<String>> items,
-      ValueChanged<String> onSelected) {
-    const bg = Colors.indigo;
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = AppDesignTokens.isDark(context);
-    final textStyles = context.appTextStyles;
-    final popupBackgroundColor =
-        isDark ? AppDesignTokens.surface2(context) : scheme.surfaceContainer;
+  Widget _buildPopupBtn({
+    required String fieldLabel,
+    required String valueLabel,
+    required List<PopupMenuEntry<String>> items,
+    required ValueChanged<String> onSelected,
+  }) {
+    return _ProjectDialogPopupField(
+      fieldLabel: fieldLabel,
+      valueLabel: valueLabel,
+      items: items,
+      onSelected: onSelected,
+    );
+  }
+}
+
+class _ProjectDialogPopupField extends StatefulWidget {
+  final String fieldLabel;
+  final String valueLabel;
+  final List<PopupMenuEntry<String>> items;
+  final ValueChanged<String> onSelected;
+
+  const _ProjectDialogPopupField({
+    required this.fieldLabel,
+    required this.valueLabel,
+    required this.items,
+    required this.onSelected,
+  });
+
+  @override
+  State<_ProjectDialogPopupField> createState() =>
+      _ProjectDialogPopupFieldState();
+}
+
+class _ProjectDialogPopupFieldState extends State<_ProjectDialogPopupField> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isTouchPlatform = _isProjectDialogTouchPlatform();
+    final menuHoverColor = AppDesignTokens.isDark(context)
+        ? Colors.white.withOpacity(0.08)
+        : Colors.black.withOpacity(0.045);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Container(
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppDesignTokens.surface2(context),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppDesignTokens.softBorder(context)),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              onTap: () {
-                final RenderBox box = context.findRenderObject() as RenderBox;
-                final Offset position = box.localToGlobal(Offset.zero);
-                final Size size = box.size;
-
-                showMenu<String>(
-                  context: context,
-                  position: RelativeRect.fromLTRB(
-                    position.dx,
-                    position.dy + size.height + 4,
-                    position.dx + size.width,
-                    position.dy + size.height + 300,
-                  ),
-                  items: items,
-                  elevation: 4,
-                  shadowColor: AppDesignTokens.cardShadow(context),
-                  surfaceTintColor: Colors.transparent,
-                  color: popupBackgroundColor,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  constraints: BoxConstraints(
-                    minWidth: size.width,
-                    maxWidth: size.width,
-                  ),
-                ).then((value) {
-                  if (value != null) onSelected(value);
-                });
-              },
-              borderRadius: BorderRadius.circular(12),
-              mouseCursor: SystemMouseCursors.click,
-              hoverColor: bg.shade700.withOpacity(isDark ? 0.12 : 0.05),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      label,
-                      style: textStyles.bodyStrong.copyWith(
-                        color: isDark ? scheme.onSurface : bg.shade800,
+        return MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          cursor: SystemMouseCursors.click,
+          child: Theme(
+            data: theme.copyWith(
+              hoverColor: menuHoverColor,
+              highlightColor: menuHoverColor,
+              splashColor: menuHoverColor,
+              popupMenuTheme: theme.popupMenuTheme.copyWith(
+                color: scheme.surface,
+                surfaceTintColor: Colors.transparent,
+                mouseCursor: const WidgetStatePropertyAll<MouseCursor>(
+                  SystemMouseCursors.click,
+                ),
+              ),
+            ),
+            child: PopupMenuButton<String>(
+              tooltip: '',
+              padding: EdgeInsets.zero,
+              menuPadding: EdgeInsets.zero,
+              elevation: 6,
+              shadowColor: AppDesignTokens.cardShadow(context),
+              surfaceTintColor: Colors.transparent,
+              color: scheme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: AppDesignTokens.softBorder(context),
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              position: isTouchPlatform
+                  ? PopupMenuPosition.under
+                  : PopupMenuPosition.over,
+              offset: Offset(0, isTouchPlatform ? 2 : 48),
+              constraints: BoxConstraints(
+                minWidth: constraints.maxWidth,
+                maxWidth: constraints.maxWidth,
+              ),
+              onSelected: widget.onSelected,
+              itemBuilder: (context) =>
+                  _buildProjectPopupEntriesWithDividers(widget.items),
+              child: IgnorePointer(
+                child: InputDecorator(
+                  isEmpty: widget.valueLabel.isEmpty,
+                  decoration: _projectDialogInputDecoration(
+                    context,
+                    label: widget.fieldLabel,
+                    constraints: const BoxConstraints(
+                      minHeight: _projectDialogSingleLineFieldHeight,
+                      maxHeight: _projectDialogSingleLineFieldHeight,
+                    ),
+                    contentPadding: const EdgeInsets.fromLTRB(16, 18, 12, 10),
+                  ).copyWith(
+                    fillColor: _isHovered
+                        ? Colors.indigo.withOpacity(0.04)
+                        : _projectDialogFieldFillColor(context),
+                    suffixIcon: Align(
+                      widthFactor: 1,
+                      heightFactor: 1,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 22,
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                    Icon(Icons.arrow_drop_down,
-                        color: isDark ? scheme.onSurfaceVariant : bg.shade800,
-                        size: 24),
-                  ],
+                    suffixIconConstraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 24,
+                    ),
+                  ),
+                  child: Text(
+                    widget.valueLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.appTextStyles.input.copyWith(
+                      color: scheme.onSurface,
+                    ),
+                  ),
                 ),
               ),
             ),
