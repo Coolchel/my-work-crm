@@ -1373,6 +1373,32 @@ class _PopupSelectOption<T> {
   });
 }
 
+bool _isCatalogPopupTouchPlatform() {
+  switch (defaultTargetPlatform) {
+    case TargetPlatform.android:
+    case TargetPlatform.iOS:
+    case TargetPlatform.fuchsia:
+      return true;
+    case TargetPlatform.linux:
+    case TargetPlatform.macOS:
+    case TargetPlatform.windows:
+      return false;
+  }
+}
+
+List<PopupMenuEntry<T>> _buildPopupMenuEntriesWithDividers<T>(
+  List<PopupMenuEntry<T>> entries,
+) {
+  final result = <PopupMenuEntry<T>>[];
+  for (var index = 0; index < entries.length; index++) {
+    if (index > 0) {
+      result.add(const PopupMenuDivider(height: 1));
+    }
+    result.add(entries[index]);
+  }
+  return result;
+}
+
 class _DialogPopupSelectField<T> extends StatefulWidget {
   final String label;
   final T value;
@@ -1414,6 +1440,7 @@ class _DialogPopupSelectFieldState<T>
   Widget build(BuildContext context) {
     final textStyles = context.appTextStyles;
     final scheme = Theme.of(context).colorScheme;
+    final isTouchPlatform = _isCatalogPopupTouchPlatform();
     final menuHoverColor = AppDesignTokens.isDark(context)
         ? Colors.white.withOpacity(0.08)
         : Colors.black.withOpacity(0.045);
@@ -1443,6 +1470,9 @@ class _DialogPopupSelectFieldState<T>
               popupMenuTheme: Theme.of(context).popupMenuTheme.copyWith(
                     color: Theme.of(context).colorScheme.surface,
                     surfaceTintColor: Colors.transparent,
+                    mouseCursor: const WidgetStatePropertyAll<MouseCursor>(
+                      SystemMouseCursors.click,
+                    ),
                   ),
             ),
             child: PopupMenuButton<T>(
@@ -1460,81 +1490,79 @@ class _DialogPopupSelectFieldState<T>
                 ),
               ),
               clipBehavior: Clip.antiAlias,
-              position: PopupMenuPosition.under,
-              offset: const Offset(0, 2),
+              position: isTouchPlatform
+                  ? PopupMenuPosition.under
+                  : PopupMenuPosition.over,
+              offset: Offset(
+                0,
+                isTouchPlatform ? 2 : 48,
+              ),
               constraints: BoxConstraints(
                 minWidth: constraints.maxWidth,
                 maxWidth: constraints.maxWidth,
               ),
               onSelected: widget.onChanged,
-              itemBuilder: (context) => widget.options
-                  .map(
-                    (option) => PopupMenuItem<T>(
-                      value: option.value,
-                      height: 40,
-                      textStyle: textStyles.body.copyWith(
-                        color: scheme.onSurface,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(
-                          option.label,
-                          overflow: TextOverflow.ellipsis,
+              itemBuilder: (context) => _buildPopupMenuEntriesWithDividers(
+                widget.options
+                    .map(
+                      (option) => PopupMenuItem<T>(
+                        value: option.value,
+                        height: 40,
+                        mouseCursor: SystemMouseCursors.click,
+                        textStyle: textStyles.body.copyWith(
+                          color: scheme.onSurface,
                         ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-              child: Stack(
-                children: [
-                  IgnorePointer(
-                    child: TextField(
-                      controller: _controller,
-                      readOnly: true,
-                      showCursor: false,
-                      enableInteractiveSelection: false,
-                      style: textStyles.input.copyWith(
-                        color: scheme.onSurface,
-                      ),
-                      decoration: _dialogInputDecoration(
-                        context,
-                        label: widget.label,
-                        constraints: const BoxConstraints(
-                          minHeight: _catalogDialogSingleLineFieldHeight,
-                          maxHeight: _catalogDialogSingleLineFieldHeight,
-                        ),
-                        contentPadding: const EdgeInsets.fromLTRB(
-                          16,
-                          18,
-                          44,
-                          10,
-                        ),
-                      ).copyWith(
-                        fillColor: _isHovered
-                            ? Colors.indigo.withOpacity(0.04)
-                            : _dialogFieldFillColor(context),
-                      ),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: Align(
-                        alignment: Alignment.centerRight,
                         child: Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: Transform.translate(
-                            offset: const Offset(0, -1),
-                            child: Icon(
-                              Icons.keyboard_arrow_down_rounded,
-                              size: 20,
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(
+                            option.label,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
+                    )
+                    .toList(),
+              ),
+              child: IgnorePointer(
+                child: TextField(
+                  controller: _controller,
+                  readOnly: true,
+                  showCursor: false,
+                  enableInteractiveSelection: false,
+                  textAlignVertical: TextAlignVertical.center,
+                  style: textStyles.input.copyWith(
+                    color: scheme.onSurface,
+                  ),
+                  decoration: _dialogInputDecoration(
+                    context,
+                    label: widget.label,
+                    constraints: const BoxConstraints(
+                      minHeight: _catalogDialogSingleLineFieldHeight,
+                      maxHeight: _catalogDialogSingleLineFieldHeight,
+                    ),
+                    contentPadding: const EdgeInsets.fromLTRB(16, 18, 12, 10),
+                  ).copyWith(
+                    fillColor: _isHovered
+                        ? Colors.indigo.withOpacity(0.04)
+                        : _dialogFieldFillColor(context),
+                    suffixIcon: Align(
+                      widthFactor: 1,
+                      heightFactor: 1,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 22,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    suffixIconConstraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 24,
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
