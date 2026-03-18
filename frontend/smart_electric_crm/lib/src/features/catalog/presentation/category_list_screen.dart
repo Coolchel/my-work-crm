@@ -10,6 +10,7 @@ import 'package:smart_electric_crm/src/features/catalog/domain/category_model.da
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/directory_models.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';

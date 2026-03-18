@@ -1013,6 +1013,8 @@ class _DirectoryCardState extends State<_DirectoryCard> {
 
   @override
   Widget build(BuildContext context) {
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
     final content = IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1033,10 +1035,8 @@ class _DirectoryCardState extends State<_DirectoryCard> {
                           widget.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Theme.of(context).colorScheme.onSurface,
+                          style: textStyles.cardTitle.copyWith(
+                            color: scheme.onSurface,
                           ),
                         ),
                       ),
@@ -1050,9 +1050,8 @@ class _DirectoryCardState extends State<_DirectoryCard> {
                     widget.subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
+                    style: textStyles.caption.copyWith(
+                      color: scheme.onSurfaceVariant,
                     ),
                   ),
                   if (widget.extraText != null &&
@@ -1062,9 +1061,9 @@ class _DirectoryCardState extends State<_DirectoryCard> {
                       widget.extraText!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: textStyles.caption.copyWith(
                         fontSize: 11,
-                        color: Colors.grey.shade500,
+                        color: scheme.onSurfaceVariant.withOpacity(0.9),
                       ),
                     ),
                   ],
@@ -1179,6 +1178,7 @@ class _DialogShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textStyles = context.appTextStyles;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
     return Dialog(
@@ -1217,9 +1217,7 @@ class _DialogShell extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                    style: textStyles.dialogTitle.copyWith(
                       color: themeColor.withOpacity(0.8),
                     ),
                   ),
@@ -1254,7 +1252,8 @@ class _DialogShell extends StatelessWidget {
   }
 }
 
-InputDecoration _dialogInputDecoration(String label) {
+InputDecoration _dialogInputDecoration(BuildContext context, String label) {
+  final theme = Theme.of(context);
   return InputDecoration(
     labelText: label,
     constraints: const BoxConstraints(minHeight: 56),
@@ -1272,10 +1271,9 @@ InputDecoration _dialogInputDecoration(String label) {
       borderRadius: BorderRadius.circular(14),
       borderSide: const BorderSide(color: Colors.indigo, width: 1.5),
     ),
-    floatingLabelStyle: const TextStyle(
+    floatingLabelStyle: theme.inputDecorationTheme.floatingLabelStyle?.copyWith(
       color: Colors.indigo,
       fontWeight: FontWeight.w600,
-      fontSize: 13.5,
     ),
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     isDense: true,
@@ -1316,6 +1314,7 @@ class _DialogPopupSelectFieldState<T>
 
   @override
   Widget build(BuildContext context) {
+    final textStyles = context.appTextStyles;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
     final selected = widget.options.cast<_PopupSelectOption<T>?>().firstWhere(
@@ -1366,10 +1365,9 @@ class _DialogPopupSelectFieldState<T>
                         (option) => PopupMenuItem<T>(
                           value: option.value,
                           height: 40,
-                          textStyle: TextStyle(
+                          textStyle: textStyles.bodyStrong.copyWith(
                             fontSize: 13,
                             color: scheme.onSurface,
-                            fontWeight: FontWeight.w500,
                           ),
                           child: Text(
                             option.label,
@@ -1386,7 +1384,8 @@ class _DialogPopupSelectFieldState<T>
               child: InputDecorator(
                 isEmpty: selected == null,
                 isFocused: false,
-                decoration: _dialogInputDecoration(widget.label).copyWith(
+                decoration:
+                    _dialogInputDecoration(context, widget.label).copyWith(
                   fillColor: _isHovered
                       ? Colors.indigo.withOpacity(isDark ? 0.10 : 0.06)
                       : null,
@@ -1400,10 +1399,7 @@ class _DialogPopupSelectFieldState<T>
                         selected?.label ?? '',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: textStyles.bodyStrong,
                       ),
                     ),
                     Icon(Icons.arrow_drop_down,
@@ -1483,15 +1479,16 @@ class _DirectorySectionDialogState extends State<_DirectorySectionDialog> {
         children: [
           TextField(
               controller: _name,
-              decoration: _dialogInputDecoration('Название')),
+              decoration: _dialogInputDecoration(context, 'Название')),
           const SizedBox(height: 10),
           TextField(
-              controller: _code, decoration: _dialogInputDecoration('Код')),
+              controller: _code,
+              decoration: _dialogInputDecoration(context, 'Код')),
           const SizedBox(height: 10),
           TextField(
             controller: _description,
             maxLines: 3,
-            decoration: _dialogInputDecoration('Описание'),
+            decoration: _dialogInputDecoration(context, 'Описание'),
           ),
         ],
       ),
@@ -1584,16 +1581,17 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
         children: [
           TextField(
               controller: _name,
-              decoration: _dialogInputDecoration('Название')),
+              decoration: _dialogInputDecoration(context, 'Название')),
           const SizedBox(height: 10),
           TextField(
-              controller: _code, decoration: _dialogInputDecoration('Код')),
+              controller: _code,
+              decoration: _dialogInputDecoration(context, 'Код')),
           const SizedBox(height: 10),
           TextField(
             controller: _order,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: _dialogInputDecoration('Порядок'),
+            decoration: _dialogInputDecoration(context, 'Порядок'),
           ),
           const SizedBox(height: 10),
           Container(
@@ -1622,7 +1620,7 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
                 setState(() => _metadataError = null);
               }
             },
-            decoration: _dialogInputDecoration('Metadata JSON')
+            decoration: _dialogInputDecoration(context, 'Metadata JSON')
                 .copyWith(errorText: _metadataError),
           ),
         ],
@@ -1722,15 +1720,16 @@ class _CategoryDialogState extends State<_CategoryDialog> {
         children: [
           TextField(
               controller: _name,
-              decoration: _dialogInputDecoration('Название')),
+              decoration: _dialogInputDecoration(context, 'Название')),
           const SizedBox(height: 10),
           TextField(
-              controller: _slug, decoration: _dialogInputDecoration('Slug')),
+              controller: _slug,
+              decoration: _dialogInputDecoration(context, 'Slug')),
           const SizedBox(height: 10),
           TextField(
             controller: _labor,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: _dialogInputDecoration('Коэффициент труда'),
+            decoration: _dialogInputDecoration(context, 'Коэффициент труда'),
           ),
         ],
       ),
@@ -1856,7 +1855,7 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
         children: [
           TextField(
               controller: _name,
-              decoration: _dialogInputDecoration('Название')),
+              decoration: _dialogInputDecoration(context, 'Название')),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -1875,7 +1874,7 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
               Expanded(
                 child: TextField(
                     controller: _unit,
-                    decoration: _dialogInputDecoration('Ед. изм.')),
+                    decoration: _dialogInputDecoration(context, 'Ед. изм.')),
               ),
             ],
           ),
@@ -1887,7 +1886,7 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
                   controller: _price,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
-                  decoration: _dialogInputDecoration('Цена'),
+                  decoration: _dialogInputDecoration(context, 'Цена'),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1907,11 +1906,11 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
           const SizedBox(height: 10),
           TextField(
               controller: _mappingKey,
-              decoration: _dialogInputDecoration('mapping_key')),
+              decoration: _dialogInputDecoration(context, 'mapping_key')),
           const SizedBox(height: 10),
           TextField(
             controller: _aggregationKey,
-            decoration: _dialogInputDecoration('aggregation_key'),
+            decoration: _dialogInputDecoration(context, 'aggregation_key'),
           ),
           const SizedBox(height: 10),
           _DialogPopupSelectField<int?>(

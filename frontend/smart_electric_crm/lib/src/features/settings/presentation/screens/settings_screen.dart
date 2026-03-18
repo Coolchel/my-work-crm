@@ -8,6 +8,7 @@ import '../../../auth/data/auth_repository.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../core/navigation/app_navigation.dart';
 import '../../../../core/navigation/route_bootstrap_storage.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
 import '../../application/app_settings_controller.dart';
@@ -161,7 +162,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           16,
         ),
         children: [
-          _buildSectionHeader('Внешний вид'),
+          _buildSectionHeader(context, 'Внешний вид'),
           _HoverSettingsCard(
             child: _buildThemeSection(
               context,
@@ -177,7 +178,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 _buildStartScreenSection(context, settings, settingsNotifier),
           ),
           const SizedBox(height: 24),
-          _buildSectionHeader('Инструменты'),
+          _buildSectionHeader(context, 'Инструменты'),
           _HoverSettingsCard(
             child: InkWell(
               hoverColor: AppDesignTokens.hoverOverlay(context),
@@ -197,7 +198,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          _buildSectionHeader('Аккаунт'),
+          _buildSectionHeader(context, 'Аккаунт'),
           _HoverSettingsCard(
             child: Column(
               children: [
@@ -260,86 +261,90 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   onTap: () async {
                     final confirmed = await showDialog<bool>(
                       context: context,
-                      builder: (context) => Dialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Container(
-                          constraints: const BoxConstraints(maxWidth: 340),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.1),
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(24),
+                      builder: (context) {
+                        final textStyles = context.appTextStyles;
+                        return Dialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 340),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.1),
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(24),
+                                    ),
                                   ),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Icon(Icons.logout, color: Colors.red),
-                                    SizedBox(width: 12),
-                                    Text(
-                                      '\u0412\u044b\u0445\u043e\u0434',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.red,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.all(24),
-                                child: Text(
-                                  '\u0412\u044b \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043b\u044c\u043d\u043e \u0445\u043e\u0442\u0438\u0442\u0435 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0441\u0438\u0441\u0442\u0435\u043c\u044b?',
-                                  style: TextStyle(fontSize: 15),
-                                ),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                                child: Wrap(
-                                  alignment: WrapAlignment.end,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, false),
-                                      child: const Text(
-                                        '\u041e\u0442\u043c\u0435\u043d\u0430',
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.red,
-                                        foregroundColor: Theme.of(context)
-                                            .colorScheme
-                                            .surface,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.logout,
+                                          color: Colors.red),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        '\u0412\u044b\u0445\u043e\u0434',
+                                        style: textStyles.dialogTitle.copyWith(
+                                          color: Colors.red,
                                         ),
                                       ),
-                                      onPressed: () =>
-                                          Navigator.pop(context, true),
-                                      child: const Text(
-                                        '\u0412\u044b\u0439\u0442\u0438',
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                                Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Text(
+                                    '\u0412\u044b \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043b\u044c\u043d\u043e \u0445\u043e\u0442\u0438\u0442\u0435 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0441\u0438\u0441\u0442\u0435\u043c\u044b?',
+                                    style:
+                                        textStyles.body.copyWith(fontSize: 15),
+                                  ),
+                                ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                                  child: Wrap(
+                                    alignment: WrapAlignment.end,
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: const Text(
+                                          '\u041e\u0442\u043c\u0435\u043d\u0430',
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.red,
+                                          foregroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .surface,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: const Text(
+                                          '\u0412\u044b\u0439\u0442\u0438',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     );
                     if (confirmed == true) {
                       RouteBootstrapStorage.clearPendingRedirect();
@@ -455,16 +460,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Color? subtitleColor,
   }) {
     final theme = Theme.of(context);
+    final textStyles = context.appTextStyles;
     final isWindowsDesktop =
         !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
-    final titleStyle = (isWindowsDesktop
-            ? theme.textTheme.titleMedium
-            : theme.textTheme.titleSmall)
-        ?.copyWith(fontWeight: FontWeight.w600);
-    final subtitleStyle = (isWindowsDesktop
-            ? theme.textTheme.bodyMedium
-            : theme.textTheme.bodySmall)
-        ?.copyWith(
+    final titleStyle =
+        (isWindowsDesktop ? textStyles.sectionTitle : textStyles.cardTitle)
+            .copyWith(fontWeight: FontWeight.w600);
+    final subtitleStyle =
+        (isWindowsDesktop ? textStyles.body : textStyles.caption).copyWith(
       color: subtitleColor ?? theme.colorScheme.onSurfaceVariant,
       height: 1.35,
     );
@@ -495,7 +498,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   title,
-                  style: titleStyle?.copyWith(
+                  style: titleStyle.copyWith(
                     color: titleColor ?? theme.colorScheme.onSurface,
                   ),
                 ),
@@ -516,14 +519,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         title.toUpperCase(),
-        style: TextStyle(
+        style: context.appTextStyles.captionStrong.copyWith(
           fontSize: 11,
-          fontWeight: FontWeight.w800,
           color: Colors.indigo.withOpacity(0.6),
           letterSpacing: 1.5,
         ),
@@ -541,160 +543,164 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     showDialog(
       context: screenContext,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: themeColor.withOpacity(0.1),
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(24)),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.warning_amber_rounded, color: themeColor),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Опасная зона',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: themeColor,
+        builder: (dialogContext, setDialogState) {
+          final textStyles = dialogContext.appTextStyles;
+          return Dialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: themeColor.withOpacity(0.1),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(24)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded,
+                            color: themeColor),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Опасная зона',
+                            style: textStyles.dialogTitle.copyWith(
+                              color: themeColor,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(24, 24, 24, 12),
-                  child: Text(
-                    'Вы входите в раздел редактирования справочника. Любые изменения здесь повлияют на расчеты во всех проектах. Будьте осторожны!',
-                    style: TextStyle(fontSize: 15, height: 1.4),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+                    child: Text(
+                      'Вы входите в раздел редактирования справочника. Любые изменения здесь повлияют на расчеты во всех проектах. Будьте осторожны!',
+                      style:
+                          textStyles.body.copyWith(fontSize: 15, height: 1.4),
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                  child: TextField(
-                    controller: passwordController,
-                    enabled: !isLoading,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Пароль текущего аккаунта',
-                      errorText: passwordError,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                    child: TextField(
+                      controller: passwordController,
+                      enabled: !isLoading,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: 'Пароль текущего аккаунта',
+                        errorText: passwordError,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                  child: Wrap(
-                    alignment: WrapAlignment.end,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      TextButton(
-                        onPressed:
-                            isLoading ? null : () => Navigator.pop(context),
-                        child: const Text('Отмена'),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: themeColor,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.surface,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        TextButton(
+                          onPressed:
+                              isLoading ? null : () => Navigator.pop(context),
+                          child: const Text('Отмена'),
                         ),
-                        onPressed: isLoading
-                            ? null
-                            : () async {
-                                final password = passwordController.text;
-                                if (password.trim().isEmpty) {
-                                  setDialogState(() {
-                                    passwordError =
-                                        'Введите пароль для подтверждения';
-                                  });
-                                  return;
-                                }
-
-                                setDialogState(() {
-                                  isLoading = true;
-                                  passwordError = null;
-                                });
-
-                                try {
-                                  final repo = await ref
-                                      .read(authRepositoryProvider.future);
-                                  final user = await repo.getUser();
-                                  final username = (user['username'] ?? '')
-                                      .toString()
-                                      .trim();
-
-                                  if (username.isEmpty) {
-                                    throw Exception(
-                                        'Не удалось получить пользователя');
-                                  }
-
-                                  final isValid =
-                                      await repo.verifyCurrentPassword(
-                                    username: username,
-                                    password: password,
-                                  );
-
-                                  if (!isValid) {
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: themeColor,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.surface,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  final password = passwordController.text;
+                                  if (password.trim().isEmpty) {
                                     setDialogState(() {
-                                      isLoading = false;
-                                      passwordError = 'Неверный пароль';
+                                      passwordError =
+                                          'Введите пароль для подтверждения';
                                     });
                                     return;
                                   }
 
-                                  if (!screenContext.mounted) return;
-                                  Navigator.pop(dialogContext);
-                                  AppNavigation.openCatalog(screenContext);
-                                } catch (_) {
                                   setDialogState(() {
-                                    isLoading = false;
-                                    passwordError =
-                                        'Ошибка проверки. Попробуйте еще раз.';
+                                    isLoading = true;
+                                    passwordError = null;
                                   });
-                                }
-                              },
-                        child: isLoading
-                            ? SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Theme.of(context).colorScheme.surface,
-                                ),
-                              )
-                            : const Text('Я понимаю'),
-                      ),
-                    ],
+
+                                  try {
+                                    final repo = await ref
+                                        .read(authRepositoryProvider.future);
+                                    final user = await repo.getUser();
+                                    final username = (user['username'] ?? '')
+                                        .toString()
+                                        .trim();
+
+                                    if (username.isEmpty) {
+                                      throw Exception(
+                                          'Не удалось получить пользователя');
+                                    }
+
+                                    final isValid =
+                                        await repo.verifyCurrentPassword(
+                                      username: username,
+                                      password: password,
+                                    );
+
+                                    if (!isValid) {
+                                      setDialogState(() {
+                                        isLoading = false;
+                                        passwordError = 'Неверный пароль';
+                                      });
+                                      return;
+                                    }
+
+                                    if (!screenContext.mounted) return;
+                                    Navigator.pop(dialogContext);
+                                    AppNavigation.openCatalog(screenContext);
+                                  } catch (_) {
+                                    setDialogState(() {
+                                      isLoading = false;
+                                      passwordError =
+                                          'Ошибка проверки. Попробуйте еще раз.';
+                                    });
+                                  }
+                                },
+                          child: isLoading
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color:
+                                        Theme.of(context).colorScheme.surface,
+                                  ),
+                                )
+                              : const Text('Я понимаю'),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -713,6 +719,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
+          final textStyles = context.appTextStyles;
           return Dialog(
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -731,11 +738,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Смена пароля',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          style: textStyles.dialogTitle.copyWith(
                             color: themeColor,
                           ),
                         ),
@@ -794,9 +799,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 Expanded(
                                   child: Text(
                                     errorMessage!,
-                                    style: const TextStyle(
+                                    style: textStyles.secondaryBody.copyWith(
                                       color: Colors.red,
-                                      fontSize: 13,
                                     ),
                                   ),
                                 ),
@@ -918,7 +922,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        errorStyle: const TextStyle(height: 0.8),
+        errorStyle: Theme.of(context)
+            .inputDecorationTheme
+            .errorStyle
+            ?.copyWith(height: 0.8),
       ),
       obscureText: true,
     );

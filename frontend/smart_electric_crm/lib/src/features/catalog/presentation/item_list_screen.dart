@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
@@ -18,6 +19,8 @@ class ItemListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final itemsAsync = ref.watch(fetchCategoryItemsProvider(categoryId));
+    final theme = Theme.of(context);
+    final textStyles = context.appTextStyles;
 
     return Scaffold(
       appBar: AppBar(
@@ -43,16 +46,21 @@ class ItemListScreen extends ConsumerWidget {
                 title: Text(item.name),
                 trailing: Text(
                   '${AppNumberFormatter.decimal(item.defaultPrice)}\$ / ${item.unit}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: textStyles.bodyStrong.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               );
             },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Ошибка: $err')),
+        error: (err, stack) => Center(
+          child: Text(
+            'Ошибка: $err',
+            style: textStyles.body.copyWith(color: theme.colorScheme.error),
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: null,
@@ -93,6 +101,8 @@ class _PopupSelectField<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textStyles = context.appTextStyles;
     final selected = options.cast<_PopupSelectOption<T>?>().firstWhere(
           (option) => option?.value == value,
           orElse: () => null,
@@ -107,10 +117,8 @@ class _PopupSelectField<T> extends StatelessWidget {
               padding: const EdgeInsets.only(left: 2, bottom: 6),
               child: Text(
                 label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade700,
+                style: textStyles.fieldLabel.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ),

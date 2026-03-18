@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import '../../data/catalog_repository.dart';
 import '../../domain/catalog_item.dart';
@@ -90,6 +91,10 @@ class _CatalogSearchScreenState extends ConsumerState<CatalogSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final textStyles = context.appTextStyles;
+
     return Scaffold(
       appBar: AppBar(
         title: TextField(
@@ -98,14 +103,14 @@ class _CatalogSearchScreenState extends ConsumerState<CatalogSearchScreen> {
           decoration: InputDecoration(
             hintText: "Поиск в каталоге...",
             border: InputBorder.none,
-            hintStyle: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+            hintStyle:
+                textStyles.input.copyWith(color: scheme.onSurfaceVariant),
           ),
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
+          style: textStyles.input.copyWith(
+            color: scheme.onSurface,
             fontSize: 18,
           ),
-          cursorColor: Theme.of(context).colorScheme.onSurface,
+          cursorColor: scheme.onSurface,
           onChanged: _onSearchChanged,
         ),
       ),
@@ -115,8 +120,10 @@ class _CatalogSearchScreenState extends ConsumerState<CatalogSearchScreen> {
           if (_error != null)
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text("Ошибка поиска: $_error",
-                  style: const TextStyle(color: Colors.red)),
+              child: Text(
+                "Ошибка поиска: $_error",
+                style: textStyles.body.copyWith(color: theme.colorScheme.error),
+              ),
             ),
           Expanded(
             child: _results.isEmpty &&
@@ -144,9 +151,7 @@ class _CatalogSearchScreenState extends ConsumerState<CatalogSearchScreen> {
                               ? Colors.green
                               : Colors.blue,
                         ),
-                        title: Text(item.name,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w500)),
+                        title: Text(item.name, style: textStyles.bodyStrong),
                         subtitle: Text(
                             "${AppNumberFormatter.decimal(item.defaultPrice)} ${item.defaultCurrency} / ${item.unit}"),
                         trailing: const Icon(Icons.add_circle_outline,
