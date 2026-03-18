@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/utils/decimal_input_formatter.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_list_tile.dart';
@@ -352,12 +353,13 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   }) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: textStyles.fieldLabel.copyWith(
             fontSize: 11,
             fontWeight: FontWeight.w500,
             color: scheme.onSurfaceVariant,
@@ -370,7 +372,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
           minLines: 1,
           keyboardType: TextInputType.multiline,
           textAlignVertical: TextAlignVertical.top,
-          style: const TextStyle(fontSize: 14),
+          style: textStyles.input.copyWith(color: scheme.onSurface),
           onChanged: onChanged,
           readOnly: widget.isDisabled,
           decoration: InputDecoration(
@@ -407,6 +409,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     final isDark = AppDesignTokens.isDark(context);
     final hasMarkup = widget.markupPercent > 0;
     const markupAccent = Colors.teal;
+    final textStyles = context.appTextStyles;
 
     final headerColor = hasMarkup
         ? (isDark
@@ -456,13 +459,19 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             children: [
               Text(
                 "Наценка: ",
-                style: TextStyle(
-                    color: textColor, fontWeight: textWeight, fontSize: 14),
+                style: textStyles.bodyStrong.copyWith(
+                  color: textColor,
+                  fontWeight: textWeight,
+                  fontSize: 14,
+                ),
               ),
               Text(
                 "${_formatMarkup(widget.markupPercent)}%",
-                style: TextStyle(
-                    color: textColor, fontWeight: textWeight, fontSize: 14),
+                style: textStyles.bodyStrong.copyWith(
+                  color: textColor,
+                  fontWeight: textWeight,
+                  fontSize: 14,
+                ),
               ),
             ],
           ),
@@ -532,14 +541,14 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                             contentPadding:
                                 const EdgeInsets.symmetric(horizontal: 4),
                             suffixText: '%',
-                            suffixStyle: TextStyle(
+                            suffixStyle: textStyles.fieldLabel.copyWith(
                               fontSize: 12,
                               color: hasMarkup
                                   ? (isDark
                                       ? markupAccent.shade300
                                       : markupAccent.shade700)
                                   : Colors.blue.shade300,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -558,9 +567,9 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                             ),
                             counterText: '',
                           ),
-                          style: TextStyle(
+                          style: textStyles.bodyStrong.copyWith(
                             fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                             color: hasMarkup
                                 ? (isDark
                                     ? scheme.onSurface
@@ -642,7 +651,10 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
               widget.isAutomationLoading
                   ? "Загрузка..."
                   : (widget.automationActionLabel ?? "Автоматизация"),
-              style: TextStyle(color: _primaryColor, fontSize: 13),
+              style: context.appTextStyles.button.copyWith(
+                color: _primaryColor,
+                fontSize: 13,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
             style: OutlinedButton.styleFrom(
@@ -674,7 +686,10 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                 : Icon(Icons.copy_all, size: 18, color: _primaryColor),
             label: Text(
               widget.isTemplatesLoading ? "Загрузка..." : "Шаблоны",
-              style: TextStyle(color: _primaryColor, fontSize: 13),
+              style: context.appTextStyles.button.copyWith(
+                color: _primaryColor,
+                fontSize: 13,
+              ),
             ),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: _primaryColor.withOpacity(0.3)),
@@ -720,6 +735,8 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
 
   Widget _buildItemsCaption(int itemCount,
       {required double horizontalPadding}) {
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         horizontalPadding,
@@ -737,10 +754,10 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
           const SizedBox(width: 6),
           Text(
             _isWorkTab ? 'Позиции работ' : 'Позиции материалов',
-            style: TextStyle(
+            style: textStyles.captionStrong.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface,
+              color: scheme.onSurface,
             ),
           ),
           const Spacer(),
@@ -753,7 +770,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             ),
             child: Text(
               '$itemCount',
-              style: TextStyle(
+              style: textStyles.captionStrong.copyWith(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w700,
                 color: _primaryColor,

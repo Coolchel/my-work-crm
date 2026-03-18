@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
@@ -55,6 +56,8 @@ class _EstimateListTileState extends State<EstimateListTile> {
   Widget build(BuildContext context) {
     final item = widget.item;
     final isDark = AppDesignTokens.isDark(context);
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
     final isUsd = item.currency == 'USD';
     final clientAmount = item.clientAmount ?? 0;
     final employerAmount = item.employerAmount ?? 0;
@@ -147,7 +150,8 @@ class _EstimateListTileState extends State<EstimateListTile> {
                               children: [
                                 Text(
                                   item.name,
-                                  style: const TextStyle(
+                                  style: textStyles.bodyStrong.copyWith(
+                                    color: scheme.onSurface,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 12.5,
                                     height: 1.2,
@@ -162,20 +166,21 @@ class _EstimateListTileState extends State<EstimateListTile> {
                                   children: [
                                     Text(
                                       '${_formatQuantity(item.totalQuantity)} ${item.unit}',
-                                      style: TextStyle(
+                                      style: textStyles.captionStrong.copyWith(
                                         fontSize: 10.5,
-                                        color: Colors.grey.shade600,
+                                        color: scheme.onSurfaceVariant,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                     if (!widget.hidePrices)
                                       Text(
                                         'x ${_formatCurrencyAmount(item.pricePerUnit ?? 0, isUsd)}',
-                                        style: TextStyle(
+                                        style:
+                                            textStyles.captionStrong.copyWith(
                                           fontSize: 10.5,
                                           color: widget.isMarkupActive
                                               ? markupAccent.shade700
-                                              : Colors.grey.shade600,
+                                              : scheme.onSurfaceVariant,
                                           fontWeight: widget.isMarkupActive
                                               ? FontWeight.w700
                                               : FontWeight.w500,
@@ -243,7 +248,7 @@ class _EstimateListTileState extends State<EstimateListTile> {
                                   ),
                                   child: Text(
                                     _formatCurrencyAmount(clientAmount, isUsd),
-                                    style: TextStyle(
+                                    style: textStyles.captionStrong.copyWith(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
                                       color: isUsd
@@ -301,7 +306,7 @@ class _EstimateListTileState extends State<EstimateListTile> {
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: context.appTextStyles.captionStrong.copyWith(
           fontSize: 9.5,
           fontWeight: FontWeight.w600,
           color: foreground,

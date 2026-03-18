@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 
 /// Comprehensive dashboard for summary totals.
@@ -80,7 +81,7 @@ class TotalDashboard extends StatelessWidget {
                       : (isMarkupActive
                           ? 'Итого (с наценкой)'
                           : 'Итого (материал)'),
-                  style: TextStyle(
+                  style: context.appTextStyles.bodyStrong.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: isDark
@@ -89,9 +90,9 @@ class TotalDashboard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                if (hasUsd) _label('USD (\$)', primaryColor),
+                if (hasUsd) _label(context, 'USD (\$)', primaryColor),
                 if (hasUsd && hasByn) const SizedBox(width: 15),
-                if (hasByn) _label('BYN (р)', Colors.deepPurple),
+                if (hasByn) _label(context, 'BYN (р)', Colors.deepPurple),
               ],
             ),
           ),
@@ -100,9 +101,11 @@ class TotalDashboard extends StatelessWidget {
             child: Column(
               children: [
                 if (hasEmployer) ...[
-                  _row('Наши', ourUsd, ourByn, Colors.green, isBold: true),
+                  _row(context, 'Наши', ourUsd, ourByn, Colors.green,
+                      isBold: true),
                   const SizedBox(height: 6),
                   _row(
+                    context,
                     'Контрагент',
                     employerUsd,
                     employerByn,
@@ -114,7 +117,8 @@ class TotalDashboard extends StatelessWidget {
                     child: Divider(height: 1, thickness: 0.5),
                   ),
                 ],
-                _row('Всего', totalUsd, totalByn, primaryColor, isBold: true),
+                _row(context, 'Всего', totalUsd, totalByn, primaryColor,
+                    isBold: true),
               ],
             ),
           ),
@@ -123,15 +127,15 @@ class TotalDashboard extends StatelessWidget {
     );
   }
 
-  Widget _label(String text, Color color) {
+  Widget _label(BuildContext context, String text, Color color) {
     return SizedBox(
       width: 65,
       child: Text(
         text,
         textAlign: TextAlign.right,
-        style: TextStyle(
+        style: context.appTextStyles.chartLabel.copyWith(
           fontSize: 10,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w700,
           color: color.withOpacity(0.8),
         ),
       ),
@@ -139,6 +143,7 @@ class TotalDashboard extends StatelessWidget {
   }
 
   Widget _row(
+    BuildContext context,
     String label,
     double usd,
     double byn,
@@ -152,17 +157,18 @@ class TotalDashboard extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: context.appTextStyles.bodyStrong.copyWith(
             color: isBold ? color : Colors.grey.shade700,
             fontWeight: isBold ? FontWeight.w700 : FontWeight.w600,
             letterSpacing: 0.2,
           ),
         ),
         const Spacer(),
-        if (hasUsd) _amount(usd, color, isBold, show: usd > 0),
+        if (hasUsd) _amount(context, usd, color, isBold, show: usd > 0),
         if (hasUsd && hasByn) const SizedBox(width: 15),
         if (hasByn)
           _amount(
+            context,
             byn,
             label == 'Контрагент' ? color : Colors.deepPurple,
             isBold,
@@ -172,10 +178,17 @@ class TotalDashboard extends StatelessWidget {
     );
   }
 
-  Widget _amount(double value, Color color, bool isBold, {required bool show}) {
+  Widget _amount(
+    BuildContext context,
+    double value,
+    Color color,
+    bool isBold, {
+    required bool show,
+  }) {
     final formattedValue = isWorkTab
         ? AppNumberFormatter.integer(value)
         : AppNumberFormatter.decimal(value);
+    final scheme = Theme.of(context).colorScheme;
 
     return SizedBox(
       width: 70,
@@ -183,16 +196,18 @@ class TotalDashboard extends StatelessWidget {
           ? Text(
               formattedValue,
               textAlign: TextAlign.right,
-              style: TextStyle(
+              style: context.appTextStyles.bodyStrong.copyWith(
                 fontSize: 13,
-                fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+                fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
                 color: isBold ? color : color.withOpacity(0.8),
               ),
             )
-          : const Text(
+          : Text(
               '—',
               textAlign: TextAlign.right,
-              style: TextStyle(color: Colors.grey),
+              style: context.appTextStyles.caption.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
             ),
     );
   }

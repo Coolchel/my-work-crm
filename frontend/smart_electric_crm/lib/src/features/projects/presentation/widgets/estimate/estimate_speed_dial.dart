@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 
 class EstimateSpeedDial extends StatelessWidget {
   final bool isExpanded;
@@ -60,6 +61,7 @@ class EstimateSpeedDial extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildExtendedFab(
+                      context: context,
                       icon: Icons.delete_forever,
                       label: 'Очистить',
                       color: deleteBtnColor,
@@ -69,6 +71,7 @@ class EstimateSpeedDial extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     _buildExtendedFab(
+                      context: context,
                       icon: Icons.file_copy_outlined,
                       label: 'Шаблоны',
                       color: actionBtnColor,
@@ -78,6 +81,7 @@ class EstimateSpeedDial extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     _buildExtendedFab(
+                      context: context,
                       icon: Icons.edit_outlined,
                       label: 'Вручную',
                       color: actionBtnColor,
@@ -87,6 +91,7 @@ class EstimateSpeedDial extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     _buildExtendedFab(
+                      context: context,
                       icon: Icons.search,
                       label: 'Поиск',
                       color: actionBtnColor,
@@ -114,6 +119,7 @@ class EstimateSpeedDial extends StatelessWidget {
   }
 
   Widget _buildExtendedFab({
+    required BuildContext context,
     required IconData icon,
     required String label,
     required Color color,
@@ -157,7 +163,10 @@ class EstimateSpeedDial extends StatelessWidget {
       icon: Icon(icon, size: 20),
       label: Text(
         label,
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        style: context.appTextStyles.button.copyWith(
+          fontSize: 13,
+          color: fgColor,
+        ),
       ),
     );
   }

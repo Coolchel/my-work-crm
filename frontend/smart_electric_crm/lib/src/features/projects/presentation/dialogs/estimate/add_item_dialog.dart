@@ -254,8 +254,13 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                       widget.onAdd(dummy);
                     },
                     icon: const Icon(Icons.add_circle_outline, size: 20),
-                    label: const Text("Новая позиция",
-                        style: TextStyle(fontSize: 13)),
+                    label: Text(
+                      "Новая позиция",
+                      style: textStyles.button.copyWith(
+                        fontSize: 13,
+                        color: themeColor,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       backgroundColor: themeColor.withOpacity(0.1),

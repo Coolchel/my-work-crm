@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 
 /// A styled header for grouping estimate items by category
 class GroupHeader extends StatelessWidget {
@@ -15,6 +16,7 @@ class GroupHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textStyles = context.appTextStyles;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       alignment: Alignment.centerLeft,
@@ -31,7 +33,7 @@ class GroupHeader extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             title,
-            style: TextStyle(
+            style: textStyles.captionStrong.copyWith(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
               color: color.withOpacity(0.9),
@@ -48,7 +50,7 @@ class GroupHeader extends StatelessWidget {
               ),
               child: Text(
                 '$itemCount',
-                style: TextStyle(
+                style: textStyles.captionStrong.copyWith(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: color.withOpacity(0.95),

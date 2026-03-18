@@ -128,7 +128,12 @@ mixin EstimateDialogHelpers {
   }
 
   /// Builds a section header label/title
-  Widget buildSectionHeader(String title, {IconData? icon}) {
+  Widget buildSectionHeader(
+    BuildContext context,
+    String title, {
+    IconData? icon,
+  }) {
+    final textStyles = context.appTextStyles;
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
       child: Row(
@@ -139,7 +144,7 @@ mixin EstimateDialogHelpers {
           ],
           Text(
             title.toUpperCase(),
-            style: TextStyle(
+            style: textStyles.captionStrong.copyWith(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: Colors.grey.shade600,
@@ -798,6 +803,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     buildSectionHeader(
+                      context,
                       "Просмотр",
                       icon: Icons.remove_red_eye_rounded,
                     ),
@@ -818,6 +824,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
                     ),
                     if (hasTextActions)
                       buildSectionHeader(
+                        context,
                         "Копировать текст",
                         icon: Icons.copy_rounded,
                       ),
@@ -831,6 +838,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
                     ),
                     if (downloadBeforeShare && hasTextActions)
                       buildSectionHeader(
+                        context,
                         EstimateTextActionHandler.downloadSectionTitle,
                         icon: Icons.download_rounded,
                       ),
@@ -845,6 +853,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
                       ),
                     if (showShareSection)
                       buildSectionHeader(
+                        context,
                         EstimateTextActionHandler.shareSectionTitle,
                         icon: Icons.share_rounded,
                       ),
@@ -859,6 +868,7 @@ class EstimateTextActionsDialog extends ConsumerWidget
                       ),
                     if (!downloadBeforeShare && hasTextActions)
                       buildSectionHeader(
+                        context,
                         EstimateTextActionHandler.downloadSectionTitle,
                         icon: Icons.download_rounded,
                       ),
@@ -1117,6 +1127,7 @@ class _EstimatePdfActionsDialogState
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     buildSectionHeader(
+                      context,
                       "Открыть в PDF",
                       icon: Icons.open_in_new_rounded,
                     ),
@@ -1129,6 +1140,7 @@ class _EstimatePdfActionsDialogState
                     ),
                     if (kIsWeb) ...[
                       buildSectionHeader(
+                        context,
                         "Скачать PDF",
                         icon: Icons.download_rounded,
                       ),
@@ -1142,6 +1154,7 @@ class _EstimatePdfActionsDialogState
                     ],
                     if (_showsPdfNativeDownloadMenu) ...[
                       buildSectionHeader(
+                        context,
                         "Скачать PDF",
                         icon: Icons.download_rounded,
                       ),
@@ -1155,6 +1168,7 @@ class _EstimatePdfActionsDialogState
                     ],
                     if (!kIsWeb) ...[
                       buildSectionHeader(
+                        context,
                         "Поделиться PDF",
                         icon: Icons.share_rounded,
                       ),

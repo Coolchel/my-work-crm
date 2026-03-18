@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 
 class EstimateAppBarActions extends StatelessWidget {
   final bool showPrices;
@@ -28,6 +29,7 @@ class EstimateAppBarActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textStyles = context.appTextStyles;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -153,7 +155,9 @@ class EstimateAppBarActions extends StatelessWidget {
                     const SizedBox(width: 12),
                     Text(
                       'Очистить смету...',
-                      style: TextStyle(color: Colors.red.shade400),
+                      style: textStyles.bodyStrong.copyWith(
+                        color: Colors.red.shade400,
+                      ),
                     ),
                   ],
                 ),
