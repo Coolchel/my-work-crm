@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
@@ -86,7 +87,88 @@ class _PopupSelectOption<T> {
   });
 }
 
-class _PopupSelectField<T> extends StatelessWidget {
+Color _catalogDialogFieldFillColor(BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
+  return AppDesignTokens.isDark(context)
+      ? scheme.surfaceContainerHigh
+      : scheme.surfaceContainer.withOpacity(0.4);
+}
+
+const double _catalogDialogSingleLineFieldHeight = 56;
+
+InputDecoration _catalogDialogInputDecoration(
+  BuildContext context, {
+  required String label,
+  bool alignLabelWithHint = false,
+  BoxConstraints? constraints,
+  EdgeInsetsGeometry? contentPadding,
+}) {
+  final scheme = Theme.of(context).colorScheme;
+  final textStyles = context.appTextStyles;
+  final labelStyle = textStyles.fieldLabel.copyWith(
+    fontSize: 12.5,
+    color: Colors.indigo.shade400,
+  );
+  return InputDecoration(
+    labelText: label,
+    labelStyle: labelStyle,
+    floatingLabelStyle: labelStyle,
+    floatingLabelBehavior: FloatingLabelBehavior.always,
+    alignLabelWithHint: alignLabelWithHint,
+    constraints: constraints,
+    isDense: true,
+    filled: true,
+    fillColor: _catalogDialogFieldFillColor(context),
+    hintStyle: textStyles.secondaryBody.copyWith(
+      color: scheme.onSurfaceVariant.withOpacity(0.75),
+    ),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: AppDesignTokens.softBorder(context)),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: AppDesignTokens.softBorder(context)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Colors.indigo, width: 2),
+    ),
+    contentPadding: contentPadding ?? const EdgeInsets.fromLTRB(16, 18, 16, 10),
+  );
+}
+
+class _CatalogDialogTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final TextInputType? keyboardType;
+
+  const _CatalogDialogTextField({
+    required this.controller,
+    required this.label,
+    this.keyboardType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      textAlignVertical: TextAlignVertical.center,
+      style: context.appTextStyles.input,
+      decoration: _catalogDialogInputDecoration(
+        context,
+        label: label,
+        constraints: const BoxConstraints(
+          minHeight: _catalogDialogSingleLineFieldHeight,
+          maxHeight: _catalogDialogSingleLineFieldHeight,
+        ),
+      ),
+    );
+  }
+}
+
+class _PopupSelectField<T> extends StatefulWidget {
   final String label;
   final T value;
   final List<_PopupSelectOption<T>> options;
@@ -100,98 +182,140 @@ class _PopupSelectField<T> extends StatelessWidget {
   });
 
   @override
+  State<_PopupSelectField<T>> createState() => _PopupSelectFieldState<T>();
+}
+
+class _PopupSelectFieldState<T> extends State<_PopupSelectField<T>> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textStyles = context.appTextStyles;
-    final selected = options.cast<_PopupSelectOption<T>?>().firstWhere(
-          (option) => option?.value == value,
+    final menuHoverColor = AppDesignTokens.isDark(context)
+        ? Colors.white.withOpacity(0.08)
+        : Colors.black.withOpacity(0.045);
+    final selected = widget.options.cast<_PopupSelectOption<T>?>().firstWhere(
+          (option) => option?.value == widget.value,
           orElse: () => null,
         );
+    final displayText = selected?.label ?? '';
+    if (_controller.text != displayText) {
+      _controller.value = TextEditingValue(
+        text: displayText,
+        selection: TextSelection.collapsed(offset: displayText.length),
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 2, bottom: 6),
-              child: Text(
-                label,
-                style: textStyles.fieldLabel.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+        return MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: Theme(
+            data: theme.copyWith(
+              hoverColor: menuHoverColor,
+              highlightColor: menuHoverColor,
+              splashColor: menuHoverColor,
+              popupMenuTheme: theme.popupMenuTheme.copyWith(
+                color: theme.colorScheme.surface,
+                surfaceTintColor: Colors.transparent,
               ),
             ),
-            Container(
-              height: 46,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+            child: PopupMenuButton<T>(
+              tooltip: '',
+              padding: EdgeInsets.zero,
+              menuPadding: EdgeInsets.zero,
+              elevation: 4,
+              shadowColor: AppDesignTokens.cardShadow(context),
+              surfaceTintColor: Colors.transparent,
+              color: theme.colorScheme.surface,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
+                side: BorderSide(
+                  color: AppDesignTokens.softBorder(context),
+                ),
               ),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
-                child: InkWell(
-                  onTap: () async {
-                    final box = context.findRenderObject() as RenderBox;
-                    final position = box.localToGlobal(Offset.zero);
-                    final size = box.size;
-
-                    final selectedValue = await showMenu<T>(
-                      context: context,
-                      position: RelativeRect.fromLTRB(
-                        position.dx,
-                        position.dy + size.height + 4,
-                        position.dx + size.width,
-                        position.dy + size.height + 280,
+              clipBehavior: Clip.antiAlias,
+              position: PopupMenuPosition.under,
+              offset: const Offset(0, 2),
+              constraints: BoxConstraints(
+                minWidth: constraints.maxWidth,
+                maxWidth: constraints.maxWidth,
+              ),
+              onSelected: widget.onChanged,
+              itemBuilder: (context) => widget.options
+                  .map(
+                    (option) => PopupMenuItem<T>(
+                      value: option.value,
+                      height: 40,
+                      textStyle: textStyles.body.copyWith(
+                        color: theme.colorScheme.onSurface,
                       ),
-                      elevation: 4,
-                      shadowColor: Colors.black.withOpacity(0.2),
-                      surfaceTintColor: Colors.transparent,
-                      color: Theme.of(context).colorScheme.surface,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      child: Text(option.label),
+                    ),
+                  )
+                  .toList(),
+              child: Stack(
+                children: [
+                  IgnorePointer(
+                    child: TextField(
+                      controller: _controller,
+                      readOnly: true,
+                      showCursor: false,
+                      enableInteractiveSelection: false,
+                      style: textStyles.input.copyWith(
+                        color: theme.colorScheme.onSurface,
                       ),
-                      constraints: BoxConstraints(
-                        minWidth: constraints.maxWidth,
-                        maxWidth: constraints.maxWidth,
-                      ),
-                      items: options
-                          .map(
-                            (option) => PopupMenuItem<T>(
-                              value: option.value,
-                              child: Text(option.label),
-                            ),
-                          )
-                          .toList(),
-                    );
-                    if (selectedValue != null) {
-                      onChanged(selectedValue);
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  mouseCursor: SystemMouseCursors.click,
-                  hoverColor: Colors.indigo.withOpacity(0.05),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            selected?.label ?? '',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                      decoration: _catalogDialogInputDecoration(
+                        context,
+                        label: widget.label,
+                        constraints: const BoxConstraints(
+                          minHeight: _catalogDialogSingleLineFieldHeight,
+                          maxHeight: _catalogDialogSingleLineFieldHeight,
                         ),
-                        const Icon(Icons.arrow_drop_down),
-                      ],
+                        contentPadding: const EdgeInsets.fromLTRB(
+                          16,
+                          18,
+                          44,
+                          10,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: Transform.translate(
+                            offset: const Offset(0, -1),
+                            child: Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              color: theme.colorScheme.onSurfaceVariant,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         );
       },
     );
@@ -223,81 +347,158 @@ class _CreateItemDialogState extends ConsumerState<_CreateItemDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Добавить товар'),
-      content: SingleChildScrollView(
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
+    final isDark = AppDesignTokens.isDark(context);
+    final maxDialogHeight = MediaQuery.sizeOf(context).height * 0.82;
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: 520, maxHeight: maxDialogHeight),
+        decoration: BoxDecoration(
+          color: isDark ? scheme.surfaceContainerHigh : scheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppDesignTokens.softBorder(context)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _PopupSelectField<String>(
-              label: 'Тип',
-              value: _itemType,
-              options: const [
-                _PopupSelectOption(value: 'material', label: 'Материал'),
-                _PopupSelectOption(value: 'work', label: 'Работа'),
-              ],
-              onChanged: (val) => setState(() => _itemType = val),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.indigo.withOpacity(0.12),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Text(
+                    'Добавить товар',
+                    style: textStyles.dialogTitle.copyWith(
+                      color: Colors.indigo.withOpacity(0.8),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, color: Colors.indigo),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      iconSize: 20,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Название'),
+            Flexible(
+              fit: FlexFit.loose,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _PopupSelectField<String>(
+                      label: 'Тип',
+                      value: _itemType,
+                      options: const [
+                        _PopupSelectOption(
+                            value: 'material', label: 'Материал'),
+                        _PopupSelectOption(value: 'work', label: 'Работа'),
+                      ],
+                      onChanged: (val) => setState(() => _itemType = val),
+                    ),
+                    const SizedBox(height: 16),
+                    _CatalogDialogTextField(
+                      controller: _nameController,
+                      label: 'Название',
+                    ),
+                    const SizedBox(height: 16),
+                    _CatalogDialogTextField(
+                      controller: _priceController,
+                      label: 'Цена (\$)',
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                    ),
+                    const SizedBox(height: 16),
+                    _CatalogDialogTextField(
+                      controller: _unitController,
+                      label: 'Ед. измерения',
+                    ),
+                  ],
+                ),
+              ),
             ),
-            TextField(
-              controller: _priceController,
-              decoration: const InputDecoration(labelText: 'Цена (\$)'),
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-            ),
-            TextField(
-              controller: _unitController,
-              decoration: const InputDecoration(labelText: 'Ед. измерения'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Отмена'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final name = _nameController.text;
+                      final priceString =
+                          _priceController.text.replaceAll(',', '.');
+                      final price = double.tryParse(priceString);
+                      final unit = _unitController.text;
+
+                      if (name.isEmpty || price == null || unit.isEmpty) {
+                        return;
+                      }
+
+                      try {
+                        await ref.read(catalogRepositoryProvider).createItem(
+                              categoryId: widget.categoryId,
+                              name: name,
+                              price: price,
+                              measurementUnit: unit,
+                              itemType: _itemType,
+                            );
+
+                        ref.invalidate(
+                          fetchCategoryItemsProvider(widget.categoryId),
+                        );
+
+                        if (context.mounted) Navigator.of(context).pop();
+                      } catch (e, st) {
+                        if (context.mounted) {
+                          debugPrint('Create catalog item failed: $e\n$st');
+                          await ErrorFeedback.show(
+                            context,
+                            e,
+                            fallbackMessage:
+                                'Не удалось создать товар. Попробуйте снова.',
+                          );
+                        }
+                      }
+                    },
+                    child: const Text('Сохранить'),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            final name = _nameController.text;
-            final priceString = _priceController.text.replaceAll(',', '.');
-            final price = double.tryParse(priceString);
-            final unit = _unitController.text;
-
-            if (name.isEmpty || price == null || unit.isEmpty) {
-              return;
-            }
-
-            try {
-              await ref.read(catalogRepositoryProvider).createItem(
-                    categoryId: widget.categoryId,
-                    name: name,
-                    price: price,
-                    measurementUnit: unit,
-                    itemType: _itemType,
-                  );
-
-              ref.invalidate(fetchCategoryItemsProvider(widget.categoryId));
-
-              if (context.mounted) Navigator.of(context).pop();
-            } catch (e, st) {
-              if (context.mounted) {
-                debugPrint('Create catalog item failed: $e\n$st');
-                await ErrorFeedback.show(
-                  context,
-                  e,
-                  fallbackMessage:
-                      'Не удалось создать товар. Попробуйте снова.',
-                );
-              }
-            }
-          },
-          child: const Text('Сохранить'),
-        ),
-      ],
     );
   }
 }

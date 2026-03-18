@@ -393,6 +393,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             '\u041f\u0440\u0438\u0432\u0435\u0442\u0441\u0442\u0432\u0438\u0435 \u0438 \u0431\u044b\u0441\u0442\u0440\u044b\u0439 \u043f\u043e\u0438\u0441\u043a. '
             '\u0415\u0441\u043b\u0438 \u044d\u043a\u0440\u0430\u043d \u0432\u044b\u043a\u043b\u044e\u0447\u0435\u043d, \u0432\u043a\u043b\u0430\u0434\u043a\u0430 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043a \u043f\u043e\u044f\u0432\u0438\u0442\u0441\u044f \u0432\u043d\u0438\u0437\u0443, '
             '\u0430 \u043a\u043d\u043e\u043f\u043a\u0430 \u00ab\u0413\u043b\u0430\u0432\u043d\u0430\u044f\u00bb \u0432 \u0433\u043b\u0443\u0431\u043e\u043a\u0438\u0445 \u0440\u0430\u0437\u0434\u0435\u043b\u0430\u0445 \u0441\u043a\u0440\u044b\u0432\u0430\u0435\u0442\u0441\u044f.',
+        centerAccessoryVertically: true,
         trailing: Switch(
           value: settings.showWelcome,
           onChanged: (value) => settingsNotifier.setShowWelcome(value),
@@ -458,22 +459,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     Color accentColor = Colors.indigo,
     Color? titleColor,
     Color? subtitleColor,
+    bool centerAccessoryVertically = false,
   }) {
     final theme = Theme.of(context);
     final textStyles = context.appTextStyles;
     final isWindowsDesktop =
         !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
     final titleStyle =
-        (isWindowsDesktop ? textStyles.sectionTitle : textStyles.cardTitle)
+        (isWindowsDesktop ? textStyles.cardTitle : textStyles.cardTitle)
             .copyWith(fontWeight: FontWeight.w600);
-    final subtitleStyle =
-        (isWindowsDesktop ? textStyles.body : textStyles.caption).copyWith(
+    final subtitleStyle = (isWindowsDesktop
+            ? textStyles.caption.copyWith(fontSize: 11.5)
+            : textStyles.caption)
+        .copyWith(
       color: subtitleColor ?? theme.colorScheme.onSurfaceVariant,
       height: 1.35,
     );
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: centerAccessoryVertically
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.start,
       children: [
         Container(
           width: 40,
@@ -493,9 +499,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 2),
+                padding:
+                    EdgeInsets.only(top: centerAccessoryVertically ? 0 : 2),
                 child: Text(
                   title,
                   style: titleStyle.copyWith(
@@ -511,7 +519,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (trailing != null) ...[
           const SizedBox(width: 12),
           Padding(
-            padding: const EdgeInsets.only(top: 2),
+            padding: EdgeInsets.only(top: centerAccessoryVertically ? 0 : 2),
             child: trailing,
           ),
         ],

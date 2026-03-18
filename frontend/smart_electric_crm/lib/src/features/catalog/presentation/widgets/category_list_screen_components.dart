@@ -1181,12 +1181,16 @@ class _DialogShell extends StatelessWidget {
     final textStyles = context.appTextStyles;
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
+    final maxDialogHeight = MediaQuery.sizeOf(context).height * 0.82;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 560),
+        constraints: BoxConstraints(
+          maxWidth: 560,
+          maxHeight: maxDialogHeight,
+        ),
         decoration: BoxDecoration(
           color: isDark ? scheme.surfaceContainerHigh : scheme.surface,
           borderRadius: BorderRadius.circular(24),
@@ -1234,9 +1238,12 @@ class _DialogShell extends StatelessWidget {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: child,
+            Flexible(
+              fit: FlexFit.loose,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: child,
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
@@ -1252,32 +1259,108 @@ class _DialogShell extends StatelessWidget {
   }
 }
 
-InputDecoration _dialogInputDecoration(BuildContext context, String label) {
+const double _catalogDialogSingleLineFieldHeight = 56;
+
+Color _dialogFieldFillColor(BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
+  return AppDesignTokens.isDark(context)
+      ? scheme.surfaceContainerHigh
+      : scheme.surfaceContainer.withOpacity(0.4);
+}
+
+InputDecoration _dialogInputDecoration(
+  BuildContext context, {
+  required String label,
+  String? errorText,
+  bool alignLabelWithHint = false,
+  BoxConstraints? constraints,
+  EdgeInsetsGeometry? contentPadding,
+}) {
   final theme = Theme.of(context);
+  final scheme = theme.colorScheme;
+  final textStyles = context.appTextStyles;
+  final labelStyle = textStyles.fieldLabel.copyWith(
+    fontSize: 12.5,
+    color: Colors.indigo.shade400,
+  );
   return InputDecoration(
     labelText: label,
-    constraints: const BoxConstraints(minHeight: 56),
+    labelStyle: labelStyle,
+    floatingLabelStyle: labelStyle,
+    floatingLabelBehavior: FloatingLabelBehavior.always,
+    alignLabelWithHint: alignLabelWithHint,
+    constraints: constraints,
+    errorText: errorText,
+    isDense: true,
     filled: true,
-    fillColor: const Color(0x14000000),
+    fillColor: _dialogFieldFillColor(context),
+    hintStyle: textStyles.secondaryBody.copyWith(
+      color: scheme.onSurfaceVariant.withOpacity(0.75),
+    ),
     border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Color(0x334B5563)),
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: AppDesignTokens.softBorder(context)),
     ),
     enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Color(0x334B5563)),
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: AppDesignTokens.softBorder(context)),
     ),
     focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Colors.indigo, width: 1.5),
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: Colors.indigo, width: 2),
     ),
-    floatingLabelStyle: theme.inputDecorationTheme.floatingLabelStyle?.copyWith(
-      color: Colors.indigo,
-      fontWeight: FontWeight.w600,
-    ),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    isDense: true,
+    errorStyle: theme.inputDecorationTheme.errorStyle,
+    contentPadding: contentPadding ?? const EdgeInsets.fromLTRB(16, 18, 16, 10),
   );
+}
+
+class _DialogTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final int maxLines;
+  final String? errorText;
+  final ValueChanged<String>? onChanged;
+
+  const _DialogTextField({
+    required this.controller,
+    required this.label,
+    this.keyboardType,
+    this.inputFormatters,
+    this.maxLines = 1,
+    this.errorText,
+    this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyles = context.appTextStyles;
+    final isSingleLine = maxLines == 1;
+
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
+      maxLines: maxLines,
+      onChanged: onChanged,
+      textAlignVertical:
+          isSingleLine ? TextAlignVertical.center : TextAlignVertical.top,
+      style: textStyles.input,
+      decoration: _dialogInputDecoration(
+        context,
+        label: label,
+        errorText: errorText,
+        alignLabelWithHint: !isSingleLine,
+        constraints: isSingleLine
+            ? const BoxConstraints(
+                minHeight: _catalogDialogSingleLineFieldHeight,
+                maxHeight: _catalogDialogSingleLineFieldHeight,
+              )
+            : null,
+      ),
+    );
+  }
 }
 
 class _PopupSelectOption<T> {
@@ -1295,12 +1378,14 @@ class _DialogPopupSelectField<T> extends StatefulWidget {
   final T value;
   final List<_PopupSelectOption<T>> options;
   final ValueChanged<T> onChanged;
+  final String? placeholder;
 
   const _DialogPopupSelectField({
     required this.label,
     required this.value,
     required this.options,
     required this.onChanged,
+    this.placeholder,
   });
 
   @override
@@ -1311,101 +1396,145 @@ class _DialogPopupSelectField<T> extends StatefulWidget {
 class _DialogPopupSelectFieldState<T>
     extends State<_DialogPopupSelectField<T>> {
   bool _isHovered = false;
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final textStyles = context.appTextStyles;
     final scheme = Theme.of(context).colorScheme;
-    final isDark = AppDesignTokens.isDark(context);
+    final menuHoverColor = AppDesignTokens.isDark(context)
+        ? Colors.white.withOpacity(0.08)
+        : Colors.black.withOpacity(0.045);
     final selected = widget.options.cast<_PopupSelectOption<T>?>().firstWhere(
           (option) => option?.value == widget.value,
           orElse: () => null,
         );
+    final displayText = selected?.label ?? widget.placeholder ?? '';
+    if (_controller.text != displayText) {
+      _controller.value = TextEditingValue(
+        text: displayText,
+        selection: TextSelection.collapsed(offset: displayText.length),
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 56),
-          child: MouseRegion(
-            cursor: SystemMouseCursors.click,
-            onEnter: (_) => setState(() => _isHovered = true),
-            onExit: (_) => setState(() => _isHovered = false),
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () async {
-                final box = context.findRenderObject() as RenderBox;
-                final position = box.localToGlobal(Offset.zero);
-                final size = box.size;
-
-                final selectedValue = await showMenu<T>(
-                  context: context,
-                  position: RelativeRect.fromLTRB(
-                    position.dx,
-                    position.dy + size.height,
-                    position.dx + size.width,
-                    position.dy + size.height + 320,
+        return MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          cursor: SystemMouseCursors.click,
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              hoverColor: menuHoverColor,
+              highlightColor: menuHoverColor,
+              splashColor: menuHoverColor,
+              popupMenuTheme: Theme.of(context).popupMenuTheme.copyWith(
+                    color: Theme.of(context).colorScheme.surface,
+                    surfaceTintColor: Colors.transparent,
                   ),
-                  elevation: 6,
-                  shadowColor: AppDesignTokens.cardShadow(context),
-                  surfaceTintColor: Colors.transparent,
-                  color: isDark
-                      ? scheme.surfaceContainerHigh
-                      : scheme.surfaceContainerHighest.withOpacity(0.98),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side:
-                        BorderSide(color: AppDesignTokens.softBorder(context)),
-                  ),
-                  constraints: BoxConstraints(
-                    minWidth: constraints.maxWidth,
-                    maxWidth: constraints.maxWidth,
-                  ),
-                  items: widget.options
-                      .map(
-                        (option) => PopupMenuItem<T>(
-                          value: option.value,
-                          height: 40,
-                          textStyle: textStyles.bodyStrong.copyWith(
-                            fontSize: 13,
-                            color: scheme.onSurface,
-                          ),
-                          child: Text(
-                            option.label,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      )
-                      .toList(),
-                );
-                if (selectedValue != null) {
-                  widget.onChanged(selectedValue);
-                }
-              },
-              child: InputDecorator(
-                isEmpty: selected == null,
-                isFocused: false,
-                decoration:
-                    _dialogInputDecoration(context, widget.label).copyWith(
-                  fillColor: _isHovered
-                      ? Colors.indigo.withOpacity(isDark ? 0.10 : 0.06)
-                      : null,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            ),
+            child: PopupMenuButton<T>(
+              tooltip: '',
+              padding: EdgeInsets.zero,
+              menuPadding: EdgeInsets.zero,
+              elevation: 6,
+              shadowColor: AppDesignTokens.cardShadow(context),
+              surfaceTintColor: Colors.transparent,
+              color: Theme.of(context).colorScheme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: AppDesignTokens.softBorder(context),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        selected?.label ?? '',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: textStyles.bodyStrong,
+              ),
+              clipBehavior: Clip.antiAlias,
+              position: PopupMenuPosition.under,
+              offset: const Offset(0, 2),
+              constraints: BoxConstraints(
+                minWidth: constraints.maxWidth,
+                maxWidth: constraints.maxWidth,
+              ),
+              onSelected: widget.onChanged,
+              itemBuilder: (context) => widget.options
+                  .map(
+                    (option) => PopupMenuItem<T>(
+                      value: option.value,
+                      height: 40,
+                      textStyle: textStyles.body.copyWith(
+                        color: scheme.onSurface,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Text(
+                          option.label,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
-                    Icon(Icons.arrow_drop_down,
-                        size: 22, color: scheme.onSurfaceVariant),
-                  ],
-                ),
+                  )
+                  .toList(),
+              child: Stack(
+                children: [
+                  IgnorePointer(
+                    child: TextField(
+                      controller: _controller,
+                      readOnly: true,
+                      showCursor: false,
+                      enableInteractiveSelection: false,
+                      style: textStyles.input.copyWith(
+                        color: scheme.onSurface,
+                      ),
+                      decoration: _dialogInputDecoration(
+                        context,
+                        label: widget.label,
+                        constraints: const BoxConstraints(
+                          minHeight: _catalogDialogSingleLineFieldHeight,
+                          maxHeight: _catalogDialogSingleLineFieldHeight,
+                        ),
+                        contentPadding: const EdgeInsets.fromLTRB(
+                          16,
+                          18,
+                          44,
+                          10,
+                        ),
+                      ).copyWith(
+                        fillColor: _isHovered
+                            ? Colors.indigo.withOpacity(0.04)
+                            : _dialogFieldFillColor(context),
+                      ),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: Transform.translate(
+                            offset: const Offset(0, -1),
+                            child: Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 20,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -1477,18 +1606,20 @@ class _DirectorySectionDialogState extends State<_DirectorySectionDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(
-              controller: _name,
-              decoration: _dialogInputDecoration(context, 'Название')),
-          const SizedBox(height: 10),
-          TextField(
-              controller: _code,
-              decoration: _dialogInputDecoration(context, 'Код')),
-          const SizedBox(height: 10),
-          TextField(
+          _DialogTextField(
+            controller: _name,
+            label: 'Название',
+          ),
+          const SizedBox(height: 16),
+          _DialogTextField(
+            controller: _code,
+            label: 'Код',
+          ),
+          const SizedBox(height: 16),
+          _DialogTextField(
             controller: _description,
+            label: 'Описание',
             maxLines: 3,
-            decoration: _dialogInputDecoration(context, 'Описание'),
           ),
         ],
       ),
@@ -1579,21 +1710,23 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(
-              controller: _name,
-              decoration: _dialogInputDecoration(context, 'Название')),
-          const SizedBox(height: 10),
-          TextField(
-              controller: _code,
-              decoration: _dialogInputDecoration(context, 'Код')),
-          const SizedBox(height: 10),
-          TextField(
+          _DialogTextField(
+            controller: _name,
+            label: 'Название',
+          ),
+          const SizedBox(height: 16),
+          _DialogTextField(
+            controller: _code,
+            label: 'Код',
+          ),
+          const SizedBox(height: 16),
+          _DialogTextField(
             controller: _order,
+            label: 'Порядок',
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: _dialogInputDecoration(context, 'Порядок'),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
               color: isDark
@@ -1611,17 +1744,17 @@ class _DirectoryEntryDialogState extends State<_DirectoryEntryDialog> {
               title: const Text('Активно'),
             ),
           ),
-          const SizedBox(height: 10),
-          TextField(
+          const SizedBox(height: 16),
+          _DialogTextField(
             controller: _metadata,
+            label: 'Metadata JSON',
             maxLines: 5,
+            errorText: _metadataError,
             onChanged: (_) {
               if (_metadataError != null) {
                 setState(() => _metadataError = null);
               }
             },
-            decoration: _dialogInputDecoration(context, 'Metadata JSON')
-                .copyWith(errorText: _metadataError),
           ),
         ],
       ),
@@ -1718,18 +1851,20 @@ class _CategoryDialogState extends State<_CategoryDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(
-              controller: _name,
-              decoration: _dialogInputDecoration(context, 'Название')),
-          const SizedBox(height: 10),
-          TextField(
-              controller: _slug,
-              decoration: _dialogInputDecoration(context, 'Slug')),
-          const SizedBox(height: 10),
-          TextField(
+          _DialogTextField(
+            controller: _name,
+            label: 'Название',
+          ),
+          const SizedBox(height: 16),
+          _DialogTextField(
+            controller: _slug,
+            label: 'Slug',
+          ),
+          const SizedBox(height: 16),
+          _DialogTextField(
             controller: _labor,
+            label: 'Коэффициент труда',
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: _dialogInputDecoration(context, 'Коэффициент труда'),
           ),
         ],
       ),
@@ -1853,10 +1988,11 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(
-              controller: _name,
-              decoration: _dialogInputDecoration(context, 'Название')),
-          const SizedBox(height: 10),
+          _DialogTextField(
+            controller: _name,
+            label: 'Название',
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -1870,26 +2006,27 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
                   onChanged: (value) => setState(() => _itemType = value),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
-                child: TextField(
-                    controller: _unit,
-                    decoration: _dialogInputDecoration(context, 'Ед. изм.')),
+                child: _DialogTextField(
+                  controller: _unit,
+                  label: 'Ед. изм.',
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
-                child: TextField(
+                child: _DialogTextField(
                   controller: _price,
+                  label: 'Цена',
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
-                  decoration: _dialogInputDecoration(context, 'Цена'),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: _DialogPopupSelectField<String>(
                   label: 'Валюта',
@@ -1903,16 +2040,17 @@ class _CatalogItemDialogState extends State<_CatalogItemDialog> {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          TextField(
-              controller: _mappingKey,
-              decoration: _dialogInputDecoration(context, 'mapping_key')),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _aggregationKey,
-            decoration: _dialogInputDecoration(context, 'aggregation_key'),
+          const SizedBox(height: 16),
+          _DialogTextField(
+            controller: _mappingKey,
+            label: 'mapping_key',
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
+          _DialogTextField(
+            controller: _aggregationKey,
+            label: 'aggregation_key',
+          ),
+          const SizedBox(height: 16),
           _DialogPopupSelectField<int?>(
             label: 'related_work_item',
             value: hasRelated ? _relatedWorkItem : null,
