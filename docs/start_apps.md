@@ -30,8 +30,6 @@ flutter run -d windows
 flutter run -d 79BHADRCTC6ML --dart-define=API_BASE_URL_ANDROID=http://192.168.0.196:8000/api
 ```
 
-попробовать flutter install -d 79BHADRCTC6ML
-
 ## Важно
 
 - Для физического телефона используйте только LAN IP компьютера.

@@ -44,7 +44,6 @@ class _StageCardState extends State<StageCard> {
   static const double _metaBlockSpacing = 12;
   static const double _mobileCardMinHeight = 168;
   static const double _mobileMetaSlotHeight = 42;
-  static const double _mobileHeaderActionWidth = 32;
 
   bool _isHovered = false;
 
@@ -75,7 +74,6 @@ class _StageCardState extends State<StageCard> {
     final stageColor = _getStageColor(widget.stage.title);
     final createdAt = widget.stage.createdAt;
     final updatedAt = widget.stage.updatedAt;
-    final textStyles = context.appTextStyles;
     final isDesktopWeb =
         kIsWeb && DesktopWebFrame.isDesktop(context, minWidth: 1280);
     final isCompactMobileWeb = DesktopWebFrame.isMobileWeb(
@@ -142,60 +140,17 @@ class _StageCardState extends State<StageCard> {
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
                         useMobileLayout ? 12 : 16,
-                        useMobileLayout ? 20 : 0,
+                        useMobileLayout ? 16 : 16,
                         useMobileLayout ? 12 : 16,
-                        useMobileLayout ? 12 : 2,
+                        useMobileLayout ? 12 : 14,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: useMobileLayout
-                            ? MainAxisAlignment.start
-                            : MainAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          useMobileLayout
-                              ? _buildMobileHeader()
-                              : Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        StageCard.getStageTitleDisplay(
-                                          widget.stage.title,
-                                        ),
-                                        style: textStyles.sectionTitle.copyWith(
-                                          fontSize: 17,
-                                          letterSpacing: -0.3,
-                                        ),
-                                      ),
-                                    ),
-                                    if (widget.stage.isPaid) ...[
-                                      Transform.translate(
-                                        offset: const Offset(0, -10),
-                                        child: _buildPaidBadge(),
-                                      ),
-                                      const SizedBox(width: 8),
-                                    ],
-                                    Transform.translate(
-                                      offset: const Offset(0, -10),
-                                      child: SizedBox(
-                                        width: 28,
-                                        height: 28,
-                                        child: IconButton(
-                                          icon: Icon(
-                                            Icons.close,
-                                            size: 18,
-                                            color: Colors.grey.shade400,
-                                          ),
-                                          padding: EdgeInsets.zero,
-                                          onPressed: widget.onDelete,
-                                          tooltip: 'Удалить этап',
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                          SizedBox(height: useMobileLayout ? 16 : 20),
+                          _buildHeader(useMobileLayout: useMobileLayout),
+                          SizedBox(height: useMobileLayout ? 14 : 16),
                           useMobileLayout
                               ? _buildMobileMetaSection(
                                   createdAt: createdAt,
@@ -215,6 +170,40 @@ class _StageCardState extends State<StageCard> {
     );
   }
 
+  Widget _buildHeader({
+    required bool useMobileLayout,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                StageCard.getStageTitleDisplay(widget.stage.title),
+                maxLines: useMobileLayout ? 3 : 2,
+                overflow: TextOverflow.ellipsis,
+                style: context.appTextStyles.cardTitle.copyWith(
+                  color: scheme.onSurface,
+                  letterSpacing: -0.15,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            _buildDeleteButton(),
+          ],
+        ),
+        if (widget.stage.isPaid) ...[
+          SizedBox(height: useMobileLayout ? 8 : 10),
+          _buildPaidBadge(),
+        ],
+      ],
+    );
+  }
+
   Widget _buildMetaBlock({
     required IconData icon,
     required String label,
@@ -231,54 +220,20 @@ class _StageCardState extends State<StageCard> {
     );
   }
 
-  Widget _buildMobileHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: Stack(
-            alignment: Alignment.topRight,
-            children: [
-              Align(
-                alignment: Alignment.topLeft,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.only(right: _mobileHeaderActionWidth),
-                  child: Text(
-                    StageCard.getStageTitleDisplay(widget.stage.title),
-                    style: context.appTextStyles.sectionTitle.copyWith(
-                      fontSize: 17,
-                      letterSpacing: -0.3,
-                    ),
-                  ),
-                ),
-              ),
-              Transform.translate(
-                offset: const Offset(0, -2),
-                child: SizedBox(
-                  width: 28,
-                  height: 28,
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      size: 18,
-                      color: Colors.grey.shade400,
-                    ),
-                    padding: EdgeInsets.zero,
-                    onPressed: widget.onDelete,
-                    tooltip: 'Удалить этап',
-                  ),
-                ),
-              ),
-            ],
-          ),
+  Widget _buildDeleteButton() {
+    return SizedBox(
+      width: 28,
+      height: 28,
+      child: IconButton(
+        icon: Icon(
+          Icons.close,
+          size: 18,
+          color: Colors.grey.shade400,
         ),
-        if (widget.stage.isPaid) ...[
-          const SizedBox(height: 8),
-          _buildPaidBadge(),
-        ],
-      ],
+        padding: EdgeInsets.zero,
+        onPressed: widget.onDelete,
+        tooltip: 'Удалить этап',
+      ),
     );
   }
 

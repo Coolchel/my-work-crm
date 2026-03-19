@@ -15,8 +15,8 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_secti
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_side_menu.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_section_header.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
-import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/constants/api_urls.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
@@ -510,15 +510,9 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header "OBJECT"
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 8),
-                  child: Text(
-                    'Об объекте',
-                    style: context.appTextStyles.pageTitle.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
+                const AppSectionHeader(
+                  title: 'Об объекте',
+                  padding: EdgeInsets.only(left: 4, bottom: 10),
                 ),
                 // Premium Project Info Header
                 Container(
@@ -604,19 +598,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                     ],
                   ),
                 ),
-                SizedBox(height: isMobileWeb ? 20 : 32),
-
-                Row(
-                  children: [
-                    Text(
-                      'Этапы работ',
-                      style: context.appTextStyles.pageTitle.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: isMobileWeb ? 12 : 16),
+                SizedBox(height: isMobileWeb ? 16 : 24),
 
                 if (widget.project.stages.isEmpty)
                   const FriendlyEmptyState(
