@@ -15,6 +15,8 @@ class TotalDashboard extends StatelessWidget {
   final Color primaryColorLight;
   final bool isWorkTab;
   final bool isMarkupActive;
+  final Widget? footer;
+  final String? emptyMessage;
 
   const TotalDashboard({
     super.key,
@@ -28,11 +30,19 @@ class TotalDashboard extends StatelessWidget {
     required this.primaryColorLight,
     required this.isWorkTab,
     this.isMarkupActive = false,
+    this.footer,
+    this.emptyMessage,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (totalUsd == 0 && totalByn == 0) return const SizedBox.shrink();
+    final hasAnyTotals = totalUsd > 0 || totalByn > 0;
+    final hasEmptyMessage =
+        emptyMessage != null && emptyMessage!.trim().isNotEmpty;
+    if (!hasAnyTotals && footer == null && !hasEmptyMessage) {
+      return const SizedBox.shrink();
+    }
+
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
 
@@ -76,11 +86,7 @@ class TotalDashboard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isWorkTab
-                      ? 'Итого (работа)'
-                      : (isMarkupActive
-                          ? 'Итого (с наценкой)'
-                          : 'Итого (материал)'),
+                  isWorkTab ? 'Итоги по работам' : 'Итоги по материалам',
                   style: context.appTextStyles.bodyStrong.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -100,25 +106,45 @@ class TotalDashboard extends StatelessWidget {
             padding: const EdgeInsets.all(9),
             child: Column(
               children: [
-                if (hasEmployer) ...[
-                  _row(context, 'Наши', ourUsd, ourByn, Colors.green,
+                if (hasAnyTotals) ...[
+                  if (hasEmployer) ...[
+                    _row(context, 'Наши', ourUsd, ourByn, Colors.green,
+                        isBold: true),
+                    const SizedBox(height: 6),
+                    _row(
+                      context,
+                      'Контрагент',
+                      employerUsd,
+                      employerByn,
+                      isWorkTab ? Colors.orange : Colors.teal,
+                      isBold: true,
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 4),
+                      child: Divider(height: 1, thickness: 0.5),
+                    ),
+                  ],
+                  _row(context, 'Всего', totalUsd, totalByn, primaryColor,
                       isBold: true),
-                  const SizedBox(height: 6),
-                  _row(
-                    context,
-                    'Контрагент',
-                    employerUsd,
-                    employerByn,
-                    isWorkTab ? Colors.orange : Colors.teal,
-                    isBold: true,
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4),
-                    child: Divider(height: 1, thickness: 0.5),
+                ] else if (hasEmptyMessage) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      emptyMessage!,
+                      style: context.appTextStyles.caption.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
                 ],
-                _row(context, 'Всего', totalUsd, totalByn, primaryColor,
-                    isBold: true),
+                if (footer != null) ...[
+                  if (hasAnyTotals || hasEmptyMessage)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Divider(height: 1, thickness: 0.5),
+                    ),
+                  footer!,
+                ],
               ],
             ),
           ),

@@ -4,7 +4,6 @@ import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/utils/decimal_input_formatter.dart';
-import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/marquee_text.dart';
 
 /// Dialog for inputting quantity when adding a catalog item to an estimate
 class QuantityInputDialog extends StatefulWidget {
@@ -114,6 +113,71 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
     super.dispose();
   }
 
+  Widget _buildItemSummaryCard(
+    BuildContext context, {
+    required Color themeColor,
+    required bool isWork,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
+    final isDark = AppDesignTokens.isDark(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color:
+            isDark ? scheme.surfaceContainerHigh : themeColor.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: themeColor.withOpacity(isDark ? 0.26 : 0.16)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: themeColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isWork ? Icons.handyman_outlined : Icons.inventory_2_outlined,
+              size: 18,
+              color: themeColor,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.item.name,
+                  style: textStyles.bodyStrong.copyWith(
+                    color: scheme.onSurface,
+                    fontSize: 14,
+                    height: 1.2,
+                  ),
+                  softWrap: true,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  widget.item.unit.trim().isEmpty
+                      ? (isWork ? 'Работа' : 'Материал')
+                      : '${isWork ? 'Работа' : 'Материал'} · ${widget.item.unit}',
+                  style: textStyles.caption.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isWork = widget.itemType == 'work';
@@ -121,6 +185,7 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
     final isDark = AppDesignTokens.isDark(context);
     final textStyles = context.appTextStyles;
     final scheme = Theme.of(context).colorScheme;
+    const dialogTitle = 'Добавить позицию';
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -165,6 +230,14 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
                   alignment: Alignment.center,
                   children: [
                     Center(
+                      child: Text(
+                        dialogTitle,
+                        style: textStyles.dialogTitle.copyWith(
+                          color: themeColor.withOpacity(0.8),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      /*
                       child: widget.item.name.length > 25
                           ? MarqueeText(
                               text: widget.item.name,
@@ -179,6 +252,7 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
                               ),
                               textAlign: TextAlign.center,
                             ),
+                      */
                     ),
                     Align(
                       alignment: Alignment.centerRight,
@@ -204,6 +278,12 @@ class _QuantityInputDialogState extends State<QuantityInputDialog> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        _buildItemSummaryCard(
+                          context,
+                          themeColor: themeColor,
+                          isWork: isWork,
+                        ),
+                        const SizedBox(height: 16),
                         TextField(
                           controller: _totalCtrl,
                           decoration: InputDecoration(

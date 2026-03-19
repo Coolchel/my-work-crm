@@ -4,7 +4,6 @@ import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/utils/decimal_input_formatter.dart';
-import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/marquee_text.dart';
 
 /// Dialog for editing an estimate item
 class EditItemDialog extends StatefulWidget {
@@ -139,6 +138,73 @@ class _EditItemDialogState extends State<EditItemDialog> {
     super.dispose();
   }
 
+  Widget _buildItemSummaryCard({
+    required BuildContext context,
+    required Color themeColor,
+    required bool isWork,
+    required String title,
+    String? subtitle,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
+    final isDark = AppDesignTokens.isDark(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color:
+            isDark ? scheme.surfaceContainerHigh : themeColor.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: themeColor.withOpacity(isDark ? 0.26 : 0.16)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: themeColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isWork ? Icons.handyman_outlined : Icons.inventory_2_outlined,
+              size: 18,
+              color: themeColor,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: textStyles.bodyStrong.copyWith(
+                    color: scheme.onSurface,
+                    fontSize: 14,
+                    height: 1.2,
+                  ),
+                  softWrap: true,
+                ),
+                if (subtitle != null && subtitle.trim().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: textStyles.caption.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isNewManual = widget.item.id == 0;
@@ -147,6 +213,9 @@ class _EditItemDialogState extends State<EditItemDialog> {
     final isDark = AppDesignTokens.isDark(context);
     final textStyles = context.appTextStyles;
     final scheme = Theme.of(context).colorScheme;
+    final itemName = widget.item.name.trim();
+    final dialogTitle =
+        isNewManual ? 'Новая позиция' : 'Редактирование позиции';
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -191,7 +260,14 @@ class _EditItemDialogState extends State<EditItemDialog> {
                   alignment: Alignment.center,
                   children: [
                     Center(
-                      child: isNewManual
+                      child: Text(
+                        dialogTitle,
+                        style: textStyles.dialogTitle.copyWith(
+                          color: themeColor.withOpacity(0.8),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      /*
                           ? Text(
                               "Новая позиция",
                               style: textStyles.dialogTitle.copyWith(
@@ -210,7 +286,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
                                   style: textStyles.dialogTitle.copyWith(
                                     color: themeColor.withOpacity(0.8),
                                   ),
-                                )),
+                      */
                     ),
                     Align(
                       alignment: Alignment.centerRight,
@@ -239,7 +315,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (isNewManual || widget.item.name.isEmpty) ...[
+                        if (isNewManual || itemName.isEmpty) ...[
                           TextField(
                             controller: _nameCtrl,
                             decoration: InputDecoration(
@@ -296,6 +372,17 @@ class _EditItemDialogState extends State<EditItemDialog> {
                                     BorderSide(color: themeColor, width: 2),
                               ),
                             ),
+                          ),
+                          const SizedBox(height: 16),
+                        ] else ...[
+                          _buildItemSummaryCard(
+                            context: context,
+                            themeColor: themeColor,
+                            isWork: isWork,
+                            title: itemName,
+                            subtitle: widget.item.unit.trim().isEmpty
+                                ? (isWork ? 'Работа' : 'Материал')
+                                : '${isWork ? 'Работа' : 'Материал'} · ${widget.item.unit}',
                           ),
                           const SizedBox(height: 16),
                         ],

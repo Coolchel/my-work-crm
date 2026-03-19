@@ -14,6 +14,7 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_sc
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import 'package:smart_electric_crm/src/shared/services/temp_file_service.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/group_header.dart';
 
 import '../../../data/models/estimate_item_model.dart';
 import '../../../data/models/stage_model.dart';
@@ -132,26 +133,18 @@ mixin EstimateDialogHelpers {
     BuildContext context,
     String title, {
     IconData? icon,
+    Color? color,
   }) {
-    final textStyles = context.appTextStyles;
+    final headerColor = color ?? Colors.blueGrey;
+    final horizontalPadding =
+        DesktopWebFrame.isMobileWeb(context, maxWidth: 560) ? 16.0 : 24.0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
-      child: Row(
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 16, color: Colors.grey.shade600),
-            const SizedBox(width: 8),
-          ],
-          Text(
-            title.toUpperCase(),
-            style: textStyles.captionStrong.copyWith(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey.shade600,
-              letterSpacing: 0.8,
-            ),
-          ),
-        ],
+      padding:
+          EdgeInsets.fromLTRB(horizontalPadding, 18, horizontalPadding, 10),
+      child: GroupHeader(
+        title: title,
+        color: headerColor,
+        padding: EdgeInsets.zero,
       ),
     );
   }

@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
+import 'package:smart_electric_crm/src/features/projects/presentation/dialogs/estimate/estimate_actions_dialog.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/utils/decimal_input_formatter.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_list_tile.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/group_header.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/total_dashboard.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_section_header.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/inline_save_button.dart';
@@ -81,8 +85,6 @@ class EstimateTab extends ConsumerStatefulWidget {
 class _EstimateTabState extends ConsumerState<EstimateTab> {
   late TextEditingController _noteCtrl;
   late TextEditingController _remarksCtrl;
-  late TextEditingController _markupCtrl;
-  late FocusNode _markupFocus;
   bool _savingNote = false;
   bool _savingRemarks = false;
   bool _savingNotesAction = false;
@@ -111,10 +113,6 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     }
 
     _remarksCtrl = TextEditingController(text: initialRemarks);
-    _markupCtrl =
-        TextEditingController(text: _formatMarkup(widget.markupPercent));
-    _markupFocus = FocusNode();
-    _markupFocus.addListener(_onMarkupFocusChange);
     _lastSavedNote = widget.note;
     // _lastSavedRemarks should remain as widget.remarks (empty) until saved.
     _lastSavedRemarks = widget.remarks;
@@ -150,34 +148,6 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
         _hasNotesChanges = false;
       }
     }
-    if (widget.markupPercent != oldWidget.markupPercent) {
-      // Sync only if not focused to avoid fighting user input
-      if (!_markupFocus.hasFocus) {
-        final newText = _formatMarkup(widget.markupPercent);
-        if (_markupCtrl.text != newText && newText != "0" && newText != "0.0") {
-          _markupCtrl.text = newText;
-        }
-      }
-    }
-  }
-
-  void _onMarkupFocusChange() {
-    if (!_markupFocus.hasFocus) {
-      // Create a submission when focus is lost
-      _submitMarkup(_markupCtrl.text);
-    }
-  }
-
-  void _submitMarkup(String val) {
-    if (val.isEmpty) return;
-    final parsed = double.tryParse(val.replaceAll(',', '.')) ?? 0;
-    if (widget.onMarkupChanged != null) {
-      // Prevent redundant updates if value works out to same
-      if ((parsed - widget.markupPercent).abs() > 0.01) {
-        final rounded = double.parse(parsed.toStringAsFixed(2));
-        widget.onMarkupChanged!(rounded.clamp(0.0, 100.0));
-      }
-    }
   }
 
   String _formatMarkup(double val) {
@@ -210,8 +180,6 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     }
     _noteCtrl.dispose();
     _remarksCtrl.dispose();
-    _markupCtrl.dispose();
-    _markupFocus.dispose();
     super.dispose();
   }
 
@@ -414,223 +382,134 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     final hasMarkup = widget.markupPercent > 0;
     const markupAccent = Colors.teal;
     final textStyles = context.appTextStyles;
-
-    final headerColor = hasMarkup
-        ? (isDark
-            ? AppDesignTokens.surface2(context).withOpacity(0.96)
-            : markupAccent.withOpacity(0.11))
-        : (isDark
-            ? AppDesignTokens.surface2(context).withOpacity(0.92)
-            : _primaryColorLight.withOpacity(0.45));
-    final bodyColor = hasMarkup
-        ? (isDark
-            ? AppDesignTokens.surface2(context).withOpacity(0.84)
-            : markupAccent.withOpacity(0.06))
-        : Colors.transparent;
-
     final borderColor = hasMarkup
         ? markupAccent.withOpacity(isDark ? 0.36 : 0.55)
         : AppDesignTokens.softBorder(context);
     final iconColor = hasMarkup
         ? (isDark ? markupAccent.shade300 : markupAccent.shade700)
         : _primaryColor.withOpacity(0.8);
-    final textColor = hasMarkup
-        ? (isDark ? scheme.onSurface : markupAccent.shade800)
-        : (isDark ? scheme.onSurface : _primaryColor.withOpacity(0.9));
-    final textWeight = hasMarkup ? FontWeight.bold : FontWeight.w500;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: headerColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderColor, width: 0.8),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: Colors.transparent,
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-        ),
-        child: ExpansionTile(
-          backgroundColor: headerColor,
-          collapsedBackgroundColor: headerColor,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-          childrenPadding: EdgeInsets.zero,
-          leading: Icon(Icons.trending_up, color: iconColor, size: 20),
-          title: Row(
-            children: [
-              Text(
-                "Наценка: ",
-                style: textStyles.bodyStrong.copyWith(
-                  color: textColor,
-                  fontWeight: textWeight,
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                "${_formatMarkup(widget.markupPercent)}%",
-                style: textStyles.bodyStrong.copyWith(
-                  color: textColor,
-                  fontWeight: textWeight,
-                  fontSize: 14,
-                ),
-              ),
-            ],
+    final valueBgColor = hasMarkup
+        ? markupAccent.withOpacity(isDark ? 0.18 : 0.12)
+        : (isDark
+            ? scheme.surfaceContainerHighest.withOpacity(0.7)
+            : _primaryColor.withOpacity(0.08));
+    final valueTextColor = hasMarkup
+        ? (isDark ? markupAccent.shade200 : markupAccent.shade800)
+        : scheme.onSurfaceVariant;
+    final titleColor = hasMarkup ? scheme.onSurface : scheme.onSurfaceVariant;
+    final subtitleColor = hasMarkup
+        ? (isDark ? markupAccent.shade200 : markupAccent.shade700)
+        : scheme.onSurfaceVariant;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: widget.isDisabled ? null : _showMarkupEditor,
+        child: Ink(
+          decoration: BoxDecoration(
+            color: hasMarkup
+                ? (isDark
+                    ? AppDesignTokens.surface2(context).withOpacity(0.66)
+                    : markupAccent.withOpacity(0.055))
+                : (isDark
+                    ? scheme.surfaceContainerLow.withOpacity(0.8)
+                    : scheme.surfaceContainerLowest),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor, width: 0.8),
           ),
-          children: [
-            Container(
-              color: bodyColor,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: markupAccent,
-                        inactiveTrackColor: markupAccent.withOpacity(0.2),
-                        thumbColor: markupAccent.shade700,
-                        trackHeight: 4,
-                        overlayShape:
-                            const RoundSliderOverlayShape(overlayRadius: 18),
-                        thumbShape:
-                            const RoundSliderThumbShape(enabledThumbRadius: 7),
-                      ),
-                      child: Slider(
-                        value: widget.markupPercent,
-                        min: 0,
-                        max: 100,
-                        divisions: 200,
-                        label: "${widget.markupPercent.toStringAsFixed(1)}%",
-                        onChanged: (val) {
-                          // Round to 2 decimal places to avoid "max 5 digits" backend error
-                          final roundedVal =
-                              double.parse(val.toStringAsFixed(2));
-                          if (widget.onMarkupChanged != null) {
-                            widget.onMarkupChanged!(roundedVal);
-                          }
-                          _markupCtrl.text = _formatMarkup(roundedVal);
-                        },
-                      ),
-                    ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  const SizedBox(width: 12),
-                  // Vertical arrangement for Input and Reset
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Icon(Icons.trending_up, color: iconColor, size: 18),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        width: 65,
-                        height:
-                            38, // Slightly more compact for vertical stacking
-                        child: TextField(
-                          controller: _markupCtrl,
-                          focusNode: _markupFocus,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
-                          inputFormatters: [DecimalInputFormatter()],
-                          textInputAction: TextInputAction.done,
-                          textAlign: TextAlign.center,
-                          textAlignVertical: TextAlignVertical.center,
-                          decoration: InputDecoration(
-                            isDense: true,
-                            filled: true,
-                            fillColor: AppDesignTokens.isDark(context)
-                                ? Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerHigh
-                                : Colors.white.withOpacity(0.9),
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 4),
-                            suffixText: '%',
-                            suffixStyle: textStyles.fieldLabel.copyWith(
-                              fontSize: 12,
-                              color: hasMarkup
-                                  ? (isDark
-                                      ? markupAccent.shade300
-                                      : markupAccent.shade700)
-                                  : Colors.blue.shade300,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                  color: borderColor.withOpacity(0.5)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                  color: borderColor.withOpacity(0.3)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide:
-                                  BorderSide(color: borderColor, width: 1.5),
-                            ),
-                            counterText: '',
-                          ),
-                          style: textStyles.bodyStrong.copyWith(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: hasMarkup
-                                ? (isDark
-                                    ? scheme.onSurface
-                                    : markupAccent.shade800)
-                                : (isDark
-                                    ? scheme.onSurface
-                                    : Colors.blue.shade900),
-                          ),
-                          onTap: () {
-                            _markupCtrl.selection = TextSelection(
-                                baseOffset: 0,
-                                extentOffset: _markupCtrl.text.length);
-                          },
-                          onSubmitted: (val) {
-                            _submitMarkup(val);
-                            _markupFocus.unfocus();
-                          },
-                          onEditingComplete: () {
-                            _submitMarkup(_markupCtrl.text);
-                            _markupFocus.unfocus();
-                          },
+                      Text(
+                        'Наценка',
+                        style: textStyles.bodyStrong.copyWith(
+                          color: titleColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 0),
-                      // Reset button below input
-                      SizedBox(
-                        height: 26, // Slightly more compact
-                        width: 26,
-                        child: IconButton(
-                          onPressed: widget.markupPercent > 0
-                              ? () {
-                                  if (widget.onMarkupChanged != null) {
-                                    widget.onMarkupChanged!(0.0);
-                                  }
-                                  _markupCtrl.text = "0";
-                                }
-                              : null,
-                          icon: Icon(Icons.refresh,
-                              size:
-                                  18, // Increased icon size for better visibility
-                              color: widget.markupPercent > 0
-                                  ? markupAccent.shade700
-                                  : Colors.grey.withOpacity(0.3)),
-                          tooltip: "Сброс",
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
+                      const SizedBox(height: 2),
+                      Text(
+                        hasMarkup
+                            ? 'Учитывается в итоге материалов'
+                            : 'Параметр расчета материалов',
+                        style: textStyles.caption.copyWith(
+                          color: subtitleColor,
+                          fontSize: 11,
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: valueBgColor,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: borderColor.withOpacity(0.65)),
+                  ),
+                  child: Text(
+                    '${_formatMarkup(widget.markupPercent)}%',
+                    style: textStyles.captionStrong.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: valueTextColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.tune_rounded,
+                    size: 16,
+                    color: iconColor,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _showMarkupEditor() async {
+    final result = await showDialog<double>(
+      context: context,
+      builder: (dialogContext) => _MarkupEditorDialog(
+        initialValue: widget.markupPercent,
+        onMarkupChanged: widget.onMarkupChanged,
+        formatMarkup: _formatMarkup,
+      ),
+    );
+    if (result != null &&
+        widget.onMarkupChanged != null &&
+        (result - widget.markupPercent).abs() > 0.01) {
+      widget.onMarkupChanged!(result);
+    }
   }
 
   Widget _buildActionButtons() {
@@ -737,51 +616,28 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     );
   }
 
-  Widget _buildItemsCaption(int itemCount,
-      {required double horizontalPadding}) {
-    final textStyles = context.appTextStyles;
+  Widget _buildSectionHeader(
+    String title, {
+    required double horizontalPadding,
+    double topPadding = 0,
+    double bottomPadding = 8,
+  }) {
     final scheme = Theme.of(context).colorScheme;
-    return Padding(
+    final textStyles = context.appTextStyles;
+    return AppSectionHeader(
+      title: title,
       padding: EdgeInsets.fromLTRB(
         horizontalPadding,
-        4,
+        topPadding,
         horizontalPadding,
-        4,
+        bottomPadding,
       ),
-      child: Row(
-        children: [
-          Icon(
-            _isWorkTab ? Icons.handyman_outlined : Icons.inventory_2_outlined,
-            size: 14,
-            color: _primaryColor.withOpacity(0.85),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            _isWorkTab ? 'Позиции работ' : 'Позиции материалов',
-            style: textStyles.captionStrong.copyWith(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: scheme.onSurface,
-            ),
-          ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: _primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(9),
-              border: Border.all(color: _primaryColor.withOpacity(0.18)),
-            ),
-            child: Text(
-              '$itemCount',
-              style: textStyles.captionStrong.copyWith(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w700,
-                color: _primaryColor,
-              ),
-            ),
-          ),
-        ],
+      titleStyle: textStyles.sectionTitle.copyWith(
+        fontSize: 14.5,
+        fontWeight: FontWeight.w700,
+        height: 1.18,
+        letterSpacing: -0.15,
+        color: scheme.onSurface,
       ),
     );
   }
@@ -870,12 +726,6 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
 
               if (!widget.hideTopActions)
                 SliverToBoxAdapter(child: _buildActionButtons()),
-              SliverToBoxAdapter(
-                child: _buildItemsCaption(
-                  widget.items.length,
-                  horizontalPadding: horizontalPadding,
-                ),
-              ),
 
               if (widget.items.isEmpty)
                 const SliverToBoxAdapter(
@@ -929,8 +779,8 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 2)),
                 ],
-
-              // Total Section - Detailed Dashboard (Hidden if prices hidden)
+              if (showPrices)
+                const SliverToBoxAdapter(child: SizedBox(height: 10)),
               if (showPrices)
                 SliverToBoxAdapter(
                   child: Padding(
@@ -946,24 +796,29 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                       primaryColorLight: _primaryColorLight,
                       isWorkTab: _isWorkTab,
                       isMarkupActive: !_isWorkTab && widget.markupPercent > 0,
+                      emptyMessage:
+                          !_isWorkTab && totalUsd == 0 && totalByn == 0
+                              ? 'Итоги появятся после добавления материалов.'
+                              : null,
+                      footer: !_isWorkTab
+                          ? AbsorbPointer(
+                              absorbing: widget.isDisabled,
+                              child: _buildMarkupControl(),
+                            )
+                          : null,
                     ),
                   ),
                 ),
-
-              // Markup Control (Spoiler style) - Hidden if prices hidden
-              if (!_isWorkTab && showPrices)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: cardInset),
-                    child: AbsorbPointer(
-                      absorbing: widget.isDisabled,
-                      child: _buildMarkupControl(),
-                    ),
-                  ),
+              // Notes & Remarks Section - at the bottom
+              // Notes & Remarks Section - at the bottom
+              SliverToBoxAdapter(
+                child: _buildSectionHeader(
+                  'Заметки',
+                  horizontalPadding: horizontalPadding,
+                  topPadding: showPrices ? 10 : 12,
+                  bottomPadding: 8,
                 ),
-
-              // Notes & Remarks Section - at the bottom
-              // Notes & Remarks Section - at the bottom
+              ),
               SliverToBoxAdapter(
                 child: Container(
                   margin: EdgeInsets.fromLTRB(
@@ -1027,6 +882,317 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _MarkupEditorDialog extends StatefulWidget {
+  const _MarkupEditorDialog({
+    required this.initialValue,
+    required this.onMarkupChanged,
+    required this.formatMarkup,
+  });
+
+  final double initialValue;
+  final ValueChanged<double>? onMarkupChanged;
+  final String Function(double value) formatMarkup;
+
+  @override
+  State<_MarkupEditorDialog> createState() => _MarkupEditorDialogState();
+}
+
+class _MarkupEditorDialogState extends State<_MarkupEditorDialog>
+    with EstimateDialogHelpers {
+  static const _markupAccent = Colors.teal;
+  Timer? _syncDebounce;
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+  late double _draftValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _draftValue = widget.initialValue.clamp(0.0, 100.0);
+    _controller = TextEditingController(text: widget.formatMarkup(_draftValue));
+    _focusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    _flushPendingSync();
+    _syncDebounce?.cancel();
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _syncMarkup(double value, {required bool immediate}) {
+    final roundedValue =
+        double.parse(value.clamp(0.0, 100.0).toStringAsFixed(2));
+    if (immediate) {
+      _syncDebounce?.cancel();
+      widget.onMarkupChanged?.call(roundedValue);
+      return;
+    }
+
+    _syncDebounce?.cancel();
+    _syncDebounce = Timer(const Duration(milliseconds: 70), () {
+      widget.onMarkupChanged?.call(roundedValue);
+    });
+  }
+
+  void _flushPendingSync() {
+    if (_syncDebounce?.isActive ?? false) {
+      _syncDebounce?.cancel();
+      widget.onMarkupChanged?.call(
+        double.parse(_draftValue.clamp(0.0, 100.0).toStringAsFixed(2)),
+      );
+    }
+  }
+
+  void _setDraftValue(double value, {bool immediateSync = false}) {
+    final roundedValue =
+        double.parse(value.clamp(0.0, 100.0).toStringAsFixed(2));
+    final formatted = widget.formatMarkup(roundedValue);
+
+    if (mounted) {
+      setState(() {
+        _draftValue = roundedValue;
+      });
+    }
+
+    if (_controller.text != formatted) {
+      _controller.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+    }
+
+    _syncMarkup(roundedValue, immediate: immediateSync);
+  }
+
+  void _commitTextValue() {
+    final rawValue = _controller.text.trim();
+    final parsed = double.tryParse(rawValue.replaceAll(',', '.'));
+    final nextValue = parsed ?? _draftValue;
+    _setDraftValue(nextValue, immediateSync: true);
+    _focusNode.unfocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
+    final hasMarkup = _draftValue > 0;
+    final borderColor = _markupAccent.withOpacity(isDark ? 0.36 : 0.24);
+
+    return buildPremiumContainer(
+      context: context,
+      themeColor: _markupAccent,
+      maxWidth: 480,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          buildPremiumHeader(
+            context: context,
+            title: 'Наценка материалов',
+            icon: Icons.trending_up_rounded,
+            themeColor: _markupAccent,
+          ),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? scheme.surfaceContainerLow
+                            : _markupAccent.withOpacity(0.045),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: borderColor),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 7,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: hasMarkup
+                                      ? _markupAccent.withOpacity(
+                                          isDark ? 0.18 : 0.12,
+                                        )
+                                      : scheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  '${widget.formatMarkup(_draftValue)}%',
+                                  style: textStyles.bodyStrong.copyWith(
+                                    fontSize: 13,
+                                    color: hasMarkup
+                                        ? (isDark
+                                            ? _markupAccent.shade200
+                                            : _markupAccent.shade800)
+                                        : scheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              activeTrackColor: _markupAccent,
+                              inactiveTrackColor:
+                                  _markupAccent.withOpacity(0.18),
+                              thumbColor: _markupAccent.shade700,
+                              trackHeight: 4,
+                              overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 16,
+                              ),
+                              thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 7,
+                              ),
+                            ),
+                            child: Slider(
+                              value: _draftValue,
+                              min: 0,
+                              max: 100,
+                              divisions: 200,
+                              label: '${_draftValue.toStringAsFixed(1)}%',
+                              onChanged: _setDraftValue,
+                              onChangeEnd: (value) =>
+                                  _syncMarkup(value, immediate: true),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _controller,
+                            focusNode: _focusNode,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [DecimalInputFormatter()],
+                            textInputAction: TextInputAction.done,
+                            textAlign: TextAlign.center,
+                            decoration: InputDecoration(
+                              isDense: true,
+                              filled: true,
+                              fillColor: isDark
+                                  ? scheme.surfaceContainerHigh
+                                  : scheme.surface,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                              labelText: 'Процент',
+                              suffixText: '%',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: borderColor.withOpacity(0.9),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: _markupAccent.shade700,
+                                  width: 1.4,
+                                ),
+                              ),
+                            ),
+                            style: textStyles.bodyStrong.copyWith(
+                              fontSize: 14,
+                              color: scheme.onSurface,
+                            ),
+                            onTap: () {
+                              _controller.selection = TextSelection(
+                                baseOffset: 0,
+                                extentOffset: _controller.text.length,
+                              );
+                            },
+                            onChanged: (value) {
+                              final normalized = value.replaceAll(',', '.');
+                              if (normalized.isEmpty ||
+                                  normalized == '.' ||
+                                  normalized.endsWith('.')) {
+                                return;
+                              }
+                              final parsed = double.tryParse(normalized);
+                              if (parsed == null) {
+                                return;
+                              }
+                              final roundedValue = double.parse(
+                                parsed.clamp(0.0, 100.0).toStringAsFixed(2),
+                              );
+                              setState(() {
+                                _draftValue = roundedValue;
+                              });
+                              _syncMarkup(roundedValue, immediate: false);
+                            },
+                            onSubmitted: (_) => _commitTextValue(),
+                            onEditingComplete: _commitTextValue,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        'Наценка влияет на итог по материалам и обновляется сразу.',
+                        style: textStyles.caption.copyWith(
+                          fontSize: 11,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                    child: Row(
+                      children: [
+                        const Spacer(),
+                        FilledButton.tonal(
+                          onPressed: hasMarkup
+                              ? () => _setDraftValue(0, immediateSync: true)
+                              : null,
+                          child: const Text('Сброс'),
+                        ),
+                        const SizedBox(width: 10),
+                        FilledButton(
+                          onPressed: () {
+                            _commitTextValue();
+                            Navigator.of(context).pop(_draftValue);
+                          },
+                          child: const Text('Готово'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
