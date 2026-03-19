@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/project_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/screens/project_list_screen.dart';
@@ -38,6 +39,45 @@ void main() {
         );
 
         _expectActionsAlignedAndRightAnchored(
+          tester,
+          address: address,
+        );
+      },
+    );
+  });
+
+  group('Project card title hierarchy', () {
+    testWidgets(
+      'uses cardTitle typography on desktop layout',
+      (tester) async {
+        const address = 'Desktop title hierarchy';
+
+        await _pumpScreen(
+          tester,
+          width: 900,
+          address: address,
+        );
+
+        _expectTitleUsesCardTitleStyle(
+          tester,
+          address: address,
+        );
+      },
+    );
+
+    testWidgets(
+      'uses cardTitle typography on mobile layout',
+      (tester) async {
+        const address =
+            'Mobile title hierarchy for a longer address that should still stay readable';
+
+        await _pumpScreen(
+          tester,
+          width: 360,
+          address: address,
+        );
+
+        _expectTitleUsesCardTitleStyle(
           tester,
           address: address,
         );
@@ -110,4 +150,26 @@ void _expectActionsAlignedAndRightAnchored(
   expect((deleteRect.top - titleRect.top).abs(), lessThanOrEqualTo(2));
   expect((editRect.top - deleteRect.top).abs(), lessThanOrEqualTo(2));
   expect(cardRect.right - deleteRect.right, lessThanOrEqualTo(24));
+}
+
+void _expectTitleUsesCardTitleStyle(
+  WidgetTester tester, {
+  required String address,
+}) {
+  final titleFinder = find.text(address);
+
+  expect(titleFinder, findsOneWidget);
+
+  final titleText = tester.widget<Text>(titleFinder);
+  final titleContext = tester.element(titleFinder);
+  final expectedStyle = Theme.of(titleContext).appTextStyles.cardTitle.copyWith(
+        color: Theme.of(titleContext).colorScheme.onSurface,
+      );
+
+  expect(titleText.style?.fontSize, expectedStyle.fontSize);
+  expect(titleText.style?.fontWeight, expectedStyle.fontWeight);
+  expect(titleText.style?.height, expectedStyle.height);
+  expect(titleText.style?.letterSpacing, expectedStyle.letterSpacing);
+  expect(titleText.maxLines, 2);
+  expect(titleText.overflow, TextOverflow.ellipsis);
 }

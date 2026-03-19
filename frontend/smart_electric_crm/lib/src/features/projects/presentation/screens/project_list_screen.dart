@@ -911,8 +911,6 @@ class _ProjectCard extends StatefulWidget {
 }
 
 class _ProjectCardState extends State<_ProjectCard> {
-  static const double _cardTitleFontSize = 16;
-  static const double _titleLineHeight = 1.2;
   static const double _actionButtonSize = 30;
   static const double _actionIconSize = 18;
   static const double _actionButtonsGap = 2;
@@ -1053,21 +1051,18 @@ class _ProjectCardState extends State<_ProjectCard> {
   }
 
   Widget _buildDesktopHeader(ProjectModel project) {
+    final titleStyle = _projectCardTitleStyle(context);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: Text(
             project.address,
-            style: context.appTextStyles.cardTitle.copyWith(
-              fontSize: _cardTitleFontSize,
-              height: _titleLineHeight,
-              color: Theme.of(context).colorScheme.onSurface,
-              letterSpacing: -0.3,
-            ),
-            strutStyle: const StrutStyle(
-              fontSize: _cardTitleFontSize,
-              height: _titleLineHeight,
+            style: titleStyle,
+            strutStyle: StrutStyle(
+              fontSize: titleStyle.fontSize,
+              height: titleStyle.height,
               forceStrutHeight: true,
             ),
             maxLines: 2,
@@ -1116,6 +1111,8 @@ class _ProjectCardState extends State<_ProjectCard> {
   }
 
   Widget _buildMobileHeader(ProjectModel project) {
+    final titleStyle = _projectCardTitleStyle(context);
+
     return SizedBox(
       width: double.infinity,
       child: Stack(
@@ -1127,15 +1124,10 @@ class _ProjectCardState extends State<_ProjectCard> {
               padding: const EdgeInsets.only(right: _mobileHeaderActionsWidth),
               child: Text(
                 project.address,
-                style: context.appTextStyles.cardTitle.copyWith(
-                  fontSize: _cardTitleFontSize,
-                  height: _titleLineHeight,
-                  color: Theme.of(context).colorScheme.onSurface,
-                  letterSpacing: -0.3,
-                ),
-                strutStyle: const StrutStyle(
-                  fontSize: _cardTitleFontSize,
-                  height: _titleLineHeight,
+                style: titleStyle,
+                strutStyle: StrutStyle(
+                  fontSize: titleStyle.fontSize,
+                  height: titleStyle.height,
                   forceStrutHeight: true,
                 ),
                 maxLines: 2,
@@ -1183,6 +1175,12 @@ class _ProjectCardState extends State<_ProjectCard> {
           ),
         ],
       ),
+    );
+  }
+
+  TextStyle _projectCardTitleStyle(BuildContext context) {
+    return context.appTextStyles.cardTitle.copyWith(
+      color: Theme.of(context).colorScheme.onSurface,
     );
   }
 
