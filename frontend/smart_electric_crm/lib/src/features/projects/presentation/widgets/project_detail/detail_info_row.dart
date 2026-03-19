@@ -72,10 +72,15 @@ class DetailInfoRow extends StatelessWidget {
                 style: labelStyle,
               ),
               const SizedBox(height: 2),
-              Text(
-                value,
-                style: valueStyle,
-              ),
+              selectable
+                  ? SelectableText(
+                      value,
+                      style: valueStyle,
+                    )
+                  : Text(
+                      value,
+                      style: valueStyle,
+                    ),
             ],
           ),
         ),

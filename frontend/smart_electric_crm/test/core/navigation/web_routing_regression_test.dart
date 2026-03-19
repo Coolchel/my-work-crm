@@ -98,7 +98,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Test object'), findsOneWidget);
+    expect(find.text('Test object'), findsAtLeastNWidgets(2));
     expect(find.text('Этапы'), findsWidgets);
   });
 

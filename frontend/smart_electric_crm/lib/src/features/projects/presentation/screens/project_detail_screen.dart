@@ -15,8 +15,8 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_secti
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_side_menu.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
-import 'package:smart_electric_crm/src/shared/presentation/widgets/app_section_header.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/constants/api_urls.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
@@ -510,95 +510,8 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const AppSectionHeader(
-                  title: 'Об объекте',
-                  padding: EdgeInsets.only(left: 4, bottom: 10),
-                ),
-                // Premium Project Info Header
-                Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppDesignTokens.cardShadow(context),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                    border:
-                        Border.all(color: AppDesignTokens.softBorder(context)),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Stack(
-                    children: [
-                      // Accent stripe
-                      Positioned(
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: 5,
-                        child: Container(color: Colors.indigo),
-                      ),
-                      Positioned(
-                        top: 14,
-                        right: 14,
-                        child: Tooltip(
-                          message: 'Редактировать объект',
-                          child: SizedBox(
-                            width: 28,
-                            height: 28,
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.edit_outlined,
-                                size: 18,
-                                color: Colors.grey.shade400,
-                              ),
-                              padding: EdgeInsets.zero,
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) =>
-                                      AddProjectDialog(project: widget.project),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(22, 20, 56, 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Заказчик
-                            DetailInfoRow(
-                              icon: Icons.person_outline,
-                              label: 'ЗАКАЗЧИК',
-                              value: widget.project.clientInfo.isNotEmpty
-                                  ? widget.project.clientInfo
-                                  : '—',
-                              color: Colors.blue.shade600,
-                              selectable: true,
-                            ),
-                            SizedBox(height: isMobileWeb ? 12 : 16),
-                            // Источник
-                            DetailInfoRow(
-                              icon: Icons.info_outline,
-                              label: 'ИСТОЧНИК',
-                              value: widget.project.source.isNotEmpty
-                                  ? widget.project.source
-                                  : '—',
-                              color: Colors.teal.shade700,
-                              selectable: false,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: isMobileWeb ? 16 : 24),
+                _buildProjectOverviewCard(isMobileWeb: isMobileWeb),
+                SizedBox(height: isMobileWeb ? 20 : 28),
 
                 if (widget.project.stages.isEmpty)
                   const FriendlyEmptyState(
@@ -691,6 +604,151 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
       builder: (context) => AddStageDialog(
         projectId: widget.project.id.toString(),
         existingStageKeys: existingKeys,
+      ),
+    );
+  }
+
+  Widget _buildProjectOverviewCard({
+    required bool isMobileWeb,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
+    final isDark = AppDesignTokens.isDark(context);
+    final headerBackground = isDark
+        ? scheme.surfaceContainerHigh.withOpacity(0.72)
+        : scheme.surfaceContainer.withOpacity(0.6);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppDesignTokens.cardShadow(context),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+        border: Border.all(color: AppDesignTokens.softBorder(context)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.fromLTRB(
+              18,
+              isMobileWeb ? 14 : 16,
+              14,
+              isMobileWeb ? 14 : 16,
+            ),
+            decoration: BoxDecoration(
+              color: headerBackground,
+              border: Border(
+                bottom: BorderSide(color: AppDesignTokens.softBorder(context)),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.indigo.withOpacity(isDark ? 0.18 : 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.apartment_rounded,
+                    size: 18,
+                    color: Colors.indigo,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Об объекте',
+                        style: textStyles.captionStrong.copyWith(
+                          color: scheme.onSurfaceVariant.withOpacity(0.72),
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.project.address.isNotEmpty
+                            ? widget.project.address
+                            : 'Без адреса',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: textStyles.cardTitle.copyWith(
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Tooltip(
+                  message: 'Редактировать объект',
+                  child: SizedBox(
+                    width: 28,
+                    height: 28,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.edit_outlined,
+                        size: 18,
+                        color: Colors.grey.shade400,
+                      ),
+                      padding: EdgeInsets.zero,
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) =>
+                              AddProjectDialog(project: widget.project),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              18,
+              isMobileWeb ? 14 : 18,
+              18,
+              isMobileWeb ? 16 : 18,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DetailInfoRow(
+                  icon: Icons.person_outline,
+                  label: 'ЗАКАЗЧИК',
+                  value: widget.project.clientInfo.isNotEmpty
+                      ? widget.project.clientInfo
+                      : '—',
+                  color: Colors.blue.shade600,
+                  selectable: true,
+                ),
+                SizedBox(height: isMobileWeb ? 12 : 16),
+                DetailInfoRow(
+                  icon: Icons.info_outline,
+                  label: 'ИСТОЧНИК',
+                  value: widget.project.source.isNotEmpty
+                      ? widget.project.source
+                      : '—',
+                  color: Colors.teal.shade700,
+                  selectable: false,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
