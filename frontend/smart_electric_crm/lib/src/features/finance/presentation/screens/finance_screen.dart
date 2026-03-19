@@ -328,11 +328,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         sectionHPadding,
         bottomPadding,
       ),
-      titleStyle: textStyles.sectionTitle.copyWith(
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-        color: scheme.onSurface,
-      ),
+      titleStyle: _financeSectionTitleStyle(textStyles, scheme),
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
@@ -368,11 +364,20 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         sectionHPadding,
         bottomPadding,
       ),
-      titleStyle: textStyles.sectionTitle.copyWith(
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-        color: scheme.onSurface,
-      ),
+      titleStyle: _financeSectionTitleStyle(textStyles, scheme),
+    );
+  }
+
+  TextStyle _financeSectionTitleStyle(
+    AppTextStyles textStyles,
+    ColorScheme scheme,
+  ) {
+    return textStyles.sectionTitle.copyWith(
+      fontSize: 14.5,
+      fontWeight: FontWeight.w700,
+      height: 1.18,
+      letterSpacing: -0.15,
+      color: scheme.onSurface,
     );
   }
 

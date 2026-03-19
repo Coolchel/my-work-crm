@@ -948,6 +948,7 @@ class _ProjectCardState extends State<_ProjectCard> {
     final useMobileLayout = isCompactMobileWeb ||
         isMobilePlatform ||
         MediaQuery.sizeOf(context).width < 480;
+    final headerBottomSpacing = useMobileLayout ? 14.0 : 20.0;
     final createdValue = _formatDate(createdAt);
     final updatedValue = isEdited ? _formatDate(updatedAt) : null;
     final infoBlocks = _buildDesktopInfoBlocks(
@@ -1014,7 +1015,7 @@ class _ProjectCardState extends State<_ProjectCard> {
                           useMobileLayout
                               ? _buildMobileHeader(project)
                               : _buildDesktopHeader(project),
-                          SizedBox(height: isCompactMobileWeb ? 12 : 20),
+                          SizedBox(height: headerBottomSpacing),
                           useMobileLayout
                               ? _buildMobileInfoSection(
                                   project: project,

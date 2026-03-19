@@ -529,10 +529,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildSectionHeader(BuildContext context, String title) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AppEyebrowLabel(
       text: title,
-      color: Colors.indigo.withOpacity(0.6),
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      color: Color.lerp(
+        scheme.onSurfaceVariant,
+        scheme.primary,
+        isDark ? 0.24 : 0.16,
+      ),
+      padding: const EdgeInsets.only(left: 4, bottom: 6),
     );
   }
 
