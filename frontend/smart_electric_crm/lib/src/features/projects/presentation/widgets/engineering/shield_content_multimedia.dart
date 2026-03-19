@@ -27,11 +27,9 @@ class ShieldContentMultimedia extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textStyles = context.appTextStyles;
     final hasLines = shield.internetLinesCount > 0;
-    final summaryBackground = isDark
-        ? Color.alphaBlend(
-            themeColor.withOpacity(0.12), scheme.surfaceContainer)
-        : themeColor.withOpacity(0.05);
-    final summaryBorderColor = themeColor.withOpacity(isDark ? 0.24 : 0.12);
+    final summaryBackground =
+        isDark ? scheme.surfaceContainerHigh : const Color(0xFFF8FAFC);
+    final summaryBorderColor = AppDesignTokens.softBorder(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,8 +50,9 @@ class ShieldContentMultimedia extends ConsumerWidget {
                     color: isDark ? scheme.onSurface : const Color(0xFF616161),
                   )),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: themeColor.withOpacity(0.15)),
-                backgroundColor: themeColor.withOpacity(0.02),
+                side: BorderSide(color: AppDesignTokens.softBorder(context)),
+                backgroundColor:
+                    isDark ? scheme.surfaceContainerHigh : scheme.surface,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 minimumSize: const Size(0, 34),
@@ -98,13 +97,14 @@ class ShieldContentMultimedia extends ConsumerWidget {
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: themeColor.withOpacity(0.12),
+                              color:
+                                  themeColor.withOpacity(isDark ? 0.18 : 0.10),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
                               Icons.router_rounded,
                               size: 16,
-                              color: themeColor.withOpacity(0.78),
+                              color: themeColor,
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -182,13 +182,14 @@ class ShieldContentMultimedia extends ConsumerWidget {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: themeColor.withOpacity(0.1),
+                              color:
+                                  themeColor.withOpacity(isDark ? 0.18 : 0.10),
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
                               '${shield.internetLinesCount} линий',
                               style: textStyles.captionStrong.copyWith(
-                                color: themeColor.withOpacity(0.86),
+                                color: themeColor,
                               ),
                             ),
                           ),
@@ -211,13 +212,13 @@ class ShieldContentMultimedia extends ConsumerWidget {
             ),
           )
         else
-          const FriendlyEmptyState(
+          FriendlyEmptyState(
             icon: Icons.router_outlined,
             title: 'Ethernet линии не добавлены',
             subtitle: 'Добавьте количество линий, чтобы заполнить этот раздел.',
-            accentColor: Colors.green,
+            accentColor: themeColor,
             iconSize: 62,
-            padding: EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10),
           ),
       ],
     );

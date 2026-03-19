@@ -7,6 +7,7 @@ import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.
 import '../../../../engineering/data/models/led_zone_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
+import '../../utils/shield_ui_palette.dart';
 
 class LedZoneDialog extends StatefulWidget {
   final String projectId;
@@ -92,7 +93,13 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
-                  color: themeColor.withOpacity(0.12),
+                  color: ShieldUiPalette.blendAccentSurface(
+                    context,
+                    themeColor,
+                    baseColor: Theme.of(context).colorScheme.surface,
+                    lightOpacity: 0.06,
+                    darkOpacity: 0.16,
+                  ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(24),
@@ -105,7 +112,7 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                       child: Text(
                         isEdit ? "Редактировать LED зону" : "Добавить LED зону",
                         style: textStyles.dialogTitle.copyWith(
-                          color: themeColor.withOpacity(0.8),
+                          color: scheme.onSurface,
                         ),
                       ),
                     ),
@@ -145,17 +152,28 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                  color: themeColor.withOpacity(0.2)),
+                                color:
+                                    ShieldUiPalette.neutralFieldBorder(context),
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                  color: themeColor.withOpacity(0.2)),
+                                color:
+                                    ShieldUiPalette.neutralFieldBorder(context),
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  BorderSide(color: themeColor, width: 2),
+                              borderSide: BorderSide(
+                                color: ShieldUiPalette.blendAccentBorder(
+                                  context,
+                                  themeColor,
+                                  lightOpacity: 0.34,
+                                  darkOpacity: 0.44,
+                                ),
+                                width: 1.5,
+                              ),
                             ),
                           ),
                         ),
@@ -172,17 +190,28 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                  color: themeColor.withOpacity(0.2)),
+                                color:
+                                    ShieldUiPalette.neutralFieldBorder(context),
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                  color: themeColor.withOpacity(0.2)),
+                                color:
+                                    ShieldUiPalette.neutralFieldBorder(context),
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  BorderSide(color: themeColor, width: 2),
+                              borderSide: BorderSide(
+                                color: ShieldUiPalette.blendAccentBorder(
+                                  context,
+                                  themeColor,
+                                  lightOpacity: 0.34,
+                                  darkOpacity: 0.44,
+                                ),
+                                width: 1.5,
+                              ),
                             ),
                           ),
                         ),
@@ -250,7 +279,21 @@ class _LedZoneDialogState extends State<LedZoneDialog> {
                                 }
                               },
                         style: FilledButton.styleFrom(
-                          backgroundColor: themeColor,
+                          backgroundColor:
+                              ShieldUiPalette.primaryActionBackground(
+                            context,
+                            themeColor,
+                          ),
+                          foregroundColor:
+                              ShieldUiPalette.primaryActionForeground(context),
+                          side: BorderSide(
+                            color: ShieldUiPalette.blendAccentBorder(
+                              context,
+                              themeColor,
+                              lightOpacity: 0.20,
+                              darkOpacity: 0.34,
+                            ),
+                          ),
                           minimumSize: const Size(120, 44),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 12),

@@ -45,8 +45,9 @@ class ShieldContentLed extends ConsumerWidget {
                     color: isDark ? scheme.onSurface : Colors.grey.shade700,
                   )),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: themeColor.withOpacity(0.15)),
-                backgroundColor: themeColor.withOpacity(0.02),
+                side: BorderSide(color: AppDesignTokens.softBorder(context)),
+                backgroundColor:
+                    isDark ? scheme.surfaceContainerHigh : scheme.surface,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 minimumSize: const Size(0, 34),
@@ -59,13 +60,13 @@ class ShieldContentLed extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         if (zones.isEmpty)
-          const FriendlyEmptyState(
+          FriendlyEmptyState(
             icon: Icons.lightbulb_outline_rounded,
             title: 'Список зон пуст',
             subtitle: 'Добавьте первую LED-зону для этого щита.',
-            accentColor: Colors.purple,
+            accentColor: themeColor,
             iconSize: 60,
-            padding: EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10),
           )
         else
           ...zones.map((zone) => Padding(
@@ -74,11 +75,13 @@ class ShieldContentLed extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: themeColor.withOpacity(0.08)),
+                    border: Border.all(
+                      color: AppDesignTokens.softBorder(context),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: themeColor.withOpacity(0.02),
-                        blurRadius: 4,
+                        color: AppDesignTokens.cardShadow(context),
+                        blurRadius: 2,
                         offset: const Offset(0, 1),
                       ),
                     ],

@@ -8,6 +8,7 @@ import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.
 import '../../../../engineering/data/models/shield_group_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
+import '../../utils/shield_ui_palette.dart';
 
 class ShieldGroupDialog extends StatefulWidget {
   final String projectId;
@@ -110,7 +111,13 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
-                  color: themeColor.withOpacity(0.12),
+                  color: ShieldUiPalette.blendAccentSurface(
+                    context,
+                    themeColor,
+                    baseColor: Theme.of(context).colorScheme.surface,
+                    lightOpacity: 0.06,
+                    darkOpacity: 0.16,
+                  ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(24),
@@ -123,7 +130,7 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                       child: Text(
                         isEdit ? "Редактировать группу" : "Добавить группу",
                         style: textStyles.dialogTitle.copyWith(
-                          color: themeColor.withOpacity(0.8),
+                          color: scheme.onSurface,
                         ),
                       ),
                     ),
@@ -294,17 +301,28 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                  color: themeColor.withOpacity(0.2)),
+                                color:
+                                    ShieldUiPalette.neutralFieldBorder(context),
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
-                                  color: themeColor.withOpacity(0.2)),
+                                color:
+                                    ShieldUiPalette.neutralFieldBorder(context),
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  BorderSide(color: themeColor, width: 2),
+                              borderSide: BorderSide(
+                                color: ShieldUiPalette.blendAccentBorder(
+                                  context,
+                                  themeColor,
+                                  lightOpacity: 0.34,
+                                  darkOpacity: 0.44,
+                                ),
+                                width: 1.5,
+                              ),
                             ),
                           ),
                         ),
@@ -374,7 +392,21 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
                                 }
                               },
                         style: FilledButton.styleFrom(
-                          backgroundColor: themeColor,
+                          backgroundColor:
+                              ShieldUiPalette.primaryActionBackground(
+                            context,
+                            themeColor,
+                          ),
+                          foregroundColor:
+                              ShieldUiPalette.primaryActionForeground(context),
+                          side: BorderSide(
+                            color: ShieldUiPalette.blendAccentBorder(
+                              context,
+                              themeColor,
+                              lightOpacity: 0.20,
+                              darkOpacity: 0.34,
+                            ),
+                          ),
                           minimumSize: const Size(120, 44),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 12),
@@ -423,6 +455,20 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
 
   // Resolve accent color by device type.
   Color _getDeviceTypeColor(String type) {
+    const calmPalette = <String, Color>{
+      'load_switch': Color(0xFF98635D),
+      'rcd': Color(0xFF9A7A45),
+      'circuit_breaker': Color(0xFF58749B),
+      'diff_breaker': Color(0xFF72668F),
+      'relay': Color(0xFF537A74),
+      'contactor': Color(0xFF8A6A46),
+      'other': Color(0xFF617487),
+    };
+    final resolved = calmPalette[type];
+    if (resolved != null) {
+      return resolved;
+    }
+
     switch (type) {
       case 'load_switch':
         return Colors.red.shade600;

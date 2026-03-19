@@ -178,8 +178,9 @@ class ShieldContentPower extends ConsumerWidget {
                     color: isDark ? scheme.onSurface : Colors.grey.shade700,
                   )),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: themeColor.withOpacity(0.15)),
-                backgroundColor: themeColor.withOpacity(0.02),
+                side: BorderSide(color: AppDesignTokens.softBorder(context)),
+                backgroundColor:
+                    isDark ? scheme.surfaceContainerHigh : scheme.surface,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 minimumSize: const Size(0, 34),
@@ -192,13 +193,13 @@ class ShieldContentPower extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         if (groups.isEmpty)
-          const FriendlyEmptyState(
+          FriendlyEmptyState(
             icon: Icons.inventory_2_outlined,
             title: 'Список групп пуст',
             subtitle: 'Добавьте первую группу устройств для этого щита.',
-            accentColor: Colors.blueGrey,
+            accentColor: themeColor,
             iconSize: 62,
-            padding: EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10),
           )
         else
           ...sortedKeys.map((type) {
@@ -227,12 +228,13 @@ class ShieldContentPower extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(6),
-                          border:
-                              Border.all(color: themeColor.withOpacity(0.08)),
+                          border: Border.all(
+                            color: AppDesignTokens.softBorder(context),
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: themeColor.withOpacity(0.02),
-                              blurRadius: 4,
+                              color: AppDesignTokens.cardShadow(context),
+                              blurRadius: 2,
                               offset: const Offset(0, 1),
                             ),
                           ],
@@ -417,6 +419,19 @@ class ShieldContentPower extends ConsumerWidget {
 
   // Определяет цвет иконки на основе типа устройства (семантическое кодирование)
   Color _getDeviceTypeColor(String type) {
+    const calmPalette = <String, Color>{
+      'load_switch': Color(0xFF98635D),
+      'rcd': Color(0xFF9A7A45),
+      'circuit_breaker': Color(0xFF58749B),
+      'diff_breaker': Color(0xFF72668F),
+      'relay': Color(0xFF537A74),
+      'contactor': Color(0xFF8A6A46),
+      'other': Color(0xFF617487),
+    };
+    final resolved = calmPalette[type];
+    if (resolved != null) {
+      return resolved;
+    }
     switch (type) {
       case 'load_switch':
         return Colors.red.shade600; // Рубильники - критичное устройство

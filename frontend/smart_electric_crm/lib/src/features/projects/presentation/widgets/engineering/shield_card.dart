@@ -18,6 +18,7 @@ import '../../../../../core/theme/app_design_tokens.dart';
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../../core/utils/app_number_formatter.dart';
 import '../../../../../shared/presentation/widgets/desktop_web_frame.dart';
+import '../../utils/shield_ui_palette.dart';
 
 class ShieldCard extends ConsumerStatefulWidget {
   final ShieldModel shield;
@@ -117,7 +118,12 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: _isExpanded
-                ? themeColor.withOpacity(0.35)
+                ? ShieldUiPalette.blendAccentBorder(
+                    context,
+                    themeColor,
+                    lightOpacity: 0.18,
+                    darkOpacity: 0.24,
+                  )
                 : AppDesignTokens.cardBorder(context, hovered: _isHovered),
           ),
           boxShadow: [
@@ -173,9 +179,20 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                   horizontal: 12, vertical: 14),
                               decoration: BoxDecoration(
                                 color: _isExpanded
-                                    ? (_isHeaderHovered
-                                        ? themeColor.withOpacity(0.14)
-                                        : themeColor.withOpacity(0.08))
+                                    ? ShieldUiPalette.blendAccentSurface(
+                                        context,
+                                        themeColor,
+                                        baseColor:
+                                            AppDesignTokens.cardBackground(
+                                          context,
+                                          hovered:
+                                              _isHovered || _isHeaderHovered,
+                                        ),
+                                        lightOpacity:
+                                            _isHeaderHovered ? 0.07 : 0.04,
+                                        darkOpacity:
+                                            _isHeaderHovered ? 0.16 : 0.10,
+                                      )
                                     : AppDesignTokens.cardBackground(context,
                                         hovered:
                                             _isHovered || _isHeaderHovered),
@@ -191,13 +208,23 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                     width: 34,
                                     height: 34,
                                     decoration: BoxDecoration(
-                                      color: themeColor
-                                          .withOpacity(0.1), // Accent icon bg
+                                      color: ShieldUiPalette.blendAccentSurface(
+                                        context,
+                                        themeColor,
+                                        baseColor:
+                                            AppDesignTokens.cardBackground(
+                                          context,
+                                          hovered:
+                                              _isHovered || _isHeaderHovered,
+                                        ),
+                                        lightOpacity: 0.12,
+                                        darkOpacity: 0.22,
+                                      ),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
                                       _getIconForType(shield.shieldType),
-                                      color: themeColor.withOpacity(0.8),
+                                      color: themeColor,
                                       size: 18,
                                     ),
                                   ),
@@ -224,14 +251,12 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                                           crossAxisAlignment:
                                               WrapCrossAlignment.center,
                                           children: [
-                                            Text(
-                                              _getTypeName(shield.shieldType),
-                                              style: textStyles.bodyStrong
-                                                  .copyWith(
-                                                color:
-                                                    themeColor.withOpacity(0.7),
-                                                fontSize: 10.5,
+                                            _buildTypeChip(
+                                              context,
+                                              label: _getTypeName(
+                                                shield.shieldType,
                                               ),
+                                              accentColor: themeColor,
                                             ),
                                             Padding(
                                               padding:
@@ -349,11 +374,9 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
         !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
     final useExpandedActionButtons = isDesktopWeb || isWindowsDesktop;
     final textStyles = context.appTextStyles;
-    final summaryBackground = isDark
-        ? Color.alphaBlend(
-            themeColor.withOpacity(0.12), scheme.surfaceContainer)
-        : themeColor.withOpacity(0.045);
-    final summaryBorderColor = themeColor.withOpacity(isDark ? 0.24 : 0.12);
+    final summaryBackground =
+        isDark ? scheme.surfaceContainerHigh : const Color(0xFFF8FAFC);
+    final summaryBorderColor = AppDesignTokens.softBorder(context);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -380,7 +403,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                         Icon(
                           Icons.tune_rounded,
                           size: 14,
-                          color: themeColor.withOpacity(isDark ? 0.78 : 0.7),
+                          color: themeColor,
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -439,8 +462,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             ],
           ),
           const SizedBox(height: 16),
-          Divider(
-              height: 1, color: themeColor.withOpacity(isDark ? 0.18 : 0.1)),
+          Divider(height: 1, color: AppDesignTokens.softBorder(context)),
           const SizedBox(height: 16),
           // Bottom Row: Size & Actions
           Column(
@@ -454,14 +476,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.withOpacity(0.08)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: themeColor.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    border:
+                        Border.all(color: AppDesignTokens.softBorder(context)),
                   ),
                   child: Wrap(
                     spacing: 10,
@@ -489,7 +505,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                               text: _formatSuggestedSize(shield.suggestedSize),
                               style: textStyles.bodyStrong.copyWith(
                                 fontSize: 11.5,
-                                color: themeColor.withOpacity(0.8),
+                                color: themeColor,
                                 letterSpacing: 0.2,
                                 height: 1.1,
                               ),
@@ -669,6 +685,42 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     );
   }
 
+  Widget _buildTypeChip(
+    BuildContext context, {
+    required String label,
+    required Color accentColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: ShieldUiPalette.blendAccentSurface(
+          context,
+          accentColor,
+          baseColor: Theme.of(context).colorScheme.surface,
+          lightOpacity: 0.10,
+          darkOpacity: 0.18,
+        ),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: ShieldUiPalette.blendAccentBorder(
+            context,
+            accentColor,
+            lightOpacity: 0.18,
+            darkOpacity: 0.30,
+          ),
+        ),
+      ),
+      child: Text(
+        label,
+        style: context.appTextStyles.captionStrong.copyWith(
+          color: accentColor,
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
   String _formatSuggestedSize(String? size) {
     if (size == null) return '';
     final count = int.tryParse(size);
@@ -730,9 +782,15 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
           padding: compact
               ? const EdgeInsets.symmetric(horizontal: 2)
               : EdgeInsets.zero,
-          selectedBackgroundColor: themeColor.withOpacity(0.1),
+          selectedBackgroundColor: ShieldUiPalette.blendAccentSurface(
+            context,
+            themeColor,
+            baseColor: Theme.of(context).colorScheme.surface,
+            lightOpacity: 0.10,
+            darkOpacity: 0.20,
+          ),
           selectedForegroundColor: themeColor,
-          side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          side: BorderSide(color: AppDesignTokens.softBorder(context)),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
       ),
@@ -740,29 +798,11 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   }
 
   IconData _getIconForType(String type) {
-    switch (type) {
-      case 'power':
-        return Icons.bolt_rounded;
-      case 'led':
-        return Icons.lightbulb_rounded;
-      case 'multimedia':
-        return Icons.router_rounded;
-      default:
-        return Icons.wb_iridescent_rounded;
-    }
+    return ShieldUiPalette.resolveShield(type).icon;
   }
 
   Color _getColorForType(String type) {
-    switch (type) {
-      case 'power':
-        return Colors.orange.shade800;
-      case 'led':
-        return Colors.purple.shade600;
-      case 'multimedia':
-        return Colors.green;
-      default:
-        return Colors.grey.shade700;
-    }
+    return ShieldUiPalette.resolveShield(type).accent;
   }
 
   String _getTypeName(String type) {

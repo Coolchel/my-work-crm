@@ -7,6 +7,7 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_sel
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
+import '../../utils/shield_ui_palette.dart';
 
 class AddShieldDialog extends StatefulWidget {
   final String projectId;
@@ -35,6 +36,9 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
     final isDark = AppDesignTokens.isDark(context);
     final textStyles = context.appTextStyles;
     final scheme = Theme.of(context).colorScheme;
+    final powerAccent = ShieldUiPalette.resolveShield('power').accent;
+    final multimediaAccent = ShieldUiPalette.resolveShield('multimedia').accent;
+    final ledAccent = ShieldUiPalette.resolveShield('led').accent;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -168,8 +172,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                                       child: Row(
                                         children: [
                                           Icon(Icons.bolt,
-                                              color: Colors.indigo.shade400,
-                                              size: 20),
+                                              color: powerAccent, size: 20),
                                           const SizedBox(width: 12),
                                           const Text('Силовой',
                                               style: TextStyle(fontSize: 13)),
@@ -188,7 +191,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                                       child: Row(
                                         children: [
                                           Icon(Icons.router,
-                                              color: Colors.indigo.shade400,
+                                              color: multimediaAccent,
                                               size: 20),
                                           const SizedBox(width: 12),
                                           const Text('Слаботочный',
@@ -208,8 +211,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
                                       child: Row(
                                         children: [
                                           Icon(Icons.lightbulb,
-                                              color: Colors.indigo.shade400,
-                                              size: 20),
+                                              color: ledAccent, size: 20),
                                           const SizedBox(width: 12),
                                           const Text('LED',
                                               style: TextStyle(fontSize: 13)),

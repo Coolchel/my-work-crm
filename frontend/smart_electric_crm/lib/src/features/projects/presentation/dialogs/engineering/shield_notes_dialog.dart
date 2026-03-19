@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
+import '../../utils/shield_ui_palette.dart';
 
 class ShieldNotesDialog extends StatefulWidget {
   final String projectId;
@@ -81,7 +82,13 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
-                  color: themeColor.withOpacity(0.12),
+                  color: ShieldUiPalette.blendAccentSurface(
+                    context,
+                    themeColor,
+                    baseColor: Theme.of(context).colorScheme.surface,
+                    lightOpacity: 0.06,
+                    darkOpacity: 0.16,
+                  ),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(24),
@@ -95,12 +102,12 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.note_alt_outlined,
-                              size: 20, color: themeColor.withOpacity(0.8)),
+                              size: 20, color: themeColor),
                           const SizedBox(width: 8),
                           Text(
                             "Заметка",
                             style: textStyles.dialogTitle.copyWith(
-                              color: themeColor.withOpacity(0.8),
+                              color: scheme.onSurface,
                             ),
                           ),
                         ],
@@ -138,17 +145,27 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: themeColor.withOpacity(0.2)),
+                          borderSide: BorderSide(
+                            color: ShieldUiPalette.neutralFieldBorder(context),
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: themeColor.withOpacity(0.2)),
+                          borderSide: BorderSide(
+                            color: ShieldUiPalette.neutralFieldBorder(context),
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: themeColor, width: 1),
+                          borderSide: BorderSide(
+                            color: ShieldUiPalette.blendAccentBorder(
+                              context,
+                              themeColor,
+                              lightOpacity: 0.34,
+                              darkOpacity: 0.44,
+                            ),
+                            width: 1.5,
+                          ),
                         ),
                         filled: true,
                         fillColor: isDark
@@ -209,7 +226,21 @@ class _ShieldNotesDialogState extends State<ShieldNotesDialog> {
                                 }
                               },
                         style: FilledButton.styleFrom(
-                          backgroundColor: themeColor,
+                          backgroundColor:
+                              ShieldUiPalette.primaryActionBackground(
+                            context,
+                            themeColor,
+                          ),
+                          foregroundColor:
+                              ShieldUiPalette.primaryActionForeground(context),
+                          side: BorderSide(
+                            color: ShieldUiPalette.blendAccentBorder(
+                              context,
+                              themeColor,
+                              lightOpacity: 0.20,
+                              darkOpacity: 0.34,
+                            ),
+                          ),
                           minimumSize: const Size(120, 44),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 12),
