@@ -8,6 +8,7 @@ import '../../data/repositories/finance_repository.dart';
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../shared/presentation/widgets/inline_save_button.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
+import '../../../../shared/presentation/widgets/app_section_header.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
 import '../../../../shared/presentation/widgets/friendly_empty_state.dart';
@@ -317,36 +318,29 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     final sectionHPadding = _sectionHPadding(context);
     final scheme = Theme.of(context).colorScheme;
     final textStyles = context.appTextStyles;
-    return Padding(
+    return AppSectionHeader(
+      title: 'Неоплаченные объекты',
       padding: EdgeInsets.fromLTRB(sectionHPadding, 10, sectionHPadding, 4),
-      child: Row(
-        children: [
-          Text(
-            'Неоплаченные объекты',
-            style: textStyles.sectionTitle.copyWith(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: scheme.onSurface,
-            ),
+      titleStyle: textStyles.sectionTitle.copyWith(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: scheme.onSurface,
+      ),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: _financeAccent.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _financeAccent.withOpacity(0.24)),
+        ),
+        child: Text(
+          '$projectsCount',
+          style: textStyles.metricLabel.copyWith(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: _financeAccent,
           ),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: _financeAccent.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: _financeAccent.withOpacity(0.24)),
-            ),
-            child: Text(
-              '$projectsCount',
-              style: textStyles.metricLabel.copyWith(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: _financeAccent,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

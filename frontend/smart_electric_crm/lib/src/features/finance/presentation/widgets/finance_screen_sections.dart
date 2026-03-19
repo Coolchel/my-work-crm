@@ -642,23 +642,17 @@ extension _FinanceScreenSections on _FinanceScreenState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.notes,
-                size: 18,
-                color: _FinanceScreenState._financeAccent,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Финансовые заметки',
-                style: textStyles.sectionTitle.copyWith(
-                  fontSize: 15,
-                ),
-              ),
-            ],
+          AppSectionHeader(
+            title: 'Финансовые заметки',
+            leading: const Icon(
+              Icons.notes,
+              size: 18,
+              color: _FinanceScreenState._financeAccent,
+            ),
+            titleStyle: textStyles.sectionTitle.copyWith(
+              fontSize: 15,
+            ),
           ),
-          const SizedBox(height: 12),
           const SizedBox(height: 12),
           _buildInputField(
             label: 'Смета контрагента',

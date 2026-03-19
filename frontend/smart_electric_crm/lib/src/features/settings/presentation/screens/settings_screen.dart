@@ -11,6 +11,7 @@ import '../../../../core/navigation/route_bootstrap_storage.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
+import '../../../../shared/presentation/widgets/app_section_header.dart';
 import '../../application/app_settings_controller.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 
@@ -528,16 +529,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildSectionHeader(BuildContext context, String title) {
-    return Padding(
+    return AppEyebrowLabel(
+      text: title,
+      color: Colors.indigo.withOpacity(0.6),
       padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(
-        title.toUpperCase(),
-        style: context.appTextStyles.captionStrong.copyWith(
-          fontSize: 11,
-          color: Colors.indigo.withOpacity(0.6),
-          letterSpacing: 1.5,
-        ),
-      ),
     );
   }
 

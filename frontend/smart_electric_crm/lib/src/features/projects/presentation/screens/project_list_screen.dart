@@ -911,7 +911,7 @@ class _ProjectCard extends StatefulWidget {
 }
 
 class _ProjectCardState extends State<_ProjectCard> {
-  static const double _titleFontSize = 17;
+  static const double _cardTitleFontSize = 16;
   static const double _titleLineHeight = 1.2;
   static const double _actionButtonSize = 30;
   static const double _actionIconSize = 18;
@@ -1059,14 +1059,14 @@ class _ProjectCardState extends State<_ProjectCard> {
         Expanded(
           child: Text(
             project.address,
-            style: context.appTextStyles.sectionTitle.copyWith(
-              fontSize: _titleFontSize,
+            style: context.appTextStyles.cardTitle.copyWith(
+              fontSize: _cardTitleFontSize,
               height: _titleLineHeight,
               color: Theme.of(context).colorScheme.onSurface,
               letterSpacing: -0.3,
             ),
             strutStyle: const StrutStyle(
-              fontSize: _titleFontSize,
+              fontSize: _cardTitleFontSize,
               height: _titleLineHeight,
               forceStrutHeight: true,
             ),
@@ -1127,14 +1127,14 @@ class _ProjectCardState extends State<_ProjectCard> {
               padding: const EdgeInsets.only(right: _mobileHeaderActionsWidth),
               child: Text(
                 project.address,
-                style: context.appTextStyles.sectionTitle.copyWith(
-                  fontSize: _titleFontSize,
+                style: context.appTextStyles.cardTitle.copyWith(
+                  fontSize: _cardTitleFontSize,
                   height: _titleLineHeight,
                   color: Theme.of(context).colorScheme.onSurface,
                   letterSpacing: -0.3,
                 ),
                 strutStyle: const StrutStyle(
-                  fontSize: _titleFontSize,
+                  fontSize: _cardTitleFontSize,
                   height: _titleLineHeight,
                   forceStrutHeight: true,
                 ),
