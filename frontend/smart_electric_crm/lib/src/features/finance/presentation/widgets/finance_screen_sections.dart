@@ -629,7 +629,12 @@ extension _FinanceScreenSections on _FinanceScreenState {
         _buildSubsectionHeader('Финансовые заметки'),
         Container(
           margin: EdgeInsets.fromLTRB(sectionHPadding, 0, sectionHPadding, 0),
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            _hasChanges ? 16 : 20,
+          ),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius:
@@ -663,6 +668,7 @@ extension _FinanceScreenSections on _FinanceScreenState {
               ),
               if (_hasChanges) ...[
                 InlineSaveActionsRow(
+                  topPadding: 16,
                   actions: [
                     InlineSaveButton(
                       accentColor: _FinanceScreenState._financeAccent,

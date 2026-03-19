@@ -848,6 +848,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       label: 'Сохранить',
       savingLabel: 'Сохранение...',
     );
+    final hasNotesSaveButton = notesSaveButton != null;
 
     return GestureDetector(
       onTap: widget.isDisabled ? widget.onDismissRequest : null,
@@ -971,7 +972,12 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                     horizontalPadding,
                     12,
                   ),
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    14,
+                    16,
+                    hasNotesSaveButton ? 16 : 20,
+                  ),
                   decoration: BoxDecoration(
                     color: scheme.surface,
                     borderRadius: BorderRadius.circular(16),
@@ -1006,6 +1012,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                         suffix: _buildSuffix(isSaving: _savingNote),
                       ),
                       InlineSaveActionsRow(
+                        topPadding: 16,
                         actions: [
                           if (notesSaveButton != null) notesSaveButton,
                         ],
