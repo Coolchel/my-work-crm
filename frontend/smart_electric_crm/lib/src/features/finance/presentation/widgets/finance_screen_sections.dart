@@ -623,69 +623,67 @@ extension _FinanceScreenSections on _FinanceScreenState {
 
   Widget _buildGlobalSettingsSection() {
     final sectionHPadding = _sectionHPadding(context);
-    final textStyles = context.appTextStyles;
-    return Container(
-      margin: EdgeInsets.fromLTRB(sectionHPadding, 12, sectionHPadding, 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(_FinanceScreenState._cardRadius),
-        border: Border.all(color: AppDesignTokens.cardBorder(context)),
-        boxShadow: [
-          BoxShadow(
-            color: AppDesignTokens.cardShadow(context),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSubsectionHeader('Финансовые заметки'),
+        Container(
+          margin: EdgeInsets.fromLTRB(sectionHPadding, 0, sectionHPadding, 0),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius:
+                BorderRadius.circular(_FinanceScreenState._cardRadius),
+            border: Border.all(color: AppDesignTokens.cardBorder(context)),
+            boxShadow: [
+              BoxShadow(
+                color: AppDesignTokens.cardShadow(context),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppSectionHeader(
-            title: 'Финансовые заметки',
-            leading: const Icon(
-              Icons.notes,
-              size: 18,
-              color: _FinanceScreenState._financeAccent,
-            ),
-            titleStyle: textStyles.sectionTitle.copyWith(
-              fontSize: 15,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildInputField(
-            label: 'Смета контрагента',
-            controller: _estimateController,
-            minLines: 1,
-            maxLines: null,
-          ),
-          const SizedBox(height: 12),
-          _buildInputField(
-            label: 'Заметки',
-            controller: _notesController,
-            minLines: 1,
-            maxLines: null,
-          ),
-          if (_hasChanges) ...[
-            InlineSaveActionsRow(
-              actions: [
-                InlineSaveButton(
-                  accentColor: _FinanceScreenState._financeAccent,
-                  label: 'Сохранить',
-                  onPressed: _saveSettings,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInputField(
+                label: 'Смета контрагента',
+                controller: _estimateController,
+                onChanged: _onTextChanged,
+                minLines: 1,
+                maxLines: null,
+              ),
+              const SizedBox(height: 12),
+              _buildInputField(
+                label: 'Заметки',
+                controller: _notesController,
+                onChanged: _onTextChanged,
+                minLines: 1,
+                maxLines: null,
+              ),
+              if (_hasChanges) ...[
+                InlineSaveActionsRow(
+                  actions: [
+                    InlineSaveButton(
+                      accentColor: _FinanceScreenState._financeAccent,
+                      label: 'Сохранить',
+                      compact: true,
+                      onPressed: _saveSettings,
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
-        ],
-      ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildInputField({
     required String label,
     required TextEditingController controller,
+    ValueChanged<String>? onChanged,
     int minLines = 1,
     int? maxLines = 1,
   }) {
@@ -709,6 +707,7 @@ extension _FinanceScreenSections on _FinanceScreenState {
           keyboardType:
               maxLines == 1 ? TextInputType.text : TextInputType.multiline,
           textAlignVertical: TextAlignVertical.top,
+          onChanged: onChanged,
           style: textStyles.input.copyWith(
             fontSize: 14,
             color: scheme.onSurface,

@@ -88,8 +88,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   bool _savingNotesAction = false;
   String? _lastSavedNote;
   String? _lastSavedRemarks;
-  bool _hasUnsavedNote = false;
-  bool _hasUnsavedRemarks = false;
+  bool _hasNotesChanges = false;
   Object? _scrollAttachment;
 
   static const _defaultMaterialsRemarks = "Не учтен вводной кабель.";
@@ -141,14 +140,14 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       if (widget.note != _lastSavedNote) {
         _noteCtrl.text = widget.note;
         _lastSavedNote = widget.note;
-        _hasUnsavedNote = false;
+        _hasNotesChanges = false;
       }
     }
     if (widget.remarks != oldWidget.remarks) {
       if (widget.remarks != _lastSavedRemarks) {
         _remarksCtrl.text = widget.remarks;
         _lastSavedRemarks = widget.remarks;
-        _hasUnsavedRemarks = false;
+        _hasNotesChanges = false;
       }
     }
     if (widget.markupPercent != oldWidget.markupPercent) {
@@ -238,7 +237,6 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       if (mounted) {
         setState(() {
           _lastSavedNote = _noteCtrl.text;
-          _hasUnsavedNote = false;
         });
       }
     } finally {
@@ -253,7 +251,6 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       if (mounted) {
         setState(() {
           _lastSavedRemarks = _remarksCtrl.text;
-          _hasUnsavedRemarks = false;
         });
       }
     } finally {
@@ -266,12 +263,16 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       return;
     }
 
-    final shouldSaveRemarks = _hasUnsavedRemarks;
-    final shouldSaveNote = _hasUnsavedNote;
+    final shouldSaveRemarks = _remarksCtrl.text != _lastSavedRemarks;
+    final shouldSaveNote = _noteCtrl.text != _lastSavedNote;
     if (!shouldSaveRemarks && !shouldSaveNote) {
+      if (mounted && _hasNotesChanges) {
+        setState(() => _hasNotesChanges = false);
+      }
       return;
     }
 
+    var completedSuccessfully = false;
     setState(() => _savingNotesAction = true);
     try {
       if (shouldSaveRemarks) {
@@ -280,32 +281,34 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       if (shouldSaveNote) {
         await _saveNote();
       }
+      completedSuccessfully = true;
     } finally {
       if (mounted) {
-        setState(() => _savingNotesAction = false);
+        setState(() {
+          _savingNotesAction = false;
+          if (completedSuccessfully) {
+            _hasNotesChanges = false;
+          }
+        });
       }
     }
   }
 
   void _onNoteChanged(String value) {
+    if (_hasNotesChanges) {
+      return;
+    }
     setState(() {
-      _hasUnsavedNote = value != _lastSavedNote;
+      _hasNotesChanges = true;
     });
   }
 
   void _onRemarksChanged(String value) {
+    if (_hasNotesChanges) {
+      return;
+    }
     setState(() {
-      // If it's Materials and was initially empty, and now it's the default text,
-      // we consider it "unsaved" but we want to HIDE the button per user request.
-      final isDefaultSpecialCase = !_isWorkTab &&
-          widget.remarks.trim().isEmpty &&
-          value == _defaultMaterialsRemarks;
-
-      if (isDefaultSpecialCase) {
-        _hasUnsavedRemarks = false;
-      } else {
-        _hasUnsavedRemarks = value != _lastSavedRemarks;
-      }
+      _hasNotesChanges = true;
     });
   }
 
@@ -340,6 +343,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       label: label,
       savingLabel: savingLabel,
       saving: saving,
+      compact: true,
       enabled: !widget.isDisabled,
       onPressed: widget.isDisabled || saving ? null : onSave,
     );
@@ -838,7 +842,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     // Use passed prop instead of provider
     final showPrices = _isWorkTab ? true : widget.showPrices;
     final notesSaveButton = _buildSaveButton(
-      hasUnsaved: _hasUnsavedRemarks || _hasUnsavedNote,
+      hasUnsaved: _hasNotesChanges,
       saving: _savingNotesAction || _savingRemarks || _savingNote,
       onSave: _savePendingNotes,
       label: 'Сохранить',

@@ -83,11 +83,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     _appBarCollapseController.bind(_scrollController);
     _scrollAttachment =
         AppNavigation.financeScrollController.attach(_scrollToTop);
-    _estimateController.addListener(_onTextChanged);
-    _notesController.addListener(_onTextChanged);
   }
 
-  void _onTextChanged() {
+  void _onTextChanged(String _) {
     if (_isDataLoaded && !_hasChanges) {
       if (mounted) setState(() => _hasChanges = true);
     }
@@ -314,13 +312,22 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
-  Widget _buildProjectsHeader(int projectsCount) {
+  Widget _buildProjectsHeader(
+    int projectsCount, {
+    double topPadding = 10,
+    double bottomPadding = 4,
+  }) {
     final sectionHPadding = _sectionHPadding(context);
     final scheme = Theme.of(context).colorScheme;
     final textStyles = context.appTextStyles;
     return AppSectionHeader(
       title: 'Неоплаченные объекты',
-      padding: EdgeInsets.fromLTRB(sectionHPadding, 10, sectionHPadding, 4),
+      padding: EdgeInsets.fromLTRB(
+        sectionHPadding,
+        topPadding,
+        sectionHPadding,
+        bottomPadding,
+      ),
       titleStyle: textStyles.sectionTitle.copyWith(
         fontSize: 13,
         fontWeight: FontWeight.w700,
@@ -341,6 +348,30 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             color: _financeAccent,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSubsectionHeader(
+    String title, {
+    double topPadding = 0,
+    double bottomPadding = 8,
+  }) {
+    final sectionHPadding = _sectionHPadding(context);
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
+    return AppSectionHeader(
+      title: title,
+      padding: EdgeInsets.fromLTRB(
+        sectionHPadding,
+        topPadding,
+        sectionHPadding,
+        bottomPadding,
+      ),
+      titleStyle: textStyles.sectionTitle.copyWith(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: scheme.onSurface,
       ),
     );
   }
@@ -426,15 +457,12 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                         width: 380,
                         child: Column(
                           children: [
-                            IgnorePointer(
-                              child: Opacity(
-                                opacity: 0,
-                                child:
-                                    _buildProjectsHeader(data.projects.length),
-                              ),
+                            _buildDesktopTotalSection(
+                              data.totalUsd,
+                              data.totalByn,
+                              projectsCount: data.projects.length,
                             ),
-                            const SizedBox(height: 8),
-                            _buildTotalSection(data.totalUsd, data.totalByn),
+                            const SizedBox(height: 16),
                             _buildGlobalSettingsSection(),
                           ],
                         ),
@@ -470,6 +498,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                           ],
                         ),
                       _buildTotalSection(data.totalUsd, data.totalByn),
+                      const SizedBox(height: 16),
                       _buildGlobalSettingsSection(),
                       const SizedBox(height: 80),
                     ],
@@ -480,11 +509,51 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     );
   }
 
+  Widget _buildDesktopTotalSection(
+    double totalUsd,
+    double totalByn, {
+    required int projectsCount,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Stack(
+          children: [
+            IgnorePointer(
+              child: Opacity(
+                opacity: 0,
+                child: _buildProjectsHeader(projectsCount),
+              ),
+            ),
+            _buildSubsectionHeader(
+              'Итого',
+              topPadding: 10,
+              bottomPadding: 4,
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        _buildTotalCards(totalUsd, totalByn),
+      ],
+    );
+  }
+
   Widget _buildTotalSection(double totalUsd, double totalByn) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSubsectionHeader('Итого'),
+        _buildTotalCards(totalUsd, totalByn),
+      ],
+    );
+  }
+
+  Widget _buildTotalCards(double totalUsd, double totalByn) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildCurrencyTotalCard(
-          title: 'Итого USD',
+          title: 'USD',
           amount: totalUsd,
           symbol: '\$',
           accentColor: Colors.green,
@@ -492,7 +561,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
         ),
         const SizedBox(height: 12),
         _buildCurrencyTotalCard(
-          title: 'Итого BYN',
+          title: 'BYN',
           amount: totalByn,
           symbol: 'р',
           accentColor: Colors.indigo,

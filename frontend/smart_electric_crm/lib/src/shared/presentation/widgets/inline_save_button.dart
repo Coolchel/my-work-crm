@@ -11,6 +11,7 @@ class InlineSaveButton extends StatelessWidget {
     this.saving = false,
     this.savingLabel,
     this.enabled = true,
+    this.compact = false,
     super.key,
   });
 
@@ -20,6 +21,7 @@ class InlineSaveButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool saving;
   final bool enabled;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +48,20 @@ class InlineSaveButton extends StatelessWidget {
         ? accentColor.withOpacity(isDark ? 0.12 : 0.10)
         : Colors.black.withOpacity(isDark ? 0.0 : 0.02);
     final effectiveLabel = saving ? (savingLabel ?? label) : label;
+    final borderRadius = compact ? 14.0 : 16.0;
+    final badgeSize = compact ? 20.0 : 24.0;
+    final iconSize = compact ? 13.0 : 15.0;
+    final badgeSpinnerSize = compact ? 10.0 : 12.0;
+    final contentPadding = compact
+        ? const EdgeInsets.fromLTRB(8, 6, 10, 6)
+        : const EdgeInsets.fromLTRB(10, 8, 14, 8);
+    final textStyle = compact
+        ? textStyles.button.copyWith(
+            color: textColor,
+            fontSize: 13,
+            height: 1.0,
+          )
+        : textStyles.button.copyWith(color: textColor);
 
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 160),
@@ -55,55 +71,57 @@ class InlineSaveButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: isInteractive ? onPressed : null,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(borderRadius),
           child: Ink(
             decoration: BoxDecoration(
               color: backgroundColor,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(borderRadius),
               border: Border.all(color: borderColor),
               boxShadow: [
                 BoxShadow(
                   color: shadowColor,
-                  blurRadius: isInteractive ? 14 : 8,
+                  blurRadius: compact
+                      ? (isInteractive ? 10 : 6)
+                      : (isInteractive ? 14 : 8),
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 14, 8),
+              padding: contentPadding,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   AnimatedContainer(
                     duration: const Duration(milliseconds: 160),
                     curve: Curves.easeOut,
-                    width: 24,
-                    height: 24,
+                    width: badgeSize,
+                    height: badgeSize,
                     decoration: BoxDecoration(
                       color: badgeColor,
                       shape: BoxShape.circle,
                     ),
                     child: Center(
                       child: saving
-                          ? const SizedBox(
-                              width: 12,
-                              height: 12,
-                              child: CircularProgressIndicator(
+                          ? SizedBox(
+                              width: badgeSpinnerSize,
+                              height: badgeSpinnerSize,
+                              child: const CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: Colors.white,
                               ),
                             )
-                          : const Icon(
+                          : Icon(
                               Icons.arrow_upward_rounded,
-                              size: 15,
+                              size: iconSize,
                               color: Colors.white,
                             ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: compact ? 8 : 10),
                   Text(
                     effectiveLabel,
-                    style: textStyles.button.copyWith(color: textColor),
+                    style: textStyle,
                   ),
                 ],
               ),
