@@ -349,12 +349,18 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
         !kIsWeb && defaultTargetPlatform == TargetPlatform.windows;
     final useExpandedActionButtons = isDesktopWeb || isWindowsDesktop;
     final textStyles = context.appTextStyles;
+    final summaryBackground = isDark
+        ? Color.alphaBlend(
+            themeColor.withOpacity(0.12), scheme.surfaceContainer)
+        : themeColor.withOpacity(0.045);
+    final summaryBorderColor = themeColor.withOpacity(isDark ? 0.24 : 0.12);
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? scheme.surfaceContainer : Colors.grey.shade50,
+        color: summaryBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scheme.outlineVariant),
+        border: Border.all(color: summaryBorderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,8 +377,11 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.tune_rounded,
-                            size: 14, color: Colors.grey.shade500),
+                        Icon(
+                          Icons.tune_rounded,
+                          size: 14,
+                          color: themeColor.withOpacity(isDark ? 0.78 : 0.7),
+                        ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
@@ -430,7 +439,8 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             ],
           ),
           const SizedBox(height: 16),
-          Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+          Divider(
+              height: 1, color: themeColor.withOpacity(isDark ? 0.18 : 0.1)),
           const SizedBox(height: 16),
           // Bottom Row: Size & Actions
           Column(

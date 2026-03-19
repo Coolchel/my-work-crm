@@ -27,6 +27,8 @@ class EthernetLinesDialog extends StatefulWidget {
 }
 
 class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
+  static const List<int> _quickValues = [1, 2, 4, 6, 8, 10];
+
   late TextEditingController _linesController;
   bool _isSaving = false;
 
@@ -131,90 +133,43 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Quick selection buttons
                         Text(
-                          "Быстрый выбор:",
-                          style: textStyles.captionStrong.copyWith(
+                          "Выберите типовое значение или введите свое количество ниже.",
+                          style: textStyles.secondaryBody.copyWith(
                             color: scheme.onSurfaceVariant,
+                            height: 1.3,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Column(
-                          children: [
-                            // First row: 1, 2, 4
-                            Row(
-                              children: [1, 2, 4].map((value) {
-                                return Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 4),
-                                    child: SizedBox(
-                                      height: 36,
-                                      child: OutlinedButton(
-                                        onPressed: () =>
-                                            _selectQuickValue(value),
-                                        style: OutlinedButton.styleFrom(
-                                          padding: EdgeInsets.zero,
-                                          side: BorderSide(
-                                              color:
-                                                  themeColor.withOpacity(0.3)),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '$value',
-                                          style: textStyles.bodyStrong.copyWith(
-                                            color: themeColor.withOpacity(0.8),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _quickValues.map((value) {
+                            return SizedBox(
+                              height: 36,
+                              child: OutlinedButton(
+                                onPressed: () => _selectQuickValue(value),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14),
+                                  side: BorderSide(
+                                    color: themeColor.withOpacity(0.3),
                                   ),
-                                );
-                              }).toList(),
-                            ),
-                            const SizedBox(height: 8),
-                            // Second row: 6, 8, 10
-                            Row(
-                              children: [6, 8, 10].map((value) {
-                                return Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 4),
-                                    child: SizedBox(
-                                      height: 36,
-                                      child: OutlinedButton(
-                                        onPressed: () =>
-                                            _selectQuickValue(value),
-                                        style: OutlinedButton.styleFrom(
-                                          padding: EdgeInsets.zero,
-                                          side: BorderSide(
-                                              color:
-                                                  themeColor.withOpacity(0.3)),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '$value',
-                                          style: textStyles.bodyStrong.copyWith(
-                                            color: themeColor.withOpacity(0.8),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
-                                );
-                              }).toList(),
-                            ),
-                          ],
+                                ),
+                                child: Text(
+                                  '$value',
+                                  style: textStyles.bodyStrong.copyWith(
+                                    color: themeColor.withOpacity(0.8),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
                         const SizedBox(height: 20),
-
-                        // Input field
                         TextField(
                           controller: _linesController,
                           autofocus: true,
@@ -317,7 +272,7 @@ class _EthernetLinesDialogState extends State<EthernetLinesDialog> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2, color: Colors.white))
-                            : const Text('Добавить'),
+                            : const Text('Сохранить'),
                       );
                     }),
                   ],
