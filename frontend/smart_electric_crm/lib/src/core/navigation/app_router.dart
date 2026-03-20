@@ -112,47 +112,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: '${AppNavigation.projectsPath}/:projectId/estimate/:stageId',
-        pageBuilder: (context, state) {
-          final projectId = state.pathParameters['projectId']!;
-          final stageId = int.tryParse(state.pathParameters['stageId']!);
-          final from = state.uri.queryParameters['from'];
-          final initialTab = AppNavigation.estimateSectionFromName(
-            state.uri.queryParameters['tab'],
-          );
-
-          return NoTransitionPage<void>(
-            key: ValueKey(
-                'estimate:$projectId:${state.pathParameters['stageId']}'),
-            child: _EstimateRouteScreen(
-              projectId: projectId,
-              stageId: stageId,
-              from: from,
-              initialTab: initialTab,
-            ),
-          );
-        },
-      ),
-      GoRoute(
-        path: '${AppNavigation.projectsPath}/:projectId',
-        pageBuilder: (context, state) {
-          final projectId = state.pathParameters['projectId']!;
-          final from = state.uri.queryParameters['from'];
-          final initialTab = AppNavigation.projectDetailSectionFromName(
-            state.uri.queryParameters['tab'],
-          );
-
-          return NoTransitionPage<void>(
-            key: ValueKey('project:$projectId'),
-            child: _ProjectDetailRouteScreen(
-              projectId: projectId,
-              from: from,
-              initialTab: initialTab,
-            ),
-          );
-        },
-      ),
-      GoRoute(
         path: AppNavigation.catalogPath,
         pageBuilder: (context, state) {
           final from = state.uri.queryParameters['from'];
@@ -206,6 +165,57 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: AppNavigation.projectsPath,
                 pageBuilder: (context, state) => const NoTransitionPage<void>(
                     child: _ProjectsBranchScreen()),
+                routes: [
+                  GoRoute(
+                    path: ':projectId',
+                    pageBuilder: (context, state) {
+                      final projectId = state.pathParameters['projectId']!;
+                      final from = state.uri.queryParameters['from'];
+                      final initialTab =
+                          AppNavigation.projectDetailSectionFromName(
+                        state.uri.queryParameters['tab'],
+                      );
+
+                      return NoTransitionPage<void>(
+                        key: ValueKey(
+                          'project:$projectId:${state.uri.queryParameters['tab'] ?? ProjectDetailSection.stages.name}',
+                        ),
+                        child: _ProjectDetailRouteScreen(
+                          projectId: projectId,
+                          from: from,
+                          initialTab: initialTab,
+                        ),
+                      );
+                    },
+                    routes: [
+                      GoRoute(
+                        path: 'estimate/:stageId',
+                        pageBuilder: (context, state) {
+                          final projectId = state.pathParameters['projectId']!;
+                          final stageId =
+                              int.tryParse(state.pathParameters['stageId']!);
+                          final from = state.uri.queryParameters['from'];
+                          final initialTab =
+                              AppNavigation.estimateSectionFromName(
+                            state.uri.queryParameters['tab'],
+                          );
+
+                          return NoTransitionPage<void>(
+                            key: ValueKey(
+                              'estimate:$projectId:${state.pathParameters['stageId']}:${state.uri.queryParameters['tab'] ?? EstimateSection.works.name}',
+                            ),
+                            child: _EstimateRouteScreen(
+                              projectId: projectId,
+                              stageId: stageId,
+                              from: from,
+                              initialTab: initialTab,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),

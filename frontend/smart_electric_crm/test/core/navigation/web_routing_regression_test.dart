@@ -13,6 +13,7 @@ import 'package:smart_electric_crm/src/features/projects/data/models/project_mod
 import 'package:smart_electric_crm/src/features/projects/data/models/stage_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/stages/stage_card.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_side_menu.dart';
 
 class _AuthenticatedAuthNotifier extends Auth {
   @override
@@ -78,6 +79,21 @@ void main() {
     stages: [stage],
   );
 
+  Future<void> pumpWithViewport(
+    WidgetTester tester, {
+    required Widget child,
+    required Size size,
+  }) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = size;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(child);
+  }
+
   testWidgets('keeps project detail route on startup with deep link',
       (tester) async {
     tester.binding.platformDispatcher.defaultRouteNameTestValue =
@@ -101,6 +117,62 @@ void main() {
     expect(find.text('Test object'), findsAtLeastNWidgets(2));
     expect(find.text('Этапы'), findsWidgets);
   });
+
+  testWidgets('keeps global bottom shell on project deep route for Android',
+      (tester) async {
+    tester.binding.platformDispatcher.defaultRouteNameTestValue = '/projects/1';
+    addTearDown(
+      () => tester.binding.platformDispatcher.clearAllTestValues(),
+    );
+
+    await pumpWithViewport(
+      tester,
+      size: const Size(390, 844),
+      child: ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+          projectListProvider.overrideWith((ref) async => [project]),
+          projectByIdProvider('1').overrideWith((ref) async => project),
+        ],
+        child: const MyApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byKey(const ValueKey('project_local_nav')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('project_local_nav_stages')),
+      findsOneWidget,
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('keeps global desktop shell on project deep route for Windows',
+      (tester) async {
+    tester.binding.platformDispatcher.defaultRouteNameTestValue = '/projects/1';
+    addTearDown(
+      () => tester.binding.platformDispatcher.clearAllTestValues(),
+    );
+
+    await pumpWithViewport(
+      tester,
+      size: const Size(1440, 1024),
+      child: ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+          projectListProvider.overrideWith((ref) async => [project]),
+          projectByIdProvider('1').overrideWith((ref) async => project),
+        ],
+        child: const MyApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DesktopSideMenu), findsOneWidget);
+    expect(find.byKey(const ValueKey('project_local_nav')), findsOneWidget);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
   testWidgets('updates URL and history for project deep navigation',
       (tester) async {
@@ -150,6 +222,103 @@ void main() {
     await tester.pumpAndSettle();
     expect(router.routeInformationProvider.value.uri.path, '/projects');
   });
+
+  testWidgets('reselecting projects in shell returns deep route to branch root',
+      (tester) async {
+    tester.binding.platformDispatcher.defaultRouteNameTestValue = '/projects/1';
+    addTearDown(
+      () => tester.binding.platformDispatcher.clearAllTestValues(),
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        projectListProvider.overrideWith((ref) async => [project]),
+        projectByIdProvider('1').overrideWith((ref) async => project),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final router = container.read(appRouterProvider);
+
+    await pumpWithViewport(
+      tester,
+      size: const Size(390, 844),
+      child: UncontrolledProviderScope(
+        container: container,
+        child: const MyApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path, '/projects/1');
+
+    await tester.tap(find.byIcon(Icons.description).first);
+    await tester.pumpAndSettle();
+
+    expect(router.routeInformationProvider.value.uri.path, '/projects');
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('estimate back returns from materials to works then to project',
+      (tester) async {
+    tester.binding.platformDispatcher.defaultRouteNameTestValue = '/projects';
+    addTearDown(
+      () => tester.binding.platformDispatcher.clearAllTestValues(),
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        projectListProvider.overrideWith((ref) async => [project]),
+        projectByIdProvider('1').overrideWith((ref) async => project),
+        stageByIdProvider(10).overrideWith((ref) async => stage),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final router = container.read(appRouterProvider);
+
+    await pumpWithViewport(
+      tester,
+      size: const Size(390, 844),
+      child: UncontrolledProviderScope(
+        container: container,
+        child: const MyApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Test object').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(StageCard.getStageTitleDisplay(stage.title)));
+    await tester.pumpAndSettle();
+
+    expect(router.routeInformationProvider.value.uri.path,
+        '/projects/1/estimate/10');
+
+    await tester
+        .tap(find.byKey(const ValueKey('estimate_local_nav_materials')));
+    await tester.pumpAndSettle();
+
+    expect(
+      router.routeInformationProvider.value.uri.path,
+      '/projects/1/estimate/10',
+    );
+    expect(
+      router.routeInformationProvider.value.uri.queryParameters['tab'],
+      'materials',
+    );
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path,
+        '/projects/1/estimate/10');
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path, '/projects/1');
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
   testWidgets('successful login redirects to home when welcome is enabled',
       (tester) async {

@@ -217,6 +217,18 @@ class AppNavigation {
     return GoRouterState.of(context).uri.toString();
   }
 
+  static String currentPath(BuildContext context) {
+    final path = GoRouterState.of(context).uri.path;
+    return path.isEmpty ? homePath : path;
+  }
+
+  static bool isAtShellSectionRoot(
+    BuildContext context,
+    AppShellSection section,
+  ) {
+    return currentPath(context) == locationForShellSection(section);
+  }
+
   static void goToShellSection(
     BuildContext context,
     AppShellSection section,

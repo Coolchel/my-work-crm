@@ -12,7 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
-import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_side_menu.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/content_tab_strip.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
@@ -21,7 +21,6 @@ import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/constants/api_urls.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
-import '../../../settings/application/app_settings_controller.dart';
 import 'dart:io';
 import '../../data/models/project_file_model.dart';
 import '../../../../shared/services/temp_file_service.dart';
@@ -118,23 +117,12 @@ class _ProjectDetailContent extends ConsumerStatefulWidget {
 }
 
 class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
-  static const double _desktopMenuWidth = 224;
-  static const double _desktopCompactMenuWidth = 88;
-  static const double _desktopMenuLeft = 16;
-  static const double _desktopMenuTop = 16;
-  static const double _desktopMenuGap = 16;
   int _currentIndex = 0;
   final ScrollController _stagesScrollController = ScrollController();
   final ScrollController _shieldsScrollController = ScrollController();
   final ScrollController _filesScrollController = ScrollController();
   final SectionAppBarCollapseController _appBarCollapseController =
       SectionAppBarCollapseController();
-  static const List<String> _tabTitles = ['Этапы', 'Щиты', 'Файлы'];
-  static const List<IconData> _tabIcons = [
-    Icons.layers_rounded,
-    Icons.settings_input_component_rounded,
-    Icons.folder_open_rounded,
-  ];
 
   int _tabIndexFromSection(ProjectDetailSection section) {
     return switch (section) {
@@ -203,57 +191,17 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
     }
   }
 
-  void _handleSectionSelection(int index, bool showWelcome) {
-    if (showWelcome && index == 0) {
-      AppNavigation.goHome();
-      return;
-    }
-
-    final mappedIndex = showWelcome ? index - 1 : index;
-    if (mappedIndex == _currentIndex) {
+  void _handleSectionSelection(int index) {
+    if (index == _currentIndex) {
       _scrollCurrentTabToTop();
       return;
     }
 
     setState(() {
-      _currentIndex = mappedIndex;
+      _currentIndex = index;
     });
-    widget.onTabChanged?.call(_sectionFromTabIndex(mappedIndex));
+    widget.onTabChanged?.call(_sectionFromTabIndex(index));
     _appBarCollapseController.bind(_activeScrollController);
-  }
-
-  List<DesktopSideMenuItem> _buildDesktopMenuItems(bool showWelcome) {
-    return [
-      if (showWelcome)
-        DesktopSideMenuItem(
-          label: 'Главная',
-          icon: const Icon(Icons.home_outlined),
-          selectedIcon: const Icon(Icons.home),
-          onTap: () => _handleSectionSelection(0, showWelcome),
-          isSelected: false,
-        ),
-      DesktopSideMenuItem(
-        label: 'Этапы',
-        icon: const Icon(Icons.layers_outlined),
-        selectedIcon: const Icon(Icons.layers),
-        onTap: () => _handleSectionSelection(showWelcome ? 1 : 0, showWelcome),
-        isSelected: showWelcome ? _currentIndex + 1 == 1 : _currentIndex == 0,
-      ),
-      DesktopSideMenuItem(
-        label: 'Щиты',
-        icon: const Icon(Icons.settings_input_component_outlined),
-        selectedIcon: const Icon(Icons.settings_input_component),
-        onTap: () => _handleSectionSelection(showWelcome ? 2 : 1, showWelcome),
-        isSelected: showWelcome ? _currentIndex + 1 == 2 : _currentIndex == 1,
-      ),
-      DesktopSideMenuItem(
-        label: 'Файлы',
-        icon: const Icon(Icons.folder_open_outlined),
-        selectedIcon: const Icon(Icons.folder_open),
-        onTap: () => _handleSectionSelection(showWelcome ? 3 : 2, showWelcome),
-        isSelected: showWelcome ? _currentIndex + 1 == 3 : _currentIndex == 2,
-      ),
-    ];
   }
 
   @override
@@ -267,26 +215,26 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
 
   @override
   Widget build(BuildContext context) {
-    final showWelcome = ref.watch(
-      appSettingsProvider.select((value) => value.showWelcome),
-    );
-    final isDesktopWeb = DesktopWebFrame.hasPersistentShellSidebar(context);
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
-    final isWideDesktopWeb = DesktopWebFrame.hasWideShellSidebar(context);
-    final desktopMenuWidth =
-        isWideDesktopWeb ? _desktopMenuWidth : _desktopCompactMenuWidth;
+    final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
+      context,
+    );
+    final localNavOverlayInset = ContentTabStrip.overlayInset(context);
     final screens = [
       _StagesTab(
         project: widget.project,
         scrollController: _stagesScrollController,
+        topContentInset: localNavOverlayInset,
       ),
       EngineeringTab(
         project: widget.project,
         scrollController: _shieldsScrollController,
+        topContentInset: localNavOverlayInset,
       ),
       _FilesTab(
         project: widget.project,
         scrollController: _filesScrollController,
+        topContentInset: localNavOverlayInset,
       ),
     ];
 
@@ -304,77 +252,48 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
               tooltip: 'Назад',
               onPressed: _handleBack,
             ),
-            title: _tabTitles[_currentIndex],
+            title: '\u041e\u0431\u044a\u0435\u043a\u0442',
             subtitle: widget.project.address,
-            icon: _tabIcons[_currentIndex],
+            icon: Icons.apartment_rounded,
             bottomGap: isMobileWeb ? 16 : 30,
           ),
-          body: isDesktopWeb
-              ? LayoutBuilder(
-                  builder: (context, constraints) {
-                    return Stack(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.only(
-                            left: _desktopMenuLeft +
-                                desktopMenuWidth +
-                                _desktopMenuGap,
-                          ),
-                          child: SizedBox(
-                            width: constraints.maxWidth -
-                                _desktopMenuLeft -
-                                desktopMenuWidth -
-                                _desktopMenuGap,
-                            height: constraints.maxHeight,
-                            child: child!,
-                          ),
-                        ),
-                        Positioned(
-                          left: _desktopMenuLeft,
-                          top: _desktopMenuTop,
-                          bottom: 16,
-                          child: DesktopSideMenu(
-                            compact: !isWideDesktopWeb,
-                            width: _desktopMenuWidth,
-                            items: _buildDesktopMenuItems(showWelcome),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                )
-              : child!,
-          bottomNavigationBar: isDesktopWeb
-              ? null
-              : NavigationBar(
-                  selectedIndex:
-                      showWelcome ? _currentIndex + 1 : _currentIndex,
-                  onDestinationSelected: (index) =>
-                      _handleSectionSelection(index, showWelcome),
-                  destinations: [
-                    if (showWelcome)
-                      const NavigationDestination(
-                        icon: Icon(Icons.home_outlined),
-                        selectedIcon: Icon(Icons.home),
-                        label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+          body: AnimatedPadding(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            padding: EdgeInsets.only(left: shellSidebarInset),
+            child: Stack(
+              children: [
+                Positioned.fill(child: child!),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: ContentTabStrip(
+                    key: const ValueKey('project_local_nav'),
+                    selectedIndex: _currentIndex,
+                    onSelected: _handleSectionSelection,
+                    items: const [
+                      ContentTabStripItem(
+                        label: '\u042d\u0442\u0430\u043f\u044b',
+                        icon: Icons.layers_rounded,
+                        keyName: 'project_local_nav_stages',
                       ),
-                    const NavigationDestination(
-                      icon: Icon(Icons.layers_outlined),
-                      selectedIcon: Icon(Icons.layers),
-                      label: '\u042d\u0442\u0430\u043f\u044b',
-                    ),
-                    const NavigationDestination(
-                      icon: Icon(Icons.settings_input_component_outlined),
-                      selectedIcon: Icon(Icons.settings_input_component),
-                      label: '\u0429\u0438\u0442\u044b',
-                    ),
-                    const NavigationDestination(
-                      icon: Icon(Icons.folder_open_outlined),
-                      selectedIcon: Icon(Icons.folder_open),
-                      label: '\u0424\u0430\u0439\u043b\u044b',
-                    ),
-                  ],
+                      ContentTabStripItem(
+                        label: '\u0429\u0438\u0442\u044b',
+                        icon: Icons.settings_input_component_rounded,
+                        keyName: 'project_local_nav_shields',
+                      ),
+                      ContentTabStripItem(
+                        label: '\u0424\u0430\u0439\u043b\u044b',
+                        icon: Icons.folder_open_rounded,
+                        keyName: 'project_local_nav_files',
+                      ),
+                    ],
+                  ),
                 ),
+              ],
+            ),
+          ),
         );
       },
       child: IndexedStack(
@@ -388,10 +307,12 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
 class _StagesTab extends ConsumerStatefulWidget {
   final ProjectModel project;
   final ScrollController scrollController;
+  final double topContentInset;
 
   const _StagesTab({
     required this.project,
     required this.scrollController,
+    required this.topContentInset,
   });
 
   @override
@@ -504,7 +425,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
             controller: widget.scrollController,
             padding: EdgeInsets.fromLTRB(
               horizontalPadding,
-              isMobileWeb ? 12 : 20,
+              widget.topContentInset + (isMobileWeb ? 12 : 20),
               horizontalPadding,
               isMobileWeb ? 12 : 16,
             ),
@@ -758,10 +679,12 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
 class _FilesTab extends ConsumerStatefulWidget {
   final ProjectModel project;
   final ScrollController scrollController;
+  final double topContentInset;
 
   const _FilesTab({
     required this.project,
     required this.scrollController,
+    required this.topContentInset,
   });
 
   @override
@@ -822,7 +745,7 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
                 controller: widget.scrollController,
                 padding: EdgeInsets.fromLTRB(
                   horizontalPadding,
-                  isMobileWeb ? 12 : 20,
+                  widget.topContentInset + (isMobileWeb ? 12 : 20),
                   horizontalPadding,
                   isMobileWeb ? 12 : 16,
                 ),

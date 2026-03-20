@@ -149,10 +149,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return match == -1 ? 0 : match;
   }
 
-  void _goToBranch(int branchIndex) {
+  void _goToBranch(int branchIndex, {bool initialLocation = false}) {
     widget.navigationShell.goBranch(
       branchIndex,
-      initialLocation: branchIndex == widget.navigationShell.currentIndex,
+      initialLocation: initialLocation,
     );
     _syncLastNonSettingsBranch();
   }
@@ -164,6 +164,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ) {
     final item = items[index];
     if (item.branchIndex == widget.navigationShell.currentIndex) {
+      final currentSection = _sectionForBranch(item.branchIndex);
+      if (!AppNavigation.isAtShellSectionRoot(context, currentSection)) {
+        _goToBranch(item.branchIndex, initialLocation: true);
+        return;
+      }
       item.scrollController?.scrollToTop();
       return;
     }
@@ -202,17 +207,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final items = _buildDestinations(settings);
     final selectedIndex = _selectedVisibleIndex(items);
-    final isDesktopWeb = DesktopWebFrame.hasPersistentShellSidebar(context);
-    final isWideDesktopWeb = DesktopWebFrame.hasWideShellSidebar(context);
+    final isDesktopWeb =
+        DesktopWebFrame.supportsPersistentShellSidebar(context);
+    final isWideDesktopWeb = DesktopWebFrame.supportsWideShellSidebar(context);
     final desktopMenuTop = _isHomeBranchSelected(settings)
         ? _welcomeDesktopMenuTop
         : _defaultDesktopMenuTop;
+    final shellScopedContent = DesktopShellScope(
+      hasSidebar: isDesktopWeb,
+      isWideSidebar: isWideDesktopWeb,
+      child: widget.navigationShell,
+    );
 
     final scaffold = Scaffold(
       body: isDesktopWeb
           ? Stack(
               children: [
-                widget.navigationShell,
+                shellScopedContent,
                 Positioned(
                   left: DesktopWebFrame.shellSidebarLeftOffset,
                   top: desktopMenuTop,
@@ -240,7 +251,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ],
             )
-          : widget.navigationShell,
+          : shellScopedContent,
       bottomNavigationBar: isDesktopWeb
           ? null
           : DecoratedBox(

@@ -23,6 +23,7 @@ class EstimateTab extends ConsumerStatefulWidget {
   final Function(EstimateItemModel) onDelete;
   final String title;
   final ScrollController scrollController;
+  final double topContentInset;
 
   // Note props
   final String note;
@@ -59,6 +60,7 @@ class EstimateTab extends ConsumerStatefulWidget {
     required this.onDelete,
     required this.title,
     required this.scrollController,
+    this.topContentInset = 0,
     required this.note,
     required this.onSaveNote,
     required this.remarks,
@@ -722,7 +724,9 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             controller: widget.scrollController,
             primary: false,
             slivers: [
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+              SliverToBoxAdapter(
+                child: SizedBox(height: widget.topContentInset + 8),
+              ),
 
               if (!widget.hideTopActions)
                 SliverToBoxAdapter(child: _buildActionButtons()),

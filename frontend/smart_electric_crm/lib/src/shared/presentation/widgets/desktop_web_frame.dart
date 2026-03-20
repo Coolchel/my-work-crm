@@ -12,12 +12,22 @@ final class DesktopWebFrame {
   static const double shellSidebarWidth = 224;
   static const double shellSidebarCompactWidth = 88;
 
+  static bool _isDesktopSurface() {
+    if (kIsWeb) {
+      return true;
+    }
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.windows => true,
+      _ => false,
+    };
+  }
+
   static bool isDesktop(BuildContext context, {double minWidth = 1100}) {
-    return kIsWeb && MediaQuery.sizeOf(context).width >= minWidth;
+    return _isDesktopSurface() && MediaQuery.sizeOf(context).width >= minWidth;
   }
 
   static bool isWide(BuildContext context, {double minWidth = 1360}) {
-    return kIsWeb && MediaQuery.sizeOf(context).width >= minWidth;
+    return _isDesktopSurface() && MediaQuery.sizeOf(context).width >= minWidth;
   }
 
   static bool isMobileWeb(BuildContext context, {double maxWidth = 700}) {
@@ -36,11 +46,30 @@ final class DesktopWebFrame {
     BuildContext context, {
     double minWidth = shellSidebarBreakpoint,
   }) {
-    return kIsWeb && MediaQuery.sizeOf(context).width >= minWidth;
+    final scope = _DesktopShellScope.maybeOf(context);
+    if (scope != null) {
+      return scope.hasSidebar;
+    }
+    return supportsPersistentShellSidebar(context, minWidth: minWidth);
   }
 
   static bool hasWideShellSidebar(BuildContext context) {
-    return kIsWeb &&
+    final scope = _DesktopShellScope.maybeOf(context);
+    if (scope != null) {
+      return scope.isWideSidebar;
+    }
+    return supportsWideShellSidebar(context);
+  }
+
+  static bool supportsPersistentShellSidebar(
+    BuildContext context, {
+    double minWidth = shellSidebarBreakpoint,
+  }) {
+    return _isDesktopSurface() && MediaQuery.sizeOf(context).width >= minWidth;
+  }
+
+  static bool supportsWideShellSidebar(BuildContext context) {
+    return _isDesktopSurface() &&
         MediaQuery.sizeOf(context).width >= shellSidebarWideBreakpoint;
   }
 
@@ -100,6 +129,28 @@ final class DesktopWebFrame {
   }
 }
 
+class DesktopShellScope extends InheritedWidget {
+  const DesktopShellScope({
+    required this.hasSidebar,
+    required this.isWideSidebar,
+    required super.child,
+    super.key,
+  });
+
+  final bool hasSidebar;
+  final bool isWideSidebar;
+
+  static DesktopShellScope? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<DesktopShellScope>();
+  }
+
+  @override
+  bool updateShouldNotify(covariant DesktopShellScope oldWidget) {
+    return hasSidebar != oldWidget.hasSidebar ||
+        isWideSidebar != oldWidget.isWideSidebar;
+  }
+}
+
 class DesktopWebPageFrame extends StatelessWidget {
   const DesktopWebPageFrame({
     required this.child,
@@ -134,3 +185,5 @@ class DesktopWebPageFrame extends StatelessWidget {
     );
   }
 }
+
+typedef _DesktopShellScope = DesktopShellScope;

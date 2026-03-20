@@ -2,6 +2,7 @@ import 'dart:async'; // For Timer
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
@@ -20,11 +21,10 @@ import 'package:smart_electric_crm/src/features/projects/presentation/providers/
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_app_bar_actions.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/estimate/estimate_tab.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/stages/stage_card.dart';
-import 'package:smart_electric_crm/src/features/settings/application/app_settings_controller.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_dialog.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
-import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_side_menu.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/content_tab_strip.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
@@ -48,11 +48,6 @@ class EstimateScreen extends ConsumerStatefulWidget {
 }
 
 class _EstimateScreenState extends ConsumerState<EstimateScreen> {
-  static const double _desktopMenuWidth = 224;
-  static const double _desktopCompactMenuWidth = 88;
-  static const double _desktopMenuLeft = 16;
-  static const double _desktopMenuTop = 16;
-  static const double _desktopMenuGap = 16;
   final ScrollController _worksScrollController = ScrollController();
   final ScrollController _materialsScrollController = ScrollController();
   final SectionAppBarCollapseController _appBarCollapseController =
@@ -102,14 +97,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   ScrollController get _activeScrollController =>
       _currentIndex == 0 ? _worksScrollController : _materialsScrollController;
 
-  void _handleSectionSelection(int index, bool showWelcome) {
-    if (showWelcome && index == 0) {
-      AppNavigation.goHome();
-      return;
-    }
-
-    final mappedIndex = showWelcome ? index - 1 : index;
-    if (mappedIndex == _currentIndex) {
+  void _handleSectionSelection(int index) {
+    if (index == _currentIndex) {
       if (_currentIndex == 0) {
         AppNavigation.worksScrollController.scrollToTop();
       } else {
@@ -118,37 +107,25 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       return;
     }
 
-    setState(() {
-      _currentIndex = mappedIndex;
-    });
-    widget.onTabChanged?.call(_sectionFromTabIndex(mappedIndex));
-    _appBarCollapseController.bind(_activeScrollController);
-  }
+    final previousIndex = _currentIndex;
+    final nextSection = _sectionFromTabIndex(index);
+    final from = GoRouterState.of(context).uri.queryParameters['from'];
+    final targetLocation = AppNavigation.estimateLocation(
+      projectId: widget.projectId,
+      stageId: widget.stage.id.toString(),
+      tab: nextSection,
+      from: from,
+    );
 
-  List<DesktopSideMenuItem> _buildDesktopSegments(bool showWelcome) {
-    return [
-      if (showWelcome)
-        DesktopSideMenuItem(
-          label: 'Главная',
-          icon: const Icon(Icons.home_outlined),
-          selectedIcon: const Icon(Icons.home),
-          onTap: () => _handleSectionSelection(0, showWelcome),
-        ),
-      DesktopSideMenuItem(
-        label: 'Работы',
-        icon: const Icon(Icons.handyman_outlined),
-        selectedIcon: const Icon(Icons.handyman),
-        onTap: () => _handleSectionSelection(showWelcome ? 1 : 0, showWelcome),
-        isSelected: showWelcome ? _currentIndex + 1 == 1 : _currentIndex == 0,
-      ),
-      DesktopSideMenuItem(
-        label: 'Материалы',
-        icon: const Icon(Icons.inventory_2_outlined),
-        selectedIcon: const Icon(Icons.inventory_2),
-        onTap: () => _handleSectionSelection(showWelcome ? 2 : 1, showWelcome),
-        isSelected: showWelcome ? _currentIndex + 1 == 2 : _currentIndex == 1,
-      ),
-    ];
+    setState(() {
+      _currentIndex = index;
+    });
+    _appBarCollapseController.bind(_activeScrollController);
+    if (previousIndex == 0 && nextSection == EstimateSection.materials) {
+      context.push(targetLocation);
+      return;
+    }
+    context.go(targetLocation);
   }
 
   void _handleAppBarCollapseChanged() {
@@ -264,14 +241,11 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final showWelcome = ref.watch(
-      appSettingsProvider.select((value) => value.showWelcome),
-    );
-    final isDesktopWeb = DesktopWebFrame.hasPersistentShellSidebar(context);
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
-    final isWideDesktopWeb = DesktopWebFrame.hasWideShellSidebar(context);
-    final desktopMenuWidth =
-        isWideDesktopWeb ? _desktopMenuWidth : _desktopCompactMenuWidth;
+    final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
+      context,
+    );
+    final localNavOverlayInset = ContentTabStrip.overlayInset(context);
     // Backdrop filter when FAB is expanded
     // Backdrop filter when FAB is expanded
     return Scaffold(
@@ -337,119 +311,93 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final content = IndexedStack(
-            index: _currentIndex,
-            children: [
-              // Works Tab
-              EstimateTab(
-                scrollController: _worksScrollController,
-                items: _works,
-                title: 'Работы', // Determines view mode inside widget
-                showPrices: true,
-                onUpdate: _updateItemFromTab,
-                onDelete: _deleteItemFromTab,
-                note: _stage.workNotes,
-                remarks: _stage.workRemarks,
-                onSaveNote: (v) => _saveNotes('work', v),
-                onSaveRemarks: (v) => _saveNotes('work_remarks', v),
-                automationActionLabel: "Рассчитать по материалам",
-                onAutomationAction: _calculateWorksFromMaterials,
-                isAutomationLoading: _isCalculatingWorks,
-                onTemplatesAction: _showWorkTemplatesDialog,
-                isTemplatesLoading: _isApplyingTemplate,
-                onSaveAsTemplate: () => _showSaveTemplateDialog('work'),
-                hideTopActions: true,
-              ),
-              // Materials Tab
-              EstimateTab(
-                scrollController: _materialsScrollController,
-                items: _materials,
-                title: 'Материалы',
-                showPrices: _showPrices,
-                onUpdate: _updateItemFromTab,
-                onDelete: _deleteItemFromTab,
-                onShowPricesChanged: _setShowPrices,
-                markupPercent: _markupPercent,
-                onMarkupChanged: (val) {
-                  setState(() => _markupPercent = val);
-                  _saveMarkupDebounced(val);
-                },
-                note: _stage.materialNotes,
-                remarks: _stage.materialRemarks,
-                onSaveNote: (v) => _saveNotes('material', v),
-                onSaveRemarks: (v) => _saveNotes('material_remarks', v),
-                automationActionLabel: "Импорт из инженерки",
-                onAutomationAction: _importFromShields,
-                isAutomationLoading: _isImportingShields,
-                onTemplatesAction: _showMaterialTemplatesDialog,
-                isTemplatesLoading: _isApplyingTemplate,
-                onSaveAsTemplate: () => _showSaveTemplateDialog('material'),
-                hideTopActions: true,
-              ),
-            ],
-          );
-
-          if (!isDesktopWeb) {
-            return content;
-          }
-
-          return Stack(
-            children: [
-              Padding(
-                padding: EdgeInsets.only(
-                  left: _desktopMenuLeft + desktopMenuWidth + _desktopMenuGap,
-                ),
-                child: SizedBox(
-                  width: constraints.maxWidth -
-                      _desktopMenuLeft -
-                      desktopMenuWidth -
-                      _desktopMenuGap,
-                  height: constraints.maxHeight,
-                  child: content,
-                ),
-              ),
-              Positioned(
-                left: _desktopMenuLeft,
-                top: _desktopMenuTop,
-                bottom: 16,
-                child: DesktopSideMenu(
-                  compact: !isWideDesktopWeb,
-                  width: _desktopMenuWidth,
-                  items: _buildDesktopSegments(showWelcome),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-      bottomNavigationBar: isDesktopWeb
-          ? null
-          : NavigationBar(
-              selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
-              onDestinationSelected: (index) =>
-                  _handleSectionSelection(index, showWelcome),
-              destinations: [
-                if (showWelcome)
-                  const NavigationDestination(
-                    icon: Icon(Icons.home_outlined),
-                    selectedIcon: Icon(Icons.home),
-                    label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+      body: AnimatedPadding(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.only(left: shellSidebarInset),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: IndexedStack(
+                index: _currentIndex,
+                children: [
+                  // Works Tab
+                  EstimateTab(
+                    scrollController: _worksScrollController,
+                    items: _works,
+                    title: 'Работы', // Determines view mode inside widget
+                    topContentInset: localNavOverlayInset,
+                    showPrices: true,
+                    onUpdate: _updateItemFromTab,
+                    onDelete: _deleteItemFromTab,
+                    note: _stage.workNotes,
+                    remarks: _stage.workRemarks,
+                    onSaveNote: (v) => _saveNotes('work', v),
+                    onSaveRemarks: (v) => _saveNotes('work_remarks', v),
+                    automationActionLabel: "Рассчитать по материалам",
+                    onAutomationAction: _calculateWorksFromMaterials,
+                    isAutomationLoading: _isCalculatingWorks,
+                    onTemplatesAction: _showWorkTemplatesDialog,
+                    isTemplatesLoading: _isApplyingTemplate,
+                    onSaveAsTemplate: () => _showSaveTemplateDialog('work'),
+                    hideTopActions: true,
                   ),
-                const NavigationDestination(
-                  icon: Icon(Icons.handyman_outlined),
-                  selectedIcon: Icon(Icons.handyman),
-                  label: '\u0420\u0430\u0431\u043e\u0442\u044b',
-                ),
-                const NavigationDestination(
-                  icon: Icon(Icons.inventory_2_outlined),
-                  selectedIcon: Icon(Icons.inventory_2),
-                  label:
-                      '\u041c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u044b',
-                ),
-              ],
+                  // Materials Tab
+                  EstimateTab(
+                    scrollController: _materialsScrollController,
+                    items: _materials,
+                    title: 'Материалы',
+                    topContentInset: localNavOverlayInset,
+                    showPrices: _showPrices,
+                    onUpdate: _updateItemFromTab,
+                    onDelete: _deleteItemFromTab,
+                    onShowPricesChanged: _setShowPrices,
+                    markupPercent: _markupPercent,
+                    onMarkupChanged: (val) {
+                      setState(() => _markupPercent = val);
+                      _saveMarkupDebounced(val);
+                    },
+                    note: _stage.materialNotes,
+                    remarks: _stage.materialRemarks,
+                    onSaveNote: (v) => _saveNotes('material', v),
+                    onSaveRemarks: (v) => _saveNotes('material_remarks', v),
+                    automationActionLabel: "Импорт из инженерки",
+                    onAutomationAction: _importFromShields,
+                    isAutomationLoading: _isImportingShields,
+                    onTemplatesAction: _showMaterialTemplatesDialog,
+                    isTemplatesLoading: _isApplyingTemplate,
+                    onSaveAsTemplate: () => _showSaveTemplateDialog('material'),
+                    hideTopActions: true,
+                  ),
+                ],
+              ),
             ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ContentTabStrip(
+                key: const ValueKey('estimate_local_nav'),
+                selectedIndex: _currentIndex,
+                onSelected: _handleSectionSelection,
+                items: const [
+                  ContentTabStripItem(
+                    label: '\u0420\u0430\u0431\u043e\u0442\u044b',
+                    icon: Icons.handyman_rounded,
+                    keyName: 'estimate_local_nav_works',
+                  ),
+                  ContentTabStripItem(
+                    label:
+                        '\u041c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u044b',
+                    icon: Icons.inventory_2_rounded,
+                    keyName: 'estimate_local_nav_materials',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: Tooltip(
         message: 'Добавить позицию',
         preferBelow: false,

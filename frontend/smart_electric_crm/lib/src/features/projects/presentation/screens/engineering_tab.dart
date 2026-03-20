@@ -12,10 +12,12 @@ import '../widgets/engineering/shield_card.dart';
 class EngineeringTab extends ConsumerStatefulWidget {
   final ProjectModel project;
   final ScrollController scrollController;
+  final double topContentInset;
 
   const EngineeringTab({
     required this.project,
     required this.scrollController,
+    required this.topContentInset,
     super.key,
   });
 
@@ -111,7 +113,7 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
             controller: widget.scrollController,
             padding: EdgeInsets.fromLTRB(
               horizontalPadding,
-              isMobileWeb ? 12 : 20,
+              widget.topContentInset + (isMobileWeb ? 12 : 20),
               horizontalPadding,
               isMobileWeb ? 12 : 16,
             ),
