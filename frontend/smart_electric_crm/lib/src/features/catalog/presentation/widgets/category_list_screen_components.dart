@@ -1015,64 +1015,97 @@ class _DirectoryCardState extends State<_DirectoryCard> {
   Widget build(BuildContext context) {
     final textStyles = context.appTextStyles;
     final scheme = Theme.of(context).colorScheme;
-    final content = IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(width: 5, color: widget.stripeColor),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: Column(
+    final content = LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 460 ||
+            DesktopWebFrame.isMobileWeb(context, maxWidth: 500);
+        final actions = widget.actions.isEmpty
+            ? const SizedBox.shrink()
+            : Row(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(widget.icon, size: 18, color: widget.stripeColor),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          widget.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: textStyles.cardTitle.copyWith(
-                            color: scheme.onSurface,
-                          ),
-                        ),
-                      ),
-                      Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: widget.actions),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textStyles.caption.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                  if (widget.extraText != null &&
-                      widget.extraText!.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      widget.extraText!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: textStyles.caption.copyWith(
-                        fontSize: 11,
-                        color: scheme.onSurfaceVariant.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ],
+                children: widget.actions,
+              );
+        final textBlock = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              widget.title,
+              maxLines: isCompact ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
+              style: textStyles.cardTitle.copyWith(
+                color: scheme.onSurface,
               ),
             ),
+            const SizedBox(height: 4),
+            Text(
+              widget.subtitle,
+              maxLines: isCompact ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
+              style: textStyles.caption.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            if (widget.extraText != null && widget.extraText!.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                widget.extraText!,
+                maxLines: isCompact ? 3 : 2,
+                overflow: TextOverflow.ellipsis,
+                style: textStyles.caption.copyWith(
+                  fontSize: 11,
+                  color: scheme.onSurfaceVariant.withOpacity(0.9),
+                ),
+              ),
+            ],
+          ],
+        );
+
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(width: 5, color: widget.stripeColor),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: isCompact ? 12 : 10,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 1),
+                            child: Icon(
+                              widget.icon,
+                              size: 18,
+                              color: widget.stripeColor,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(child: textBlock),
+                          if (widget.actions.isNotEmpty) ...[
+                            SizedBox(width: isCompact ? 6 : 8),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 1),
+                              child: actions,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
 
     final card = AnimatedContainer(
@@ -1247,8 +1280,10 @@ class _DialogShell extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
                 children: actions,
               ),
             ),

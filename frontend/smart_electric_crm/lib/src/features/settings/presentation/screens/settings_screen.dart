@@ -554,158 +554,195 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {
           final textStyles = dialogContext.appTextStyles;
+          final isMobileWeb =
+              DesktopWebFrame.isMobileWeb(dialogContext, maxWidth: 560);
+          final baseInset = EdgeInsets.symmetric(
+            horizontal: isMobileWeb ? 10 : 16,
+            vertical: isMobileWeb ? 8 : 12,
+          );
+          final contentPadding = EdgeInsets.fromLTRB(
+            isMobileWeb ? 16 : 24,
+            isMobileWeb ? 18 : 24,
+            isMobileWeb ? 16 : 24,
+            12,
+          );
+          final footerPadding = EdgeInsets.fromLTRB(
+            isMobileWeb ? 16 : 24,
+            0,
+            isMobileWeb ? 16 : 24,
+            isMobileWeb ? 16 : 24,
+          );
+
           return Dialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            child: Container(
+            insetPadding: baseInset,
+            insetAnimationDuration: const Duration(milliseconds: 180),
+            insetAnimationCurve: Curves.easeOut,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: themeColor.withOpacity(0.1),
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(24)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.warning_amber_rounded,
-                            color: themeColor),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Опасная зона',
-                            style: textStyles.dialogTitle.copyWith(
-                              color: themeColor,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
-                    child: Text(
-                      'Вы входите в раздел редактирования справочника. Любые изменения здесь повлияют на расчеты во всех проектах. Будьте осторожны!',
-                      style:
-                          textStyles.body.copyWith(fontSize: 15, height: 1.4),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
-                    child: TextField(
-                      controller: passwordController,
-                      enabled: !isLoading,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        labelText: 'Пароль текущего аккаунта',
-                        errorText: passwordError,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: themeColor.withOpacity(0.1),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(24),
                         ),
                       ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                    child: Wrap(
-                      alignment: WrapAlignment.end,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        TextButton(
-                          onPressed:
-                              isLoading ? null : () => Navigator.pop(context),
-                          child: const Text('Отмена'),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: themeColor,
-                            foregroundColor:
-                                Theme.of(context).colorScheme.surface,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.warning_amber_rounded,
+                            color: themeColor,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Опасная зона',
+                              style: textStyles.dialogTitle.copyWith(
+                                color: themeColor,
+                              ),
                             ),
                           ),
-                          onPressed: isLoading
-                              ? null
-                              : () async {
-                                  final password = passwordController.text;
-                                  if (password.trim().isEmpty) {
-                                    setDialogState(() {
-                                      passwordError =
-                                          'Введите пароль для подтверждения';
-                                    });
-                                    return;
-                                  }
-
-                                  setDialogState(() {
-                                    isLoading = true;
-                                    passwordError = null;
-                                  });
-
-                                  try {
-                                    final repo = await ref
-                                        .read(authRepositoryProvider.future);
-                                    final user = await repo.getUser();
-                                    final username = (user['username'] ?? '')
-                                        .toString()
-                                        .trim();
-
-                                    if (username.isEmpty) {
-                                      throw Exception(
-                                          'Не удалось получить пользователя');
-                                    }
-
-                                    final isValid =
-                                        await repo.verifyCurrentPassword(
-                                      username: username,
-                                      password: password,
-                                    );
-
-                                    if (!isValid) {
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: contentPadding,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Вы входите в раздел редактирования справочника. Любые изменения здесь повлияют на расчеты во всех проектах. Будьте осторожны!',
+                            style: textStyles.body.copyWith(
+                              fontSize: 15,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: passwordController,
+                            enabled: !isLoading,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: 'Пароль текущего аккаунта',
+                              errorText: passwordError,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: footerPadding,
+                      child: Wrap(
+                        alignment: WrapAlignment.end,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          TextButton(
+                            onPressed: isLoading
+                                ? null
+                                : () => Navigator.pop(dialogContext),
+                            child: const Text('Отмена'),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: themeColor,
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.surface,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: isLoading
+                                ? null
+                                : () async {
+                                    final password = passwordController.text;
+                                    if (password.trim().isEmpty) {
                                       setDialogState(() {
-                                        isLoading = false;
-                                        passwordError = 'Неверный пароль';
+                                        passwordError =
+                                            'Введите пароль для подтверждения';
                                       });
                                       return;
                                     }
 
-                                    if (!screenContext.mounted) return;
-                                    Navigator.pop(dialogContext);
-                                    AppNavigation.openCatalog(screenContext);
-                                  } catch (_) {
                                     setDialogState(() {
-                                      isLoading = false;
-                                      passwordError =
-                                          'Ошибка проверки. Попробуйте еще раз.';
+                                      isLoading = true;
+                                      passwordError = null;
                                     });
-                                  }
-                                },
-                          child: isLoading
-                              ? SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color:
-                                        Theme.of(context).colorScheme.surface,
-                                  ),
-                                )
-                              : const Text('Я понимаю'),
-                        ),
-                      ],
+
+                                    try {
+                                      final repo = await ref.read(
+                                        authRepositoryProvider.future,
+                                      );
+                                      final user = await repo.getUser();
+                                      final username = (user['username'] ?? '')
+                                          .toString()
+                                          .trim();
+
+                                      if (username.isEmpty) {
+                                        throw Exception(
+                                          'Не удалось получить пользователя',
+                                        );
+                                      }
+
+                                      final isValid =
+                                          await repo.verifyCurrentPassword(
+                                        username: username,
+                                        password: password,
+                                      );
+
+                                      if (!isValid) {
+                                        setDialogState(() {
+                                          isLoading = false;
+                                          passwordError = 'Неверный пароль';
+                                        });
+                                        return;
+                                      }
+
+                                      if (!screenContext.mounted) return;
+                                      Navigator.pop(dialogContext);
+                                      AppNavigation.openCatalog(screenContext);
+                                    } catch (_) {
+                                      setDialogState(() {
+                                        isLoading = false;
+                                        passwordError =
+                                            'Ошибка проверки. Попробуйте еще раз.';
+                                      });
+                                    }
+                                  },
+                            child: isLoading
+                                ? SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color:
+                                          Theme.of(context).colorScheme.surface,
+                                    ),
+                                  )
+                                : const Text('Я понимаю'),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
