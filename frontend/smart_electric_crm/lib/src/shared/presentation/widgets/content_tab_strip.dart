@@ -49,10 +49,10 @@ class ContentTabStrip extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final horizontalPadding = DesktopWebFrame.centeredContentSidePadding(
+        final horizontalPadding =
+            DesktopWebFrame.centeredContentHorizontalPadding(
+          context,
           constraints.maxWidth,
-          maxWidth: 1380,
-          minPadding: 12,
         );
 
         return Padding(

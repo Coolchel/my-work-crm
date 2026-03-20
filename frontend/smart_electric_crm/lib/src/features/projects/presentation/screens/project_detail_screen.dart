@@ -413,17 +413,21 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           const contentMaxWidth = 1380.0;
-          final horizontalPadding = DesktopWebFrame.centeredContentSidePadding(
+          final scrollbarEndInset =
+              DesktopWebFrame.scrollableContentEndInset(context);
+          final horizontalPadding =
+              DesktopWebFrame.centeredContentHorizontalPadding(
+            context,
             constraints.maxWidth,
             maxWidth: contentMaxWidth,
-            minPadding: 12,
+            trailingInset: scrollbarEndInset,
           );
           final content = SingleChildScrollView(
             controller: widget.scrollController,
-            padding: EdgeInsets.fromLTRB(
+            padding: EdgeInsetsDirectional.fromSTEB(
               horizontalPadding,
               widget.topContentInset + (isMobileWeb ? 12 : 20),
-              horizontalPadding,
+              horizontalPadding + scrollbarEndInset,
               isMobileWeb ? 12 : 16,
             ),
             child: Column(
@@ -731,19 +735,21 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
+              final scrollbarEndInset =
+                  DesktopWebFrame.scrollableContentEndInset(context);
               final horizontalPadding =
-                  DesktopWebFrame.centeredContentSidePadding(
+                  DesktopWebFrame.centeredContentHorizontalPadding(
+                context,
                 constraints.maxWidth,
-                maxWidth: 1380,
-                minPadding: 12,
+                trailingInset: scrollbarEndInset,
               );
 
               return ListView(
                 controller: widget.scrollController,
-                padding: EdgeInsets.fromLTRB(
+                padding: EdgeInsetsDirectional.fromSTEB(
                   horizontalPadding,
                   widget.topContentInset + (isMobileWeb ? 12 : 20),
-                  horizontalPadding,
+                  horizontalPadding + scrollbarEndInset,
                   isMobileWeb ? 12 : 16,
                 ),
                 children: [

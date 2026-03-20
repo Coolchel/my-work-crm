@@ -35,7 +35,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   static const double _overlayMinHeight = 120;
   static const double _overlayMaxHeightCap = 520;
   static const double _searchTopMargin = 8;
-  static const double _desktopScrollRightPadding = 16;
   static const double _desktopTopFadeHeight = 28;
 
   final LayerLink _layerLink = LayerLink();
@@ -424,6 +423,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final usesMobileContentPadding = DesktopWebFrame.usesMobileContentPadding(
       context,
     );
+    final desktopScrollEndInset = DesktopWebFrame.scrollableContentEndInset(
+      context,
+    );
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -461,7 +463,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           padding: EdgeInsets.only(left: shellSidebarInset),
                           child: DesktopWebPageFrame(
                             maxWidth: 1360,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            padding: DesktopWebFrame.frameHorizontalPadding(
+                              context,
+                            ),
                             child: Column(
                               children: [
                                 QuickStatsRow(
@@ -488,18 +492,18 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                 builder: (context, constraints) {
                                   final scrollView = DesktopWebPageFrame(
                                     maxWidth: 1360,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                    ),
+                                    padding:
+                                        DesktopWebFrame.frameHorizontalPadding(
+                                            context),
                                     child: SizedBox(
                                       height: constraints.maxHeight,
                                       child: _buildMainScrollConfiguration(
                                         context,
                                         child: SingleChildScrollView(
                                           controller: _scrollController,
-                                          padding: const EdgeInsets.only(
+                                          padding: EdgeInsets.only(
                                             top: 8,
-                                            right: _desktopScrollRightPadding,
+                                            right: desktopScrollEndInset,
                                             bottom: 100,
                                           ),
                                           child: Column(
@@ -613,13 +617,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                         left: shellSidebarInset),
                                     child: DesktopWebPageFrame(
                                       maxWidth: 1360,
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: DesktopWebFrame
-                                            .contentHorizontalPadding(
-                                          context,
-                                          desktop: 20,
-                                        ),
-                                      ),
+                                      padding: DesktopWebFrame
+                                          .frameHorizontalPadding(context),
                                       child: Column(
                                         children: [
                                           QuickStatsRow(
@@ -666,13 +665,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                           left: shellSidebarInset),
                                       child: DesktopWebPageFrame(
                                         maxWidth: 1360,
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: DesktopWebFrame
-                                              .contentHorizontalPadding(
-                                            context,
-                                            desktop: 16,
-                                          ),
-                                        ),
+                                        padding: DesktopWebFrame
+                                            .frameHorizontalPadding(context),
                                         child: Column(
                                           children: [
                                             SizedBox(

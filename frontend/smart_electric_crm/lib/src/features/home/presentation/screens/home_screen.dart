@@ -39,7 +39,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const int _statisticsBranchIndex = 3;
   static const int _settingsBranchIndex = 4;
   static const double _defaultDesktopMenuTop = 118;
-  static const double _welcomeDesktopMenuTop = 220;
+  static const double _welcomeDesktopMenuTop = 204;
 
   @override
   void initState() {

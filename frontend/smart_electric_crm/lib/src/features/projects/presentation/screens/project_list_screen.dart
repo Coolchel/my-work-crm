@@ -36,8 +36,6 @@ class ProjectListScreen extends ConsumerStatefulWidget {
 
 class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     with SingleTickerProviderStateMixin {
-  static const double _searchHorizontalPadding = 12;
-
   SortOrder _sortOrder = SortOrder.newest;
   String? _filterSource;
   String? _filterType;
@@ -164,14 +162,18 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textStyles = context.appTextStyles;
     final hintText = !isMobileWeb || isOpen ? ProjectSearchTexts.hint : null;
+    final horizontalPadding = DesktopWebFrame.contentHorizontalPadding(
+      context,
+      desktop: DesktopWebFrame.desktopContentHorizontalPadding,
+    );
 
     return SizedBox(
       width: double.infinity,
       child: Padding(
         padding: EdgeInsets.fromLTRB(
-          isMobileWeb ? 12 : _searchHorizontalPadding,
+          horizontalPadding,
           isMobileWeb ? 6 : 8,
-          isMobileWeb ? 12 : _searchHorizontalPadding,
+          horizontalPadding,
           isMobileWeb ? 8 : 10,
         ),
         child: TextField(
@@ -350,20 +352,23 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
           return LayoutBuilder(
             builder: (context, constraints) {
               const contentMaxWidth = 1380.0;
+              final scrollbarEndInset =
+                  DesktopWebFrame.scrollableContentEndInset(context);
               final horizontalPadding =
-                  DesktopWebFrame.centeredContentSidePadding(
+                  DesktopWebFrame.centeredContentHorizontalPadding(
+                context,
                 constraints.maxWidth,
                 maxWidth: contentMaxWidth,
-                minPadding: 12,
+                trailingInset: scrollbarEndInset,
               );
 
               if (!useDesktopGrid || constraints.maxWidth < 1080) {
                 return ListView.builder(
                   controller: _scrollController,
-                  padding: EdgeInsets.fromLTRB(
+                  padding: EdgeInsetsDirectional.fromSTEB(
                     horizontalPadding,
                     16,
-                    horizontalPadding,
+                    horizontalPadding + scrollbarEndInset,
                     120,
                   ),
                   itemCount: filtered.length,
@@ -379,10 +384,10 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
 
               return GridView.builder(
                 controller: _scrollController,
-                padding: EdgeInsets.fromLTRB(
+                padding: EdgeInsetsDirectional.fromSTEB(
                   horizontalPadding,
                   16,
-                  horizontalPadding,
+                  horizontalPadding + scrollbarEndInset,
                   120,
                 ),
                 itemCount: filtered.length,
@@ -432,10 +437,14 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
           final maxWidth = DesktopWebFrame.isDesktop(context, minWidth: 1180)
               ? 1380.0
               : constraints.maxWidth;
-          final horizontalPadding = DesktopWebFrame.centeredContentSidePadding(
+          final scrollbarEndInset =
+              DesktopWebFrame.scrollableContentEndInset(context);
+          final horizontalPadding =
+              DesktopWebFrame.centeredContentHorizontalPadding(
+            context,
             constraints.maxWidth,
             maxWidth: maxWidth,
-            minPadding: _searchHorizontalPadding,
+            trailingInset: scrollbarEndInset,
           );
 
           return RefreshIndicator(
@@ -447,10 +456,10 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                 if (projects.isEmpty) {
                   return ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(
+                    padding: EdgeInsetsDirectional.fromSTEB(
                       horizontalPadding,
                       16,
-                      horizontalPadding,
+                      horizontalPadding + scrollbarEndInset,
                       120,
                     ),
                     children: const [
@@ -465,10 +474,10 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                 }
 
                 return ListView.separated(
-                  padding: EdgeInsets.fromLTRB(
+                  padding: EdgeInsetsDirectional.fromSTEB(
                     horizontalPadding,
                     16,
-                    horizontalPadding,
+                    horizontalPadding + scrollbarEndInset,
                     120,
                   ),
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -488,10 +497,10 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) => ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(
+                padding: EdgeInsetsDirectional.fromSTEB(
                   horizontalPadding,
                   16,
-                  horizontalPadding,
+                  horizontalPadding + scrollbarEndInset,
                   120,
                 ),
                 children: [

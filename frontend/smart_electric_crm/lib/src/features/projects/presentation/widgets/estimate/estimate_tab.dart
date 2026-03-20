@@ -621,6 +621,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
   Widget _buildSectionHeader(
     String title, {
     required double horizontalPadding,
+    double? horizontalEndPadding,
     double topPadding = 0,
     double bottomPadding = 8,
   }) {
@@ -628,10 +629,10 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     final textStyles = context.appTextStyles;
     return AppSectionHeader(
       title: title,
-      padding: EdgeInsets.fromLTRB(
+      padding: EdgeInsetsDirectional.fromSTEB(
         horizontalPadding,
         topPadding,
-        horizontalPadding,
+        horizontalEndPadding ?? horizontalPadding,
         bottomPadding,
       ),
       titleStyle: textStyles.sectionTitle.copyWith(
@@ -713,12 +714,17 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
       behavior: HitTestBehavior.translucent,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final horizontalPadding = DesktopWebFrame.centeredContentSidePadding(
+          final scrollbarEndInset =
+              DesktopWebFrame.scrollableContentEndInset(context);
+          final horizontalPadding =
+              DesktopWebFrame.centeredContentHorizontalPadding(
+            context,
             constraints.maxWidth,
-            maxWidth: 1380,
-            minPadding: 12,
+            trailingInset: scrollbarEndInset,
           );
+          final horizontalEndPadding = horizontalPadding + scrollbarEndInset;
           final cardInset = horizontalPadding - 12;
+          final cardEndInset = cardInset + scrollbarEndInset;
 
           return CustomScrollView(
             controller: widget.scrollController,
@@ -747,8 +753,10 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                 for (var category in sortedCategories) ...[
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: horizontalPadding),
+                      padding: EdgeInsetsDirectional.only(
+                        start: horizontalPadding,
+                        end: horizontalEndPadding,
+                      ),
                       child: GroupHeader(
                         title: category,
                         color: _primaryColor,
@@ -757,10 +765,10 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                     ),
                   ),
                   SliverPadding(
-                    padding: EdgeInsets.fromLTRB(
+                    padding: EdgeInsetsDirectional.fromSTEB(
                       horizontalPadding,
                       0,
-                      horizontalPadding,
+                      horizontalEndPadding,
                       0,
                     ),
                     sliver: SliverList(
@@ -788,7 +796,10 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
               if (showPrices)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: cardInset),
+                    padding: EdgeInsetsDirectional.only(
+                      start: cardInset,
+                      end: cardEndInset,
+                    ),
                     child: TotalDashboard(
                       totalUsd: totalUsd,
                       totalByn: totalByn,
@@ -819,16 +830,17 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                 child: _buildSectionHeader(
                   'Заметки',
                   horizontalPadding: horizontalPadding,
+                  horizontalEndPadding: horizontalEndPadding,
                   topPadding: showPrices ? 10 : 12,
                   bottomPadding: 8,
                 ),
               ),
               SliverToBoxAdapter(
                 child: Container(
-                  margin: EdgeInsets.fromLTRB(
+                  margin: EdgeInsetsDirectional.fromSTEB(
                     horizontalPadding,
                     4,
-                    horizontalPadding,
+                    horizontalEndPadding,
                     12,
                   ),
                   padding: EdgeInsets.fromLTRB(

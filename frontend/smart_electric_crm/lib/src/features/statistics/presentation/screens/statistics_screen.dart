@@ -27,6 +27,7 @@ class StatisticsScreen extends ConsumerStatefulWidget {
 
 class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
   static const double _pieChartCardHeight = 320;
+  static const double _desktopContentMaxWidth = 1360;
   static const List<String> _periodValues = ['month', 'year', 'all'];
   final ScrollController _scrollController = ScrollController();
   final SectionAppBarCollapseController _appBarCollapseController =
@@ -104,6 +105,9 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     final horizontalContentPadding = DesktopWebFrame.contentHorizontalPadding(
       context,
       desktop: 16,
+    );
+    final scrollableEndInset = DesktopWebFrame.scrollableContentEndInset(
+      context,
     );
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
@@ -186,15 +190,15 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                     curve: Curves.easeOutCubic,
                     padding: EdgeInsets.only(left: shellSidebarInset),
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(
+                      padding: EdgeInsetsDirectional.fromSTEB(
                         horizontalContentPadding,
                         (isDesktopWeb ? 18 : 12) +
                             statisticsSwitcherOverlayHeight,
-                        horizontalContentPadding,
+                        horizontalContentPadding + scrollableEndInset,
                         16,
                       ),
                       child: DesktopWebPageFrame(
-                        maxWidth: 1380,
+                        maxWidth: _desktopContentMaxWidth,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -343,7 +347,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                       horizontal: horizontalContentPadding,
                     ),
                     child: DesktopWebPageFrame(
-                      maxWidth: 1380,
+                      maxWidth: _desktopContentMaxWidth,
                       child: Align(
                         alignment: Alignment.topCenter,
                         child: ContentTabStrip(

@@ -385,7 +385,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     // Инициализация контроллеров перенесена в build с использованием addPostFrameCallback
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1240);
     final sectionHPadding = _sectionHPadding(context);
-    final usesMobileContentPadding = DesktopWebFrame.usesMobileContentPadding(
+    final scrollableEndInset = DesktopWebFrame.scrollableContentEndInset(
       context,
     );
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
@@ -413,11 +413,9 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
           padding: EdgeInsets.only(left: shellSidebarInset),
           child: DesktopWebPageFrame(
             maxWidth: 1380,
-            padding: EdgeInsets.fromLTRB(
-              usesMobileContentPadding ? 0 : sectionHPadding,
-              isDesktopWeb ? 24 : 0,
-              usesMobileContentPadding ? 0 : sectionHPadding,
-              0,
+            padding: EdgeInsets.only(
+              right: scrollableEndInset,
+              top: isDesktopWeb ? 24 : 0,
             ),
             child: isDesktopWeb
                 ? Row(

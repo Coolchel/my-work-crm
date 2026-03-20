@@ -104,17 +104,21 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           const contentMaxWidth = 1380.0;
-          final horizontalPadding = DesktopWebFrame.centeredContentSidePadding(
+          final scrollbarEndInset =
+              DesktopWebFrame.scrollableContentEndInset(context);
+          final horizontalPadding =
+              DesktopWebFrame.centeredContentHorizontalPadding(
+            context,
             constraints.maxWidth,
             maxWidth: contentMaxWidth,
-            minPadding: 12,
+            trailingInset: scrollbarEndInset,
           );
           final content = SingleChildScrollView(
             controller: widget.scrollController,
-            padding: EdgeInsets.fromLTRB(
+            padding: EdgeInsetsDirectional.fromSTEB(
               horizontalPadding,
               widget.topContentInset + (isMobileWeb ? 12 : 20),
-              horizontalPadding,
+              horizontalPadding + scrollbarEndInset,
               isMobileWeb ? 12 : 16,
             ),
             child: Column(

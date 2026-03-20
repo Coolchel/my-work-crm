@@ -85,6 +85,25 @@ void main() {
     },
     variant: TargetPlatformVariant.only(TargetPlatform.windows),
   );
+
+  testWidgets(
+    'windows welcome keeps a right gutter for the desktop scrollbar',
+    (tester) async {
+      await _pumpWelcomeScreen(
+        tester,
+        width: 1280,
+        height: 900,
+      );
+
+      final mainScrollView = tester
+          .widgetList<SingleChildScrollView>(find.byType(SingleChildScrollView))
+          .firstWhere((widget) => widget.controller != null);
+      final padding = mainScrollView.padding as EdgeInsets;
+
+      expect(padding.right, greaterThan(0));
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.windows),
+  );
 }
 
 Future<void> _pumpWelcomeScreen(

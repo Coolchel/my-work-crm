@@ -86,6 +86,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context,
       desktop: 16,
     );
+    final scrollableEndInset = DesktopWebFrame.scrollableContentEndInset(
+      context,
+    );
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -137,12 +140,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 padding: EdgeInsets.only(left: shellSidebarInset),
                 child: DesktopWebPageFrame(
                   maxWidth: 1160,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: DesktopWebFrame.contentHorizontalPadding(
-                      context,
-                      desktop: 20,
-                    ),
-                  ),
+                  padding: EdgeInsets.zero,
                   child: SizedBox(
                     width: constraints.maxWidth,
                     child: child!,
@@ -155,10 +153,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       },
       child: ListView(
         controller: _scrollController,
-        padding: EdgeInsets.fromLTRB(
+        padding: EdgeInsetsDirectional.fromSTEB(
           horizontalContentPadding,
           isDesktopWeb ? 24 : 16,
-          horizontalContentPadding,
+          horizontalContentPadding + scrollableEndInset,
           16,
         ),
         children: [

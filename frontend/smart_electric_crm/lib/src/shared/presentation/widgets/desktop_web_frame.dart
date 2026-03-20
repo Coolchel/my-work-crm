@@ -5,6 +5,9 @@ final class DesktopWebFrame {
   const DesktopWebFrame._();
 
   static const double mobileContentHorizontalPadding = 12;
+  static const double desktopContentHorizontalPadding = 16;
+  static const double desktopScrollContentEndInset = 16;
+  static const double defaultDesktopContentMaxWidth = 1380;
   static const double shellSidebarBreakpoint = 1180;
   static const double shellSidebarWideBreakpoint = 1450;
   static const double shellSidebarLeftOffset = 16;
@@ -103,6 +106,38 @@ final class DesktopWebFrame {
     return minPadding + (extraWidth / 2);
   }
 
+  static double centeredContentHorizontalPadding(
+    BuildContext context,
+    double availableWidth, {
+    double maxWidth = defaultDesktopContentMaxWidth,
+    double mobile = mobileContentHorizontalPadding,
+    double desktop = desktopContentHorizontalPadding,
+    double mobileWidthBreakpoint = 700,
+    double trailingInset = 0,
+  }) {
+    return centeredContentSidePadding(
+      (availableWidth - trailingInset).clamp(0, double.infinity).toDouble(),
+      maxWidth: maxWidth,
+      minPadding: contentHorizontalPadding(
+        context,
+        mobile: mobile,
+        desktop: desktop,
+        maxWidth: mobileWidthBreakpoint,
+      ),
+    );
+  }
+
+  static double scrollableContentEndInset(
+    BuildContext context, {
+    double desktop = desktopScrollContentEndInset,
+    double maxWidth = 700,
+  }) {
+    if (usesMobileContentPadding(context, maxWidth: maxWidth)) {
+      return 0;
+    }
+    return _isDesktopSurface() ? desktop : 0;
+  }
+
   static EdgeInsets pagePadding(
     BuildContext context, {
     double mobileHorizontal = 16,
@@ -120,12 +155,28 @@ final class DesktopWebFrame {
   static double contentHorizontalPadding(
     BuildContext context, {
     double mobile = mobileContentHorizontalPadding,
-    double desktop = 16,
+    double desktop = desktopContentHorizontalPadding,
     double maxWidth = 700,
   }) {
     return usesMobileContentPadding(context, maxWidth: maxWidth)
         ? mobile
         : desktop;
+  }
+
+  static EdgeInsetsGeometry frameHorizontalPadding(
+    BuildContext context, {
+    double mobile = mobileContentHorizontalPadding,
+    double desktop = desktopContentHorizontalPadding,
+    double maxWidth = 700,
+  }) {
+    return EdgeInsets.symmetric(
+      horizontal: contentHorizontalPadding(
+        context,
+        mobile: mobile,
+        desktop: desktop,
+        maxWidth: maxWidth,
+      ),
+    );
   }
 }
 
