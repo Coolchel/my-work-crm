@@ -16,7 +16,7 @@ void main() {
   });
 
   testWidgets(
-    'mobile welcome keeps header outside the scrollable content',
+    'mobile welcome keeps header inside the scrollable content',
     (tester) async {
       await _pumpWelcomeScreen(
         tester,
@@ -30,7 +30,7 @@ void main() {
           of: find.byType(SingleChildScrollView),
           matching: find.byType(WelcomeHeader),
         ),
-        findsNothing,
+        findsOneWidget,
       );
     },
     variant: TargetPlatformVariant.only(TargetPlatform.android),
@@ -51,7 +51,7 @@ void main() {
       await _pumpWelcomeScreen(
         tester,
         width: 1280,
-        height: 900,
+        height: 720,
         projects: [baseProject],
         searchResults: [searchProject],
       );

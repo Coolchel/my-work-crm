@@ -49,7 +49,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
   late AnimationController _searchAnimController;
   late Animation<double> _fadeAnimation;
   final _searchFocusNode = FocusNode();
-  bool _autofocusSearchOnOpen = false;
   final ScrollController _scrollController = ScrollController();
   final SectionAppBarCollapseController _appBarCollapseController =
       SectionAppBarCollapseController();
@@ -114,14 +113,13 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     if (_searchAnimController.isDismissed) {
       if (isMobileWeb) {
-        setState(() {
-          _autofocusSearchOnOpen = true;
-          _searchAnimController.value = 1;
-        });
-        _focusSearchField();
+        _searchAnimController.value = 1;
+        _focusSearchField(deferKeyboardOpen: false);
       } else {
         _searchAnimController.forward().then((_) {
-          _focusSearchField();
+          if (mounted) {
+            _focusSearchField();
+          }
         });
       }
     } else {
@@ -129,15 +127,12 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     }
   }
 
-  void _focusSearchField() {
+  void _focusSearchField({bool deferKeyboardOpen = true}) {
     _searchFocusNode.requestFocus();
-    final shouldShowKeyboard = DesktopWebFrame.isMobileWeb(
-          context,
-          maxWidth: 700,
-        ) ||
-        (!kIsWeb &&
-            (defaultTargetPlatform == TargetPlatform.android ||
-                defaultTargetPlatform == TargetPlatform.iOS));
+    final shouldShowKeyboard = deferKeyboardOpen &&
+        !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS);
     if (!shouldShowKeyboard) {
       return;
     }
@@ -154,11 +149,100 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     _searchController.clear();
     ref.read(objectsProjectSearchQueryProvider.notifier).state = null;
     _searchAnimController.reverse();
-    _autofocusSearchOnOpen = false;
     FocusScope.of(context).unfocus();
     if (mounted) {
       setState(() {});
     }
+  }
+
+  Widget _buildSearchField(
+    BuildContext context, {
+    required bool isMobileWeb,
+    required bool isOpen,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textStyles = context.appTextStyles;
+    final hintText = !isMobileWeb || isOpen ? ProjectSearchTexts.hint : null;
+
+    return SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          isMobileWeb ? 12 : _searchHorizontalPadding,
+          isMobileWeb ? 6 : 8,
+          isMobileWeb ? 12 : _searchHorizontalPadding,
+          isMobileWeb ? 8 : 10,
+        ),
+        child: TextField(
+          key: const Key('project_list_search_field'),
+          controller: _searchController,
+          focusNode: _searchFocusNode,
+          textAlignVertical: TextAlignVertical.center,
+          style: textStyles.input.copyWith(fontSize: 16),
+          decoration: InputDecoration(
+            isDense: true,
+            hintText: hintText,
+            hintStyle: textStyles.secondaryBody.copyWith(
+              color: Colors.grey.shade500,
+              fontSize: 15,
+            ),
+            prefixIcon: Icon(
+              Icons.search,
+              color: Colors.grey.shade600,
+              size: 22,
+            ),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    color: Colors.grey.shade500,
+                    onPressed: () {
+                      _searchController.clear();
+                      ref
+                          .read(objectsProjectSearchQueryProvider.notifier)
+                          .state = null;
+                      setState(() {});
+                    },
+                  )
+                : null,
+            filled: true,
+            fillColor: scheme.surfaceContainerHighest.withOpacity(
+              isDark ? 0.40 : 0.56,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: scheme.outlineVariant.withOpacity(
+                  isDark ? 0.34 : 0.26,
+                ),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: scheme.outlineVariant.withOpacity(
+                  isDark ? 0.34 : 0.26,
+                ),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: scheme.primary, width: 1.5),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+          ),
+          onChanged: (val) {
+            ref.read(objectsProjectSearchQueryProvider.notifier).state =
+                normalizeProjectSearchQuery(val);
+            setState(() {});
+          },
+          onSubmitted: (_) => FocusScope.of(context).unfocus(),
+        ),
+      ),
+    );
   }
 
   /// Calc total work amount (client_amount) in USD across all stages
@@ -438,9 +522,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
     final normalizedSearchQuery = normalizeProjectSearchQuery(searchQuery);
     final isSearchActive = normalizedSearchQuery != null;
     final searchResultsAsync = ref.watch(objectsProjectSearchResultsProvider);
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textStyles = context.appTextStyles;
     final handleBack =
         widget.onBackPressed ?? () => Navigator.of(context).maybePop();
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
@@ -553,93 +634,25 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                 animation: _searchAnimController,
                 builder: (context, _) {
                   final isOpen = _searchAnimController.value > 0;
-                  if (!isOpen) {
+                  final keepMounted = isMobileWeb;
+
+                  if (!isOpen && !keepMounted) {
                     return const SizedBox(width: double.infinity, height: 0);
                   }
-                  return FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          isMobileWeb ? 12 : _searchHorizontalPadding,
-                          isMobileWeb ? 6 : 8,
-                          isMobileWeb ? 12 : _searchHorizontalPadding,
-                          isMobileWeb ? 8 : 10,
-                        ),
-                        child: TextField(
-                          controller: _searchController,
-                          focusNode: _searchFocusNode,
-                          autofocus: isMobileWeb && _autofocusSearchOnOpen,
-                          textAlignVertical: TextAlignVertical.center,
-                          style: textStyles.input.copyWith(fontSize: 16),
-                          decoration: InputDecoration(
-                            isDense: true,
-                            hintText: ProjectSearchTexts.hint,
-                            hintStyle: textStyles.secondaryBody.copyWith(
-                              color: Colors.grey.shade500,
-                              fontSize: 15,
-                            ),
-                            prefixIcon: Icon(
-                              Icons.search,
-                              color: Colors.grey.shade600,
-                              size: 22,
-                            ),
-                            suffixIcon: _searchController.text.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.close, size: 20),
-                                    color: Colors.grey.shade500,
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      ref
-                                          .read(
-                                            objectsProjectSearchQueryProvider
-                                                .notifier,
-                                          )
-                                          .state = null;
-                                      setState(() {});
-                                    },
-                                  )
-                                : null,
-                            filled: true,
-                            fillColor:
-                                scheme.surfaceContainerHighest.withOpacity(
-                              isDark ? 0.40 : 0.56,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: scheme.outlineVariant.withOpacity(
-                                  isDark ? 0.34 : 0.26,
-                                ),
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: scheme.outlineVariant.withOpacity(
-                                  isDark ? 0.34 : 0.26,
-                                ),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  BorderSide(color: scheme.primary, width: 1.5),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    heightFactor: isOpen ? 1 : 0,
+                    child: IgnorePointer(
+                      ignoring: !isOpen,
+                      child: ExcludeSemantics(
+                        excluding: !isOpen,
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: _buildSearchField(
+                            context,
+                            isMobileWeb: isMobileWeb,
+                            isOpen: isOpen,
                           ),
-                          onChanged: (val) {
-                            ref
-                                .read(
-                                    objectsProjectSearchQueryProvider.notifier)
-                                .state = normalizeProjectSearchQuery(val);
-                            setState(() {});
-                          },
-                          onSubmitted: (_) => FocusScope.of(context).unfocus(),
                         ),
                       ),
                     ),

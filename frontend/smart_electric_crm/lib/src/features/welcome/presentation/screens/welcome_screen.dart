@@ -280,7 +280,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
 
     final anchorTopLeft =
         anchorBox.localToGlobal(Offset.zero, ancestor: rootBox);
-    final safeTop = _resolveSearchSafeTop(rootBox);
+    final safeTop = MediaQuery.of(context).padding.top + _searchTopMargin;
     final delta = anchorTopLeft.dy - safeTop;
     if (delta.abs() < 1) {
       return;
@@ -298,20 +298,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
   }
 
-  double _resolveSearchSafeTop(RenderBox rootBox) {
-    final topInset = MediaQuery.of(context).padding.top;
-    final headerContext = _headerKey.currentContext;
-    final headerBox = headerContext?.findRenderObject() as RenderBox?;
-
-    if (headerBox == null) {
-      return topInset + _searchTopMargin;
-    }
-
-    final headerOffset =
-        headerBox.localToGlobal(Offset.zero, ancestor: rootBox);
-    return headerOffset.dy + headerBox.size.height + _searchTopMargin;
-  }
-
   double _resolveSearchOverlayWidth(BuildContext context) {
     final anchorContext = _searchAnchorKey.currentContext;
     final anchorBox = anchorContext?.findRenderObject() as RenderBox?;
@@ -319,6 +305,29 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       return anchorBox.size.width;
     }
     return MediaQuery.of(context).size.width - 40;
+  }
+
+  Widget _buildMainScrollConfiguration(
+    BuildContext context, {
+    required Widget child,
+  }) {
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+      child: child,
+    );
+  }
+
+  Widget _buildSearchResultsWithScrollbar(BuildContext context) {
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: true),
+      child: SearchResultsOverlay(
+        maxHeight: 520,
+        queryProvider: projectSearchQueryProvider,
+        resultsProvider: projectSearchResultsProvider,
+        inline: true,
+        matchSearchWidth: true,
+      ),
+    );
   }
 
   Widget _buildSearchBar() {
@@ -430,52 +439,49 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                     const EdgeInsets.symmetric(horizontal: 16),
                                 child: SizedBox(
                                   height: constraints.maxHeight,
-                                  child: SingleChildScrollView(
-                                    controller: _scrollController,
-                                    padding: const EdgeInsets.only(
-                                      top: 8,
-                                      right: _desktopScrollRightPadding,
-                                      bottom: 100,
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        _buildSearchBar(),
-                                        if (_useInlineDesktopResults &&
-                                            isSearchActive) ...[
-                                          const SizedBox(height: 24),
-                                          SearchResultsOverlay(
-                                            maxHeight: 520,
-                                            queryProvider:
-                                                projectSearchQueryProvider,
-                                            resultsProvider:
-                                                projectSearchResultsProvider,
-                                            inline: true,
-                                            matchSearchWidth: true,
-                                          ),
-                                        ] else ...[
-                                          const SizedBox(height: 18),
-                                          const NewProjectCard(),
-                                          const SizedBox(height: 24),
-                                          if (hasProjectsLoadError)
-                                            const Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Expanded(
-                                                  child: RecentProjectsList(),
-                                                ),
-                                                SizedBox(width: 24),
-                                                SizedBox(
-                                                  width: 360,
-                                                  child:
-                                                      _WelcomeNetworkNotice(),
-                                                ),
-                                              ],
-                                            )
-                                          else
-                                            const RecentProjectsList(),
+                                  child: _buildMainScrollConfiguration(
+                                    context,
+                                    child: SingleChildScrollView(
+                                      controller: _scrollController,
+                                      padding: const EdgeInsets.only(
+                                        top: 8,
+                                        right: _desktopScrollRightPadding,
+                                        bottom: 100,
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          _buildSearchBar(),
+                                          if (_useInlineDesktopResults &&
+                                              isSearchActive) ...[
+                                            const SizedBox(height: 24),
+                                            _buildSearchResultsWithScrollbar(
+                                              context,
+                                            ),
+                                          ] else ...[
+                                            const SizedBox(height: 18),
+                                            const NewProjectCard(),
+                                            const SizedBox(height: 24),
+                                            if (hasProjectsLoadError)
+                                              const Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Expanded(
+                                                    child: RecentProjectsList(),
+                                                  ),
+                                                  SizedBox(width: 24),
+                                                  SizedBox(
+                                                    width: 360,
+                                                    child:
+                                                        _WelcomeNetworkNotice(),
+                                                  ),
+                                                ],
+                                              )
+                                            else
+                                              const RecentProjectsList(),
+                                          ],
                                         ],
-                                      ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -524,178 +530,166 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     ),
                 ],
               )
-            : Stack(
+            : Column(
                 children: [
-                  Column(
-                    children: [
-                      WelcomeHeader(
-                        key: _headerKey,
-                        onSettingsPressed: widget.onSettingsPressed,
-                      ),
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            SingleChildScrollView(
-                              controller: _scrollController,
-                              child: Column(
-                                children: [
-                                  Transform.translate(
-                                    offset: Offset(0, isMobileWeb ? -12 : -20),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        _buildMainScrollConfiguration(
+                          context,
+                          child: SingleChildScrollView(
+                            controller: _scrollController,
+                            child: Column(
+                              children: [
+                                WelcomeHeader(
+                                  key: _headerKey,
+                                  onSettingsPressed: widget.onSettingsPressed,
+                                ),
+                                Transform.translate(
+                                  offset: Offset(0, isMobileWeb ? -12 : -20),
+                                  child: AnimatedPadding(
+                                    duration: const Duration(milliseconds: 180),
+                                    curve: Curves.easeOutCubic,
+                                    padding: EdgeInsets.only(
+                                        left: shellSidebarInset),
+                                    child: DesktopWebPageFrame(
+                                      maxWidth: 1360,
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: DesktopWebFrame
+                                            .contentHorizontalPadding(
+                                          context,
+                                          desktop: 20,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          QuickStatsRow(
+                                            selectedStat: selectedStat,
+                                            onStatSelected: (stat) {
+                                              ref
+                                                  .read(
+                                                    dashboardFilterProvider
+                                                        .notifier,
+                                                  )
+                                                  .state = stat;
+                                            },
+                                          ),
+                                          SizedBox(
+                                              height: isMobileWeb ? 14 : 24),
+                                          _buildSearchBar(),
+                                          if (isSearchActive &&
+                                              _useInlineDesktopResults)
+                                            Padding(
+                                              padding: EdgeInsets.only(
+                                                top: isMobileWeb ? 12 : 16,
+                                              ),
+                                              child:
+                                                  _buildSearchResultsWithScrollbar(
+                                                context,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 180),
+                                  curve: Curves.easeOut,
+                                  opacity: isSearchActive ? 0 : 1,
+                                  child: IgnorePointer(
+                                    ignoring: isSearchActive,
                                     child: AnimatedPadding(
                                       duration:
                                           const Duration(milliseconds: 180),
                                       curve: Curves.easeOutCubic,
                                       padding: EdgeInsets.only(
-                                        left: shellSidebarInset,
-                                      ),
+                                          left: shellSidebarInset),
                                       child: DesktopWebPageFrame(
                                         maxWidth: 1360,
                                         padding: EdgeInsets.symmetric(
                                           horizontal: DesktopWebFrame
                                               .contentHorizontalPadding(
                                             context,
-                                            desktop: 20,
+                                            desktop: 16,
                                           ),
                                         ),
                                         child: Column(
                                           children: [
-                                            QuickStatsRow(
-                                              selectedStat: selectedStat,
-                                              onStatSelected: (stat) {
-                                                ref
-                                                    .read(
-                                                      dashboardFilterProvider
-                                                          .notifier,
-                                                    )
-                                                    .state = stat;
-                                              },
-                                            ),
                                             SizedBox(
-                                              height: isMobileWeb ? 14 : 24,
-                                            ),
-                                            _buildSearchBar(),
-                                            if (isSearchActive &&
-                                                _useInlineDesktopResults)
-                                              Padding(
-                                                padding: EdgeInsets.only(
-                                                  top: isMobileWeb ? 12 : 16,
-                                                ),
-                                                child: SearchResultsOverlay(
-                                                  maxHeight: 520,
-                                                  queryProvider:
-                                                      projectSearchQueryProvider,
-                                                  resultsProvider:
-                                                      projectSearchResultsProvider,
-                                                  inline: true,
-                                                  matchSearchWidth: true,
-                                                ),
+                                                height: isMobileWeb ? 4 : 8),
+                                            Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal:
+                                                    usesMobileContentPadding
+                                                        ? 0
+                                                        : 16,
                                               ),
+                                              child: const NewProjectCard(),
+                                            ),
+                                            if (hasProjectsLoadError)
+                                              Padding(
+                                                padding: EdgeInsets.fromLTRB(
+                                                  usesMobileContentPadding
+                                                      ? 0
+                                                      : 16,
+                                                  isMobileWeb ? 10 : 12,
+                                                  usesMobileContentPadding
+                                                      ? 0
+                                                      : 16,
+                                                  0,
+                                                ),
+                                                child:
+                                                    const _WelcomeNetworkNotice(),
+                                              ),
+                                            SizedBox(
+                                                height: isMobileWeb ? 18 : 24),
+                                            Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal:
+                                                    usesMobileContentPadding
+                                                        ? 0
+                                                        : 16,
+                                              ),
+                                              child: const RecentProjectsList(),
+                                            ),
                                           ],
                                         ),
                                       ),
                                     ),
                                   ),
-                                  AnimatedOpacity(
-                                    duration: const Duration(milliseconds: 180),
-                                    curve: Curves.easeOut,
-                                    opacity: isSearchActive ? 0 : 1,
-                                    child: IgnorePointer(
-                                      ignoring: isSearchActive,
-                                      child: AnimatedPadding(
-                                        duration:
-                                            const Duration(milliseconds: 180),
-                                        curve: Curves.easeOutCubic,
-                                        padding: EdgeInsets.only(
-                                          left: shellSidebarInset,
-                                        ),
-                                        child: DesktopWebPageFrame(
-                                          maxWidth: 1360,
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: DesktopWebFrame
-                                                .contentHorizontalPadding(
-                                              context,
-                                              desktop: 16,
-                                            ),
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              SizedBox(
-                                                height: isMobileWeb ? 4 : 8,
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal:
-                                                      usesMobileContentPadding
-                                                          ? 0
-                                                          : 16,
-                                                ),
-                                                child: const NewProjectCard(),
-                                              ),
-                                              if (hasProjectsLoadError)
-                                                Padding(
-                                                  padding: EdgeInsets.fromLTRB(
-                                                    usesMobileContentPadding
-                                                        ? 0
-                                                        : 16,
-                                                    isMobileWeb ? 10 : 12,
-                                                    usesMobileContentPadding
-                                                        ? 0
-                                                        : 16,
-                                                    0,
-                                                  ),
-                                                  child:
-                                                      const _WelcomeNetworkNotice(),
-                                                ),
-                                              SizedBox(
-                                                height: isMobileWeb ? 18 : 24,
-                                              ),
-                                              Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal:
-                                                      usesMobileContentPadding
-                                                          ? 0
-                                                          : 16,
-                                                ),
-                                                child:
-                                                    const RecentProjectsList(),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: isMobileWeb ? 76 : 100),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  _buildStatusBarBackdrop(context),
-                  if (isSearchActive && !_useInlineDesktopResults)
-                    CompositedTransformFollower(
-                      link: _layerLink,
-                      showWhenUnlinked: false,
-                      offset: Offset(0, _searchOverlayOffsetY),
-                      child: Align(
-                        alignment: Alignment.topLeft,
-                        child: SizedBox(
-                          width: _resolveSearchOverlayWidth(context),
-                          child: TapRegion(
-                            groupId: _searchTapGroupId,
-                            child: SearchResultsOverlay(
-                              maxHeight: _searchOverlayMaxHeight,
-                              queryProvider: projectSearchQueryProvider,
-                              resultsProvider: projectSearchResultsProvider,
-                              matchSearchWidth: true,
+                                ),
+                                SizedBox(height: isMobileWeb ? 76 : 100),
+                              ],
                             ),
                           ),
                         ),
-                      ),
+                        _buildStatusBarBackdrop(context),
+                        if (isSearchActive && !_useInlineDesktopResults)
+                          CompositedTransformFollower(
+                            link: _layerLink,
+                            showWhenUnlinked: false,
+                            offset: Offset(0, _searchOverlayOffsetY),
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: SizedBox(
+                                width: _resolveSearchOverlayWidth(context),
+                                child: TapRegion(
+                                  groupId: _searchTapGroupId,
+                                  child: SearchResultsOverlay(
+                                    maxHeight: _searchOverlayMaxHeight,
+                                    queryProvider: projectSearchQueryProvider,
+                                    resultsProvider:
+                                        projectSearchResultsProvider,
+                                    matchSearchWidth: true,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
+                  ),
                 ],
               ),
       ),
