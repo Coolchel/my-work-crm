@@ -20,12 +20,20 @@ class ContentTabStrip extends StatelessWidget {
     required this.items,
     required this.selectedIndex,
     required this.onSelected,
+    this.topPadding = 12,
+    this.bottomPadding = 8,
+    this.sidePadding,
+    this.itemWidth,
     super.key,
   });
 
   final List<ContentTabStripItem> items;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
+  final double topPadding;
+  final double bottomPadding;
+  final double? sidePadding;
+  final double? itemWidth;
 
   static double overlayInset(BuildContext context) {
     final isCompact = MediaQuery.sizeOf(context).width < 720;
@@ -49,10 +57,10 @@ class ContentTabStrip extends StatelessWidget {
 
         return Padding(
           padding: EdgeInsets.fromLTRB(
-            horizontalPadding,
-            12,
-            horizontalPadding,
-            8,
+            sidePadding ?? horizontalPadding,
+            topPadding,
+            sidePadding ?? horizontalPadding,
+            bottomPadding,
           ),
           child: Align(
             alignment: Alignment.topCenter,
@@ -67,6 +75,7 @@ class ContentTabStrip extends StatelessWidget {
                       item: items[i],
                       isSelected: i == selectedIndex,
                       isCompact: isCompact,
+                      width: itemWidth,
                       textStyles: textStyles,
                       scheme: scheme,
                       isDark: isDark,
@@ -89,6 +98,7 @@ class _TabChipButton extends StatelessWidget {
     required this.item,
     required this.isSelected,
     required this.isCompact,
+    required this.width,
     required this.textStyles,
     required this.scheme,
     required this.isDark,
@@ -98,6 +108,7 @@ class _TabChipButton extends StatelessWidget {
   final ContentTabStripItem item;
   final bool isSelected;
   final bool isCompact;
+  final double? width;
   final AppTextStyles textStyles;
   final ColorScheme scheme;
   final bool isDark;
@@ -140,32 +151,41 @@ class _TabChipButton extends StatelessWidget {
                   : scheme.outlineVariant.withOpacity(isDark ? 0.28 : 0.20),
             ),
           ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: isCompact ? 14 : 18,
-              vertical: isCompact ? 10 : 12,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  item.icon,
-                  size: isCompact ? 18 : 20,
-                  color: foregroundColor,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  item.label,
-                  key: ValueKey(item.keyName),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textStyles.navLabel.copyWith(
-                    fontSize: isCompact ? 13 : 14,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+          child: SizedBox(
+            width: width,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 14 : 18,
+                vertical: isCompact ? 10 : 12,
+              ),
+              child: Row(
+                mainAxisSize:
+                    width == null ? MainAxisSize.min : MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    item.icon,
+                    size: isCompact ? 18 : 20,
                     color: foregroundColor,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      item.label,
+                      key: ValueKey(item.keyName),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: textStyles.navLabel.copyWith(
+                        fontSize: isCompact ? 13 : 14,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w600,
+                        color: foregroundColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

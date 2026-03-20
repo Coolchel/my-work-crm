@@ -10,6 +10,7 @@ import 'package:smart_electric_crm/src/features/statistics/data/models/statistic
 import 'package:smart_electric_crm/src/features/statistics/data/repositories/statistics_repository.dart';
 import 'package:smart_electric_crm/src/features/statistics/presentation/widgets/work_dynamics_chart.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/content_tab_strip.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 
 class StatisticsScreen extends ConsumerStatefulWidget {
@@ -26,6 +27,7 @@ class StatisticsScreen extends ConsumerStatefulWidget {
 
 class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
   static const double _pieChartCardHeight = 320;
+  static const List<String> _periodValues = ['month', 'year', 'all'];
   final ScrollController _scrollController = ScrollController();
   final SectionAppBarCollapseController _appBarCollapseController =
       SectionAppBarCollapseController();
@@ -96,7 +98,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textStyles = context.appTextStyles;
     final viewport = MediaQuery.sizeOf(context);
     final isMobile = viewport.width < 600;
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
@@ -120,34 +121,32 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     final statisticsAccent =
         Theme.of(context).floatingActionButtonTheme.backgroundColor ??
             Colors.indigo;
-    final periodSwitcherWidth =
-        (isMobile ? viewport.width - 32 : viewport.width * 0.58)
-            .clamp(280.0, 560.0)
-            .toDouble();
-    final periodSegmentWidth = periodSwitcherWidth / 3;
     final headerStripeColor =
         isDark ? scheme.primary.withOpacity(0.76) : statisticsAccent;
-    final periodSegments = <ButtonSegment<String>>[
-      ButtonSegment<String>(
-        value: 'month',
-        label: const Text('\u041c\u0435\u0441\u044f\u0446'),
-        icon: isMobile ? null : const Icon(Icons.calendar_view_month),
+    final periodItems = <ContentTabStripItem>[
+      const ContentTabStripItem(
+        label: '\u041c\u0435\u0441\u044f\u0446',
+        icon: Icons.calendar_view_month,
+        keyName: 'statistics_period_month',
       ),
-      ButtonSegment<String>(
-        value: 'year',
-        label: const Text('\u0413\u043e\u0434'),
-        icon: isMobile ? null : const Icon(Icons.calendar_today),
+      const ContentTabStripItem(
+        label: '\u0413\u043e\u0434',
+        icon: Icons.calendar_today,
+        keyName: 'statistics_period_year',
       ),
-      ButtonSegment<String>(
-        value: 'all',
-        label: Text(
-          isMobile
-              ? '\u0412\u0441\u0435'
-              : '\u0412\u0441\u0435 \u0432\u0440\u0435\u043c\u044f',
-        ),
-        icon: isMobile ? null : const Icon(Icons.history),
+      ContentTabStripItem(
+        label: isMobile
+            ? '\u0412\u0441\u0435'
+            : '\u0412\u0441\u0435 \u0432\u0440\u0435\u043c\u044f',
+        icon: Icons.history,
+        keyName: 'statistics_period_all',
       ),
     ];
+    final selectedPeriodIndex = _periodValues.indexOf(currentPeriod);
+    final statisticsSwitcherTopPadding = isMobile ? 6.0 : 8.0;
+    final statisticsSwitcherBottomPadding = isMobile ? 2.0 : 4.0;
+    final statisticsSwitcherOverlayHeight = isMobile ? 52.0 : 58.0;
+    final statisticsSwitcherItemWidth = isMobile ? 108.0 : 152.0;
 
     return ListenableBuilder(
       listenable: _appBarCollapseController,
@@ -178,242 +177,198 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
         error: (error, stack) => Center(child: Text('Ошибка: $error')),
         data: (stats) => RefreshIndicator(
           onRefresh: () async => ref.invalidate(statisticsDataProvider),
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            child: AnimatedPadding(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
-              padding: EdgeInsets.only(left: shellSidebarInset),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  horizontalContentPadding,
-                  isDesktopWeb ? 24 : 16,
-                  horizontalContentPadding,
-                  16,
-                ),
-                child: DesktopWebPageFrame(
-                  maxWidth: 1380,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Переключатель периода
-                      Align(
-                        alignment: Alignment.center,
-                        child: SizedBox(
-                          width: periodSwitcherWidth,
-                          child: SegmentedButton<String>(
-                            segments: periodSegments,
-                            selected: {currentPeriod},
-                            showSelectedIcon: !isMobile,
-                            onSelectionChanged: (Set<String> newSelection) {
-                              ref
-                                  .read(statisticsFilterProvider.notifier)
-                                  .setPeriod(newSelection.first);
-                            },
-                            style: ButtonStyle(
-                              textStyle: WidgetStatePropertyAll(
-                                textStyles.button.copyWith(
-                                  fontSize: isMobile ? 13 : 14,
-                                ),
-                              ),
-                              visualDensity: isMobile
-                                  ? VisualDensity.compact
-                                  : VisualDensity.standard,
-                              minimumSize: MaterialStateProperty.all(
-                                Size(periodSegmentWidth, isMobile ? 40 : 46),
-                              ),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              padding: MaterialStateProperty.all(
-                                EdgeInsets.symmetric(
-                                  horizontal: isMobile ? 8 : 12,
-                                  vertical: isMobile ? 8 : 10,
-                                ),
-                              ),
-                              side:
-                                  MaterialStateProperty.resolveWith<BorderSide>(
-                                (states) {
-                                  if (states.contains(MaterialState.selected)) {
-                                    return BorderSide(
-                                      color: isDark
-                                          ? scheme.primary.withOpacity(0.66)
-                                          : statisticsAccent.withOpacity(0.85),
-                                    );
-                                  }
-                                  return BorderSide(
-                                    color: AppDesignTokens.cardBorder(context),
-                                  );
-                                },
-                              ),
-                              backgroundColor:
-                                  MaterialStateProperty.resolveWith<Color>(
-                                      (states) {
-                                if (states.contains(MaterialState.selected)) {
-                                  return isDark
-                                      ? scheme.primary.withOpacity(0.28)
-                                      : statisticsAccent.withOpacity(0.9);
-                                }
-                                return isDark
-                                    ? scheme.surfaceContainerHigh
-                                    : scheme.surface;
-                              }),
-                              foregroundColor:
-                                  MaterialStateProperty.resolveWith<Color>(
-                                      (states) {
-                                if (states.contains(MaterialState.selected)) {
-                                  return Colors.white;
-                                }
-                                return scheme.onSurface;
-                              }),
-                              iconColor:
-                                  MaterialStateProperty.resolveWith<Color>(
-                                      (states) {
-                                if (states.contains(MaterialState.selected)) {
-                                  return Colors.white;
-                                }
-                                return isDark
-                                    ? scheme.onSurfaceVariant
-                                    : Colors.grey;
-                              }),
-                              overlayColor:
-                                  MaterialStateProperty.resolveWith<Color?>(
-                                      (states) {
-                                if (states.contains(MaterialState.hovered)) {
-                                  return AppDesignTokens.hoverOverlay(context);
-                                }
-                                if (states.contains(MaterialState.pressed)) {
-                                  return AppDesignTokens.pressedOverlay(
-                                      context);
-                                }
-                                return null;
-                              }),
-                            ),
-                          ),
-                        ),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: AnimatedPadding(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
+                    padding: EdgeInsets.only(left: shellSidebarInset),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalContentPadding,
+                        (isDesktopWeb ? 18 : 12) +
+                            statisticsSwitcherOverlayHeight,
+                        horizontalContentPadding,
+                        16,
                       ),
-                      const SizedBox(height: 24),
-
-                      _buildHeader(
-                        context,
-                        'Финансы за ${_getPeriodTitle(currentPeriod)}',
-                        stripeColor: headerStripeColor,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildFinancialSummary(context, stats.finances),
-                      const SizedBox(height: 24),
-
-                      if (useVerticalPieCharts) ...[
-                        _buildHeader(
-                          context,
-                          'Откуда объекты',
-                          stripeColor: headerStripeColor,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildPieChartCard(
-                          context,
-                          stats.sources
-                              .map((e) => _ChartData(e.name, e.usd))
-                              .toList(),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildHeader(
-                          context,
-                          'Типы объектов',
-                          stripeColor: headerStripeColor,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildPieChartCard(
-                          context,
-                          stats.objectTypes
-                              .map((e) => _ChartData(e.name, e.usd))
-                              .toList(),
-                          paletteOffset: 2,
-                        ),
-                      ] else
-                        IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildHeader(
-                                      context,
-                                      'Откуда объекты',
-                                      stripeColor: headerStripeColor,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    _buildPieChartCard(
-                                      context,
-                                      stats.sources
-                                          .map((e) => _ChartData(e.name, e.usd))
-                                          .toList(),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildHeader(
-                                      context,
-                                      'Типы объектов',
-                                      stripeColor: headerStripeColor,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    _buildPieChartCard(
-                                      context,
-                                      stats.objectTypes
-                                          .map((e) => _ChartData(e.name, e.usd))
-                                          .toList(),
-                                      paletteOffset: 2,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      const SizedBox(height: 24),
-
-                      _buildHeader(
-                        context,
-                        'Динамика работ',
-                        stripeColor: headerStripeColor,
-                      ),
-                      const SizedBox(height: 12),
-                      if (isPhonePortrait)
-                        _buildRotateDeviceNotice(context)
-                      else
-                        Column(
+                      child: DesktopWebPageFrame(
+                        maxWidth: 1380,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildWorkDynamicsCard(
-                              stats: stats,
-                              currentPeriod: currentPeriod,
-                              isMobile: isMobile,
-                              currencyLabel: "USD",
-                              currencySymbol: "\$",
-                              isUsd: true,
+                            // Переключатель периода
+                            const SizedBox(height: 6),
+
+                            _buildHeader(
+                              context,
+                              'Финансы за ${_getPeriodTitle(currentPeriod)}',
+                              stripeColor: headerStripeColor,
                             ),
-                            const SizedBox(height: 16),
-                            _buildWorkDynamicsCard(
-                              stats: stats,
-                              currentPeriod: currentPeriod,
-                              isMobile: isMobile,
-                              currencyLabel: "BYN",
-                              currencySymbol: '\u0440',
-                              isUsd: false,
+                            const SizedBox(height: 12),
+                            _buildFinancialSummary(context, stats.finances),
+                            const SizedBox(height: 24),
+
+                            if (useVerticalPieCharts) ...[
+                              _buildHeader(
+                                context,
+                                'Откуда объекты',
+                                stripeColor: headerStripeColor,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildPieChartCard(
+                                context,
+                                stats.sources
+                                    .map((e) => _ChartData(e.name, e.usd))
+                                    .toList(),
+                              ),
+                              const SizedBox(height: 16),
+                              _buildHeader(
+                                context,
+                                'Типы объектов',
+                                stripeColor: headerStripeColor,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildPieChartCard(
+                                context,
+                                stats.objectTypes
+                                    .map((e) => _ChartData(e.name, e.usd))
+                                    .toList(),
+                                paletteOffset: 2,
+                              ),
+                            ] else
+                              IntrinsicHeight(
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          _buildHeader(
+                                            context,
+                                            'Откуда объекты',
+                                            stripeColor: headerStripeColor,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          _buildPieChartCard(
+                                            context,
+                                            stats.sources
+                                                .map((e) =>
+                                                    _ChartData(e.name, e.usd))
+                                                .toList(),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          _buildHeader(
+                                            context,
+                                            'Типы объектов',
+                                            stripeColor: headerStripeColor,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          _buildPieChartCard(
+                                            context,
+                                            stats.objectTypes
+                                                .map((e) =>
+                                                    _ChartData(e.name, e.usd))
+                                                .toList(),
+                                            paletteOffset: 2,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            const SizedBox(height: 24),
+
+                            _buildHeader(
+                              context,
+                              'Динамика работ',
+                              stripeColor: headerStripeColor,
                             ),
+                            const SizedBox(height: 12),
+                            if (isPhonePortrait)
+                              _buildRotateDeviceNotice(context)
+                            else
+                              Column(
+                                children: [
+                                  _buildWorkDynamicsCard(
+                                    stats: stats,
+                                    currentPeriod: currentPeriod,
+                                    isMobile: isMobile,
+                                    currencyLabel: "USD",
+                                    currencySymbol: "\$",
+                                    isUsd: true,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _buildWorkDynamicsCard(
+                                    stats: stats,
+                                    currentPeriod: currentPeriod,
+                                    isMobile: isMobile,
+                                    currencyLabel: "BYN",
+                                    currencySymbol: '\u0440',
+                                    isUsd: false,
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 24),
                           ],
                         ),
-                      const SizedBox(height: 24),
-                    ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: AnimatedPadding(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  padding: EdgeInsets.only(left: shellSidebarInset),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalContentPadding,
+                    ),
+                    child: DesktopWebPageFrame(
+                      maxWidth: 1380,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: ContentTabStrip(
+                          key: const ValueKey('statistics_period_switcher'),
+                          items: periodItems,
+                          selectedIndex: selectedPeriodIndex == -1
+                              ? 0
+                              : selectedPeriodIndex,
+                          topPadding: statisticsSwitcherTopPadding,
+                          bottomPadding: statisticsSwitcherBottomPadding,
+                          sidePadding: 0,
+                          itemWidth: statisticsSwitcherItemWidth,
+                          onSelected: (index) {
+                            ref
+                                .read(statisticsFilterProvider.notifier)
+                                .setPeriod(_periodValues[index]);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
