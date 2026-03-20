@@ -189,7 +189,9 @@ void main() {
 
     await tester.enterText(find.byType(TextFormField).at(0), 'user');
     await tester.enterText(find.byType(TextFormField).at(1), 'password');
-    await tester.tap(find.byType(FilledButton));
+    final submitButton = find.byType(FilledButton);
+    await tester.ensureVisible(submitButton);
+    await tester.tap(submitButton);
     await tester.pumpAndSettle();
 
     expect(router.routeInformationProvider.value.uri.path, '/');
@@ -233,7 +235,9 @@ void main() {
 
     await tester.enterText(find.byType(TextFormField).at(0), 'user');
     await tester.enterText(find.byType(TextFormField).at(1), 'password');
-    await tester.tap(find.byType(FilledButton));
+    final submitButton = find.byType(FilledButton);
+    await tester.ensureVisible(submitButton);
+    await tester.tap(submitButton);
     await tester.pumpAndSettle();
 
     expect(router.routeInformationProvider.value.uri.path, '/projects');
