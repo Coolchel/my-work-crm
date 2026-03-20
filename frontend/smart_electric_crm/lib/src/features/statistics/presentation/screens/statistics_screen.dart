@@ -163,7 +163,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
               onPressed: handleBack,
             ),
             title: 'Статистика',
-            icon: Icons.bar_chart_rounded,
             gradientColors: AppDesignTokens.subtleSectionGradient,
             bottomGap: isPhoneLandscape ? 10 : 30,
           ),

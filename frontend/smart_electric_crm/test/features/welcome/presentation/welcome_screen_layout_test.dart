@@ -56,6 +56,7 @@ void main() {
         searchResults: [searchProject],
       );
 
+      await tester.ensureVisible(find.byType(TextField));
       await tester.tap(find.byType(TextField));
       await tester.pump();
       await tester.enterText(find.byType(TextField), 'Найденный');

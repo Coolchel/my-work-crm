@@ -337,7 +337,6 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
         ),
         title: 'Справочник',
         subtitle: widget.section.name,
-        icon: Icons.schema_rounded,
       ),
       floatingActionButton: Tooltip(
         message: 'Добавить запись',
@@ -773,7 +772,6 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
         ),
         title: 'Каталог',
         subtitle: widget.category.name,
-        icon: Icons.inventory_2_rounded,
       ),
       floatingActionButton: Tooltip(
         message: 'Добавить позицию',

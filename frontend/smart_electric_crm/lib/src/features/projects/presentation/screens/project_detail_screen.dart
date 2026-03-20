@@ -77,7 +77,6 @@ class ProjectDetailScreen extends ConsumerWidget {
           ),
           title: 'Объект',
           subtitle: 'Загрузка',
-          icon: Icons.apartment_rounded,
         ),
         body: const Center(child: CircularProgressIndicator()),
       ),
@@ -90,7 +89,6 @@ class ProjectDetailScreen extends ConsumerWidget {
           ),
           title: 'Объект',
           subtitle: 'Ошибка загрузки',
-          icon: Icons.apartment_rounded,
         ),
         body: Center(child: Text('Ошибка: $error')),
       ),
@@ -254,7 +252,6 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
             ),
             title: '\u041e\u0431\u044a\u0435\u043a\u0442',
             subtitle: widget.project.address,
-            icon: Icons.apartment_rounded,
             bottomGap: isMobileWeb ? 16 : 30,
           ),
           body: AnimatedPadding(

@@ -119,7 +119,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onPressed: handleBack,
             ),
             title: 'Настройки',
-            icon: Icons.settings_rounded,
           ),
           body: LayoutBuilder(
             builder: (context, constraints) {

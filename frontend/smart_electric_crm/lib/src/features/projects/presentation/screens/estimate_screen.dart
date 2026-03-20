@@ -262,7 +262,6 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         ),
         title: 'Смета',
         subtitle: StageCard.getStageTitleDisplay(widget.stage.title),
-        icon: Icons.request_quote_rounded,
         bottomGap: isMobileWeb ? 16 : 30,
         actions: [
           EstimateAppBarActions(

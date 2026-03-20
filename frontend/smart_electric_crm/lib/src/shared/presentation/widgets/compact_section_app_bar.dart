@@ -74,7 +74,6 @@ class CompactSectionAppBar extends StatelessWidget
     implements PreferredSizeWidget {
   final String title;
   final String? subtitle;
-  final IconData icon;
   final Widget? leading;
   final List<Widget>? actions;
   final bool centerTitle;
@@ -87,7 +86,6 @@ class CompactSectionAppBar extends StatelessWidget
   const CompactSectionAppBar({
     super.key,
     required this.title,
-    required this.icon,
     this.subtitle,
     this.leading,
     this.actions,
@@ -146,16 +144,9 @@ class CompactSectionAppBar extends StatelessWidget
             : AppDesignTokens.subtleSectionGradient);
     final foreground = isDark ? scheme.onSurface : Colors.white;
     final progress = _clampedCollapseProgress;
-    final iconBadgeBackground = isDark
-        ? scheme.surfaceContainerHighest.withOpacity(0.8)
-        : Colors.white.withOpacity(0.16);
     final subtitleColor = isDark
         ? scheme.onSurface.withOpacity(0.72)
         : Colors.white.withOpacity(0.92);
-    final badgeSize = lerpDouble(28, 20, progress)!;
-    final badgeRadius = lerpDouble(9, 6, progress)!;
-    final badgeIconSize = lerpDouble(17, 14, progress)!;
-    final titleGap = lerpDouble(10, 6, progress)!;
     final subtitleOpacity =
         (1 - Curves.easeOut.transform((progress * 1.2).clamp(0.0, 1.0)))
             .clamp(0.0, 1.0);
@@ -237,54 +228,43 @@ class CompactSectionAppBar extends StatelessWidget
       titleTextStyle: titleTextStyle,
       title: SizedBox(
         height: _totalHeight,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: badgeSize,
-              height: badgeSize,
-              decoration: BoxDecoration(
-                color: iconBadgeBackground,
-                borderRadius: BorderRadius.circular(badgeRadius),
-              ),
-              child: Icon(icon, size: badgeIconSize),
-            ),
-            SizedBox(width: titleGap),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: titleTextStyle,
-                  ),
-                  if (subtitle != null && subtitle!.trim().isNotEmpty)
-                    ClipRect(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        heightFactor: subtitleOpacity,
-                        child: Opacity(
-                          opacity: subtitleOpacity,
-                          child: Padding(
-                            padding: EdgeInsets.only(top: titleSpacing),
-                            child: Text(
-                              subtitle!,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: subtitleTextStyle,
-                            ),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: SizedBox(
+            width: double.infinity,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: titleTextStyle,
+                ),
+                if (subtitle != null && subtitle!.trim().isNotEmpty)
+                  ClipRect(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      heightFactor: subtitleOpacity,
+                      child: Opacity(
+                        opacity: subtitleOpacity,
+                        child: Padding(
+                          padding: EdgeInsets.only(top: titleSpacing),
+                          child: Text(
+                            subtitle!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: subtitleTextStyle,
                           ),
                         ),
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

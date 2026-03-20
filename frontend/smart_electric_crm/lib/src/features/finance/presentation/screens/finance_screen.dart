@@ -288,7 +288,6 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               onPressed: handleBack,
             ),
             title: 'Финансы',
-            icon: Icons.account_balance_wallet_rounded,
             gradientColors: AppDesignTokens.subtleSectionGradient,
           ),
           body: child!,

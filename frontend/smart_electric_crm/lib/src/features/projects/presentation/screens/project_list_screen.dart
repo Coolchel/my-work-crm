@@ -545,7 +545,6 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
               onPressed: handleBack,
             ),
             title: 'Объекты',
-            icon: Icons.apartment_rounded,
             gradientColors: AppDesignTokens.subtleSectionGradient,
             bottomGap: isMobileWeb ? 16 : 30,
             actions: [

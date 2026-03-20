@@ -205,7 +205,6 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
           onPressed: _handleBack,
         ),
         title: 'Справочник',
-        icon: Icons.menu_book_rounded,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 10),

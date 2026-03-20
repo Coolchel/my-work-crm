@@ -311,6 +311,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     BuildContext context, {
     required Widget child,
   }) {
+    final shouldHideMainScrollbar =
+        DesktopWebFrame.isMobileWeb(context, maxWidth: 700) ||
+            (!kIsWeb && defaultTargetPlatform != TargetPlatform.windows);
+    if (!shouldHideMainScrollbar) {
+      return child;
+    }
+
     return ScrollConfiguration(
       behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
       child: child,
@@ -435,8 +442,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                             builder: (context, constraints) {
                               final scrollView = DesktopWebPageFrame(
                                 maxWidth: 1360,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
                                 child: SizedBox(
                                   height: constraints.maxHeight,
                                   child: _buildMainScrollConfiguration(
