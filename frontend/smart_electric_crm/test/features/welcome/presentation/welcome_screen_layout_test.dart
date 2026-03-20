@@ -68,6 +68,23 @@ void main() {
     },
     variant: TargetPlatformVariant.only(TargetPlatform.windows),
   );
+
+  testWidgets(
+    'windows welcome shows top fade mask over scrollable content',
+    (tester) async {
+      await _pumpWelcomeScreen(
+        tester,
+        width: 1280,
+        height: 900,
+      );
+
+      expect(
+        find.byKey(const Key('welcome_desktop_top_fade_mask')),
+        findsOneWidget,
+      );
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.windows),
+  );
 }
 
 Future<void> _pumpWelcomeScreen(

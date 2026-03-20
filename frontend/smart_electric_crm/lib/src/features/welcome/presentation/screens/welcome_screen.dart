@@ -36,6 +36,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   static const double _overlayMaxHeightCap = 520;
   static const double _searchTopMargin = 8;
   static const double _desktopScrollRightPadding = 16;
+  static const double _desktopTopFadeHeight = 28;
 
   final LayerLink _layerLink = LayerLink();
   final Object _searchTapGroupId = Object();
@@ -370,6 +371,49 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
   }
 
+  Widget _buildDesktopTopFadeMask(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final background = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return ListenableBuilder(
+      listenable: _scrollController,
+      builder: (context, _) {
+        final offset =
+            _scrollController.hasClients ? _scrollController.offset : 0;
+        final opacity = ((offset - 6) / 22).clamp(0.0, 1.0);
+
+        return IgnorePointer(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: Opacity(
+              opacity: opacity,
+              child: Container(
+                key: const Key('welcome_desktop_top_fade_mask'),
+                height: _desktopTopFadeHeight,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color.alphaBlend(
+                        scheme.surface.withOpacity(isDark ? 0.14 : 0.06),
+                        background,
+                      ),
+                      background.withOpacity(0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedStat = ref.watch(dashboardFilterProvider);
@@ -434,82 +478,89 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                         ),
                       ),
                       Expanded(
-                        child: AnimatedPadding(
-                          duration: const Duration(milliseconds: 180),
-                          curve: Curves.easeOutCubic,
-                          padding: EdgeInsets.only(left: shellSidebarInset),
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final scrollView = DesktopWebPageFrame(
-                                maxWidth: 1360,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                child: SizedBox(
-                                  height: constraints.maxHeight,
-                                  child: _buildMainScrollConfiguration(
-                                    context,
-                                    child: SingleChildScrollView(
-                                      controller: _scrollController,
-                                      padding: const EdgeInsets.only(
-                                        top: 8,
-                                        right: _desktopScrollRightPadding,
-                                        bottom: 100,
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          _buildSearchBar(),
-                                          if (_useInlineDesktopResults &&
-                                              isSearchActive) ...[
-                                            const SizedBox(height: 24),
-                                            _buildSearchResultsWithScrollbar(
-                                              context,
-                                            ),
-                                          ] else ...[
-                                            const SizedBox(height: 18),
-                                            const NewProjectCard(),
-                                            const SizedBox(height: 24),
-                                            if (hasProjectsLoadError)
-                                              const Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Expanded(
-                                                    child: RecentProjectsList(),
-                                                  ),
-                                                  SizedBox(width: 24),
-                                                  SizedBox(
-                                                    width: 360,
-                                                    child:
-                                                        _WelcomeNetworkNotice(),
-                                                  ),
-                                                ],
-                                              )
-                                            else
-                                              const RecentProjectsList(),
-                                          ],
-                                        ],
+                        child: Stack(
+                          children: [
+                            AnimatedPadding(
+                              duration: const Duration(milliseconds: 180),
+                              curve: Curves.easeOutCubic,
+                              padding: EdgeInsets.only(left: shellSidebarInset),
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final scrollView = DesktopWebPageFrame(
+                                    maxWidth: 1360,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
+                                    child: SizedBox(
+                                      height: constraints.maxHeight,
+                                      child: _buildMainScrollConfiguration(
+                                        context,
+                                        child: SingleChildScrollView(
+                                          controller: _scrollController,
+                                          padding: const EdgeInsets.only(
+                                            top: 8,
+                                            right: _desktopScrollRightPadding,
+                                            bottom: 100,
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              _buildSearchBar(),
+                                              if (_useInlineDesktopResults &&
+                                                  isSearchActive) ...[
+                                                const SizedBox(height: 24),
+                                                _buildSearchResultsWithScrollbar(
+                                                  context,
+                                                ),
+                                              ] else ...[
+                                                const SizedBox(height: 18),
+                                                const NewProjectCard(),
+                                                const SizedBox(height: 24),
+                                                if (hasProjectsLoadError)
+                                                  const Row(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Expanded(
+                                                        child:
+                                                            RecentProjectsList(),
+                                                      ),
+                                                      SizedBox(width: 24),
+                                                      SizedBox(
+                                                        width: 360,
+                                                        child:
+                                                            _WelcomeNetworkNotice(),
+                                                      ),
+                                                    ],
+                                                  )
+                                                else
+                                                  const RecentProjectsList(),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                              );
+                                  );
 
-                              if (_useInlineDesktopResults) {
-                                return scrollView;
-                              }
+                                  if (_useInlineDesktopResults) {
+                                    return scrollView;
+                                  }
 
-                              return AnimatedOpacity(
-                                duration: const Duration(milliseconds: 180),
-                                curve: Curves.easeOut,
-                                opacity: isSearchActive ? 0 : 1,
-                                child: IgnorePointer(
-                                  ignoring: isSearchActive,
-                                  child: scrollView,
-                                ),
-                              );
-                            },
-                          ),
+                                  return AnimatedOpacity(
+                                    duration: const Duration(milliseconds: 180),
+                                    curve: Curves.easeOut,
+                                    opacity: isSearchActive ? 0 : 1,
+                                    child: IgnorePointer(
+                                      ignoring: isSearchActive,
+                                      child: scrollView,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            _buildDesktopTopFadeMask(context),
+                          ],
                         ),
                       ),
                     ],
