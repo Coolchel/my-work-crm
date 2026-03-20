@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/widgets/card_meta_info_block.dart';
+import 'package:smart_electric_crm/src/shared/presentation/utils/human_friendly_date_formatter.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 
 import '../../../data/models/stage_model.dart';
@@ -48,7 +48,7 @@ class _StageCardState extends State<StageCard> {
   bool _isHovered = false;
 
   String _formatDate(DateTime date) {
-    return DateFormat('dd.MM.yyyy').format(date);
+    return HumanFriendlyDateFormatter.format(date);
   }
 
   Color _getStageColor(String title) {

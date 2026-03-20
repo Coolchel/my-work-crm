@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
+import 'package:smart_electric_crm/src/shared/presentation/utils/human_friendly_date_formatter.dart';
 
 import '../../data/models/project_model.dart';
 
@@ -45,13 +45,7 @@ class _ProjectSearchResultTileState extends State<ProjectSearchResultTile> {
   }
 
   String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final diff = now.difference(date);
-
-    if (diff.inDays == 0) return 'Сегодня';
-    if (diff.inDays == 1) return 'Вчера';
-    if (diff.inDays < 7) return '${diff.inDays} дн. назад';
-    return DateFormat('dd.MM.yyyy').format(date);
+    return HumanFriendlyDateFormatter.format(date);
   }
 
   String? _buildClientLine(ProjectModel project) {

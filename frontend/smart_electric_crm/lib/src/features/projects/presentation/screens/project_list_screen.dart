@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/project_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/screens/add_project_screen.dart';
@@ -16,6 +15,7 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_secti
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
+import 'package:smart_electric_crm/src/shared/presentation/utils/human_friendly_date_formatter.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
@@ -472,6 +472,14 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                 icon: const Icon(Icons.search),
                 tooltip: 'Поиск',
                 onPressed: _toggleSearch,
+                visualDensity: isMobileWeb
+                    ? VisualDensity.compact
+                    : VisualDensity.standard,
+                padding: isMobileWeb ? EdgeInsets.zero : null,
+                constraints: isMobileWeb
+                    ? const BoxConstraints.tightFor(width: 40, height: 40)
+                    : null,
+                splashRadius: isMobileWeb ? 20 : null,
               ),
               IconButton(
                 icon: Badge(
@@ -481,8 +489,16 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                 ),
                 tooltip: 'Фильтры',
                 onPressed: () => _showFilterDialog(context),
+                visualDensity: isMobileWeb
+                    ? VisualDensity.compact
+                    : VisualDensity.standard,
+                padding: isMobileWeb ? EdgeInsets.zero : null,
+                constraints: isMobileWeb
+                    ? const BoxConstraints.tightFor(width: 40, height: 40)
+                    : null,
+                splashRadius: isMobileWeb ? 20 : null,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: isMobileWeb ? 4 : 8),
             ],
           ),
           body: LayoutBuilder(
@@ -924,7 +940,7 @@ class _ProjectCardState extends State<_ProjectCard> {
   bool _isHovered = false;
 
   String _formatDate(DateTime date) {
-    return DateFormat('dd.MM.yyyy').format(date);
+    return HumanFriendlyDateFormatter.format(date);
   }
 
   @override

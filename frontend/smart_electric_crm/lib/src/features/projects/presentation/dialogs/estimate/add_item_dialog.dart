@@ -11,15 +11,11 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empt
 
 /// Dialog for searching and adding catalog items to an estimate
 class AddItemDialog extends ConsumerStatefulWidget {
-  final Function(CatalogItem) onAdd;
   final String itemType;
   final bool hidePrices;
 
   const AddItemDialog(
-      {super.key,
-      required this.onAdd,
-      required this.itemType,
-      this.hidePrices = false});
+      {super.key, required this.itemType, this.hidePrices = false});
 
   @override
   ConsumerState<AddItemDialog> createState() => _AddItemDialogState();
@@ -63,8 +59,8 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
   }
 
   void _onItemAdded(CatalogItem item) {
-    widget.onAdd(item);
     _searchController.clear();
+    Navigator.of(context).pop(item);
   }
 
   Color get _primaryColor =>
@@ -251,7 +247,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog> {
                           defaultPrice: 0,
                           defaultCurrency: 'USD',
                           itemType: widget.itemType);
-                      widget.onAdd(dummy);
+                      Navigator.of(context).pop(dummy);
                     },
                     icon: const Icon(Icons.add_circle_outline, size: 20),
                     label: Text(

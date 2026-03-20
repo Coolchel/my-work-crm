@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
+import 'package:smart_electric_crm/src/shared/presentation/utils/human_friendly_date_formatter.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
 
@@ -230,16 +230,6 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
   static const double _dateColumnWidth = 92;
   static const double _contentDateGap = 12;
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final diff = now.difference(date);
-
-    if (diff.inDays == 0) return 'Сегодня';
-    if (diff.inDays == 1) return 'Вчера';
-    if (diff.inDays < 7) return '${diff.inDays} дн. назад';
-    return DateFormat('dd.MM.yyyy').format(date);
-  }
-
   IconData _getIcon(String type) {
     switch (type) {
       case 'new_building':
@@ -421,7 +411,9 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                                     child: SizedBox(
                                       width: _dateColumnWidth,
                                       child: Text(
-                                        _formatDate(lastActivity),
+                                        HumanFriendlyDateFormatter.format(
+                                          lastActivity,
+                                        ),
                                         textAlign: TextAlign.right,
                                         style:
                                             textStyles.captionStrong.copyWith(
@@ -519,7 +511,9 @@ class _RecentProjectTileState extends State<_RecentProjectTile> {
                                     child: SizedBox(
                                       width: _dateColumnWidth,
                                       child: Text(
-                                        _formatDate(lastActivity),
+                                        HumanFriendlyDateFormatter.format(
+                                          lastActivity,
+                                        ),
                                         textAlign: TextAlign.right,
                                         style:
                                             textStyles.captionStrong.copyWith(

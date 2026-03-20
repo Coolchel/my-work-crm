@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
+import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
 import 'package:smart_electric_crm/src/features/engineering/data/models/template_models.dart';
 import 'package:smart_electric_crm/src/features/engineering/presentation/dialogs/template_selection_dialog.dart';
@@ -505,59 +506,59 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     }
   }
 
-  void _showSearchDialog() {
+  Future<void> _showSearchDialog() async {
     final index = _currentIndex;
     final itemType = index == 0 ? 'work' : 'material';
     final showPrices = itemType == 'work' ? true : _showPrices;
     final hidePrices = !showPrices;
 
-    showDialog(
+    final catalogItem = await showDialog<CatalogItem>(
       context: context,
       builder: (_) => AddItemDialog(
         itemType: itemType,
         hidePrices: hidePrices,
-        onAdd: (catalogItem) async {
-          // If ID == 0, it's manual.
-          if (catalogItem.id == 0) {
-            Navigator.pop(context); // Close Add Dialog
-            _showManualAddDialog();
-            return;
-          }
-
-          Navigator.pop(context); // Close search dialog
-
-          final quantities = await showDialog<Map<String, dynamic>>(
-            context: context,
-            builder: (_) => QuantityInputDialog(
-              item: catalogItem,
-              itemType: itemType,
-              hidePrices: hidePrices,
-            ),
-          );
-
-          if (quantities == null) return;
-
-          // Create model for _saveNewItem
-          final newItem = EstimateItemModel(
-            id: 0,
-            stage: widget.stage.id,
-            itemType: itemType,
-            name: catalogItem.name,
-            unit: catalogItem.unit,
-            pricePerUnit:
-                quantities['price']?.toDouble() ?? catalogItem.defaultPrice,
-            currency: quantities['currency'] as String? ??
-                catalogItem.defaultCurrency,
-            totalQuantity: quantities['total']?.toDouble() ?? 0.0,
-            employerQuantity: quantities['employer']?.toDouble() ?? 0.0,
-            markupPercent: 0,
-            isPreliminary: false,
-          );
-
-          _saveNewItem(newItem, catalogItem.id);
-        },
       ),
     );
+
+    if (!mounted || catalogItem == null) {
+      return;
+    }
+
+    // ID == 0 is the existing sentinel for manual add.
+    if (catalogItem.id == 0) {
+      _showManualAddDialog();
+      return;
+    }
+
+    final quantities = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (_) => QuantityInputDialog(
+        item: catalogItem,
+        itemType: itemType,
+        hidePrices: hidePrices,
+      ),
+    );
+
+    if (!mounted || quantities == null) {
+      return;
+    }
+
+    final newItem = EstimateItemModel(
+      id: 0,
+      stage: widget.stage.id,
+      itemType: itemType,
+      name: catalogItem.name,
+      unit: catalogItem.unit,
+      pricePerUnit: quantities['price']?.toDouble() ?? catalogItem.defaultPrice,
+      currency:
+          quantities['currency'] as String? ?? catalogItem.defaultCurrency,
+      totalQuantity: quantities['total']?.toDouble() ?? 0.0,
+      employerQuantity: quantities['employer']?.toDouble() ?? 0.0,
+      markupPercent: 0,
+      isPreliminary: false,
+    );
+
+    await _saveNewItem(newItem, catalogItem.id);
   }
 
   // --- Data Methods ---
@@ -578,7 +579,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       });
       if (!mounted) return;
       ref.invalidate(projectListProvider);
-      _refresh();
+      await _refresh();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
