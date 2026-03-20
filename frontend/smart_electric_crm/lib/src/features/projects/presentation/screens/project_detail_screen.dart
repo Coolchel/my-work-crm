@@ -15,6 +15,7 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_secti
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_side_menu.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
@@ -769,6 +770,7 @@ class _FilesTab extends ConsumerStatefulWidget {
 
 class _FilesTabState extends ConsumerState<_FilesTab> {
   Object? _scrollAttachment;
+  bool _isLimitInfoOpen = false;
 
   @override
   void initState() {
@@ -839,7 +841,7 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
                     projectId: widget.project.id.toString(),
                   ),
                   _FileCategorySection(
-                    title: "Реализация (Этапы 1-2)",
+                    title: "Реализация",
                     icon: Icons.construction_rounded,
                     color: Colors.blue,
                     category: "WORK",
@@ -868,27 +870,48 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
             },
           ),
         ),
-        Align(
-          alignment: isMobileWeb ? Alignment.centerLeft : Alignment.centerRight,
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              0,
-              16,
-              isMobileWeb ? 12 : 16,
+      ],
+    );
+    return Stack(
+      children: [
+        content,
+        if (_isLimitInfoOpen)
+          Positioned.fill(
+            child: GestureDetector(
+              key: const ValueKey('files_limit_info_dismiss_area'),
+              behavior: HitTestBehavior.translucent,
+              onTap: () => setState(() => _isLimitInfoOpen = false),
+              child: const SizedBox.expand(),
             ),
-            child: Text(
-              "Лимит загрузки: до 12 файлов на проект, до 20 МБ каждый",
-              style: TextStyle(
-                color: Colors.grey.shade500,
-                fontSize: 12,
+          ),
+        Positioned(
+          right: 16,
+          bottom: isMobileWeb ? 12 : 16,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (_isLimitInfoOpen)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {},
+                    child: _FilesLimitInfoBlock(
+                      filesCount: widget.project.files.length,
+                    ),
+                  ),
+                ),
+              _FilesLimitInfoButton(
+                isOpen: _isLimitInfoOpen,
+                onTap: () =>
+                    setState(() => _isLimitInfoOpen = !_isLimitInfoOpen),
               ),
-            ),
+            ],
           ),
         ),
       ],
     );
-    return content;
   }
 
   Future<void> _pickAndUploadFiles(
@@ -1088,8 +1111,10 @@ class _FileCard extends ConsumerStatefulWidget {
 }
 
 class _FileCardState extends ConsumerState<_FileCard> {
+  static const double _fileActionMenuWidth = 220;
+
   bool _isHovered = false;
-  bool _areTouchActionsVisible = false;
+  final GlobalKey _actionMenuAnchorKey = GlobalKey();
   final ProjectFileSaveService _fileSaveService = ProjectFileSaveService();
   final ProjectFileShareService _fileShareService = ProjectFileShareService();
 
@@ -1170,11 +1195,15 @@ class _FileCardState extends ConsumerState<_FileCard> {
     final fileUrl = ApiUrls.resolveBackendUrl(widget.file.file);
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final supportsHover = switch (defaultTargetPlatform) {
-      TargetPlatform.android || TargetPlatform.iOS => false,
-      _ => true,
+    final textStyles = context.appTextStyles;
+    final blocksLongPress = switch (defaultTargetPlatform) {
+      TargetPlatform.android || TargetPlatform.iOS => true,
+      _ => false,
     };
-    final showActions = supportsHover ? _isHovered : _areTouchActionsVisible;
+    final previewBackground = Color.alphaBlend(
+      fileAccentColor.withOpacity(0.032),
+      AppDesignTokens.surface2(context),
+    );
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -1198,18 +1227,8 @@ class _FileCardState extends ConsumerState<_FileCard> {
         ),
         clipBehavior: Clip.antiAlias,
         child: GestureDetector(
-          onLongPress: supportsHover
-              ? null
-              : () => setState(
-                    () => _areTouchActionsVisible = !_areTouchActionsVisible,
-                  ),
-          onTap: () {
-            if (!supportsHover && _areTouchActionsVisible) {
-              setState(() => _areTouchActionsVisible = false);
-              return;
-            }
-            _openFile(context, fileUrl);
-          },
+          onLongPress: blocksLongPress ? () {} : null,
+          onTap: () => _openFile(context, fileUrl),
           child: Stack(
             children: [
               Column(
@@ -1219,7 +1238,7 @@ class _FileCardState extends ConsumerState<_FileCard> {
                     child: Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: fileAccentColor.withOpacity(0.08),
+                        color: previewBackground,
                       ),
                       child: isImage
                           ? Image.network(
@@ -1235,14 +1254,17 @@ class _FileCardState extends ConsumerState<_FileCard> {
                                 width: 38,
                                 height: 38,
                                 decoration: BoxDecoration(
-                                  color: fileAccentColor.withOpacity(0.14),
+                                  color: fileAccentColor.withOpacity(0.08),
                                   borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: fileAccentColor.withOpacity(0.14),
+                                  ),
                                 ),
                                 child: Icon(
                                   isPdf
                                       ? Icons.description_rounded
                                       : Icons.insert_drive_file_rounded,
-                                  color: fileAccentColor.withOpacity(0.9),
+                                  color: fileAccentColor.withOpacity(0.78),
                                   size: 20,
                                 ),
                               ),
@@ -1261,8 +1283,8 @@ class _FileCardState extends ConsumerState<_FileCard> {
                             displayName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 10,
+                            style: textStyles.captionStrong.copyWith(
+                              fontSize: 10.5,
                               fontWeight: FontWeight.w600,
                               color: isDark
                                   ? scheme.onSurface
@@ -1275,15 +1297,18 @@ class _FileCardState extends ConsumerState<_FileCard> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 5, vertical: 2),
                           decoration: BoxDecoration(
-                            color: fileAccentColor.withOpacity(0.12),
+                            color: fileAccentColor.withOpacity(0.08),
                             borderRadius: BorderRadius.circular(5),
+                            border: Border.all(
+                              color: fileAccentColor.withOpacity(0.12),
+                            ),
                           ),
                           child: Text(
                             extensionLabel,
-                            style: TextStyle(
+                            style: textStyles.captionStrong.copyWith(
                               fontSize: 8,
                               fontWeight: FontWeight.w700,
-                              color: fileAccentColor.withOpacity(0.9),
+                              color: fileAccentColor.withOpacity(0.78),
                               letterSpacing: 0.2,
                             ),
                           ),
@@ -1293,58 +1318,12 @@ class _FileCardState extends ConsumerState<_FileCard> {
                   ),
                 ],
               ),
-              // Кнопки управления (появляются при наведении)
               Positioned(
                 top: 6,
                 right: 6,
-                child: AnimatedOpacity(
-                  opacity: showActions ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 150),
-                  child: Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface.withOpacity(
-                            AppDesignTokens.isDark(context) ? 0.82 : 0.92,
-                          ),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.black.withOpacity(0.1)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.12),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _ActionButton(
-                          icon: Icons.edit_rounded,
-                          tooltip: "Переименовать",
-                          onTap: () => _renameFile(context),
-                        ),
-                        const SizedBox(width: 4),
-                        _ActionButton(
-                          icon: Icons.download_rounded,
-                          tooltip: "Сохранить как...",
-                          onTap: () => _saveAsFile(context, fileUrl),
-                        ),
-                        const SizedBox(width: 4),
-                        _ActionButton(
-                          icon: shareActionIcon,
-                          tooltip: shareActionTooltip,
-                          onTap: () => _shareFile(context, fileUrl),
-                        ),
-                        const SizedBox(width: 4),
-                        _ActionButton(
-                          icon: Icons.close_rounded,
-                          tooltip: "Удалить",
-                          onTap: widget.onDelete,
-                        ),
-                      ],
-                    ),
-                  ),
+                child: _buildActionEntryButton(
+                  context,
+                  fileUrl,
                 ),
               ),
             ],
@@ -1352,6 +1331,147 @@ class _FileCardState extends ConsumerState<_FileCard> {
         ),
       ),
     );
+  }
+
+  Widget _buildActionEntryButton(
+    BuildContext context,
+    String fileUrl,
+  ) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final menuHoverColor = AppDesignTokens.isDark(context)
+        ? Colors.white.withOpacity(0.08)
+        : Colors.black.withOpacity(0.045);
+    return Theme(
+      data: theme.copyWith(
+        hoverColor: menuHoverColor,
+        highlightColor: menuHoverColor,
+        splashColor: menuHoverColor,
+        popupMenuTheme: theme.popupMenuTheme.copyWith(
+          color: scheme.surface,
+          surfaceTintColor: Colors.transparent,
+          mouseCursor: const WidgetStatePropertyAll<MouseCursor>(
+            SystemMouseCursors.click,
+          ),
+        ),
+      ),
+      child: Builder(
+        builder: (menuContext) {
+          return SizedBox(
+            key: _actionMenuAnchorKey,
+            child: KeyedSubtree(
+              key: ValueKey('file_action_entry_${widget.file.id}'),
+              child: _FileActionEntryButton(
+                onTap: () => _showActionMenu(menuContext, fileUrl),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  List<PopupMenuEntry<_FileCardAction>> _buildFileActionMenuItems(
+      BuildContext context) {
+    return buildPopupMenuEntriesWithDividers<_FileCardAction>([
+      const PopupMenuItem<_FileCardAction>(
+        value: _FileCardAction.rename,
+        child: _FileActionMenuLabel(
+          icon: Icons.edit_rounded,
+          title: 'Переименовать',
+        ),
+      ),
+      const PopupMenuItem<_FileCardAction>(
+        value: _FileCardAction.saveAs,
+        child: _FileActionMenuLabel(
+          icon: Icons.download_rounded,
+          title: 'Сохранить как...',
+        ),
+      ),
+      PopupMenuItem<_FileCardAction>(
+        value: _FileCardAction.share,
+        child: _FileActionMenuLabel(
+          icon: shareActionIcon,
+          title: shareActionTooltip,
+        ),
+      ),
+      const PopupMenuItem<_FileCardAction>(
+        value: _FileCardAction.delete,
+        child: _FileActionMenuLabel(
+          icon: Icons.close_rounded,
+          title: 'Удалить',
+          isDestructive: true,
+        ),
+      ),
+    ]);
+  }
+
+  Future<void> _showActionMenu(BuildContext context, String fileUrl) async {
+    final anchorContext = _actionMenuAnchorKey.currentContext;
+    final overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox?;
+    final anchor = anchorContext?.findRenderObject() as RenderBox?;
+    if (overlay == null || anchor == null) {
+      return;
+    }
+
+    final buttonOffset = anchor.localToGlobal(Offset.zero, ancestor: overlay);
+    final buttonRect = buttonOffset & anchor.size;
+    const verticalGap = 6.0;
+    const horizontalInset = 8.0;
+    final left = (buttonRect.right - _fileActionMenuWidth).clamp(
+        horizontalInset,
+        overlay.size.width - _fileActionMenuWidth - horizontalInset);
+    final top = (buttonRect.bottom + verticalGap)
+        .clamp(horizontalInset, overlay.size.height - horizontalInset);
+    final position = RelativeRect.fromLTRB(
+      left,
+      top,
+      overlay.size.width - left - _fileActionMenuWidth,
+      overlay.size.height - top,
+    );
+
+    final action = await showMenu<_FileCardAction>(
+      context: context,
+      position: position,
+      items: _buildFileActionMenuItems(context),
+      menuPadding: EdgeInsets.zero,
+      color: Theme.of(context).colorScheme.surface,
+      elevation: 6,
+      shadowColor: AppDesignTokens.cardShadow(context),
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: AppDesignTokens.softBorder(context)),
+      ),
+      constraints: const BoxConstraints.tightFor(width: _fileActionMenuWidth),
+    );
+
+    if (action == null || !context.mounted) {
+      return;
+    }
+    await _handleFileAction(context, action, fileUrl);
+  }
+
+  Future<void> _handleFileAction(
+    BuildContext context,
+    _FileCardAction action,
+    String fileUrl,
+  ) async {
+    switch (action) {
+      case _FileCardAction.rename:
+        await _renameFile(context);
+        return;
+      case _FileCardAction.saveAs:
+        await _saveAsFile(context, fileUrl);
+        return;
+      case _FileCardAction.share:
+        await _shareFile(context, fileUrl);
+        return;
+      case _FileCardAction.delete:
+        widget.onDelete();
+        return;
+    }
   }
 
   void _openFile(BuildContext context, String url) {
@@ -1475,28 +1595,34 @@ class _FileCardState extends ConsumerState<_FileCard> {
   }
 }
 
-class _ActionButton extends StatefulWidget {
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  @override
-  State<_ActionButton> createState() => _ActionButtonState();
+enum _FileCardAction {
+  rename,
+  saveAs,
+  share,
+  delete,
 }
 
-class _ActionButtonState extends State<_ActionButton> {
+class _FileActionEntryButton extends StatefulWidget {
+  const _FileActionEntryButton({
+    this.onTap,
+  });
+
+  final VoidCallback? onTap;
+
+  @override
+  State<_FileActionEntryButton> createState() => _FileActionEntryButtonState();
+}
+
+class _FileActionEntryButtonState extends State<_FileActionEntryButton> {
   bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
+
     return Tooltip(
-      message: widget.tooltip,
+      message: 'Действия с файлом',
       child: Material(
         color: Colors.transparent,
         child: MouseRegion(
@@ -1505,33 +1631,213 @@ class _ActionButtonState extends State<_ActionButton> {
           onExit: (_) => setState(() => _isHovered = false),
           child: InkWell(
             onTap: widget.onTap,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(10),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 140),
-              width: 22,
-              height: 22,
+              width: 28,
+              height: 28,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
                 color: _isHovered
-                    ? Colors.black.withOpacity(0.12)
-                    : Theme.of(context).colorScheme.surface.withOpacity(
-                          AppDesignTokens.isDark(context) ? 0.84 : 0.95,
-                        ),
+                    ? scheme.surface.withOpacity(isDark ? 0.88 : 0.92)
+                    : scheme.surface.withOpacity(isDark ? 0.72 : 0.82),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: _isHovered
-                      ? Colors.black.withOpacity(0.28)
-                      : Colors.black.withOpacity(0.12),
-                  width: 1,
+                      ? Colors.black.withOpacity(0.12)
+                      : Colors.black.withOpacity(0.06),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(_isHovered ? 0.08 : 0.04),
+                    blurRadius: _isHovered ? 6 : 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
               child: Icon(
-                widget.icon,
-                size: 13,
-                color: Theme.of(context).colorScheme.onSurface,
+                Icons.more_vert_rounded,
+                size: 17,
+                color: scheme.onSurface.withOpacity(_isHovered ? 0.76 : 0.62),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FileActionMenuLabel extends StatelessWidget {
+  const _FileActionMenuLabel({
+    required this.icon,
+    required this.title,
+    this.isDestructive = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final bool isDestructive;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = isDestructive ? scheme.error : scheme.onSurface;
+
+    return Row(
+      children: [
+        Icon(icon,
+            size: 18, color: color.withOpacity(isDestructive ? 1 : 0.78)),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            title,
+            style: context.appTextStyles.body.copyWith(
+              color: color,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FilesLimitInfoButton extends StatefulWidget {
+  const _FilesLimitInfoButton({
+    required this.isOpen,
+    required this.onTap,
+  });
+
+  final bool isOpen;
+  final VoidCallback onTap;
+
+  @override
+  State<_FilesLimitInfoButton> createState() => _FilesLimitInfoButtonState();
+}
+
+class _FilesLimitInfoButtonState extends State<_FilesLimitInfoButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = AppDesignTokens.isDark(context);
+    final borderColor = widget.isOpen
+        ? scheme.primary.withOpacity(isDark ? 0.30 : 0.22)
+        : AppDesignTokens.softBorder(context);
+
+    return Material(
+      color: Colors.transparent,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: InkWell(
+          key: const ValueKey('files_limit_info_button'),
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: widget.isOpen
+                  ? scheme.primary.withOpacity(isDark ? 0.16 : 0.10)
+                  : (_isHovered
+                      ? AppDesignTokens.surface3(context)
+                      : AppDesignTokens.surface2(context)),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: borderColor),
+              boxShadow: [
+                BoxShadow(
+                  color: AppDesignTokens.cardShadow(context),
+                  blurRadius: _isHovered || widget.isOpen ? 8 : 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                'i',
+                style: context.appTextStyles.bodyStrong.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: widget.isOpen
+                      ? scheme.primary.withOpacity(isDark ? 0.92 : 0.82)
+                      : scheme.onSurfaceVariant.withOpacity(0.82),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilesLimitInfoBlock extends StatelessWidget {
+  const _FilesLimitInfoBlock({
+    required this.filesCount,
+  });
+
+  final int filesCount;
+
+  static const int _maxFiles = 12;
+  static const int _nearLimitThreshold = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final textStyles = context.appTextStyles;
+    final isDark = theme.brightness == Brightness.dark;
+    final isCompact = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
+    final isNearLimit = filesCount >= _nearLimitThreshold;
+    final surface = AppDesignTokens.surface1(context);
+    final backgroundColor = isNearLimit
+        ? Color.alphaBlend(
+            scheme.primary.withOpacity(isDark ? 0.10 : 0.06),
+            surface,
+          )
+        : Color.alphaBlend(
+            Colors.black.withOpacity(isDark ? 0.03 : 0.02),
+            surface,
+          );
+    final borderColor = isNearLimit
+        ? scheme.primary.withOpacity(isDark ? 0.24 : 0.18)
+        : AppDesignTokens.softBorder(context);
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: isCompact ? 280 : 340),
+      child: Container(
+        key: const ValueKey('files_limit_info_block'),
+        padding: EdgeInsets.symmetric(
+          horizontal: isCompact ? 12 : 14,
+          vertical: isCompact ? 10 : 12,
+        ),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'До 12 файлов на проект',
+              style: textStyles.captionStrong.copyWith(
+                color: scheme.onSurface.withOpacity(isDark ? 0.88 : 0.78),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Сейчас ${AppNumberFormatter.integer(filesCount)} из $_maxFiles, до 20 МБ на файл',
+              style: textStyles.caption.copyWith(
+                color:
+                    scheme.onSurfaceVariant.withOpacity(isDark ? 0.88 : 0.92),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1588,12 +1894,32 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
     }
   }
 
+  String _filesCountLabel(int count) {
+    final absoluteCount = count.abs() % 100;
+    final tail = absoluteCount % 10;
+
+    if (absoluteCount >= 11 && absoluteCount <= 19) {
+      return 'файлов';
+    }
+    if (tail == 1) {
+      return 'файл';
+    }
+    if (tail >= 2 && tail <= 4) {
+      return 'файла';
+    }
+    return 'файлов';
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isCompactHeader = MediaQuery.sizeOf(context).width < 360 ||
-        DesktopWebFrame.isMobileWeb(context, maxWidth: 440);
+    final textStyles = context.appTextStyles;
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final isNarrowHeader = viewportWidth < 460 ||
+        DesktopWebFrame.isMobileWeb(context, maxWidth: 500);
+    final useCompactCountPill = viewportWidth < 360 ||
+        DesktopWebFrame.isMobileWeb(context, maxWidth: 390);
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -1635,92 +1961,90 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
                         19,
-                        isCompactHeader ? 12 : 14,
+                        isNarrowHeader ? 12 : 14,
                         14,
-                        isCompactHeader ? 12 : 14,
+                        isNarrowHeader ? 12 : 14,
                       ),
-                      child: Column(
+                      child: Row(
+                        crossAxisAlignment: isNarrowHeader
+                            ? CrossAxisAlignment.center
+                            : CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: widget.color.withOpacity(0.08),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(widget.icon,
-                                    color: widget.color, size: 18),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      widget.title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        color: isDark
-                                            ? scheme.onSurface
-                                            : Colors.grey.shade900,
-                                        letterSpacing: -0.2,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      _isExpanded
-                                          ? 'Нажмите, чтобы свернуть'
-                                          : 'Нажмите, чтобы развернуть',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: isDark
-                                            ? scheme.onSurfaceVariant
-                                            : Colors.grey.shade500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (!isCompactHeader) ...[
-                                _buildFilesCountPill(widget.files.length),
-                                const SizedBox(width: 8),
-                                _buildHeaderActionButton(
-                                  icon: Icons.add_rounded,
-                                  tooltip: 'Загрузить файлы',
-                                  onTap: widget.onUpload,
-                                  isPrimary: true,
-                                ),
-                                const SizedBox(width: 6),
-                              ],
-                              _buildHeaderExpandToggle(
-                                tooltip:
-                                    _isExpanded ? 'Свернуть' : 'Развернуть',
-                                onTap: () =>
-                                    setState(() => _isExpanded = !_isExpanded),
-                              ),
-                            ],
+                          Container(
+                            padding: EdgeInsets.all(isNarrowHeader ? 7 : 8),
+                            decoration: BoxDecoration(
+                              color: widget.color.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              widget.icon,
+                              color: widget.color,
+                              size: isNarrowHeader ? 17 : 18,
+                            ),
                           ),
-                          if (isCompactHeader) ...[
-                            const SizedBox(height: 10),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: isNarrowHeader
+                                  ? MainAxisAlignment.center
+                                  : MainAxisAlignment.start,
                               children: [
-                                _buildFilesCountPill(widget.files.length),
-                                _buildHeaderActionButton(
-                                  icon: Icons.add_rounded,
-                                  tooltip: 'Загрузить файлы',
-                                  onTap: widget.onUpload,
-                                  isPrimary: true,
+                                Text(
+                                  widget.title,
+                                  key: ValueKey(
+                                      'file_group_title_${widget.category}'),
+                                  maxLines: isNarrowHeader ? 2 : 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textStyles.cardTitle.copyWith(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark
+                                        ? scheme.onSurface
+                                        : Colors.grey.shade900,
+                                    letterSpacing: -0.2,
+                                  ),
                                 ),
+                                if (!isNarrowHeader) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _isExpanded
+                                        ? 'Нажмите, чтобы свернуть'
+                                        : 'Нажмите, чтобы развернуть',
+                                    style: textStyles.caption.copyWith(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark
+                                          ? scheme.onSurfaceVariant
+                                          : Colors.grey.shade500,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
-                          ],
+                          ),
+                          const SizedBox(width: 8),
+                          _buildFilesCountPill(
+                            widget.files.length,
+                            compact: useCompactCountPill,
+                          ),
+                          const SizedBox(width: 8),
+                          _buildHeaderActionButton(
+                            key: ValueKey(
+                                'file_group_upload_${widget.category}'),
+                            icon: Icons.add_rounded,
+                            tooltip: 'Загрузить файлы',
+                            onTap: widget.onUpload,
+                            isPrimary: true,
+                            compact: isNarrowHeader,
+                          ),
+                          const SizedBox(width: 6),
+                          _buildHeaderExpandToggle(
+                            compact: isNarrowHeader,
+                            tooltip: _isExpanded ? 'Свернуть' : 'Развернуть',
+                            onTap: () =>
+                                setState(() => _isExpanded = !_isExpanded),
+                          ),
                         ],
                       ),
                     ),
@@ -1731,17 +2055,17 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
                         12,
                         0,
                         12,
-                        isCompactHeader ? 12 : 16,
+                        isNarrowHeader ? 12 : 16,
                       ),
                       child: widget.files.isEmpty
-                          ? const FriendlyEmptyState(
+                          ? FriendlyEmptyState(
                               icon: Icons.folder_open_rounded,
                               title: 'Нет загруженных файлов',
                               subtitle:
                                   'Загрузите файлы этого типа, чтобы они появились в списке.',
-                              accentColor: Colors.blueGrey,
+                              accentColor: widget.color,
                               iconSize: 66,
-                              padding: EdgeInsets.symmetric(vertical: 18),
+                              padding: const EdgeInsets.symmetric(vertical: 18),
                             )
                           : LayoutBuilder(
                               builder: (context, constraints) {
@@ -1792,6 +2116,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
   }
 
   Widget _buildHeaderExpandToggle({
+    bool compact = false,
     required String tooltip,
     required VoidCallback onTap,
   }) {
@@ -1813,8 +2138,8 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
             highlightColor: Colors.transparent,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 140),
-              width: 24,
-              height: 24,
+              width: compact ? 22 : 24,
+              height: compact ? 22 : 24,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: _isExpandToggleHovered
@@ -1824,7 +2149,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
               ),
               child: Icon(
                 _isExpanded ? Icons.expand_less : Icons.expand_more,
-                size: 20,
+                size: compact ? 18 : 20,
                 color: Colors.grey.shade400,
               ),
             ),
@@ -1835,11 +2160,15 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
   }
 
   Widget _buildHeaderActionButton({
+    Key? key,
     required IconData icon,
     required String tooltip,
     required VoidCallback onTap,
     bool isPrimary = false,
+    bool compact = false,
   }) {
+    final size = compact ? 32.0 : 34.0;
+
     return Tooltip(
       message: tooltip,
       preferBelow: false,
@@ -1851,8 +2180,9 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
           mouseCursor: SystemMouseCursors.click,
           borderRadius: BorderRadius.circular(8),
           child: Ink(
-            width: 34,
-            height: 34,
+            key: key,
+            width: size,
+            height: size,
             decoration: BoxDecoration(
               color: isPrimary
                   ? widget.color.withOpacity(0.16)
@@ -1866,7 +2196,7 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
             ),
             child: Icon(
               icon,
-              size: 20,
+              size: compact ? 18 : 20,
               color: isPrimary ? widget.color : widget.color.withOpacity(0.9),
             ),
           ),
@@ -1875,41 +2205,52 @@ class _FileCategorySectionState extends State<_FileCategorySection> {
     );
   }
 
-  Widget _buildFilesCountPill(int count) {
+  Widget _buildFilesCountPill(
+    int count, {
+    bool compact = false,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
+    final iconColor = widget.color.withOpacity(0.88);
+    final countLabel =
+        '${AppNumberFormatter.integer(count)} ${_filesCountLabel(count)}';
+
     return Container(
+      key: ValueKey('file_group_count_${widget.category}'),
       height: 34,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 10),
       decoration: BoxDecoration(
-        color: widget.color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: widget.color.withOpacity(0.16)),
+        color: AppDesignTokens.surface2(context),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppDesignTokens.softBorder(context)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 18,
-            height: 18,
-            decoration: BoxDecoration(
-              color: widget.color.withOpacity(0.16),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: widget.color.withOpacity(0.34)),
-            ),
-            child: Icon(
-              Icons.layers_outlined,
-              size: 12,
-              color: widget.color,
-            ),
+          Icon(
+            Icons.folder_copy_outlined,
+            size: compact ? 14 : 15,
+            color: iconColor,
           ),
           const SizedBox(width: 6),
-          Text(
-            AppNumberFormatter.integer(count),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: widget.color,
+          if (compact)
+            Text(
+              AppNumberFormatter.integer(count),
+              style: textStyles.captionStrong.copyWith(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurface.withOpacity(0.78),
+              ),
+            )
+          else
+            Text(
+              countLabel,
+              style: textStyles.captionStrong.copyWith(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: scheme.onSurface.withOpacity(0.78),
+              ),
             ),
-          ),
         ],
       ),
     );
