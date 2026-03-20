@@ -11,7 +11,6 @@ import 'package:smart_electric_crm/src/features/statistics/data/repositories/sta
 import 'package:smart_electric_crm/src/features/statistics/presentation/widgets/work_dynamics_chart.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
-import 'package:smart_electric_crm/src/shared/presentation/widgets/help_tooltip_icon.dart';
 
 class StatisticsScreen extends ConsumerStatefulWidget {
   final VoidCallback? onBackPressed;
@@ -128,11 +127,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     final periodSegmentWidth = periodSwitcherWidth / 3;
     final headerStripeColor =
         isDark ? scheme.primary.withOpacity(0.76) : statisticsAccent;
-    const workDynamicsTooltip =
-        '\u0414\u0438\u043d\u0430\u043c\u0438\u043a\u0430 \u0440\u0430\u0431\u043e\u0442.\n'
-        '\u041f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0435\u0442 \u0437\u0430\u0440\u0430\u0431\u043e\u0442\u043e\u043a\n'
-        '\u043f\u043e \u0441\u0434\u0435\u043b\u0430\u043d\u043d\u044b\u043c \u043e\u0431\u044a\u0435\u043a\u0442\u0430\u043c.\n'
-        '\u041d\u0435 \u0441\u0432\u044f\u0437\u0430\u043d\u043e \u0441 \u043e\u043f\u043b\u0430\u0442\u043e\u0439.';
     final periodSegments = <ButtonSegment<String>>[
       ButtonSegment<String>(
         value: 'month',
@@ -298,8 +292,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      const SizedBox(height: 24),
-
                       _buildHeader(
                         context,
                         'Финансы за ${_getPeriodTitle(currentPeriod)}',
@@ -401,7 +393,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                               stats: stats,
                               currentPeriod: currentPeriod,
                               isMobile: isMobile,
-                              workDynamicsTooltip: workDynamicsTooltip,
                               currencyLabel: "USD",
                               currencySymbol: "\$",
                               isUsd: true,
@@ -411,7 +402,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                               stats: stats,
                               currentPeriod: currentPeriod,
                               isMobile: isMobile,
-                              workDynamicsTooltip: workDynamicsTooltip,
                               currencyLabel: "BYN",
                               currencySymbol: '\u0440',
                               isUsd: false,
@@ -434,11 +424,12 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     required StatisticsModel stats,
     required String currentPeriod,
     required bool isMobile,
-    required String workDynamicsTooltip,
     required String currencyLabel,
     required String currencySymbol,
     required bool isUsd,
   }) {
+    final accentColor = isUsd ? Colors.green : Colors.indigo;
+
     return _HoverStatsCard(
       borderRadius: 16,
       child: LayoutBuilder(
@@ -453,37 +444,87 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
 
           return SizedBox(
             height: isMobile ? 300 : 280,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: contentWidth,
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                      child: WorkDynamicsChart(
-                        data: stats.workDynamics,
-                        isMonthly: currentPeriod != 'month',
-                        currencyLabel: currencyLabel,
-                        currencySymbol: currencySymbol,
-                        isUsd: isUsd,
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: HelpTooltipIcon(
-                        message: workDynamicsTooltip,
-                        size: 16,
-                      ),
-                    ),
-                  ],
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                  child: _buildWorkDynamicsCardHeader(
+                    context,
+                    title: '$currencyLabel $currencySymbol',
+                    subtitle: 'Заработок по сделанным объектам',
+                    accentColor: accentColor,
+                  ),
                 ),
-              ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: SizedBox(
+                      width: contentWidth,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+                        child: WorkDynamicsChart(
+                          data: stats.workDynamics,
+                          isMonthly: currentPeriod != 'month',
+                          currencyLabel: currencyLabel,
+                          currencySymbol: currencySymbol,
+                          isUsd: isUsd,
+                          showLegend: false,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildWorkDynamicsCardHeader(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required Color accentColor,
+  }) {
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: accentColor,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: textStyles.cardTitle.copyWith(
+                  color: scheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: textStyles.caption.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -750,6 +791,10 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                 (constraints.maxWidth * (isCompact ? 0.56 : 0.42))
                     .clamp(150.0, constraints.maxWidth - 24)
                     .toDouble();
+            final compactLabelMaxWidth =
+                (legendMaxWidth - 14).clamp(96.0, legendMaxWidth).toDouble();
+            final regularLabelMaxWidth =
+                (legendMaxWidth - 54).clamp(78.0, legendMaxWidth).toDouble();
             final legendWidget = Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -783,33 +828,67 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Align(
                     alignment: Alignment.centerRight,
-                    child: IntrinsicWidth(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 3),
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                              ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: legendMaxWidth),
+                      child: isCompact
+                          ? Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 3),
+                                      child: Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: color,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxWidth: compactLabelMaxWidth,
+                                      ),
+                                      child: nameText,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                amountText,
+                              ],
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 3),
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: color,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: regularLabelMaxWidth,
+                                  ),
+                                  child: nameText,
+                                ),
+                                const SizedBox(width: 8),
+                                amountText,
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: 6),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: legendMaxWidth - 54,
-                            ),
-                            child: nameText,
-                          ),
-                          const SizedBox(width: 8),
-                          amountText,
-                        ],
-                      ),
                     ),
                   ),
                 );

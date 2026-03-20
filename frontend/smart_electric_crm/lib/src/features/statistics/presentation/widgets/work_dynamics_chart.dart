@@ -11,6 +11,7 @@ class WorkDynamicsChart extends StatefulWidget {
   final String currencyLabel; // e.g., "USD" or "BYN"
   final String currencySymbol; // e.g., "$" or "р"
   final bool isUsd; // To determine which field to use and which color
+  final bool showLegend;
 
   const WorkDynamicsChart({
     super.key,
@@ -19,6 +20,7 @@ class WorkDynamicsChart extends StatefulWidget {
     this.currencyLabel = "USD",
     this.currencySymbol = "\$",
     this.isUsd = true,
+    this.showLegend = true,
   });
 
   @override
@@ -69,19 +71,21 @@ class _WorkDynamicsChartState extends State<WorkDynamicsChart> {
 
     return Column(
       children: [
-        Wrap(
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 8,
-          runSpacing: 6,
-          children: [
-            _buildLegendItem(
-              '${widget.currencyLabel} (${widget.currencySymbol})',
-              mainColor,
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
+        if (widget.showLegend) ...[
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              _buildLegendItem(
+                '${widget.currencyLabel} (${widget.currencySymbol})',
+                mainColor,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+        ],
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(
