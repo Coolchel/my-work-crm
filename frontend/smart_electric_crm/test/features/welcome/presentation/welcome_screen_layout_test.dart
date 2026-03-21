@@ -37,6 +37,25 @@ void main() {
   );
 
   testWidgets(
+    'mobile welcome applies bottom scroll padding for content ending',
+    (tester) async {
+      await _pumpWelcomeScreen(
+        tester,
+        width: 390,
+        height: 844,
+      );
+
+      final mainScrollView = tester
+          .widgetList<SingleChildScrollView>(find.byType(SingleChildScrollView))
+          .firstWhere((widget) => widget.controller != null);
+      final padding = mainScrollView.padding as EdgeInsets;
+
+      expect(padding.bottom, greaterThan(0));
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
+
+  testWidgets(
     'windows welcome search shows results without render overflow',
     (tester) async {
       final baseProject = _project(

@@ -354,6 +354,13 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
               const contentMaxWidth = 1380.0;
               final scrollbarEndInset =
                   DesktopWebFrame.scrollableContentEndInset(context);
+              final useOverlayPrimaryAction =
+                  DesktopWebFrame.usesOverlayPrimaryAction(context);
+              final bottomPadding =
+                  DesktopWebFrame.scrollableContentBottomPadding(
+                context,
+                hasOverlayAction: useOverlayPrimaryAction,
+              );
               final horizontalPadding =
                   DesktopWebFrame.centeredContentHorizontalPadding(
                 context,
@@ -369,7 +376,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                     horizontalPadding,
                     16,
                     horizontalPadding + scrollbarEndInset,
-                    120,
+                    bottomPadding,
                   ),
                   itemCount: filtered.length,
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -388,7 +395,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                   horizontalPadding,
                   16,
                   horizontalPadding + scrollbarEndInset,
-                  120,
+                  bottomPadding,
                 ),
                 itemCount: filtered.length,
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -439,6 +446,12 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
               : constraints.maxWidth;
           final scrollbarEndInset =
               DesktopWebFrame.scrollableContentEndInset(context);
+          final useOverlayPrimaryAction =
+              DesktopWebFrame.usesOverlayPrimaryAction(context);
+          final bottomPadding = DesktopWebFrame.scrollableContentBottomPadding(
+            context,
+            hasOverlayAction: useOverlayPrimaryAction,
+          );
           final horizontalPadding =
               DesktopWebFrame.centeredContentHorizontalPadding(
             context,
@@ -460,7 +473,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                       horizontalPadding,
                       16,
                       horizontalPadding + scrollbarEndInset,
-                      120,
+                      bottomPadding,
                     ),
                     children: const [
                       FriendlyEmptyState(
@@ -478,7 +491,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                     horizontalPadding,
                     16,
                     horizontalPadding + scrollbarEndInset,
-                    120,
+                    bottomPadding,
                   ),
                   physics: const AlwaysScrollableScrollPhysics(),
                   itemCount: projects.length,
@@ -501,7 +514,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                   horizontalPadding,
                   16,
                   horizontalPadding + scrollbarEndInset,
-                  120,
+                  bottomPadding,
                 ),
                 children: [
                   FriendlyEmptyState(
@@ -535,9 +548,17 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
         widget.onBackPressed ?? () => Navigator.of(context).maybePop();
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
+    final useOverlayPrimaryAction =
+        DesktopWebFrame.usesOverlayPrimaryAction(context);
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
+    void openAddProjectDialog() {
+      showDialog(
+        context: context,
+        builder: (context) => const AddProjectDialog(),
+      );
+    }
 
     return ListenableBuilder(
       listenable: _appBarCollapseController,
@@ -557,6 +578,13 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             gradientColors: AppDesignTokens.subtleSectionGradient,
             bottomGap: isMobileWeb ? 16 : 30,
             actions: [
+              if (!useOverlayPrimaryAction)
+                IconButton(
+                  key: const ValueKey('project_list_add_action'),
+                  icon: const Icon(Icons.add),
+                  tooltip: 'Добавить объект',
+                  onPressed: openAddProjectDialog,
+                ),
               IconButton(
                 icon: const Icon(Icons.search),
                 tooltip: 'Поиск',
@@ -613,22 +641,19 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
               );
             },
           ),
-          floatingActionButton: Tooltip(
-            message: 'Добавить объект',
-            preferBelow: false,
-            verticalOffset: 32,
-            child: FloatingActionButton(
-              heroTag: 'add_project',
-              elevation: 4,
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => const AddProjectDialog(),
-                );
-              },
-              child: const Icon(Icons.add),
-            ),
-          ),
+          floatingActionButton: useOverlayPrimaryAction
+              ? Tooltip(
+                  message: 'Добавить объект',
+                  preferBelow: false,
+                  verticalOffset: 32,
+                  child: FloatingActionButton(
+                    heroTag: 'add_project',
+                    elevation: 4,
+                    onPressed: openAddProjectDialog,
+                    child: const Icon(Icons.add),
+                  ),
+                )
+              : null,
         );
       },
       child: Column(

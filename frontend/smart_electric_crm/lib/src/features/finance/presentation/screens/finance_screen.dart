@@ -388,6 +388,8 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
     final scrollableEndInset = DesktopWebFrame.scrollableContentEndInset(
       context,
     );
+    final contentBottomPadding =
+        DesktopWebFrame.scrollableContentBottomPadding(context);
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -416,6 +418,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
             padding: EdgeInsets.only(
               right: scrollableEndInset,
               top: isDesktopWeb ? 24 : 0,
+              bottom: contentBottomPadding,
             ),
             child: isDesktopWeb
                 ? Row(
@@ -450,7 +453,6 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                   ),
                                 ],
                               ),
-                            const SizedBox(height: 80),
                           ],
                         ),
                       ),
@@ -502,7 +504,6 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                       _buildTotalSection(data.totalUsd, data.totalByn),
                       const SizedBox(height: 16),
                       _buildGlobalSettingsSection(),
-                      const SizedBox(height: 80),
                     ],
                   ),
           ),

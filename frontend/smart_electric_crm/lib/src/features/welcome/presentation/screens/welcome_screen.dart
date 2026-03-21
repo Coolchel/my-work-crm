@@ -429,6 +429,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final desktopScrollEndInset = DesktopWebFrame.scrollableContentEndInset(
       context,
     );
+    final contentBottomPadding =
+        DesktopWebFrame.scrollableContentBottomPadding(context);
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -513,7 +515,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                           padding: EdgeInsets.only(
                                             top: compensatedSearchGap,
                                             right: desktopScrollEndInset,
-                                            bottom: 100,
+                                            bottom: contentBottomPadding,
                                           ),
                                           child: Column(
                                             children: [
@@ -615,6 +617,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           context,
                           child: SingleChildScrollView(
                             controller: _scrollController,
+                            padding: EdgeInsets.only(
+                              bottom: contentBottomPadding,
+                            ),
                             child: Column(
                               children: [
                                 WelcomeHeader(
@@ -727,7 +732,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: isMobileWeb ? 76 : 100),
                               ],
                             ),
                           ),

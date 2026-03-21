@@ -108,6 +108,9 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     final scrollableEndInset = DesktopWebFrame.scrollableContentEndInset(
       context,
     );
+    final bottomPadding = DesktopWebFrame.scrollableContentBottomPadding(
+      context,
+    );
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -191,7 +194,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                         horizontalContentPadding,
                         statisticsSwitcherSpacing.contentInset,
                         horizontalContentPadding + scrollableEndInset,
-                        16,
+                        bottomPadding,
                       ),
                       child: DesktopWebPageFrame(
                         maxWidth: _desktopContentMaxWidth,

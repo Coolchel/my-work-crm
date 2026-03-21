@@ -243,6 +243,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   @override
   Widget build(BuildContext context) {
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
+    final useOverlayPrimaryAction =
+        DesktopWebFrame.usesOverlayPrimaryAction(context);
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -404,15 +406,27 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
         message: 'Добавить позицию',
         preferBelow: false,
         verticalOffset: 32,
-        child: FloatingActionButton(
-          heroTag: 'add_estimate_item',
-          onPressed: _showSearchDialog,
-          backgroundColor:
-              _currentIndex == 0 ? Colors.green.shade500 : Colors.blue.shade500,
-          foregroundColor: Theme.of(context).colorScheme.surface,
-          // tooltip: 'Добавить позицию', // Removed
-          child: const Icon(Icons.add),
-        ),
+        child: useOverlayPrimaryAction
+            ? FloatingActionButton(
+                heroTag: 'add_estimate_item',
+                onPressed: _showSearchDialog,
+                backgroundColor: _currentIndex == 0
+                    ? Colors.green.shade500
+                    : Colors.blue.shade500,
+                foregroundColor: Theme.of(context).colorScheme.surface,
+                child: const Icon(Icons.add),
+              )
+            : FloatingActionButton.small(
+                heroTag: 'add_estimate_item',
+                onPressed: _showSearchDialog,
+                backgroundColor: (_currentIndex == 0
+                        ? Colors.green.shade500
+                        : Colors.blue.shade500)
+                    .withOpacity(0.88),
+                foregroundColor: Theme.of(context).colorScheme.surface,
+                elevation: 3,
+                child: const Icon(Icons.add),
+              ),
       ),
     );
   }

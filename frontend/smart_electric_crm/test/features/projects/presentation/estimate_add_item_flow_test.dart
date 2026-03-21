@@ -10,6 +10,7 @@ import 'package:smart_electric_crm/src/features/projects/data/models/stage_model
 import 'package:smart_electric_crm/src/features/projects/data/repositories/project_repository.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/screens/estimate_screen.dart';
+import 'package:smart_electric_crm/src/core/theme/app_theme.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +40,8 @@ void main() {
           stage: stage,
           fakeProjectRepository: fakeProjectRepository,
           fakeCatalogRepository: fakeCatalogRepository,
+          width: 600,
+          platform: TargetPlatform.android,
         );
 
         await tester.tap(find.byType(FloatingActionButton));
@@ -81,6 +84,76 @@ void main() {
         expect(fakeProjectRepository.addedPayloads.single['catalog_item'], 101);
         expect(find.text('Кабель ВВГнг'), findsOneWidget);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
+
+    testWidgets(
+      'uses desktop floating add action on Windows',
+      (tester) async {
+        final stage = _buildStage();
+        final fakeProjectRepository = _FakeProjectRepository(stage);
+        final fakeCatalogRepository = _FakeCatalogRepository(
+          [
+            CatalogItem(
+              id: 101,
+              name: 'Кабель ВВГнг',
+              category: 1,
+              unit: 'м',
+              defaultPrice: 12,
+              defaultCurrency: 'USD',
+              itemType: 'work',
+            ),
+          ],
+        );
+
+        await _pumpEstimateScreen(
+          tester,
+          stage: stage,
+          fakeProjectRepository: fakeProjectRepository,
+          fakeCatalogRepository: fakeCatalogRepository,
+          width: 1280,
+          platform: TargetPlatform.windows,
+        );
+
+        expect(find.byType(FloatingActionButton), findsOneWidget);
+
+        await tester.tap(find.byType(FloatingActionButton));
+        await tester.pumpAndSettle();
+
+        final searchField = find.descendant(
+          of: find.byType(Dialog),
+          matching: find.byType(TextField),
+        );
+        await tester.enterText(searchField, 'Кабель');
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Кабель ВВГнг'));
+        await tester.pumpAndSettle();
+
+        final quantityDialog = find.byType(Dialog);
+        final quantityField = find
+            .descendant(
+              of: quantityDialog,
+              matching: find.byType(TextField),
+            )
+            .first;
+        await tester.enterText(quantityField, '2');
+        await tester.pump();
+
+        await tester.tap(
+          find.descendant(
+            of: quantityDialog,
+            matching: find.byType(FilledButton),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(EstimateScreen), findsOneWidget);
+        expect(fakeProjectRepository.addedPayloads, hasLength(1));
+        expect(fakeProjectRepository.addedPayloads.single['catalog_item'], 101);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
 
     testWidgets(
@@ -94,6 +167,8 @@ void main() {
           stage: stage,
           fakeProjectRepository: fakeProjectRepository,
           fakeCatalogRepository: _FakeCatalogRepository(const []),
+          width: 600,
+          platform: TargetPlatform.android,
         );
 
         await tester.tap(find.byType(FloatingActionButton));
@@ -130,6 +205,7 @@ void main() {
             'Ручная работа');
         expect(find.text('Ручная работа'), findsOneWidget);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
     );
   });
 }
@@ -139,7 +215,16 @@ Future<void> _pumpEstimateScreen(
   required StageModel stage,
   required _FakeProjectRepository fakeProjectRepository,
   required _FakeCatalogRepository fakeCatalogRepository,
+  required double width,
+  required TargetPlatform platform,
 }) async {
+  tester.view.devicePixelRatio = 1;
+  tester.view.physicalSize = Size(width, 900);
+  addTearDown(() {
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -148,6 +233,7 @@ Future<void> _pumpEstimateScreen(
         projectListProvider.overrideWith((ref) async => const []),
       ],
       child: MaterialApp(
+        theme: AppTheme.light().copyWith(platform: platform),
         routes: {
           '/': (_) => const Scaffold(body: Text('objects screen')),
           '/estimate': (_) => Scaffold(

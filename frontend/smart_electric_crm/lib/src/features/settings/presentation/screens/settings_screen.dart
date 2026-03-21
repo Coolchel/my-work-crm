@@ -89,6 +89,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final scrollableEndInset = DesktopWebFrame.scrollableContentEndInset(
       context,
     );
+    final bottomPadding = DesktopWebFrame.scrollableContentBottomPadding(
+      context,
+    );
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
@@ -157,7 +160,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           horizontalContentPadding,
           isDesktopWeb ? 24 : 16,
           horizontalContentPadding + scrollableEndInset,
-          16,
+          bottomPadding,
         ),
         children: [
           _buildSectionHeader(context, 'Внешний вид'),

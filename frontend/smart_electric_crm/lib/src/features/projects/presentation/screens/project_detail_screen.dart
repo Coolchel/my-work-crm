@@ -392,31 +392,39 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
   Widget build(BuildContext context) {
     final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
+    final useOverlayPrimaryAction =
+        DesktopWebFrame.usesOverlayPrimaryAction(context);
 
     return Scaffold(
-      floatingActionButton: Tooltip(
-        message: 'Добавить этап',
-        preferBelow: false,
-        verticalOffset: 32,
-        child: isMobileWeb
-            ? FloatingActionButton.small(
-                onPressed: () => _showAddStageDialog(context, ref),
-                backgroundColor: Colors.indigo,
-                foregroundColor: Theme.of(context).colorScheme.surface,
-                child: const Icon(Icons.add),
-              )
-            : FloatingActionButton(
-                onPressed: () => _showAddStageDialog(context, ref),
-                backgroundColor: Colors.indigo,
-                foregroundColor: Theme.of(context).colorScheme.surface,
-                child: const Icon(Icons.add),
-              ),
-      ),
+      floatingActionButton: useOverlayPrimaryAction
+          ? Tooltip(
+              message: 'Добавить этап',
+              preferBelow: false,
+              verticalOffset: 32,
+              child: isMobileWeb
+                  ? FloatingActionButton.small(
+                      onPressed: () => _showAddStageDialog(context, ref),
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Theme.of(context).colorScheme.surface,
+                      child: const Icon(Icons.add),
+                    )
+                  : FloatingActionButton(
+                      onPressed: () => _showAddStageDialog(context, ref),
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Theme.of(context).colorScheme.surface,
+                      child: const Icon(Icons.add),
+                    ),
+            )
+          : null,
       body: LayoutBuilder(
         builder: (context, constraints) {
           const contentMaxWidth = 1380.0;
           final scrollbarEndInset =
               DesktopWebFrame.scrollableContentEndInset(context);
+          final bottomPadding = DesktopWebFrame.scrollableContentBottomPadding(
+            context,
+            hasOverlayAction: useOverlayPrimaryAction,
+          );
           final horizontalPadding =
               DesktopWebFrame.centeredContentHorizontalPadding(
             context,
@@ -430,14 +438,16 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
               horizontalPadding,
               widget.topContentInset,
               horizontalPadding + scrollbarEndInset,
-              isMobileWeb ? 12 : 16,
+              bottomPadding,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildProjectOverviewCard(isMobileWeb: isMobileWeb),
+                _buildProjectOverviewCard(
+                  isMobileWeb: isMobileWeb,
+                  showInlineStageAction: !useOverlayPrimaryAction,
+                ),
                 SizedBox(height: isMobileWeb ? 20 : 28),
-
                 if (widget.project.stages.isEmpty)
                   const FriendlyEmptyState(
                     icon: Icons.layers_clear_rounded,
@@ -447,7 +457,6 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                     accentColor: Colors.indigo,
                     padding: EdgeInsets.symmetric(vertical: 8),
                   ),
-
                 if (isDesktopWeb && widget.project.stages.isNotEmpty)
                   LayoutBuilder(
                     builder: (context, constraints) {
@@ -500,8 +509,6 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                       onDelete: () => _deleteStage(context, ref, stage),
                     );
                   }),
-
-                SizedBox(height: isMobileWeb ? 64 : 80), // Space for FAB
               ],
             ),
           );
@@ -535,6 +542,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
 
   Widget _buildProjectOverviewCard({
     required bool isMobileWeb,
+    required bool showInlineStageAction,
   }) {
     final scheme = Theme.of(context).colorScheme;
     final textStyles = context.appTextStyles;
@@ -670,11 +678,117 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                   color: Colors.teal.shade700,
                   selectable: false,
                 ),
+                if (showInlineStageAction) ...[
+                  SizedBox(height: isMobileWeb ? 12 : 16),
+                  _buildStageInfoRow(
+                    textStyles: textStyles,
+                    scheme: scheme,
+                  ),
+                ],
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStageInfoRow({
+    required AppTextStyles textStyles,
+    required ColorScheme scheme,
+  }) {
+    final stageCount = widget.project.stages.length;
+    final stageCountLabel =
+        stageCount == 0 ? 'Этапов пока нет' : '$stageCount этапов';
+
+    final labelStyle = textStyles.bodyStrong.copyWith(
+      fontSize: 12,
+      color: scheme.onSurface,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0,
+    );
+    final valueStyle = textStyles.body.copyWith(
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      color: scheme.onSurface,
+    );
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.indigo.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: const Icon(
+            Icons.layers_rounded,
+            color: Colors.indigo,
+            size: 18,
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Этапы',
+                style: labelStyle,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                stageCountLabel,
+                style: valueStyle,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            key: const ValueKey('project_detail_add_stage_action'),
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => _showAddStageDialog(context, ref),
+            child: Ink(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.indigo.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.indigo.withOpacity(0.16),
+                ),
+              ),
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '+',
+                      style: textStyles.navLabel.copyWith(
+                        color: scheme.primary,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        height: 1,
+                      ),
+                    ),
+                    const TextSpan(text: ' '),
+                    TextSpan(
+                      text: 'Этап',
+                      style: textStyles.navLabel.copyWith(
+                        color: scheme.primary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -739,6 +853,8 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
             builder: (context, constraints) {
               final scrollbarEndInset =
                   DesktopWebFrame.scrollableContentEndInset(context);
+              final bottomPadding =
+                  DesktopWebFrame.scrollableContentBottomPadding(context);
               final horizontalPadding =
                   DesktopWebFrame.centeredContentHorizontalPadding(
                 context,
@@ -752,7 +868,7 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
                   horizontalPadding,
                   widget.topContentInset,
                   horizontalPadding + scrollbarEndInset,
-                  isMobileWeb ? 12 : 16,
+                  bottomPadding,
                 ),
                 children: [
                   _FileCategorySection(
@@ -792,7 +908,6 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
                     onUpload: () => _pickAndUploadFiles(context, ref, "FINISH"),
                     projectId: widget.project.id.toString(),
                   ),
-                  const SizedBox(height: 8),
                 ],
               );
             },

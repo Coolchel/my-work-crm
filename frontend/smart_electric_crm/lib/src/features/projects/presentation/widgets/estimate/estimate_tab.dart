@@ -52,6 +52,9 @@ class EstimateTab extends ConsumerStatefulWidget {
   final bool isTemplatesLoading;
   final VoidCallback? onSaveAsTemplate;
   final bool hideTopActions;
+  final String? primaryActionLabel;
+  final String? primaryActionDescription;
+  final VoidCallback? onPrimaryAction;
 
   const EstimateTab({
     super.key,
@@ -78,6 +81,9 @@ class EstimateTab extends ConsumerStatefulWidget {
     this.isTemplatesLoading = false,
     this.onSaveAsTemplate,
     this.hideTopActions = false,
+    this.primaryActionLabel,
+    this.primaryActionDescription,
+    this.onPrimaryAction,
   });
 
   @override
@@ -618,6 +624,87 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
     );
   }
 
+  Widget _buildPrimaryActionCard({
+    required double horizontalPadding,
+    required double horizontalEndPadding,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
+    final actionLabel = widget.primaryActionLabel ?? 'Добавить позицию';
+    final actionDescription = widget.primaryActionDescription ??
+        'Новая позиция будет добавлена в текущий раздел сметы.';
+
+    return Container(
+      margin: EdgeInsetsDirectional.fromSTEB(
+        horizontalPadding,
+        0,
+        horizontalEndPadding,
+        12,
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: AppDesignTokens.surface2(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppDesignTokens.softBorder(context),
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final actionButton = FilledButton.icon(
+            key: ValueKey('estimate_inline_add_action_${widget.title}'),
+            onPressed: widget.onPrimaryAction,
+            icon: const Icon(Icons.add),
+            label: Text(actionLabel),
+            style: FilledButton.styleFrom(
+              backgroundColor: _primaryColor,
+              foregroundColor: scheme.surface,
+            ),
+          );
+
+          final content = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.title,
+                style: textStyles.sectionTitle.copyWith(
+                  color: scheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                actionDescription,
+                style: textStyles.secondaryBody.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          );
+
+          if (constraints.maxWidth < 560) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                content,
+                const SizedBox(height: 12),
+                actionButton,
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: content),
+              const SizedBox(width: 16),
+              actionButton,
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildSectionHeader(
     String title, {
     required double horizontalPadding,
@@ -716,6 +803,12 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
         builder: (context, constraints) {
           final scrollbarEndInset =
               DesktopWebFrame.scrollableContentEndInset(context);
+          final useOverlayPrimaryAction =
+              DesktopWebFrame.usesOverlayPrimaryAction(context);
+          final bottomPadding = DesktopWebFrame.scrollableContentBottomPadding(
+            context,
+            hasOverlayAction: useOverlayPrimaryAction,
+          );
           final horizontalPadding =
               DesktopWebFrame.centeredContentHorizontalPadding(
             context,
@@ -733,6 +826,14 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
               SliverToBoxAdapter(
                 child: SizedBox(height: widget.topContentInset),
               ),
+
+              if (!useOverlayPrimaryAction && widget.onPrimaryAction != null)
+                SliverToBoxAdapter(
+                  child: _buildPrimaryActionCard(
+                    horizontalPadding: horizontalPadding,
+                    horizontalEndPadding: horizontalEndPadding,
+                  ),
+                ),
 
               if (!widget.hideTopActions)
                 SliverToBoxAdapter(child: _buildActionButtons()),
@@ -893,8 +994,9 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
                 ),
               ),
 
-              // Bottom Padding for FAB
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              SliverToBoxAdapter(
+                child: SizedBox(height: bottomPadding),
+              ),
             ],
           );
         },

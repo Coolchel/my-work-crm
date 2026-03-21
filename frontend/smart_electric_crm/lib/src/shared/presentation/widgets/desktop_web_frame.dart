@@ -14,6 +14,10 @@ final class DesktopWebFrame {
   static const double shellSidebarGap = 16;
   static const double shellSidebarWidth = 224;
   static const double shellSidebarCompactWidth = 88;
+  static const double shellSidebarBottomOffset = 16;
+  static const double mobileContentEndPadding = 24;
+  static const double desktopContentEndPadding = shellSidebarBottomOffset;
+  static const double overlayActionBottomClearance = 24;
 
   static bool _isDesktopSurface() {
     if (kIsWeb) {
@@ -43,6 +47,13 @@ final class DesktopWebFrame {
   }) {
     return isMobileWeb(context, maxWidth: maxWidth) ||
         (!kIsWeb && defaultTargetPlatform == TargetPlatform.android);
+  }
+
+  static bool usesOverlayPrimaryAction(
+    BuildContext context, {
+    double maxWidth = 700,
+  }) {
+    return usesMobileContentPadding(context, maxWidth: maxWidth);
   }
 
   static bool hasPersistentShellSidebar(
@@ -94,6 +105,13 @@ final class DesktopWebFrame {
         shellSidebarGap;
   }
 
+  static double persistentShellViewportBottomInset(BuildContext context) {
+    if (!hasPersistentShellSidebar(context)) {
+      return 0;
+    }
+    return shellSidebarBottomOffset;
+  }
+
   static double centeredContentSidePadding(
     double availableWidth, {
     required double maxWidth,
@@ -136,6 +154,44 @@ final class DesktopWebFrame {
       return 0;
     }
     return _isDesktopSurface() ? desktop : 0;
+  }
+
+  static double contentEndPadding(
+    BuildContext context, {
+    double mobile = mobileContentEndPadding,
+    double desktop = desktopContentEndPadding,
+    double maxWidth = 700,
+  }) {
+    if (usesMobileContentPadding(context, maxWidth: maxWidth)) {
+      return mobile;
+    }
+    if (hasPersistentShellSidebar(context)) {
+      return shellSidebarBottomOffset;
+    }
+    return _isDesktopSurface() ? desktop : mobile;
+  }
+
+  static double scrollableContentBottomPadding(
+    BuildContext context, {
+    bool hasOverlayAction = false,
+    double mobile = mobileContentEndPadding,
+    double desktop = desktopContentEndPadding,
+    double overlayActionClearance = overlayActionBottomClearance,
+    double maxWidth = 700,
+  }) {
+    final safeBottom = MediaQuery.viewPaddingOf(context).bottom;
+    final endPadding = contentEndPadding(
+      context,
+      mobile: mobile,
+      desktop: desktop,
+      maxWidth: maxWidth,
+    );
+
+    if (!hasOverlayAction) {
+      return endPadding + safeBottom;
+    }
+
+    return endPadding + overlayActionClearance + safeBottom;
   }
 
   static EdgeInsets pagePadding(

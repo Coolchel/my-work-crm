@@ -210,6 +210,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final isDesktopWeb =
         DesktopWebFrame.supportsPersistentShellSidebar(context);
     final isWideDesktopWeb = DesktopWebFrame.supportsWideShellSidebar(context);
+    final shellViewportBottomInset =
+        DesktopWebFrame.persistentShellViewportBottomInset(context);
     final desktopMenuTop = _isHomeBranchSelected(settings)
         ? _welcomeDesktopMenuTop
         : _defaultDesktopMenuTop;
@@ -223,11 +225,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: isDesktopWeb
           ? Stack(
               children: [
-                shellScopedContent,
+                Positioned.fill(
+                  bottom: shellViewportBottomInset,
+                  child: shellScopedContent,
+                ),
                 Positioned(
                   left: DesktopWebFrame.shellSidebarLeftOffset,
                   top: desktopMenuTop,
-                  bottom: 16,
+                  bottom: shellViewportBottomInset,
                   child: SafeArea(
                     top: false,
                     child: DesktopSideMenu(
