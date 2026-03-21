@@ -40,6 +40,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const int _settingsBranchIndex = 4;
   static const double _defaultDesktopMenuTop = 118;
   static const double _welcomeDesktopMenuTop = 204;
+  static const double _desktopViewportFadeHeight = 28;
+
+  double _desktopBottomFadeOpacity = 0;
 
   @override
   void initState() {
@@ -51,6 +54,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void didUpdateWidget(covariant HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     _syncLastNonSettingsBranch();
+    if (oldWidget.navigationShell.currentIndex !=
+        widget.navigationShell.currentIndex) {
+      _desktopBottomFadeOpacity = 0;
+    }
   }
 
   void _syncLastNonSettingsBranch() {
@@ -200,6 +207,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  void _updateDesktopBottomFadeOpacity(double extentAfter) {
+    final nextOpacity = ((extentAfter - 4) / 24).clamp(0.0, 1.0);
+    if ((_desktopBottomFadeOpacity - nextOpacity).abs() < 0.01 || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _desktopBottomFadeOpacity = nextOpacity;
+    });
+  }
+
+  bool _handleDesktopScrollMetrics(ScrollMetrics metrics) {
+    if (axisDirectionToAxis(metrics.axisDirection) != Axis.vertical) {
+      return false;
+    }
+    _updateDesktopBottomFadeOpacity(metrics.extentAfter);
+    return false;
+  }
+
+  Widget _buildDesktopBottomFadeMask(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final background = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return IgnorePointer(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOut,
+          opacity: _desktopBottomFadeOpacity,
+          child: Container(
+            key: const Key('home_desktop_bottom_fade_mask'),
+            height: _desktopViewportFadeHeight,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  background.withOpacity(0),
+                  Color.alphaBlend(
+                    scheme.surface.withOpacity(isDark ? 0.16 : 0.08),
+                    background,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(appSettingsProvider);
@@ -227,7 +289,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               children: [
                 Positioned.fill(
                   bottom: shellViewportBottomInset,
-                  child: shellScopedContent,
+                  child: NotificationListener<ScrollMetricsNotification>(
+                    onNotification: (notification) =>
+                        _handleDesktopScrollMetrics(notification.metrics),
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: (notification) =>
+                          _handleDesktopScrollMetrics(notification.metrics),
+                      child: Stack(
+                        children: [
+                          shellScopedContent,
+                          _buildDesktopBottomFadeMask(context),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
                 Positioned(
                   left: DesktopWebFrame.shellSidebarLeftOffset,

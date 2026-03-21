@@ -123,6 +123,24 @@ void main() {
     },
     variant: TargetPlatformVariant.only(TargetPlatform.windows),
   );
+
+  testWidgets(
+    'windows welcome keeps the main scroll viewport clipped',
+    (tester) async {
+      await _pumpWelcomeScreen(
+        tester,
+        width: 1280,
+        height: 900,
+      );
+
+      final mainScrollView = tester
+          .widgetList<SingleChildScrollView>(find.byType(SingleChildScrollView))
+          .firstWhere((widget) => widget.controller != null);
+
+      expect(mainScrollView.clipBehavior, Clip.hardEdge);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.windows),
+  );
 }
 
 Future<void> _pumpWelcomeScreen(

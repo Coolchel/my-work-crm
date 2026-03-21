@@ -39,6 +39,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   static const double _overlayMaxHeightCap = 520;
   static const double _searchTopMargin = 8;
   static const double _desktopTopFadeHeight = 28;
+  static const double _hoverCardShadowTopInset = 12;
+  static const double _hoverCardShadowBottomInset = 18;
 
   final LayerLink _layerLink = LayerLink();
   final Object _searchTapGroupId = Object();
@@ -416,6 +418,52 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
   }
 
+  Widget _buildShadowSafeNewProjectCard({
+    required bool enabled,
+    required double topGap,
+    required double bottomGap,
+    EdgeInsetsGeometry? horizontalPadding,
+  }) {
+    if (!enabled) {
+      return Column(
+        children: [
+          SizedBox(height: topGap),
+          if (horizontalPadding == null)
+            const NewProjectCard()
+          else
+            Padding(
+              padding: horizontalPadding,
+              child: const NewProjectCard(),
+            ),
+          SizedBox(height: bottomGap),
+        ],
+      );
+    }
+
+    final adjustedTopGap = math.max(0.0, topGap - _hoverCardShadowTopInset);
+    final adjustedBottomGap =
+        math.max(0.0, bottomGap - _hoverCardShadowBottomInset);
+
+    return Column(
+      children: [
+        SizedBox(height: adjustedTopGap),
+        Padding(
+          padding: const EdgeInsets.only(
+            top: _hoverCardShadowTopInset,
+            bottom: _hoverCardShadowBottomInset,
+          ),
+          child: horizontalPadding == null
+              ? const NewProjectCard()
+              : Padding(
+                  padding: horizontalPadding,
+                  child: const NewProjectCard(),
+                ),
+        ),
+        SizedBox(height: adjustedBottomGap),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedStat = ref.watch(dashboardFilterProvider);
@@ -529,11 +577,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                                   context,
                                                 ),
                                               ] else ...[
-                                                SizedBox(
-                                                  height: searchVerticalGap,
+                                                _buildShadowSafeNewProjectCard(
+                                                  enabled: true,
+                                                  topGap: searchVerticalGap,
+                                                  bottomGap: 24,
                                                 ),
-                                                const NewProjectCard(),
-                                                const SizedBox(height: 24),
                                                 if (hasProjectsLoadError)
                                                   const Row(
                                                     crossAxisAlignment:
@@ -691,14 +739,21 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                             SizedBox(
                                               height: compensatedSearchGap,
                                             ),
-                                            Padding(
-                                              padding: EdgeInsets.symmetric(
+                                            _buildShadowSafeNewProjectCard(
+                                              enabled: !isMobileWeb &&
+                                                  (kIsWeb ||
+                                                      defaultTargetPlatform ==
+                                                          TargetPlatform
+                                                              .windows),
+                                              topGap: 0,
+                                              bottomGap: 0,
+                                              horizontalPadding:
+                                                  EdgeInsets.symmetric(
                                                 horizontal:
                                                     usesMobileContentPadding
                                                         ? 0
                                                         : 16,
                                               ),
-                                              child: const NewProjectCard(),
                                             ),
                                             if (hasProjectsLoadError)
                                               Padding(

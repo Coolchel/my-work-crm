@@ -198,6 +198,7 @@ class RecentProjectsList extends ConsumerWidget {
             ),
             SizedBox(height: _isMobileDevice() ? 6 : 10),
             ListView.separated(
+              clipBehavior: Clip.none,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: displayProjects.length,
