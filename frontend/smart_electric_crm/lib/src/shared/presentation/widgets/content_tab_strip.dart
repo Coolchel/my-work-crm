@@ -15,6 +15,25 @@ class ContentTabStripItem {
   final String keyName;
 }
 
+class ContentTabStripSpacing {
+  const ContentTabStripSpacing({
+    required this.topPadding,
+    required this.bottomPadding,
+    required this.contentGap,
+    required this.itemHeight,
+  });
+
+  final double topPadding;
+  final double bottomPadding;
+  final double contentGap;
+  final double itemHeight;
+
+  double get overlayHeight => topPadding + itemHeight + bottomPadding;
+  double get contentInset => overlayHeight + contentGap;
+  double get lowerGap => bottomPadding + contentGap;
+  double get outerGap => topPadding;
+}
+
 class ContentTabStrip extends StatelessWidget {
   const ContentTabStrip({
     required this.items,
@@ -36,8 +55,33 @@ class ContentTabStrip extends StatelessWidget {
   final double? itemWidth;
 
   static double overlayInset(BuildContext context) {
-    final isCompact = MediaQuery.sizeOf(context).width < 720;
-    return isCompact ? 68 : 72;
+    return balancedSpacing(context).overlayHeight;
+  }
+
+  static ContentTabStripSpacing balancedSpacing(BuildContext context) {
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    if (viewportWidth < 720) {
+      return const ContentTabStripSpacing(
+        topPadding: 16,
+        bottomPadding: 6,
+        contentGap: 10,
+        itemHeight: 38,
+      );
+    }
+    if (DesktopWebFrame.isDesktop(context, minWidth: 1180)) {
+      return const ContentTabStripSpacing(
+        topPadding: 20,
+        bottomPadding: 8,
+        contentGap: 12,
+        itemHeight: 44,
+      );
+    }
+    return const ContentTabStripSpacing(
+      topPadding: 18,
+      bottomPadding: 8,
+      contentGap: 10,
+      itemHeight: 44,
+    );
   }
 
   @override

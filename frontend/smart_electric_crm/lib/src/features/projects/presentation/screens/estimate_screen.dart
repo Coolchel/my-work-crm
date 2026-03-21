@@ -246,7 +246,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
-    final localNavOverlayInset = ContentTabStrip.overlayInset(context);
+    final localNavSpacing = ContentTabStrip.balancedSpacing(context);
     // Backdrop filter when FAB is expanded
     // Backdrop filter when FAB is expanded
     return Scaffold(
@@ -326,7 +326,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                     scrollController: _worksScrollController,
                     items: _works,
                     title: 'Работы', // Determines view mode inside widget
-                    topContentInset: localNavOverlayInset,
+                    topContentInset: localNavSpacing.contentInset,
                     showPrices: true,
                     onUpdate: _updateItemFromTab,
                     onDelete: _deleteItemFromTab,
@@ -347,7 +347,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                     scrollController: _materialsScrollController,
                     items: _materials,
                     title: 'Материалы',
-                    topContentInset: localNavOverlayInset,
+                    topContentInset: localNavSpacing.contentInset,
                     showPrices: _showPrices,
                     onUpdate: _updateItemFromTab,
                     onDelete: _deleteItemFromTab,
@@ -380,6 +380,8 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                 key: const ValueKey('estimate_local_nav'),
                 selectedIndex: _currentIndex,
                 onSelected: _handleSectionSelection,
+                topPadding: localNavSpacing.topPadding,
+                bottomPadding: localNavSpacing.bottomPadding,
                 items: const [
                   ContentTabStripItem(
                     label: '\u0420\u0430\u0431\u043e\u0442\u044b',

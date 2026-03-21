@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/navigation/app_navigation.dart';
 import '../../../../core/theme/app_design_tokens.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/presentation/widgets/content_tab_strip.dart';
 import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
 import '../../../projects/presentation/providers/project_providers.dart';
 import '../widgets/new_project_card.dart';
@@ -429,6 +432,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
+    final searchVerticalGap = ContentTabStrip.balancedSpacing(context).outerGap;
+    final summaryOverlap = isDesktopWeb ? 20.0 : (isMobileWeb ? 12.0 : 20.0);
+    final compensatedSearchGap = math.max(
+      0.0,
+      searchVerticalGap - summaryOverlap,
+    );
     final hasProjectsLoadError = ref.watch(projectListProvider).maybeWhen(
           error: (_, __) => true,
           orElse: () => false,
@@ -502,7 +511,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                         child: SingleChildScrollView(
                                           controller: _scrollController,
                                           padding: EdgeInsets.only(
-                                            top: 8,
+                                            top: compensatedSearchGap,
                                             right: desktopScrollEndInset,
                                             bottom: 100,
                                           ),
@@ -511,12 +520,16 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                               _buildSearchBar(),
                                               if (_useInlineDesktopResults &&
                                                   isSearchActive) ...[
-                                                const SizedBox(height: 24),
+                                                SizedBox(
+                                                  height: searchVerticalGap,
+                                                ),
                                                 _buildSearchResultsWithScrollbar(
                                                   context,
                                                 ),
                                               ] else ...[
-                                                const SizedBox(height: 18),
+                                                SizedBox(
+                                                  height: searchVerticalGap,
+                                                ),
                                                 const NewProjectCard(),
                                                 const SizedBox(height: 24),
                                                 if (hasProjectsLoadError)
@@ -633,13 +646,14 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                             },
                                           ),
                                           SizedBox(
-                                              height: isMobileWeb ? 14 : 24),
+                                            height: searchVerticalGap,
+                                          ),
                                           _buildSearchBar(),
                                           if (isSearchActive &&
                                               _useInlineDesktopResults)
                                             Padding(
                                               padding: EdgeInsets.only(
-                                                top: isMobileWeb ? 12 : 16,
+                                                top: searchVerticalGap,
                                               ),
                                               child:
                                                   _buildSearchResultsWithScrollbar(
@@ -670,7 +684,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                                         child: Column(
                                           children: [
                                             SizedBox(
-                                                height: isMobileWeb ? 4 : 8),
+                                              height: compensatedSearchGap,
+                                            ),
                                             Padding(
                                               padding: EdgeInsets.symmetric(
                                                 horizontal:

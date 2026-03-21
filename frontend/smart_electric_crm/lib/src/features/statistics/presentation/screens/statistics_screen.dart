@@ -101,7 +101,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
   Widget build(BuildContext context) {
     final viewport = MediaQuery.sizeOf(context);
     final isMobile = viewport.width < 600;
-    final isDesktopWeb = DesktopWebFrame.isDesktop(context, minWidth: 1180);
     final horizontalContentPadding = DesktopWebFrame.contentHorizontalPadding(
       context,
       desktop: 16,
@@ -147,9 +146,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
       ),
     ];
     final selectedPeriodIndex = _periodValues.indexOf(currentPeriod);
-    final statisticsSwitcherTopPadding = isMobile ? 6.0 : 8.0;
-    final statisticsSwitcherBottomPadding = isMobile ? 2.0 : 4.0;
-    final statisticsSwitcherOverlayHeight = isMobile ? 52.0 : 58.0;
+    final statisticsSwitcherSpacing = ContentTabStrip.balancedSpacing(context);
     final statisticsSwitcherItemWidth = isMobile ? 108.0 : 152.0;
 
     return ListenableBuilder(
@@ -192,8 +189,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                     child: Padding(
                       padding: EdgeInsetsDirectional.fromSTEB(
                         horizontalContentPadding,
-                        (isDesktopWeb ? 18 : 12) +
-                            statisticsSwitcherOverlayHeight,
+                        statisticsSwitcherSpacing.contentInset,
                         horizontalContentPadding + scrollableEndInset,
                         16,
                       ),
@@ -203,7 +199,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Переключатель периода
-                            const SizedBox(height: 6),
 
                             _buildHeader(
                               context,
@@ -356,8 +351,9 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                           selectedIndex: selectedPeriodIndex == -1
                               ? 0
                               : selectedPeriodIndex,
-                          topPadding: statisticsSwitcherTopPadding,
-                          bottomPadding: statisticsSwitcherBottomPadding,
+                          topPadding: statisticsSwitcherSpacing.topPadding,
+                          bottomPadding:
+                              statisticsSwitcherSpacing.bottomPadding,
                           sidePadding: 0,
                           itemWidth: statisticsSwitcherItemWidth,
                           onSelected: (index) {

@@ -217,22 +217,22 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
     final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
       context,
     );
-    final localNavOverlayInset = ContentTabStrip.overlayInset(context);
+    final localNavSpacing = ContentTabStrip.balancedSpacing(context);
     final screens = [
       _StagesTab(
         project: widget.project,
         scrollController: _stagesScrollController,
-        topContentInset: localNavOverlayInset,
+        topContentInset: localNavSpacing.contentInset,
       ),
       EngineeringTab(
         project: widget.project,
         scrollController: _shieldsScrollController,
-        topContentInset: localNavOverlayInset,
+        topContentInset: localNavSpacing.contentInset,
       ),
       _FilesTab(
         project: widget.project,
         scrollController: _filesScrollController,
-        topContentInset: localNavOverlayInset,
+        topContentInset: localNavSpacing.contentInset,
       ),
     ];
 
@@ -269,6 +269,8 @@ class _ProjectDetailContentState extends ConsumerState<_ProjectDetailContent> {
                     key: const ValueKey('project_local_nav'),
                     selectedIndex: _currentIndex,
                     onSelected: _handleSectionSelection,
+                    topPadding: localNavSpacing.topPadding,
+                    bottomPadding: localNavSpacing.bottomPadding,
                     items: const [
                       ContentTabStripItem(
                         label: '\u042d\u0442\u0430\u043f\u044b',
@@ -426,7 +428,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
             controller: widget.scrollController,
             padding: EdgeInsetsDirectional.fromSTEB(
               horizontalPadding,
-              widget.topContentInset + (isMobileWeb ? 12 : 20),
+              widget.topContentInset,
               horizontalPadding + scrollbarEndInset,
               isMobileWeb ? 12 : 16,
             ),
@@ -748,7 +750,7 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
                 controller: widget.scrollController,
                 padding: EdgeInsetsDirectional.fromSTEB(
                   horizontalPadding,
-                  widget.topContentInset + (isMobileWeb ? 12 : 20),
+                  widget.topContentInset,
                   horizontalPadding + scrollbarEndInset,
                   isMobileWeb ? 12 : 16,
                 ),

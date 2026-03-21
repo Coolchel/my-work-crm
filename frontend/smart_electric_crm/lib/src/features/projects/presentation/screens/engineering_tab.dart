@@ -117,7 +117,7 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
             controller: widget.scrollController,
             padding: EdgeInsetsDirectional.fromSTEB(
               horizontalPadding,
-              widget.topContentInset + (isMobileWeb ? 12 : 20),
+              widget.topContentInset,
               horizontalPadding + scrollbarEndInset,
               isMobileWeb ? 12 : 16,
             ),

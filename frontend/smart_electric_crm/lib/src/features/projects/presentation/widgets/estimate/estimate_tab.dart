@@ -731,7 +731,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             primary: false,
             slivers: [
               SliverToBoxAdapter(
-                child: SizedBox(height: widget.topContentInset + 8),
+                child: SizedBox(height: widget.topContentInset),
               ),
 
               if (!widget.hideTopActions)
