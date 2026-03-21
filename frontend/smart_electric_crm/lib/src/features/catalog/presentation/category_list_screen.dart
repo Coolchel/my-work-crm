@@ -1,29 +1,261 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:smart_electric_crm/src/features/catalog/data/directory_repository.dart';
-import 'package:smart_electric_crm/src/features/catalog/domain/category_model.dart';
-import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
-import 'package:smart_electric_crm/src/features/catalog/domain/directory_models.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
-import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
+import 'package:smart_electric_crm/src/features/catalog/data/directory_repository.dart';
+import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
+import 'package:smart_electric_crm/src/features/catalog/domain/category_model.dart';
+import 'package:smart_electric_crm/src/features/catalog/domain/directory_models.dart';
+import 'package:smart_electric_crm/src/features/settings/application/app_settings_controller.dart';
 import 'package:smart_electric_crm/src/shared/presentation/dialogs/confirmation_dialog.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/content_tab_strip.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_side_menu.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
-import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
-import 'package:smart_electric_crm/src/features/settings/application/app_settings_controller.dart';
 
 part 'widgets/category_list_screen_components.dart';
 
+const double _catalogDesktopMenuTop = 118;
+const double _catalogContentMaxWidth = 1160;
+const double _catalogDesktopViewportFadeHeight = 28;
+
 double _catalogHorizontalContentPadding(BuildContext context) {
   return DesktopWebFrame.contentHorizontalPadding(context);
+}
+
+EdgeInsetsDirectional _catalogScrollableContentPadding(
+  BuildContext context, {
+  required double top,
+  required double bottom,
+  double scrollableEndInset = 0,
+}) {
+  return EdgeInsetsDirectional.fromSTEB(
+    _catalogHorizontalContentPadding(context),
+    top,
+    _catalogHorizontalContentPadding(context) + scrollableEndInset,
+    bottom,
+  );
+}
+
+Widget _buildCatalogDesktopSideMenu(
+  BuildContext context, {
+  required bool showWelcome,
+}) {
+  final isWideSidebar = DesktopWebFrame.supportsWideShellSidebar(context);
+
+  return DesktopSideMenu(
+    compact: !isWideSidebar,
+    items: [
+      if (showWelcome)
+        DesktopSideMenuItem(
+          label: 'Главная',
+          icon: const Icon(Icons.home_outlined),
+          selectedIcon: const Icon(Icons.home),
+          onTap: () => AppNavigation.goHome(scrollToTop: false),
+        ),
+      DesktopSideMenuItem(
+        label: 'Объекты',
+        icon: const Icon(Icons.description_outlined),
+        selectedIcon: const Icon(Icons.description),
+        onTap: () =>
+            AppNavigation.goToShellSection(context, AppShellSection.projects),
+      ),
+      DesktopSideMenuItem(
+        label: 'Финансы',
+        icon: const Icon(Icons.account_balance_wallet_outlined),
+        selectedIcon: const Icon(Icons.account_balance_wallet),
+        onTap: () =>
+            AppNavigation.goToShellSection(context, AppShellSection.finance),
+      ),
+      DesktopSideMenuItem(
+        label: 'Статистика',
+        icon: const Icon(Icons.bar_chart_outlined),
+        selectedIcon: const Icon(Icons.bar_chart),
+        onTap: () => AppNavigation.goToShellSection(
+          context,
+          AppShellSection.statistics,
+        ),
+      ),
+      DesktopSideMenuItem(
+        label: 'Настройки',
+        icon: const Icon(Icons.settings_outlined),
+        selectedIcon: const Icon(Icons.settings),
+        isSelected: true,
+        onTap: () =>
+            AppNavigation.goToShellSection(context, AppShellSection.settings),
+      ),
+    ],
+  );
+}
+
+Widget _buildCatalogOverlayActionButton(
+  BuildContext context, {
+  required String heroTag,
+  required String tooltip,
+  required VoidCallback onTap,
+}) {
+  final theme = Theme.of(context);
+  final backgroundColor = theme.floatingActionButtonTheme.backgroundColor ??
+      theme.colorScheme.primary;
+  final foregroundColor = theme.floatingActionButtonTheme.foregroundColor ??
+      theme.colorScheme.surface;
+  final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
+
+  return Tooltip(
+    message: tooltip,
+    preferBelow: false,
+    verticalOffset: 32,
+    child: isMobileWeb
+        ? FloatingActionButton.small(
+            heroTag: heroTag,
+            onPressed: onTap,
+            backgroundColor: backgroundColor,
+            foregroundColor: foregroundColor,
+            child: const Icon(Icons.add),
+          )
+        : FloatingActionButton(
+            heroTag: heroTag,
+            onPressed: onTap,
+            backgroundColor: backgroundColor,
+            foregroundColor: foregroundColor,
+            child: const Icon(Icons.add),
+          ),
+  );
+}
+
+Widget _buildCatalogDesktopBottomFadeMask(BuildContext context) {
+  final theme = Theme.of(context);
+  final scheme = theme.colorScheme;
+  final background = theme.scaffoldBackgroundColor;
+  final isDark = theme.brightness == Brightness.dark;
+
+  return IgnorePointer(
+    child: Align(
+      alignment: Alignment.bottomCenter,
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            height: _catalogDesktopViewportFadeHeight,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  background.withOpacity(0),
+                  Color.alphaBlend(
+                    scheme.surface.withOpacity(isDark ? 0.20 : 0.10),
+                    background,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+bool _useCatalogNestedShellLayout() => true;
+
+class _CatalogScreenScaffoldBody extends StatelessWidget {
+  const _CatalogScreenScaffoldBody({
+    required this.showWelcome,
+    required this.content,
+    required this.localNavigation,
+    this.localNavigationRightInset = 0,
+  });
+
+  final bool showWelcome;
+  final Widget content;
+  final Widget localNavigation;
+  final double localNavigationRightInset;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasSidebar = DesktopWebFrame.hasPersistentShellSidebar(context);
+    final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
+      context,
+    );
+    final shellViewportBottomInset =
+        DesktopWebFrame.persistentShellViewportBottomInset(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final contentHost = Stack(
+          children: [
+            Positioned.fill(
+              bottom: hasSidebar ? shellViewportBottomInset : 0,
+              child: DesktopWebPageFrame(
+                maxWidth: _catalogContentMaxWidth,
+                padding: EdgeInsets.zero,
+                child: content,
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: DesktopWebPageFrame(
+                maxWidth: _catalogContentMaxWidth,
+                padding: EdgeInsets.zero,
+                child: Padding(
+                  padding: EdgeInsets.only(right: localNavigationRightInset),
+                  child: localNavigation,
+                ),
+              ),
+            ),
+            if (hasSidebar) _buildCatalogDesktopBottomFadeMask(context),
+          ],
+        );
+
+        final constrainedHost = hasSidebar
+            ? SizedBox(
+                width: (constraints.maxWidth - shellSidebarInset)
+                    .clamp(0.0, double.infinity),
+                height: constraints.maxHeight,
+                child: contentHost,
+              )
+            : contentHost;
+
+        return Stack(
+          children: [
+            AnimatedPadding(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.only(left: shellSidebarInset),
+              child: constrainedHost,
+            ),
+            if (hasSidebar)
+              Positioned(
+                left: DesktopWebFrame.shellSidebarLeftOffset,
+                top: _catalogDesktopMenuTop,
+                bottom: shellViewportBottomInset,
+                child: SafeArea(
+                  top: false,
+                  child: _buildCatalogDesktopSideMenu(
+                    context,
+                    showWelcome: showWelcome,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class CategoryListScreen extends ConsumerStatefulWidget {
@@ -72,6 +304,17 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
   ScrollController get _activeScrollController =>
       _currentIndex == 0 ? _systemScrollController : _catalogScrollController;
 
+  void _handleSectionSelection(int index) {
+    if (index == _currentIndex) {
+      _scrollCurrentTabToTop();
+      return;
+    }
+
+    setState(() => _currentIndex = index);
+    widget.onTabChanged?.call(_sectionFromTabIndex(index));
+    _appBarCollapseController.bind(_activeScrollController);
+  }
+
   void _handleAppBarCollapseChanged() {
     if (mounted) {
       setState(() {});
@@ -108,8 +351,9 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
     super.dispose();
   }
 
-  Future<void> _synchronizeSystemSections(
-      {required bool showSuccessMessage}) async {
+  Future<void> _synchronizeSystemSections({
+    required bool showSuccessMessage,
+  }) async {
     if (_isSyncingSystemSections) return;
     setState(() => _isSyncingSystemSections = true);
     try {
@@ -192,6 +436,17 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
     final showWelcome = ref.watch(
       appSettingsProvider.select((value) => value.showWelcome),
     );
+    final useOverlayPrimaryAction = DesktopWebFrame.usesOverlayPrimaryAction(
+      context,
+    );
+    final localNavSpacing = ContentTabStrip.balancedSpacing(context);
+    final localNavItemWidth = ContentTabStrip.standardItemWidth(context);
+    final scrollableEndInset =
+        DesktopWebFrame.scrollableContentEndInset(context);
+    final bottomPadding = DesktopWebFrame.scrollableContentBottomPadding(
+      context,
+      hasOverlayAction: useOverlayPrimaryAction,
+    );
 
     return Scaffold(
       appBar: CompactSectionAppBar(
@@ -222,84 +477,91 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
           ),
         ],
       ),
-      floatingActionButton: _buildFab(),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          _SystemSectionsTab(
-            scrollController: _systemScrollController,
-            isSyncing: _isSyncingSystemSections,
-            onError: (message) => _showSnack(message, isError: true),
-            onSelectTab: (index) => setState(() => _currentIndex = index),
-          ),
-          _CatalogTab(
-            scrollController: _catalogScrollController,
-            onError: (message) => _showSnack(message, isError: true),
-            onSelectTab: (index) => setState(() => _currentIndex = index),
-          ),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: showWelcome ? _currentIndex + 1 : _currentIndex,
-        onDestinationSelected: (index) {
-          if (showWelcome && index == 0) {
-            AppNavigation.goHome();
-            return;
-          }
-          final mappedIndex = showWelcome ? index - 1 : index;
-          if (mappedIndex == _currentIndex) {
-            _scrollCurrentTabToTop();
-            return;
-          }
-          setState(() => _currentIndex = mappedIndex);
-          widget.onTabChanged?.call(_sectionFromTabIndex(mappedIndex));
-          _appBarCollapseController.bind(_activeScrollController);
-        },
-        destinations: [
-          if (showWelcome)
-            const NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+      body: _CatalogScreenScaffoldBody(
+        showWelcome: showWelcome,
+        localNavigationRightInset: scrollableEndInset,
+        content: IndexedStack(
+          index: _currentIndex,
+          children: [
+            _SystemSectionsTab(
+              scrollController: _systemScrollController,
+              isSyncing: _isSyncingSystemSections,
+              onError: (message) => _showSnack(message, isError: true),
+              onSelectTab: (index) => setState(() => _currentIndex = index),
+              topContentInset: localNavSpacing.contentInset,
+              scrollableEndInset: scrollableEndInset,
+              bottomContentPadding: bottomPadding,
             ),
-          const NavigationDestination(
-            icon: Icon(Icons.schema_outlined),
-            selectedIcon: Icon(Icons.schema),
-            label: '\u0421\u0438\u0441\u0442\u0435\u043c\u0430',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: '\u041a\u0430\u0442\u0430\u043b\u043e\u0433',
-          ),
-        ],
+            _CatalogTab(
+              scrollController: _catalogScrollController,
+              onError: (message) => _showSnack(message, isError: true),
+              onSelectTab: (index) => setState(() => _currentIndex = index),
+              topContentInset: localNavSpacing.contentInset,
+              scrollableEndInset: scrollableEndInset,
+              bottomContentPadding: bottomPadding,
+            ),
+          ],
+        ),
+        localNavigation: ContentTabStrip(
+          key: const ValueKey('catalog_local_nav'),
+          selectedIndex: _currentIndex,
+          onSelected: _handleSectionSelection,
+          topPadding: localNavSpacing.topPadding,
+          bottomPadding: localNavSpacing.bottomPadding,
+          itemWidth: localNavItemWidth,
+          trailing:
+              useOverlayPrimaryAction ? null : _buildTopAddAction(context),
+          trailingReservedWidth:
+              useOverlayPrimaryAction ? null : localNavItemWidth,
+          items: const [
+            ContentTabStripItem(
+              label: 'Система',
+              icon: Icons.schema_outlined,
+              keyName: 'catalog_local_nav_system',
+            ),
+            ContentTabStripItem(
+              label: 'Каталог',
+              icon: Icons.inventory_2_outlined,
+              keyName: 'catalog_local_nav_catalog',
+            ),
+          ],
+        ),
       ),
+      floatingActionButton: useOverlayPrimaryAction
+          ? _buildCatalogOverlayActionButton(
+              context,
+              heroTag: _currentIndex == 0
+                  ? 'add-system-section'
+                  : 'add-catalog-category',
+              tooltip:
+                  _currentIndex == 0 ? 'Добавить раздел' : 'Добавить категорию',
+              onTap: _currentIndex == 0
+                  ? _openCreateSectionDialog
+                  : _openCreateCategoryDialog,
+            )
+          : null,
     );
   }
 
-  Widget _buildFab() {
+  Widget _buildTopAddAction(BuildContext context) {
     if (_currentIndex == 0) {
-      return Tooltip(
-        message: 'Добавить раздел',
-        preferBelow: false,
-        verticalOffset: 32,
-        child: FloatingActionButton(
-          heroTag: 'add-system-section',
-          onPressed: _openCreateSectionDialog,
-          child: const Icon(Icons.add),
-        ),
+      return ContentTabStripActionButton(
+        key: const ValueKey('catalog_local_nav_add_action'),
+        icon: Icons.add,
+        label: 'Добавить',
+        tooltip: 'Добавить раздел',
+        width: ContentTabStrip.standardItemWidth(context),
+        onTap: _openCreateSectionDialog,
       );
     }
 
-    return Tooltip(
-      message: 'Добавить категорию',
-      preferBelow: false,
-      verticalOffset: 32,
-      child: FloatingActionButton(
-        heroTag: 'add-catalog-category',
-        onPressed: _openCreateCategoryDialog,
-        child: const Icon(Icons.add),
-      ),
+    return ContentTabStripActionButton(
+      key: const ValueKey('catalog_local_nav_add_action'),
+      icon: Icons.add,
+      label: 'Добавить',
+      tooltip: 'Добавить категорию',
+      width: ContentTabStrip.standardItemWidth(context),
+      onTap: _openCreateCategoryDialog,
     );
   }
 }

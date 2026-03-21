@@ -64,29 +64,43 @@ class ContentTabStrip extends StatelessWidget {
     return balancedSpacing(context).overlayHeight;
   }
 
+  static double standardItemWidth(BuildContext context) {
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    if (viewportWidth < 420) {
+      return 116;
+    }
+    if (viewportWidth < 720) {
+      return 124;
+    }
+    if (DesktopWebFrame.isDesktop(context, minWidth: 1180)) {
+      return 136;
+    }
+    return 132;
+  }
+
   static ContentTabStripSpacing balancedSpacing(BuildContext context) {
     final viewportWidth = MediaQuery.sizeOf(context).width;
     if (viewportWidth < 720) {
       return const ContentTabStripSpacing(
-        topPadding: 16,
+        topPadding: 14,
         bottomPadding: 6,
         contentGap: 10,
-        itemHeight: 38,
+        itemHeight: 36,
       );
     }
     if (DesktopWebFrame.isDesktop(context, minWidth: 1180)) {
       return const ContentTabStripSpacing(
-        topPadding: 20,
+        topPadding: 18,
         bottomPadding: 8,
         contentGap: 12,
-        itemHeight: 44,
+        itemHeight: 40,
       );
     }
     return const ContentTabStripSpacing(
-      topPadding: 18,
+      topPadding: 16,
       bottomPadding: 8,
       contentGap: 10,
-      itemHeight: 44,
+      itemHeight: 40,
     );
   }
 
@@ -116,6 +130,7 @@ class ContentTabStrip extends StatelessWidget {
               ? Align(
                   alignment: Alignment.topCenter,
                   child: _buildTabsRow(
+                    context: context,
                     isCompact: isCompact,
                     textStyles: textStyles,
                     scheme: scheme,
@@ -132,6 +147,7 @@ class ContentTabStrip extends StatelessWidget {
                       child: Align(
                         alignment: Alignment.center,
                         child: _buildTabsRow(
+                          context: context,
                           isCompact: isCompact,
                           textStyles: textStyles,
                           scheme: scheme,
@@ -155,11 +171,14 @@ class ContentTabStrip extends StatelessWidget {
   }
 
   Widget _buildTabsRow({
+    required BuildContext context,
     required bool isCompact,
     required AppTextStyles textStyles,
     required ColorScheme scheme,
     required bool isDark,
   }) {
+    final resolvedItemWidth = itemWidth ?? standardItemWidth(context);
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -171,7 +190,7 @@ class ContentTabStrip extends StatelessWidget {
               item: items[i],
               isSelected: i == selectedIndex,
               isCompact: isCompact,
-              width: itemWidth,
+              width: resolvedItemWidth,
               textStyles: textStyles,
               scheme: scheme,
               isDark: isDark,
@@ -247,8 +266,8 @@ class _TabChipButton extends StatelessWidget {
             width: width,
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: isCompact ? 14 : 18,
-                vertical: isCompact ? 10 : 12,
+                horizontal: isCompact ? 12 : 16,
+                vertical: isCompact ? 9 : 10,
               ),
               child: Row(
                 mainAxisSize:
@@ -257,7 +276,7 @@ class _TabChipButton extends StatelessWidget {
                 children: [
                   Icon(
                     item.icon,
-                    size: isCompact ? 18 : 20,
+                    size: isCompact ? 17 : 18,
                     color: foregroundColor,
                   ),
                   const SizedBox(width: 8),
@@ -282,6 +301,133 @@ class _TabChipButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class ContentTabStripActionButton extends StatefulWidget {
+  const ContentTabStripActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.width,
+    this.tooltip,
+    this.message,
+    super.key,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final double? width;
+  final String? tooltip;
+  final String? message;
+
+  @override
+  State<ContentTabStripActionButton> createState() =>
+      _ContentTabStripActionButtonState();
+}
+
+class _ContentTabStripActionButtonState
+    extends State<ContentTabStripActionButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textStyles = context.appTextStyles;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCompact = MediaQuery.sizeOf(context).width < 720;
+    final isHighlighted = _isHovered && widget.onTap != null;
+    final selectedColor = isDark
+        ? Color.alphaBlend(
+            scheme.primary.withOpacity(0.26),
+            scheme.surfaceContainerHigh,
+          )
+        : Color.alphaBlend(
+            scheme.primary.withOpacity(0.14),
+            scheme.surface,
+          );
+    final idleColor = isDark ? scheme.surfaceContainerHigh : scheme.surface;
+    final foregroundColor = scheme.primary;
+
+    final button = MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor:
+          widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+      child: Material(
+        color: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Ink(
+            decoration: BoxDecoration(
+              color: isHighlighted
+                  ? selectedColor
+                  : Color.alphaBlend(
+                      scheme.primary.withOpacity(isDark ? 0.18 : 0.10),
+                      idleColor,
+                    ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: scheme.primary.withOpacity(isHighlighted
+                    ? (isDark ? 0.34 : 0.22)
+                    : (isDark ? 0.22 : 0.18)),
+              ),
+            ),
+            child: SizedBox(
+              width: widget.width ?? ContentTabStrip.standardItemWidth(context),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isCompact ? 12 : 16,
+                  vertical: isCompact ? 9 : 10,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      widget.icon,
+                      size: isCompact ? 17 : 18,
+                      color: foregroundColor,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: textStyles.navLabel.copyWith(
+                          fontSize: isCompact ? 13 : 14,
+                          fontWeight: FontWeight.w600,
+                          color: foregroundColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final tooltipText = widget.tooltip ?? widget.message;
+    if (tooltipText == null || tooltipText.isEmpty) {
+      return button;
+    }
+
+    return Tooltip(
+      message: tooltipText,
+      preferBelow: false,
+      verticalOffset: 20,
+      child: button,
     );
   }
 }

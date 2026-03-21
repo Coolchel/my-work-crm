@@ -68,12 +68,18 @@ class _SystemSectionsTab extends ConsumerStatefulWidget {
   final bool isSyncing;
   final ValueChanged<String> onError;
   final ValueChanged<int> onSelectTab;
+  final double topContentInset;
+  final double scrollableEndInset;
+  final double bottomContentPadding;
 
   const _SystemSectionsTab({
     required this.scrollController,
     required this.isSyncing,
     required this.onError,
     required this.onSelectTab,
+    this.topContentInset = 0,
+    this.scrollableEndInset = 0,
+    this.bottomContentPadding = 0,
   });
 
   @override
@@ -114,24 +120,38 @@ class _SystemSectionsTabState extends ConsumerState<_SystemSectionsTab> {
     widget.scrollController.jumpTo(0);
   }
 
+  Widget _buildStateBody(Widget child) {
+    return Padding(
+      padding: _catalogScrollableContentPadding(
+        context,
+        top: widget.topContentInset,
+        bottom: widget.bottomContentPadding,
+        scrollableEndInset: widget.scrollableEndInset,
+      ),
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sectionsAsync = ref.watch(directorySectionsProvider);
 
     if (widget.isSyncing) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text(
-                'Синхронизируем системные разделы. Пожалуйста, подождите...',
-                textAlign: TextAlign.center,
-              ),
-            ],
+      return _buildStateBody(
+        const Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text(
+                  'Синхронизируем системные разделы. Пожалуйста, подождите...',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -140,22 +160,25 @@ class _SystemSectionsTabState extends ConsumerState<_SystemSectionsTab> {
     return sectionsAsync.when(
       data: (sections) {
         if (sections.isEmpty) {
-          return const FriendlyEmptyState(
-            icon: Icons.schema_outlined,
-            title: 'Разделы не найдены',
-            subtitle: 'Нажмите "Синхронизировать" или создайте раздел вручную.',
-            accentColor: Colors.indigo,
-            padding: EdgeInsets.all(24),
+          return _buildStateBody(
+            const FriendlyEmptyState(
+              icon: Icons.schema_outlined,
+              title: 'Разделы не найдены',
+              subtitle:
+                  'Нажмите "Синхронизировать" или создайте раздел вручную.',
+              accentColor: Colors.indigo,
+              padding: EdgeInsets.all(24),
+            ),
           );
         }
 
         return ListView.builder(
           controller: widget.scrollController,
-          padding: EdgeInsets.fromLTRB(
-            _catalogHorizontalContentPadding(context),
-            20,
-            _catalogHorizontalContentPadding(context),
-            112,
+          padding: _catalogScrollableContentPadding(
+            context,
+            top: widget.topContentInset,
+            bottom: widget.bottomContentPadding,
+            scrollableEndInset: widget.scrollableEndInset,
           ),
           itemCount: sections.length,
           itemBuilder: (context, index) {
@@ -237,12 +260,16 @@ class _SystemSectionsTabState extends ConsumerState<_SystemSectionsTab> {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text('Не удалось загрузить разделы: $error',
-              textAlign: TextAlign.center),
+      loading: () => _buildStateBody(
+        const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => _buildStateBody(
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text('Не удалось загрузить разделы: $error',
+                textAlign: TextAlign.center),
+          ),
         ),
       ),
     );
@@ -317,12 +344,264 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
     _scrollController.jumpTo(0);
   }
 
+  Future<void> _openCreateEntryDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _DirectoryEntryDialog(
+        title: 'Новая запись',
+        onSubmit: (code, name, order, isActive, metadata) async {
+          await ref.read(directoryRepositoryProvider).createEntry(
+                section: widget.section.id,
+                code: code,
+                name: name,
+                sortOrder: order,
+                isActive: isActive,
+                metadata: metadata,
+              );
+          ref.invalidate(directoryEntriesProvider(widget.section.id));
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final entriesAsync = ref.watch(directoryEntriesProvider(widget.section.id));
     final showWelcome = ref.watch(
       appSettingsProvider.select((value) => value.showWelcome),
     );
+    final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
+      context,
+    );
+    final hasPersistentShellSidebar =
+        DesktopWebFrame.hasPersistentShellSidebar(context);
+    final shellViewportBottomInset =
+        DesktopWebFrame.persistentShellViewportBottomInset(context);
+    final useOverlayPrimaryAction = DesktopWebFrame.usesOverlayPrimaryAction(
+      context,
+    );
+    final localNavSpacing = ContentTabStrip.balancedSpacing(context);
+    final localNavItemWidth = ContentTabStrip.standardItemWidth(context);
+    final scrollableEndInset =
+        DesktopWebFrame.scrollableContentEndInset(context);
+    final bottomPadding = DesktopWebFrame.scrollableContentBottomPadding(
+      context,
+      hasOverlayAction: useOverlayPrimaryAction,
+    );
+
+    if (_useCatalogNestedShellLayout()) {
+      return Scaffold(
+        appBar: CompactSectionAppBar(
+          collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
+            context,
+            _appBarCollapseController.progress,
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new),
+            tooltip: 'Назад',
+            onPressed: () => _handleBack(context),
+          ),
+          title: 'Справочник',
+          subtitle: widget.section.name,
+        ),
+        body: _CatalogScreenScaffoldBody(
+          showWelcome: showWelcome,
+          localNavigationRightInset: scrollableEndInset,
+          content: entriesAsync.when(
+            data: (entries) {
+              if (entries.isEmpty) {
+                return Padding(
+                  padding: EdgeInsets.only(
+                    top: localNavSpacing.contentInset,
+                    bottom: bottomPadding,
+                  ),
+                  child: const FriendlyEmptyState(
+                    icon: Icons.list_alt_rounded,
+                    title: 'В этом разделе пока нет записей',
+                    subtitle:
+                        'Добавьте первую запись, чтобы заполнить справочник.',
+                    accentColor: Colors.teal,
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                controller: _scrollController,
+                padding: EdgeInsetsDirectional.fromSTEB(
+                  _catalogHorizontalContentPadding(context),
+                  localNavSpacing.contentInset,
+                  _catalogHorizontalContentPadding(context) +
+                      scrollableEndInset,
+                  bottomPadding,
+                ),
+                itemCount: entries.length,
+                itemBuilder: (context, index) {
+                  final entry = entries[index];
+                  final metadataPreview = entry.metadata.isEmpty
+                      ? null
+                      : const JsonEncoder.withIndent('  ')
+                          .convert(entry.metadata);
+
+                  return _DirectoryCard(
+                    stripeColor: entry.isActive ? Colors.teal : Colors.orange,
+                    icon: entry.isActive
+                        ? Icons.check_circle_outline
+                        : Icons.block,
+                    title: entry.name,
+                    subtitle: '${entry.code} | order: ${entry.sortOrder}',
+                    extraText: metadataPreview,
+                    onTap: () async {
+                      await showDialog<void>(
+                        context: context,
+                        builder: (_) => _DirectoryEntryDialog(
+                          title: 'Редактирование записи',
+                          initial: entry,
+                          onSubmit: (
+                            code,
+                            name,
+                            order,
+                            isActive,
+                            metadata,
+                          ) async {
+                            await ref
+                                .read(directoryRepositoryProvider)
+                                .updateEntry(
+                                  id: entry.id,
+                                  section: widget.section.id,
+                                  code: code,
+                                  name: name,
+                                  sortOrder: order,
+                                  isActive: isActive,
+                                  metadata: metadata,
+                                );
+                            ref.invalidate(
+                              directoryEntriesProvider(widget.section.id),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                    actions: [
+                      _InlineActionButton(
+                        icon: Icons.edit_outlined,
+                        tooltip: 'Редактировать запись',
+                        color: Colors.grey.shade500,
+                        hoverColor: Colors.indigo,
+                        onTap: () async {
+                          await showDialog<void>(
+                            context: context,
+                            builder: (_) => _DirectoryEntryDialog(
+                              title: 'Редактирование записи',
+                              initial: entry,
+                              onSubmit: (
+                                code,
+                                name,
+                                order,
+                                isActive,
+                                metadata,
+                              ) async {
+                                await ref
+                                    .read(directoryRepositoryProvider)
+                                    .updateEntry(
+                                      id: entry.id,
+                                      section: widget.section.id,
+                                      code: code,
+                                      name: name,
+                                      sortOrder: order,
+                                      isActive: isActive,
+                                      metadata: metadata,
+                                    );
+                                ref.invalidate(
+                                  directoryEntriesProvider(widget.section.id),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                      _InlineActionButton(
+                        icon: Icons.close,
+                        tooltip: 'Удалить запись',
+                        color: Colors.grey.shade500,
+                        hoverColor: Colors.grey.shade600,
+                        onTap: () async {
+                          final confirmed = await showConfirmationDialog(
+                            context: context,
+                            title: 'Удалить запись?',
+                            content: 'Действие необратимо.',
+                            confirmText: 'Удалить',
+                            isDangerous: true,
+                            themeColor: Colors.red,
+                          );
+                          if (confirmed != true || !context.mounted) {
+                            return;
+                          }
+
+                          try {
+                            await ref
+                                .read(directoryRepositoryProvider)
+                                .deleteEntry(entry.id);
+                            ref.invalidate(
+                              directoryEntriesProvider(widget.section.id),
+                            );
+                          } catch (error) {
+                            widget.onError(error.toString());
+                          }
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            loading: () => Padding(
+              padding: EdgeInsets.only(top: localNavSpacing.contentInset),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+            error: (error, _) => Padding(
+              padding: EdgeInsets.only(top: localNavSpacing.contentInset),
+              child: Center(child: Text('Ошибка: $error')),
+            ),
+          ),
+          localNavigation: ContentTabStrip(
+            key: const ValueKey('directory_entries_local_nav'),
+            selectedIndex: 0,
+            onSelected: (index) {
+              if (index == 0) {
+                AppNavigation.directorySystemScrollController.scrollToTop();
+                return;
+              }
+              widget.onSelectTab(index);
+              Navigator.of(context).pop();
+            },
+            topPadding: localNavSpacing.topPadding,
+            bottomPadding: localNavSpacing.bottomPadding,
+            itemWidth: localNavItemWidth,
+            trailing: ContentTabStripActionButton(
+              key: const ValueKey('directory_entries_add_action'),
+              icon: Icons.add,
+              label: 'Добавить',
+              tooltip: 'Добавить запись',
+              width: localNavItemWidth,
+              onTap: _openCreateEntryDialog,
+            ),
+            trailingReservedWidth: localNavItemWidth,
+            items: const [
+              ContentTabStripItem(
+                label: 'Система',
+                icon: Icons.schema_outlined,
+                keyName: 'directory_entries_local_nav_system',
+              ),
+              ContentTabStripItem(
+                label: 'Каталог',
+                icon: Icons.inventory_2_outlined,
+                keyName: 'directory_entries_local_nav_catalog',
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: CompactSectionAppBar(
@@ -338,187 +617,260 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
         title: 'Справочник',
         subtitle: widget.section.name,
       ),
-      floatingActionButton: Tooltip(
-        message: 'Добавить запись',
-        preferBelow: false,
-        verticalOffset: 32,
-        child: FloatingActionButton(
-          onPressed: () async {
-            await showDialog<void>(
-              context: context,
-              builder: (_) => _DirectoryEntryDialog(
-                title: 'Новая запись',
-                onSubmit: (code, name, order, isActive, metadata) async {
-                  await ref.read(directoryRepositoryProvider).createEntry(
-                        section: widget.section.id,
-                        code: code,
-                        name: name,
-                        sortOrder: order,
-                        isActive: isActive,
-                        metadata: metadata,
-                      );
-                  ref.invalidate(directoryEntriesProvider(widget.section.id));
-                },
-              ),
-            );
-          },
-          child: const Icon(Icons.add),
-        ),
-      ),
-      body: entriesAsync.when(
-        data: (entries) {
-          if (entries.isEmpty) {
-            return const FriendlyEmptyState(
-              icon: Icons.list_alt_rounded,
-              title: 'В этом разделе пока нет записей',
-              subtitle: 'Добавьте первую запись, чтобы заполнить справочник.',
-              accentColor: Colors.teal,
-            );
-          }
+      body: LayoutBuilder(
+        builder: (context, constraints) => AnimatedPadding(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: EdgeInsets.only(left: shellSidebarInset),
+          child: SizedBox(
+            width: hasPersistentShellSidebar
+                ? (constraints.maxWidth - shellSidebarInset)
+                    .clamp(0.0, double.infinity)
+                : constraints.maxWidth,
+            height: constraints.maxHeight,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  bottom:
+                      hasPersistentShellSidebar ? shellViewportBottomInset : 0,
+                  child: DesktopWebPageFrame(
+                    maxWidth: 1160,
+                    padding: EdgeInsets.zero,
+                    child: entriesAsync.when(
+                      data: (entries) {
+                        if (entries.isEmpty) {
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              top: localNavSpacing.contentInset,
+                              bottom: bottomPadding,
+                            ),
+                            child: const FriendlyEmptyState(
+                              icon: Icons.list_alt_rounded,
+                              title: 'В этом разделе пока нет записей',
+                              subtitle:
+                                  'Добавьте первую запись, чтобы заполнить справочник.',
+                              accentColor: Colors.teal,
+                            ),
+                          );
+                        }
 
-          return ListView.builder(
-            controller: _scrollController,
-            padding: EdgeInsets.fromLTRB(
-              _catalogHorizontalContentPadding(context),
-              20,
-              _catalogHorizontalContentPadding(context),
-              100,
-            ),
-            itemCount: entries.length,
-            itemBuilder: (context, index) {
-              final entry = entries[index];
-              final metadataPreview = entry.metadata.isEmpty
-                  ? null
-                  : const JsonEncoder.withIndent('  ').convert(entry.metadata);
+                        return ListView.builder(
+                          controller: _scrollController,
+                          padding: EdgeInsetsDirectional.fromSTEB(
+                            _catalogHorizontalContentPadding(context),
+                            localNavSpacing.contentInset,
+                            _catalogHorizontalContentPadding(context) +
+                                scrollableEndInset,
+                            bottomPadding,
+                          ),
+                          itemCount: entries.length,
+                          itemBuilder: (context, index) {
+                            final entry = entries[index];
+                            final metadataPreview = entry.metadata.isEmpty
+                                ? null
+                                : const JsonEncoder.withIndent('  ')
+                                    .convert(entry.metadata);
 
-              return _DirectoryCard(
-                stripeColor: entry.isActive ? Colors.teal : Colors.orange,
-                icon: entry.isActive ? Icons.check_circle_outline : Icons.block,
-                title: entry.name,
-                subtitle: '${entry.code} | order: ${entry.sortOrder}',
-                extraText: metadataPreview,
-                onTap: () async {
-                  await showDialog<void>(
-                    context: context,
-                    builder: (_) => _DirectoryEntryDialog(
-                      title: 'Редактирование записи',
-                      initial: entry,
-                      onSubmit: (code, name, order, isActive, metadata) async {
-                        await ref.read(directoryRepositoryProvider).updateEntry(
-                              id: entry.id,
-                              section: widget.section.id,
-                              code: code,
-                              name: name,
-                              sortOrder: order,
-                              isActive: isActive,
-                              metadata: metadata,
-                            );
-                        ref.invalidate(
-                            directoryEntriesProvider(widget.section.id));
-                      },
-                    ),
-                  );
-                },
-                actions: [
-                  _InlineActionButton(
-                    icon: Icons.edit_outlined,
-                    tooltip: 'Редактировать запись',
-                    color: Colors.grey.shade500,
-                    hoverColor: Colors.indigo,
-                    onTap: () async {
-                      await showDialog<void>(
-                        context: context,
-                        builder: (_) => _DirectoryEntryDialog(
-                          title: 'Редактирование записи',
-                          initial: entry,
-                          onSubmit:
-                              (code, name, order, isActive, metadata) async {
-                            await ref
-                                .read(directoryRepositoryProvider)
-                                .updateEntry(
-                                  id: entry.id,
-                                  section: widget.section.id,
-                                  code: code,
-                                  name: name,
-                                  sortOrder: order,
-                                  isActive: isActive,
-                                  metadata: metadata,
+                            return _DirectoryCard(
+                              stripeColor:
+                                  entry.isActive ? Colors.teal : Colors.orange,
+                              icon: entry.isActive
+                                  ? Icons.check_circle_outline
+                                  : Icons.block,
+                              title: entry.name,
+                              subtitle:
+                                  '${entry.code} | order: ${entry.sortOrder}',
+                              extraText: metadataPreview,
+                              onTap: () async {
+                                await showDialog<void>(
+                                  context: context,
+                                  builder: (_) => _DirectoryEntryDialog(
+                                    title: 'Редактирование записи',
+                                    initial: entry,
+                                    onSubmit: (
+                                      code,
+                                      name,
+                                      order,
+                                      isActive,
+                                      metadata,
+                                    ) async {
+                                      await ref
+                                          .read(directoryRepositoryProvider)
+                                          .updateEntry(
+                                            id: entry.id,
+                                            section: widget.section.id,
+                                            code: code,
+                                            name: name,
+                                            sortOrder: order,
+                                            isActive: isActive,
+                                            metadata: metadata,
+                                          );
+                                      ref.invalidate(
+                                        directoryEntriesProvider(
+                                            widget.section.id),
+                                      );
+                                    },
+                                  ),
                                 );
-                            ref.invalidate(
-                                directoryEntriesProvider(widget.section.id));
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                  _InlineActionButton(
-                    icon: Icons.close,
-                    tooltip: 'Удалить запись',
-                    color: Colors.grey.shade500,
-                    hoverColor: Colors.grey.shade600,
-                    onTap: () async {
-                      final confirmed = await showConfirmationDialog(
-                        context: context,
-                        title: 'Удалить запись?',
-                        content: 'Действие необратимо.',
-                        confirmText: 'Удалить',
-                        isDangerous: true,
-                        themeColor: Colors.red,
-                      );
-                      if (confirmed != true || !context.mounted) return;
+                              },
+                              actions: [
+                                _InlineActionButton(
+                                  icon: Icons.edit_outlined,
+                                  tooltip: 'Редактировать запись',
+                                  color: Colors.grey.shade500,
+                                  hoverColor: Colors.indigo,
+                                  onTap: () async {
+                                    await showDialog<void>(
+                                      context: context,
+                                      builder: (_) => _DirectoryEntryDialog(
+                                        title: 'Редактирование записи',
+                                        initial: entry,
+                                        onSubmit: (
+                                          code,
+                                          name,
+                                          order,
+                                          isActive,
+                                          metadata,
+                                        ) async {
+                                          await ref
+                                              .read(directoryRepositoryProvider)
+                                              .updateEntry(
+                                                id: entry.id,
+                                                section: widget.section.id,
+                                                code: code,
+                                                name: name,
+                                                sortOrder: order,
+                                                isActive: isActive,
+                                                metadata: metadata,
+                                              );
+                                          ref.invalidate(
+                                            directoryEntriesProvider(
+                                              widget.section.id,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                ),
+                                _InlineActionButton(
+                                  icon: Icons.close,
+                                  tooltip: 'Удалить запись',
+                                  color: Colors.grey.shade500,
+                                  hoverColor: Colors.grey.shade600,
+                                  onTap: () async {
+                                    final confirmed =
+                                        await showConfirmationDialog(
+                                      context: context,
+                                      title: 'Удалить запись?',
+                                      content: 'Действие необратимо.',
+                                      confirmText: 'Удалить',
+                                      isDangerous: true,
+                                      themeColor: Colors.red,
+                                    );
+                                    if (confirmed != true || !context.mounted) {
+                                      return;
+                                    }
 
-                      try {
-                        await ref
-                            .read(directoryRepositoryProvider)
-                            .deleteEntry(entry.id);
-                        ref.invalidate(
-                            directoryEntriesProvider(widget.section.id));
-                      } catch (error) {
-                        widget.onError(error.toString());
-                      }
-                    },
+                                    try {
+                                      await ref
+                                          .read(directoryRepositoryProvider)
+                                          .deleteEntry(entry.id);
+                                      ref.invalidate(
+                                        directoryEntriesProvider(
+                                            widget.section.id),
+                                      );
+                                    } catch (error) {
+                                      widget.onError(error.toString());
+                                    }
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      loading: () => Padding(
+                        padding:
+                            EdgeInsets.only(top: localNavSpacing.contentInset),
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      error: (error, _) => Padding(
+                        padding:
+                            EdgeInsets.only(top: localNavSpacing.contentInset),
+                        child: Center(child: Text('Ошибка: $error')),
+                      ),
+                    ),
                   ),
-                ],
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Ошибка: $error')),
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: showWelcome ? 1 : 0,
-        onDestinationSelected: (index) {
-          if (showWelcome && index == 0) {
-            AppNavigation.goHome();
-            return;
-          }
-          final mappedIndex = showWelcome ? index - 1 : index;
-          if (mappedIndex == 0) {
-            AppNavigation.directorySystemScrollController.scrollToTop();
-            return;
-          }
-          widget.onSelectTab(mappedIndex);
-          Navigator.of(context).pop();
-        },
-        destinations: [
-          if (showWelcome)
-            const NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+                ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: DesktopWebPageFrame(
+                    maxWidth: 1160,
+                    padding: EdgeInsets.zero,
+                    child: Padding(
+                      padding: EdgeInsets.only(right: scrollableEndInset),
+                      child: ContentTabStrip(
+                        key: const ValueKey('directory_entries_local_nav'),
+                        selectedIndex: 0,
+                        onSelected: (index) {
+                          if (index == 0) {
+                            AppNavigation.directorySystemScrollController
+                                .scrollToTop();
+                            return;
+                          }
+                          widget.onSelectTab(index);
+                          Navigator.of(context).pop();
+                        },
+                        topPadding: localNavSpacing.topPadding,
+                        bottomPadding: localNavSpacing.bottomPadding,
+                        itemWidth: localNavItemWidth,
+                        trailing: ContentTabStripActionButton(
+                          key: const ValueKey('directory_entries_add_action'),
+                          icon: Icons.add,
+                          label: 'Добавить',
+                          tooltip: 'Добавить запись',
+                          width: localNavItemWidth,
+                          onTap: _openCreateEntryDialog,
+                        ),
+                        trailingReservedWidth: localNavItemWidth,
+                        items: const [
+                          ContentTabStripItem(
+                            label: 'Система',
+                            icon: Icons.schema_outlined,
+                            keyName: 'directory_entries_local_nav_system',
+                          ),
+                          ContentTabStripItem(
+                            label: 'Каталог',
+                            icon: Icons.inventory_2_outlined,
+                            keyName: 'directory_entries_local_nav_catalog',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (hasPersistentShellSidebar)
+                  _buildCatalogDesktopBottomFadeMask(context),
+                if (hasPersistentShellSidebar)
+                  Positioned(
+                    left: DesktopWebFrame.shellSidebarLeftOffset,
+                    top: _catalogDesktopMenuTop,
+                    bottom: shellViewportBottomInset,
+                    child: SafeArea(
+                      top: false,
+                      child: _buildCatalogDesktopSideMenu(
+                        context,
+                        showWelcome: showWelcome,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          const NavigationDestination(
-            icon: Icon(Icons.schema_outlined),
-            selectedIcon: Icon(Icons.schema),
-            label: '\u0421\u0438\u0441\u0442\u0435\u043c\u0430',
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: '\u041a\u0430\u0442\u0430\u043b\u043e\u0433',
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -528,11 +880,17 @@ class _CatalogTab extends ConsumerStatefulWidget {
   final ScrollController scrollController;
   final ValueChanged<String> onError;
   final ValueChanged<int> onSelectTab;
+  final double topContentInset;
+  final double scrollableEndInset;
+  final double bottomContentPadding;
 
   const _CatalogTab({
     required this.scrollController,
     required this.onError,
     required this.onSelectTab,
+    this.topContentInset = 0,
+    this.scrollableEndInset = 0,
+    this.bottomContentPadding = 0,
   });
 
   @override
@@ -590,11 +948,11 @@ class _CatalogTabState extends ConsumerState<_CatalogTab> {
 
         return ListView.builder(
           controller: widget.scrollController,
-          padding: EdgeInsets.fromLTRB(
-            _catalogHorizontalContentPadding(context),
-            20,
-            _catalogHorizontalContentPadding(context),
-            100,
+          padding: _catalogScrollableContentPadding(
+            context,
+            top: widget.topContentInset,
+            bottom: widget.bottomContentPadding,
+            scrollableEndInset: widget.scrollableEndInset,
           ),
           itemCount: categories.length,
           itemBuilder: (context, index) {
@@ -750,6 +1108,30 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
     _scrollController.jumpTo(0);
   }
 
+  Future<void> _openCreateItemDialog(List<CatalogItem> workItems) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _CatalogItemDialog(
+        title: 'Новая позиция',
+        workItems: workItems,
+        onSubmit: (form) async {
+          await ref.read(directoryRepositoryProvider).createItem(
+                categoryId: widget.category.id,
+                name: form.name,
+                price: form.price,
+                unit: form.unit,
+                itemType: form.itemType,
+                currency: form.currency,
+                mappingKey: form.mappingKey,
+                aggregationKey: form.aggregationKey,
+                relatedWorkItem: form.relatedWorkItem,
+              );
+          ref.invalidate(catalogItemsByCategoryProvider(widget.category.id));
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final itemsAsync =
@@ -758,119 +1140,82 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
     final showWelcome = ref.watch(
       appSettingsProvider.select((value) => value.showWelcome),
     );
+    final shellSidebarInset = DesktopWebFrame.persistentShellContentInset(
+      context,
+    );
+    final hasPersistentShellSidebar =
+        DesktopWebFrame.hasPersistentShellSidebar(context);
+    final shellViewportBottomInset =
+        DesktopWebFrame.persistentShellViewportBottomInset(context);
+    final useOverlayPrimaryAction = DesktopWebFrame.usesOverlayPrimaryAction(
+      context,
+    );
+    final localNavSpacing = ContentTabStrip.balancedSpacing(context);
+    final localNavItemWidth = ContentTabStrip.standardItemWidth(context);
+    final scrollableEndInset =
+        DesktopWebFrame.scrollableContentEndInset(context);
+    final bottomPadding = DesktopWebFrame.scrollableContentBottomPadding(
+      context,
+      hasOverlayAction: useOverlayPrimaryAction,
+    );
 
-    return Scaffold(
-      appBar: CompactSectionAppBar(
-        collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
-          context,
-          _appBarCollapseController.progress,
+    if (_useCatalogNestedShellLayout()) {
+      return Scaffold(
+        appBar: CompactSectionAppBar(
+          collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
+            context,
+            _appBarCollapseController.progress,
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new),
+            tooltip: 'Назад',
+            onPressed: () => _handleBack(context),
+          ),
+          title: 'Каталог',
+          subtitle: widget.category.name,
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          tooltip: 'Назад',
-          onPressed: () => _handleBack(context),
-        ),
-        title: 'Каталог',
-        subtitle: widget.category.name,
-      ),
-      floatingActionButton: Tooltip(
-        message: 'Добавить позицию',
-        preferBelow: false,
-        verticalOffset: 32,
-        child: FloatingActionButton(
-          onPressed: () async {
-            final workItems = workItemsAsync.value ?? const <CatalogItem>[];
-            await showDialog<void>(
-              context: context,
-              builder: (_) => _CatalogItemDialog(
-                title: 'Новая позиция',
-                workItems: workItems,
-                onSubmit: (form) async {
-                  await ref.read(directoryRepositoryProvider).createItem(
-                        categoryId: widget.category.id,
-                        name: form.name,
-                        price: form.price,
-                        unit: form.unit,
-                        itemType: form.itemType,
-                        currency: form.currency,
-                        mappingKey: form.mappingKey,
-                        aggregationKey: form.aggregationKey,
-                        relatedWorkItem: form.relatedWorkItem,
-                      );
-                  ref.invalidate(
-                      catalogItemsByCategoryProvider(widget.category.id));
-                },
-              ),
-            );
-          },
-          child: const Icon(Icons.add),
-        ),
-      ),
-      body: itemsAsync.when(
-        data: (items) {
-          if (items.isEmpty) {
-            return const FriendlyEmptyState(
-              icon: Icons.inventory_2_outlined,
-              title: 'В этой категории пока нет позиций',
-              subtitle: 'Добавьте первую позицию в эту категорию.',
-              accentColor: Colors.blue,
-            );
-          }
-          return ListView.builder(
-            controller: _scrollController,
-            padding: EdgeInsets.fromLTRB(
-              _catalogHorizontalContentPadding(context),
-              20,
-              _catalogHorizontalContentPadding(context),
-              96,
-            ),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return _DirectoryCard(
-                stripeColor:
-                    item.itemType == 'work' ? Colors.teal : Colors.blue,
-                icon: item.itemType == 'work'
-                    ? Icons.engineering
-                    : Icons.inventory_2_outlined,
-                title: item.name,
-                subtitle:
-                    '${item.itemType} | ${AppNumberFormatter.decimal(item.defaultPrice)} ${item.defaultCurrency} / ${item.unit}',
-                extraText: _itemDetails(item),
-                onTap: () async {
-                  final workItems =
-                      workItemsAsync.value ?? const <CatalogItem>[];
-                  await showDialog<void>(
-                    context: context,
-                    builder: (_) => _CatalogItemDialog(
-                      title: 'Редактирование позиции',
-                      initial: item,
-                      workItems: workItems,
-                      onSubmit: (form) async {
-                        await ref.read(directoryRepositoryProvider).updateItem(
-                              id: item.id,
-                              categoryId: widget.category.id,
-                              name: form.name,
-                              price: form.price,
-                              unit: form.unit,
-                              itemType: form.itemType,
-                              currency: form.currency,
-                              mappingKey: form.mappingKey,
-                              aggregationKey: form.aggregationKey,
-                              relatedWorkItem: form.relatedWorkItem,
-                            );
-                        ref.invalidate(
-                            catalogItemsByCategoryProvider(widget.category.id));
-                      },
-                    ),
-                  );
-                },
-                actions: [
-                  _InlineActionButton(
-                    icon: Icons.edit_outlined,
-                    tooltip: 'Редактировать позицию',
-                    color: Colors.grey.shade500,
-                    hoverColor: Colors.indigo,
+        body: _CatalogScreenScaffoldBody(
+          showWelcome: showWelcome,
+          localNavigationRightInset: scrollableEndInset,
+          content: itemsAsync.when(
+            data: (items) {
+              if (items.isEmpty) {
+                return Padding(
+                  padding: EdgeInsets.only(
+                    top: localNavSpacing.contentInset,
+                    bottom: bottomPadding,
+                  ),
+                  child: const FriendlyEmptyState(
+                    icon: Icons.inventory_2_outlined,
+                    title: 'В этой категории пока нет позиций',
+                    subtitle: 'Добавьте первую позицию в эту категорию.',
+                    accentColor: Colors.blue,
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                controller: _scrollController,
+                padding: EdgeInsetsDirectional.fromSTEB(
+                  _catalogHorizontalContentPadding(context),
+                  localNavSpacing.contentInset,
+                  _catalogHorizontalContentPadding(context) +
+                      scrollableEndInset,
+                  bottomPadding,
+                ),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return _DirectoryCard(
+                    stripeColor:
+                        item.itemType == 'work' ? Colors.teal : Colors.blue,
+                    icon: item.itemType == 'work'
+                        ? Icons.engineering
+                        : Icons.inventory_2_outlined,
+                    title: item.name,
+                    subtitle:
+                        '${item.itemType} | ${AppNumberFormatter.decimal(item.defaultPrice)} ${item.defaultCurrency} / ${item.unit}',
+                    extraText: _itemDetails(item),
                     onTap: () async {
                       final workItems =
                           workItemsAsync.value ?? const <CatalogItem>[];
@@ -895,80 +1240,406 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
                                   aggregationKey: form.aggregationKey,
                                   relatedWorkItem: form.relatedWorkItem,
                                 );
-                            ref.invalidate(catalogItemsByCategoryProvider(
-                                widget.category.id));
+                            ref.invalidate(
+                              catalogItemsByCategoryProvider(
+                                  widget.category.id),
+                            );
                           },
                         ),
                       );
                     },
-                  ),
-                  _InlineActionButton(
-                    icon: Icons.close,
-                    tooltip: 'Удалить позицию',
-                    color: Colors.grey.shade500,
-                    hoverColor: Colors.grey.shade600,
-                    onTap: () async {
-                      final confirmed = await showConfirmationDialog(
-                        context: context,
-                        title: 'Удалить позицию?',
-                        content: 'Действие необратимо.',
-                        confirmText: 'Удалить',
-                        isDangerous: true,
-                        themeColor: Colors.red,
-                      );
-                      if (confirmed != true || !context.mounted) return;
-                      try {
-                        await ref
-                            .read(directoryRepositoryProvider)
-                            .deleteItem(item.id);
-                        ref.invalidate(
-                            catalogItemsByCategoryProvider(widget.category.id));
-                      } catch (error) {
-                        widget.onError(error.toString());
-                      }
-                    },
-                  ),
-                ],
+                    actions: [
+                      _InlineActionButton(
+                        icon: Icons.edit_outlined,
+                        tooltip: 'Редактировать позицию',
+                        color: Colors.grey.shade500,
+                        hoverColor: Colors.indigo,
+                        onTap: () async {
+                          final workItems =
+                              workItemsAsync.value ?? const <CatalogItem>[];
+                          await showDialog<void>(
+                            context: context,
+                            builder: (_) => _CatalogItemDialog(
+                              title: 'Редактирование позиции',
+                              initial: item,
+                              workItems: workItems,
+                              onSubmit: (form) async {
+                                await ref
+                                    .read(directoryRepositoryProvider)
+                                    .updateItem(
+                                      id: item.id,
+                                      categoryId: widget.category.id,
+                                      name: form.name,
+                                      price: form.price,
+                                      unit: form.unit,
+                                      itemType: form.itemType,
+                                      currency: form.currency,
+                                      mappingKey: form.mappingKey,
+                                      aggregationKey: form.aggregationKey,
+                                      relatedWorkItem: form.relatedWorkItem,
+                                    );
+                                ref.invalidate(
+                                  catalogItemsByCategoryProvider(
+                                      widget.category.id),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                      _InlineActionButton(
+                        icon: Icons.close,
+                        tooltip: 'Удалить позицию',
+                        color: Colors.grey.shade500,
+                        hoverColor: Colors.grey.shade600,
+                        onTap: () async {
+                          final confirmed = await showConfirmationDialog(
+                            context: context,
+                            title: 'Удалить позицию?',
+                            content: 'Действие необратимо.',
+                            confirmText: 'Удалить',
+                            isDangerous: true,
+                            themeColor: Colors.red,
+                          );
+                          if (confirmed != true || !context.mounted) {
+                            return;
+                          }
+                          try {
+                            await ref
+                                .read(directoryRepositoryProvider)
+                                .deleteItem(item.id);
+                            ref.invalidate(
+                              catalogItemsByCategoryProvider(
+                                  widget.category.id),
+                            );
+                          } catch (error) {
+                            widget.onError(error.toString());
+                          }
+                        },
+                      ),
+                    ],
+                  );
+                },
               );
             },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Ошибка: $error')),
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: showWelcome ? 2 : 1,
-        onDestinationSelected: (index) {
-          if (showWelcome && index == 0) {
-            AppNavigation.goHome();
-            return;
-          }
-          final mappedIndex = showWelcome ? index - 1 : index;
-          if (mappedIndex == 1) {
-            AppNavigation.directoryCatalogScrollController.scrollToTop();
-            return;
-          }
-          widget.onSelectTab(mappedIndex);
-          Navigator.of(context).pop();
-        },
-        destinations: [
-          if (showWelcome)
-            const NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: '\u0413\u043b\u0430\u0432\u043d\u0430\u044f',
+            loading: () => Padding(
+              padding: EdgeInsets.only(top: localNavSpacing.contentInset),
+              child: const Center(child: CircularProgressIndicator()),
             ),
-          const NavigationDestination(
-            icon: Icon(Icons.schema_outlined),
-            selectedIcon: Icon(Icons.schema),
-            label: '\u0421\u0438\u0441\u0442\u0435\u043c\u0430',
+            error: (error, _) => Padding(
+              padding: EdgeInsets.only(top: localNavSpacing.contentInset),
+              child: Center(child: Text('Ошибка: $error')),
+            ),
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: '\u041a\u0430\u0442\u0430\u043b\u043e\u0433',
+          localNavigation: ContentTabStrip(
+            key: const ValueKey('category_items_local_nav'),
+            selectedIndex: 1,
+            onSelected: (index) {
+              if (index == 1) {
+                AppNavigation.directoryCatalogScrollController.scrollToTop();
+                return;
+              }
+              widget.onSelectTab(index);
+              Navigator.of(context).pop();
+            },
+            topPadding: localNavSpacing.topPadding,
+            bottomPadding: localNavSpacing.bottomPadding,
+            itemWidth: localNavItemWidth,
+            trailing: ContentTabStripActionButton(
+              key: const ValueKey('category_items_add_action'),
+              icon: Icons.add,
+              label: 'Добавить',
+              tooltip: 'Добавить позицию',
+              width: localNavItemWidth,
+              onTap: () => _openCreateItemDialog(
+                workItemsAsync.value ?? const <CatalogItem>[],
+              ),
+            ),
+            trailingReservedWidth: localNavItemWidth,
+            items: const [
+              ContentTabStripItem(
+                label: 'Система',
+                icon: Icons.schema_outlined,
+                keyName: 'category_items_local_nav_system',
+              ),
+              ContentTabStripItem(
+                label: 'Каталог',
+                icon: Icons.inventory_2_outlined,
+                keyName: 'category_items_local_nav_catalog',
+              ),
+            ],
           ),
-        ],
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: CompactSectionAppBar(
+        collapseProgress: CompactSectionAppBar.resolveCollapseProgress(
+          context,
+          _appBarCollapseController.progress,
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          tooltip: 'Назад',
+          onPressed: () => _handleBack(context),
+        ),
+        title: 'Каталог',
+        subtitle: widget.category.name,
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) => AnimatedPadding(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: EdgeInsets.only(left: shellSidebarInset),
+          child: SizedBox(
+            width: hasPersistentShellSidebar
+                ? (constraints.maxWidth - shellSidebarInset)
+                    .clamp(0.0, double.infinity)
+                : constraints.maxWidth,
+            height: constraints.maxHeight,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  bottom:
+                      hasPersistentShellSidebar ? shellViewportBottomInset : 0,
+                  child: DesktopWebPageFrame(
+                    maxWidth: 1160,
+                    padding: EdgeInsets.zero,
+                    child: itemsAsync.when(
+                      data: (items) {
+                        if (items.isEmpty) {
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              top: localNavSpacing.contentInset,
+                              bottom: bottomPadding,
+                            ),
+                            child: const FriendlyEmptyState(
+                              icon: Icons.inventory_2_outlined,
+                              title: 'В этой категории пока нет позиций',
+                              subtitle:
+                                  'Добавьте первую позицию в эту категорию.',
+                              accentColor: Colors.blue,
+                            ),
+                          );
+                        }
+
+                        return ListView.builder(
+                          controller: _scrollController,
+                          padding: EdgeInsetsDirectional.fromSTEB(
+                            _catalogHorizontalContentPadding(context),
+                            localNavSpacing.contentInset,
+                            _catalogHorizontalContentPadding(context) +
+                                scrollableEndInset,
+                            bottomPadding,
+                          ),
+                          itemCount: items.length,
+                          itemBuilder: (context, index) {
+                            final item = items[index];
+                            return _DirectoryCard(
+                              stripeColor: item.itemType == 'work'
+                                  ? Colors.teal
+                                  : Colors.blue,
+                              icon: item.itemType == 'work'
+                                  ? Icons.engineering
+                                  : Icons.inventory_2_outlined,
+                              title: item.name,
+                              subtitle:
+                                  '${item.itemType} | ${AppNumberFormatter.decimal(item.defaultPrice)} ${item.defaultCurrency} / ${item.unit}',
+                              extraText: _itemDetails(item),
+                              onTap: () async {
+                                final workItems = workItemsAsync.value ??
+                                    const <CatalogItem>[];
+                                await showDialog<void>(
+                                  context: context,
+                                  builder: (_) => _CatalogItemDialog(
+                                    title: 'Редактирование позиции',
+                                    initial: item,
+                                    workItems: workItems,
+                                    onSubmit: (form) async {
+                                      await ref
+                                          .read(directoryRepositoryProvider)
+                                          .updateItem(
+                                            id: item.id,
+                                            categoryId: widget.category.id,
+                                            name: form.name,
+                                            price: form.price,
+                                            unit: form.unit,
+                                            itemType: form.itemType,
+                                            currency: form.currency,
+                                            mappingKey: form.mappingKey,
+                                            aggregationKey: form.aggregationKey,
+                                            relatedWorkItem:
+                                                form.relatedWorkItem,
+                                          );
+                                      ref.invalidate(
+                                        catalogItemsByCategoryProvider(
+                                            widget.category.id),
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                              actions: [
+                                _InlineActionButton(
+                                  icon: Icons.edit_outlined,
+                                  tooltip: 'Редактировать позицию',
+                                  color: Colors.grey.shade500,
+                                  hoverColor: Colors.indigo,
+                                  onTap: () async {
+                                    final workItems = workItemsAsync.value ??
+                                        const <CatalogItem>[];
+                                    await showDialog<void>(
+                                      context: context,
+                                      builder: (_) => _CatalogItemDialog(
+                                        title: 'Редактирование позиции',
+                                        initial: item,
+                                        workItems: workItems,
+                                        onSubmit: (form) async {
+                                          await ref
+                                              .read(directoryRepositoryProvider)
+                                              .updateItem(
+                                                id: item.id,
+                                                categoryId: widget.category.id,
+                                                name: form.name,
+                                                price: form.price,
+                                                unit: form.unit,
+                                                itemType: form.itemType,
+                                                currency: form.currency,
+                                                mappingKey: form.mappingKey,
+                                                aggregationKey:
+                                                    form.aggregationKey,
+                                                relatedWorkItem:
+                                                    form.relatedWorkItem,
+                                              );
+                                          ref.invalidate(
+                                            catalogItemsByCategoryProvider(
+                                                widget.category.id),
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                ),
+                                _InlineActionButton(
+                                  icon: Icons.close,
+                                  tooltip: 'Удалить позицию',
+                                  color: Colors.grey.shade500,
+                                  hoverColor: Colors.grey.shade600,
+                                  onTap: () async {
+                                    final confirmed =
+                                        await showConfirmationDialog(
+                                      context: context,
+                                      title: 'Удалить позицию?',
+                                      content: 'Действие необратимо.',
+                                      confirmText: 'Удалить',
+                                      isDangerous: true,
+                                      themeColor: Colors.red,
+                                    );
+                                    if (confirmed != true || !context.mounted) {
+                                      return;
+                                    }
+                                    try {
+                                      await ref
+                                          .read(directoryRepositoryProvider)
+                                          .deleteItem(item.id);
+                                      ref.invalidate(
+                                        catalogItemsByCategoryProvider(
+                                            widget.category.id),
+                                      );
+                                    } catch (error) {
+                                      widget.onError(error.toString());
+                                    }
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      loading: () => Padding(
+                        padding:
+                            EdgeInsets.only(top: localNavSpacing.contentInset),
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                      error: (error, _) => Padding(
+                        padding:
+                            EdgeInsets.only(top: localNavSpacing.contentInset),
+                        child: Center(child: Text('Ошибка: $error')),
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: DesktopWebPageFrame(
+                    maxWidth: 1160,
+                    padding: EdgeInsets.zero,
+                    child: Padding(
+                      padding: EdgeInsets.only(right: scrollableEndInset),
+                      child: ContentTabStrip(
+                        key: const ValueKey('category_items_local_nav'),
+                        selectedIndex: 1,
+                        onSelected: (index) {
+                          if (index == 1) {
+                            AppNavigation.directoryCatalogScrollController
+                                .scrollToTop();
+                            return;
+                          }
+                          widget.onSelectTab(index);
+                          Navigator.of(context).pop();
+                        },
+                        topPadding: localNavSpacing.topPadding,
+                        bottomPadding: localNavSpacing.bottomPadding,
+                        itemWidth: localNavItemWidth,
+                        trailing: ContentTabStripActionButton(
+                          key: const ValueKey('category_items_add_action'),
+                          icon: Icons.add,
+                          label: 'Добавить',
+                          tooltip: 'Добавить позицию',
+                          width: localNavItemWidth,
+                          onTap: () => _openCreateItemDialog(
+                            workItemsAsync.value ?? const <CatalogItem>[],
+                          ),
+                        ),
+                        trailingReservedWidth: localNavItemWidth,
+                        items: const [
+                          ContentTabStripItem(
+                            label: 'Система',
+                            icon: Icons.schema_outlined,
+                            keyName: 'category_items_local_nav_system',
+                          ),
+                          ContentTabStripItem(
+                            label: 'Каталог',
+                            icon: Icons.inventory_2_outlined,
+                            keyName: 'category_items_local_nav_catalog',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (hasPersistentShellSidebar)
+                  _buildCatalogDesktopBottomFadeMask(context),
+                if (hasPersistentShellSidebar)
+                  Positioned(
+                    left: DesktopWebFrame.shellSidebarLeftOffset,
+                    top: _catalogDesktopMenuTop,
+                    bottom: shellViewportBottomInset,
+                    child: SafeArea(
+                      top: false,
+                      child: _buildCatalogDesktopSideMenu(
+                        context,
+                        showWelcome: showWelcome,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

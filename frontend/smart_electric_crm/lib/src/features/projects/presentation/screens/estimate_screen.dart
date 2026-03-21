@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
-import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
 import 'package:smart_electric_crm/src/features/engineering/data/models/template_models.dart';
@@ -50,8 +49,6 @@ class EstimateScreen extends ConsumerStatefulWidget {
 }
 
 class _EstimateScreenState extends ConsumerState<EstimateScreen> {
-  static const double _desktopAddActionWidth = 152;
-
   final ScrollController _worksScrollController = ScrollController();
   final ScrollController _materialsScrollController = ScrollController();
   final SectionAppBarCollapseController _appBarCollapseController =
@@ -258,6 +255,7 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
       context,
     );
     final localNavSpacing = ContentTabStrip.balancedSpacing(context);
+    final localNavItemWidth = ContentTabStrip.standardItemWidth(context);
     // Backdrop filter when FAB is expanded
     // Backdrop filter when FAB is expanded
     return Scaffold(
@@ -393,11 +391,12 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
                 onSelected: _handleSectionSelection,
                 topPadding: localNavSpacing.topPadding,
                 bottomPadding: localNavSpacing.bottomPadding,
+                itemWidth: localNavItemWidth,
                 trailing: useOverlayPrimaryAction
                     ? null
                     : _buildStickyAddAction(context),
                 trailingReservedWidth:
-                    useOverlayPrimaryAction ? null : _desktopAddActionWidth,
+                    useOverlayPrimaryAction ? null : localNavItemWidth,
                 items: const [
                   ContentTabStripItem(
                     label: '\u0420\u0430\u0431\u043e\u0442\u044b',
@@ -434,80 +433,13 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
   }
 
   Widget _buildStickyAddAction(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textStyles = Theme.of(context).appTextStyles;
-    final selectedColor = isDark
-        ? Color.alphaBlend(
-            scheme.primary.withOpacity(0.26),
-            scheme.surfaceContainerHigh,
-          )
-        : Color.alphaBlend(
-            scheme.primary.withOpacity(0.14),
-            scheme.surface,
-          );
-    final foregroundColor = scheme.primary;
-
-    final button = Material(
-      color: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        key: const ValueKey('estimate_local_nav_add_action'),
-        onTap: _showSearchDialog,
-        borderRadius: BorderRadius.circular(20),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: selectedColor,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: scheme.primary.withOpacity(isDark ? 0.34 : 0.22),
-            ),
-          ),
-          child: SizedBox(
-            width: _desktopAddActionWidth,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 12,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.add,
-                    size: 20,
-                    color: foregroundColor,
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      _currentAddActionLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: textStyles.navLabel.copyWith(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: foregroundColor,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-
-    return Tooltip(
-      message: _currentAddActionTooltip,
-      preferBelow: false,
-      verticalOffset: 20,
-      child: button,
+    return ContentTabStripActionButton(
+      key: const ValueKey('estimate_local_nav_add_action'),
+      icon: Icons.add,
+      label: _currentAddActionLabel,
+      tooltip: _currentAddActionTooltip,
+      width: ContentTabStrip.standardItemWidth(context),
+      onTap: _showSearchDialog,
     );
   }
 

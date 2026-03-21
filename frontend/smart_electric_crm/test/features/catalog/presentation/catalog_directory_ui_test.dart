@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,11 +11,85 @@ import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart
 import 'package:smart_electric_crm/src/features/catalog/domain/category_model.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/directory_models.dart';
 import 'package:smart_electric_crm/src/features/catalog/presentation/category_list_screen.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_side_menu.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Catalog and directory card layout audit', () {
+    testWidgets(
+      'uses sticky top add action instead of FAB on wide layout',
+      (tester) async {
+        await _pumpCatalogScreen(
+          tester,
+          width: 1280,
+          initialTab: CatalogSection.system,
+        );
+
+        expect(
+          find.byKey(const ValueKey('catalog_local_nav_add_action')),
+          findsOneWidget,
+        );
+        expect(find.byType(FloatingActionButton), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'keeps root catalog content separated from desktop shell menu',
+      (tester) async {
+        await _pumpCatalogScreen(
+          tester,
+          width: 1280,
+          initialTab: CatalogSection.system,
+        );
+
+        final menuRect = tester.getRect(find.byType(DesktopSideMenu));
+        final titleRect = tester.getRect(find.text(_longSectionName));
+
+        expect(titleRect.left, greaterThan(menuRect.right));
+      },
+    );
+
+    testWidgets(
+      'uses top add action in section entries screen instead of FAB',
+      (tester) async {
+        await _pumpCatalogScreen(
+          tester,
+          width: 1280,
+          initialTab: CatalogSection.system,
+        );
+
+        await tester.tap(find.text(_longSectionName));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('directory_entries_add_action')),
+          findsOneWidget,
+        );
+        expect(find.byType(FloatingActionButton), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'uses top add action in category items screen instead of FAB',
+      (tester) async {
+        await _pumpCatalogScreen(
+          tester,
+          width: 1280,
+          initialTab: CatalogSection.catalog,
+        );
+
+        await tester.tap(find.text(_categoryName));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('category_items_add_action')),
+          findsOneWidget,
+        );
+        expect(find.byType(FloatingActionButton), findsNothing);
+      },
+    );
+
     testWidgets(
       'keeps system section titles readable on narrow layout',
       (tester) async {
@@ -201,6 +276,7 @@ Future<void> _pumpCatalogScreen(
   WidgetTester tester, {
   required double width,
   required CatalogSection initialTab,
+  TargetPlatform targetPlatform = TargetPlatform.windows,
 }) async {
   SharedPreferences.setMockInitialValues({
     'show_welcome_screen': false,
@@ -210,6 +286,8 @@ Future<void> _pumpCatalogScreen(
 
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, 1200);
+  final previousPlatform = debugDefaultTargetPlatformOverride;
+  debugDefaultTargetPlatformOverride = targetPlatform;
   addTearDown(() {
     tester.view.resetPhysicalSize();
     tester.view.resetDevicePixelRatio();
@@ -222,7 +300,7 @@ Future<void> _pumpCatalogScreen(
             .overrideWithValue(_FakeDirectoryRepository()),
       ],
       child: MaterialApp(
-        theme: AppTheme.light(),
+        theme: AppTheme.light().copyWith(platform: targetPlatform),
         darkTheme: AppTheme.dark(),
         home: CategoryListScreen(initialTab: initialTab),
       ),
@@ -230,4 +308,5 @@ Future<void> _pumpCatalogScreen(
   );
 
   await tester.pumpAndSettle();
+  debugDefaultTargetPlatformOverride = previousPlatform;
 }
