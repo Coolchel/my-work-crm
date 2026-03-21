@@ -43,6 +43,7 @@ class StageCard extends StatefulWidget {
 class _StageCardState extends State<StageCard> {
   static const double _metaBlockSpacing = 12;
   static const double _mobileCardMinHeight = 168;
+  static const double _desktopCardMinHeight = 132;
   static const double _mobileMetaSlotHeight = 42;
 
   bool _isHovered = false;
@@ -74,8 +75,6 @@ class _StageCardState extends State<StageCard> {
     final stageColor = _getStageColor(widget.stage.title);
     final createdAt = widget.stage.createdAt;
     final updatedAt = widget.stage.updatedAt;
-    final isDesktopWeb =
-        kIsWeb && DesktopWebFrame.isDesktop(context, minWidth: 1280);
     final isCompactMobileWeb = DesktopWebFrame.isMobileWeb(
       context,
       maxWidth: 520,
@@ -86,7 +85,7 @@ class _StageCardState extends State<StageCard> {
     final useMobileLayout = isCompactMobileWeb ||
         isMobilePlatform ||
         MediaQuery.sizeOf(context).width < 480;
-    final desktopCardHeight = isDesktopWeb ? 152.0 : 132.0;
+    final headerBottomSpacing = useMobileLayout ? 14.0 : 20.0;
 
     final isEdited = createdAt != null &&
         updatedAt != null &&
@@ -104,8 +103,8 @@ class _StageCardState extends State<StageCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         constraints: BoxConstraints(
-          minHeight: useMobileLayout ? _mobileCardMinHeight : desktopCardHeight,
-          maxHeight: useMobileLayout ? double.infinity : desktopCardHeight,
+          minHeight:
+              useMobileLayout ? _mobileCardMinHeight : _desktopCardMinHeight,
         ),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
@@ -140,17 +139,19 @@ class _StageCardState extends State<StageCard> {
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
                         useMobileLayout ? 12 : 16,
-                        useMobileLayout ? 16 : 16,
+                        useMobileLayout ? 20 : 0,
                         useMobileLayout ? 12 : 16,
-                        useMobileLayout ? 12 : 14,
+                        useMobileLayout ? 12 : 2,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisAlignment: useMobileLayout
+                            ? MainAxisAlignment.start
+                            : MainAxisAlignment.center,
                         children: [
                           _buildHeader(useMobileLayout: useMobileLayout),
-                          SizedBox(height: useMobileLayout ? 14 : 16),
+                          SizedBox(height: headerBottomSpacing),
                           useMobileLayout
                               ? _buildMobileMetaSection(
                                   createdAt: createdAt,
@@ -193,7 +194,7 @@ class _StageCardState extends State<StageCard> {
               ),
             ),
             const SizedBox(width: 8),
-            _buildDeleteButton(),
+            _buildDeleteButton(useMobileLayout: useMobileLayout),
           ],
         ),
         if (widget.stage.isPaid) ...[
@@ -220,8 +221,10 @@ class _StageCardState extends State<StageCard> {
     );
   }
 
-  Widget _buildDeleteButton() {
-    return SizedBox(
+  Widget _buildDeleteButton({
+    required bool useMobileLayout,
+  }) {
+    final button = SizedBox(
       width: 28,
       height: 28,
       child: IconButton(
@@ -234,6 +237,15 @@ class _StageCardState extends State<StageCard> {
         onPressed: widget.onDelete,
         tooltip: 'Удалить этап',
       ),
+    );
+
+    if (useMobileLayout) {
+      return button;
+    }
+
+    return Transform.translate(
+      offset: const Offset(0, -14),
+      child: button,
     );
   }
 

@@ -43,6 +43,9 @@ class ContentTabStrip extends StatelessWidget {
     this.bottomPadding = 8,
     this.sidePadding,
     this.itemWidth,
+    this.trailing,
+    this.trailingGap = 12,
+    this.trailingReservedWidth,
     super.key,
   });
 
@@ -53,6 +56,9 @@ class ContentTabStrip extends StatelessWidget {
   final double bottomPadding;
   final double? sidePadding;
   final double? itemWidth;
+  final Widget? trailing;
+  final double trailingGap;
+  final double? trailingReservedWidth;
 
   static double overlayInset(BuildContext context) {
     return balancedSpacing(context).overlayHeight;
@@ -106,33 +112,75 @@ class ContentTabStrip extends StatelessWidget {
             sidePadding ?? horizontalPadding,
             bottomPadding,
           ),
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                key: const ValueKey('content_tab_strip'),
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (var i = 0; i < items.length; i++) ...[
-                    _TabChipButton(
-                      item: items[i],
-                      isSelected: i == selectedIndex,
-                      isCompact: isCompact,
-                      width: itemWidth,
-                      textStyles: textStyles,
-                      scheme: scheme,
-                      isDark: isDark,
-                      onTap: () => onSelected(i),
+          child: trailing == null
+              ? Align(
+                  alignment: Alignment.topCenter,
+                  child: _buildTabsRow(
+                    isCompact: isCompact,
+                    textStyles: textStyles,
+                    scheme: scheme,
+                    isDark: isDark,
+                  ),
+                )
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: (trailingReservedWidth ?? 0) + trailingGap,
                     ),
-                    if (i < items.length - 1) const SizedBox(width: 8),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: _buildTabsRow(
+                          isCompact: isCompact,
+                          textStyles: textStyles,
+                          scheme: scheme,
+                          isDark: isDark,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: trailingGap),
+                    SizedBox(
+                      width: trailingReservedWidth,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: trailing!,
+                      ),
+                    ),
                   ],
-                ],
-              ),
-            ),
-          ),
+                ),
         );
       },
+    );
+  }
+
+  Widget _buildTabsRow({
+    required bool isCompact,
+    required AppTextStyles textStyles,
+    required ColorScheme scheme,
+    required bool isDark,
+  }) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        key: const ValueKey('content_tab_strip'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            _TabChipButton(
+              item: items[i],
+              isSelected: i == selectedIndex,
+              isCompact: isCompact,
+              width: itemWidth,
+              textStyles: textStyles,
+              scheme: scheme,
+              isDark: isDark,
+              onTap: () => onSelected(i),
+            ),
+            if (i < items.length - 1) const SizedBox(width: 8),
+          ],
+        ],
+      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
 import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/estimate_item_model.dart';
@@ -88,7 +89,7 @@ void main() {
     );
 
     testWidgets(
-      'uses desktop floating add action on Windows',
+      'uses sticky local add action instead of FAB on Windows',
       (tester) async {
         final stage = _buildStage();
         final fakeProjectRepository = _FakeProjectRepository(stage);
@@ -115,9 +116,14 @@ void main() {
           platform: TargetPlatform.windows,
         );
 
-        expect(find.byType(FloatingActionButton), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('estimate_local_nav_add_action')),
+          findsOneWidget,
+        );
+        expect(find.byType(FloatingActionButton), findsNothing);
 
-        await tester.tap(find.byType(FloatingActionButton));
+        await tester
+            .tap(find.byKey(const ValueKey('estimate_local_nav_add_action')));
         await tester.pumpAndSettle();
 
         final searchField = find.descendant(
@@ -152,6 +158,77 @@ void main() {
         expect(find.byType(EstimateScreen), findsOneWidget);
         expect(fakeProjectRepository.addedPayloads, hasLength(1));
         expect(fakeProjectRepository.addedPayloads.single['catalog_item'], 101);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
+    );
+
+    testWidgets(
+      'desktop local add action follows materials tab context on Windows',
+      (tester) async {
+        final stage = _buildStage();
+        final fakeProjectRepository = _FakeProjectRepository(stage);
+        final fakeCatalogRepository = _FakeCatalogRepository(
+          [
+            CatalogItem(
+              id: 202,
+              name: 'Кабель ПВС',
+              category: 1,
+              unit: 'м',
+              defaultPrice: 7,
+              defaultCurrency: 'USD',
+              itemType: 'material',
+            ),
+          ],
+        );
+
+        await _pumpEstimateScreen(
+          tester,
+          stage: stage,
+          fakeProjectRepository: fakeProjectRepository,
+          fakeCatalogRepository: fakeCatalogRepository,
+          width: 1280,
+          platform: TargetPlatform.windows,
+          initialTab: EstimateSection.materials,
+        );
+
+        await tester
+            .tap(find.byKey(const ValueKey('estimate_local_nav_add_action')));
+        await tester.pumpAndSettle();
+
+        final searchField = find.descendant(
+          of: find.byType(Dialog),
+          matching: find.byType(TextField),
+        );
+        await tester.enterText(searchField, 'Кабель');
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Кабель ПВС'));
+        await tester.pumpAndSettle();
+
+        final quantityDialog = find.byType(Dialog);
+        final quantityField = find
+            .descendant(
+              of: quantityDialog,
+              matching: find.byType(TextField),
+            )
+            .first;
+        await tester.enterText(quantityField, '4');
+        await tester.pump();
+
+        await tester.tap(
+          find.descendant(
+            of: quantityDialog,
+            matching: find.byType(FilledButton),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(EstimateScreen), findsOneWidget);
+        expect(fakeProjectRepository.addedPayloads, hasLength(1));
+        expect(fakeProjectRepository.addedPayloads.single['catalog_item'], 202);
+        expect(fakeProjectRepository.addedPayloads.single['item_type'],
+            'material');
       },
       variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
@@ -217,6 +294,7 @@ Future<void> _pumpEstimateScreen(
   required _FakeCatalogRepository fakeCatalogRepository,
   required double width,
   required TargetPlatform platform,
+  EstimateSection initialTab = EstimateSection.works,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, 900);
@@ -240,6 +318,7 @@ Future<void> _pumpEstimateScreen(
                 body: EstimateScreen(
                   projectId: '1',
                   stage: stage,
+                  initialTab: initialTab,
                 ),
               ),
         },
