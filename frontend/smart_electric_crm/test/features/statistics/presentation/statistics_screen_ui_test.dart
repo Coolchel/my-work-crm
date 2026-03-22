@@ -49,6 +49,15 @@ void main() {
           ),
           findsOneWidget,
         );
+        expect(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is SizedBox &&
+                widget.height == 24 &&
+                widget.width == null,
+          ),
+          findsNWidgets(2),
+        );
       },
     );
   });

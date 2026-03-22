@@ -37,12 +37,16 @@ void main() {
       );
 
       expect(bottomPadding, DesktopWebFrame.mobileContentEndPadding);
+      expect(
+        bottomPadding,
+        DesktopWebFrame.mobileContentHorizontalPadding,
+      );
     },
     variant: TargetPlatformVariant.only(TargetPlatform.android),
   );
 
   testWidgets(
-    'Android overlay action adds only a moderate bottom clearance',
+    'Android overlay action does not add extra bottom clearance',
     (tester) async {
       final bottomPadding = await _measureBottomPadding(
         tester,
@@ -53,8 +57,7 @@ void main() {
 
       expect(
         bottomPadding,
-        DesktopWebFrame.mobileContentEndPadding +
-            DesktopWebFrame.mobileOverlayActionBottomClearance,
+        DesktopWebFrame.mobileContentEndPadding,
       );
     },
     variant: TargetPlatformVariant.only(TargetPlatform.android),

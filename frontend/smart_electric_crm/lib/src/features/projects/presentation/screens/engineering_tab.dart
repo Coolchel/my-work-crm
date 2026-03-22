@@ -99,6 +99,10 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
             context,
             hasOverlayAction: useOverlayPrimaryAction,
           );
+          final effectiveBottomPadding =
+              useOverlayPrimaryAction && sortedShields.isNotEmpty
+                  ? (bottomPadding - 12).clamp(0.0, double.infinity).toDouble()
+                  : bottomPadding;
           final showCenteredAddCard =
               !useOverlayPrimaryAction && widget.project.shields.isEmpty;
           final horizontalPadding =
@@ -115,13 +119,13 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
               horizontalPadding,
               widget.topContentInset,
               horizontalPadding + scrollbarEndInset,
-              bottomPadding,
+              effectiveBottomPadding,
             ),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 minHeight: (constraints.maxHeight -
                         widget.topContentInset -
-                        bottomPadding)
+                        effectiveBottomPadding)
                     .clamp(0.0, double.infinity),
               ),
               child: Column(

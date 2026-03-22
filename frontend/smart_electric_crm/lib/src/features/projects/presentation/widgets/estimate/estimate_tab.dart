@@ -722,6 +722,9 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
             context,
             hasOverlayAction: useOverlayPrimaryAction,
           );
+          final effectiveBottomPadding = useOverlayPrimaryAction
+              ? (bottomPadding - 12).clamp(0.0, double.infinity).toDouble()
+              : bottomPadding;
           final horizontalPadding =
               DesktopWebFrame.centeredContentHorizontalPadding(
             context,
@@ -900,7 +903,7 @@ class _EstimateTabState extends ConsumerState<EstimateTab> {
               ),
 
               SliverToBoxAdapter(
-                child: SizedBox(height: bottomPadding),
+                child: SizedBox(height: effectiveBottomPadding),
               ),
             ],
           );

@@ -362,6 +362,10 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                 context,
                 hasOverlayAction: useOverlayPrimaryAction,
               );
+              final effectiveBottomPadding = useOverlayPrimaryAction &&
+                      filtered.isNotEmpty
+                  ? (bottomPadding - 12).clamp(0.0, double.infinity).toDouble()
+                  : bottomPadding;
               final horizontalPadding =
                   DesktopWebFrame.centeredContentHorizontalPadding(
                 context,
@@ -377,7 +381,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                     horizontalPadding,
                     16,
                     horizontalPadding + scrollbarEndInset,
-                    bottomPadding,
+                    effectiveBottomPadding,
                   ),
                   itemCount: filtered.length,
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -396,7 +400,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
                   horizontalPadding,
                   16,
                   horizontalPadding + scrollbarEndInset,
-                  bottomPadding,
+                  effectiveBottomPadding,
                 ),
                 itemCount: filtered.length,
                 physics: const AlwaysScrollableScrollPhysics(),

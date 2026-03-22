@@ -151,6 +151,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     final selectedPeriodIndex = _periodValues.indexOf(currentPeriod);
     final statisticsSwitcherSpacing = ContentTabStrip.balancedSpacing(context);
     final statisticsSwitcherItemWidth = isMobile ? 108.0 : 152.0;
+    final trailingSectionSpacing = isMobile ? 0.0 : 24.0;
 
     return ListenableBuilder(
       listenable: _appBarCollapseController,
@@ -324,7 +325,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                                   ),
                                 ],
                               ),
-                            const SizedBox(height: 24),
+                            SizedBox(height: trailingSectionSpacing),
                           ],
                         ),
                       ),

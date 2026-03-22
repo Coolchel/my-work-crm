@@ -15,12 +15,12 @@ final class DesktopWebFrame {
   static const double shellSidebarWidth = 224;
   static const double shellSidebarCompactWidth = 88;
   static const double shellSidebarBottomOffset = 16;
-  static const double mobileContentEndPadding = 24;
+  static const double mobileContentEndPadding = mobileContentHorizontalPadding;
   static const double desktopContentEndPadding = shellSidebarBottomOffset;
   static const double overlayActionBottomClearance = 24;
   static const double mobileOverlayActionSize = 56;
   static const double mobileOverlayActionMargin = 16;
-  static const double mobileOverlayActionBottomClearance = 40;
+  static const double mobileOverlayActionBottomClearance = 0;
 
   static bool _isDesktopSurface() {
     if (kIsWeb) {

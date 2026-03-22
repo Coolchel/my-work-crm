@@ -428,6 +428,10 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
             context,
             hasOverlayAction: useOverlayPrimaryAction,
           );
+          final effectiveBottomPadding =
+              useOverlayPrimaryAction && widget.project.stages.isNotEmpty
+                  ? (bottomPadding - 12).clamp(0.0, double.infinity).toDouble()
+                  : bottomPadding;
           final horizontalPadding =
               DesktopWebFrame.centeredContentHorizontalPadding(
             context,
@@ -441,7 +445,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
               horizontalPadding,
               widget.topContentInset,
               horizontalPadding + scrollbarEndInset,
-              bottomPadding,
+              effectiveBottomPadding,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -858,6 +862,12 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
                   DesktopWebFrame.scrollableContentEndInset(context);
               final bottomPadding =
                   DesktopWebFrame.scrollableContentBottomPadding(context);
+              final effectiveBottomPadding =
+                  DesktopWebFrame.usesMobileContentPadding(context)
+                      ? (bottomPadding - 10)
+                          .clamp(0.0, double.infinity)
+                          .toDouble()
+                      : bottomPadding;
               final horizontalPadding =
                   DesktopWebFrame.centeredContentHorizontalPadding(
                 context,
@@ -871,7 +881,7 @@ class _FilesTabState extends ConsumerState<_FilesTab> {
                   horizontalPadding,
                   widget.topContentInset,
                   horizontalPadding + scrollbarEndInset,
-                  bottomPadding,
+                  effectiveBottomPadding,
                 ),
                 children: [
                   _FileCategorySection(

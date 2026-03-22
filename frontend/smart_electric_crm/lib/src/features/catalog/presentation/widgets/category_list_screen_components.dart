@@ -141,6 +141,13 @@ class _SystemSectionsTabState extends ConsumerState<_SystemSectionsTab> {
 
     return sectionsAsync.when(
       data: (sections) {
+        final effectiveBottomPadding =
+            DesktopWebFrame.usesMobileContentPadding(context) &&
+                    sections.isNotEmpty
+                ? (widget.bottomContentPadding - 10)
+                    .clamp(0.0, double.infinity)
+                    .toDouble()
+                : widget.bottomContentPadding;
         if (sections.isEmpty) {
           return _buildStateBody(
             const FriendlyEmptyState(
@@ -159,7 +166,7 @@ class _SystemSectionsTabState extends ConsumerState<_SystemSectionsTab> {
           padding: _catalogScrollableContentPadding(
             context,
             top: widget.topContentInset,
-            bottom: widget.bottomContentPadding,
+            bottom: effectiveBottomPadding,
             scrollableEndInset: widget.scrollableEndInset,
           ),
           itemCount: sections.length,
@@ -384,6 +391,10 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
       context,
       hasOverlayAction: useOverlayPrimaryAction,
     );
+    final effectiveBottomPadding =
+        useOverlayPrimaryAction && entriesAsync.valueOrNull?.isNotEmpty == true
+            ? (bottomPadding - 10).clamp(0.0, double.infinity).toDouble()
+            : bottomPadding;
 
     if (_useCatalogNestedShellLayout()) {
       return Scaffold(
@@ -429,7 +440,7 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
                   localNavSpacing.contentInset,
                   _catalogHorizontalContentPadding(context) +
                       scrollableEndInset,
-                  bottomPadding,
+                  effectiveBottomPadding,
                 ),
                 itemCount: entries.length,
                 itemBuilder: (context, index) {
@@ -672,7 +683,7 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
                             localNavSpacing.contentInset,
                             _catalogHorizontalContentPadding(context) +
                                 scrollableEndInset,
-                            bottomPadding,
+                            effectiveBottomPadding,
                           ),
                           itemCount: entries.length,
                           itemBuilder: (context, index) {
@@ -965,6 +976,13 @@ class _CatalogTabState extends ConsumerState<_CatalogTab> {
 
     return categoriesAsync.when(
       data: (categories) {
+        final effectiveBottomPadding =
+            DesktopWebFrame.usesMobileContentPadding(context) &&
+                    categories.isNotEmpty
+                ? (widget.bottomContentPadding - 10)
+                    .clamp(0.0, double.infinity)
+                    .toDouble()
+                : widget.bottomContentPadding;
         if (categories.isEmpty) {
           return const FriendlyEmptyState(
             icon: Icons.folder_open_rounded,
@@ -979,7 +997,7 @@ class _CatalogTabState extends ConsumerState<_CatalogTab> {
           padding: _catalogScrollableContentPadding(
             context,
             top: widget.topContentInset,
-            bottom: widget.bottomContentPadding,
+            bottom: effectiveBottomPadding,
             scrollableEndInset: widget.scrollableEndInset,
           ),
           itemCount: categories.length,
@@ -1200,6 +1218,10 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
       context,
       hasOverlayAction: useOverlayPrimaryAction,
     );
+    final effectiveBottomPadding =
+        useOverlayPrimaryAction && itemsAsync.valueOrNull?.isNotEmpty == true
+            ? (bottomPadding - 10).clamp(0.0, double.infinity).toDouble()
+            : bottomPadding;
 
     if (_useCatalogNestedShellLayout()) {
       return Scaffold(
@@ -1244,7 +1266,7 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
                   localNavSpacing.contentInset,
                   _catalogHorizontalContentPadding(context) +
                       scrollableEndInset,
-                  bottomPadding,
+                  effectiveBottomPadding,
                 ),
                 itemCount: items.length,
                 itemBuilder: (context, index) {
@@ -1490,7 +1512,7 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
                             localNavSpacing.contentInset,
                             _catalogHorizontalContentPadding(context) +
                                 scrollableEndInset,
-                            bottomPadding,
+                            effectiveBottomPadding,
                           ),
                           itemCount: items.length,
                           itemBuilder: (context, index) {
