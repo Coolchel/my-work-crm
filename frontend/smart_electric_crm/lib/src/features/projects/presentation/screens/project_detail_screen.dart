@@ -377,8 +377,8 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
     if (confirm == true) {
       try {
         await ref.read(projectRepositoryProvider).deleteStage(stage.id);
-        // Force refresh
         ref.invalidate(projectListProvider);
+        ref.invalidate(projectByIdProvider(widget.project.id.toString()));
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

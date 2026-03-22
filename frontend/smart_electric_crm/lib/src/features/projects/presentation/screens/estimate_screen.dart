@@ -988,7 +988,9 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           onSelected: (t) => _applyWorkTemplate(t.id),
           onDelete: (t) => _deleteWorkTemplate(t),
           themeColor: Colors.green, // Theme color for Work
-          onCreate: () => _showSaveTemplateDialog('work'),
+          onCreate: (dialogContext) async =>
+              _showSaveTemplateDialog('work', dialogContext: dialogContext),
+          createButtonLabel: 'Сохранить текущие работы',
         ),
       );
     } catch (e) {
@@ -1013,7 +1015,11 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
           onSelected: (t) => _applyMaterialTemplate(t.id),
           onDelete: (t) => _deleteMaterialTemplate(t),
           themeColor: Colors.blue, // Theme color for Material
-          onCreate: () => _showSaveTemplateDialog('material'),
+          onCreate: (dialogContext) async => _showSaveTemplateDialog(
+            'material',
+            dialogContext: dialogContext,
+          ),
+          createButtonLabel: 'Сохранить текущие материалы',
         ),
       );
     } catch (e) {
@@ -1047,7 +1053,12 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     }
   }
 
-  void _showSaveTemplateDialog(String type) async {
+  void _showSaveTemplateDialog(
+    String type, {
+    BuildContext? dialogContext,
+  }) async {
+    final dialogNavigator =
+        dialogContext != null ? Navigator.of(dialogContext) : null;
     final themeColor = type == 'work' ? Colors.green : Colors.blue;
     final result = await showDialog<dynamic>(
       context: context,
@@ -1065,14 +1076,21 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
     final name = result is Map ? result['text'] : result;
     final description = result is Map ? result['description'] : '';
 
-    _saveTemplate(type, name, description);
+    await _saveTemplate(
+      type,
+      name,
+      description,
+      dialogNavigator: dialogNavigator,
+    );
   }
 
   Future<void> _saveTemplate(
-      String type, String name, String description) async {
+    String type,
+    String name,
+    String description, {
+    NavigatorState? dialogNavigator,
+  }) async {
     if (name.trim().isEmpty) return;
-
-    Navigator.pop(context); // Close dialog
 
     try {
       if (type == 'work') {
@@ -1086,6 +1104,10 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
             .createMaterialTemplateFromStage(_stage.id, name,
                 description: description);
         ref.invalidate(materialTemplatesProvider);
+      }
+
+      if (dialogNavigator != null && dialogNavigator.mounted) {
+        dialogNavigator.pop();
       }
     } catch (e) {
       if (mounted) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_typography.dart';
+import 'desktop_dialog_foundation.dart';
 import '../widgets/app_dialog_scrollbar.dart';
 import '../widgets/desktop_web_frame.dart';
 
@@ -37,6 +38,50 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
 
   @override
   Widget build(BuildContext context) {
+    if (usesDesktopDialogFoundation(context)) {
+      return _buildDesktopDialog(context);
+    }
+    return _buildMobileDialog(context);
+  }
+
+  Widget _buildDesktopDialog(BuildContext context) {
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
+    final effectiveColor =
+        widget.isDestructive ? Colors.red : widget.themeColor;
+
+    return DesktopDialogShell(
+      title: widget.title,
+      accentColor: effectiveColor,
+      maxWidth: 440,
+      onClose: () => Navigator.of(context).pop(false),
+      scrollController: _scrollController,
+      actions: [
+        if (widget.cancelText.isNotEmpty)
+          DesktopDialogSecondaryButton(
+            onPressed: () => Navigator.pop(context, false),
+            label: widget.cancelText,
+            accentColor: effectiveColor,
+          ),
+        DesktopDialogPrimaryButton(
+          onPressed: () => Navigator.pop(context, true),
+          accentColor: effectiveColor,
+          child: Text(widget.confirmText),
+        ),
+      ],
+      child: Text(
+        widget.content,
+        style: textStyles.body.copyWith(
+          fontSize: 15,
+          height: 1.4,
+          color: scheme.onSurface,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _buildMobileDialog(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final textStyles = context.appTextStyles;
@@ -56,7 +101,6 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
       isMobileWeb ? 16 : 24,
     );
     final actionWidth = isMobileWeb ? double.infinity : 140.0;
-
     return Dialog(
       insetPadding: EdgeInsets.symmetric(
         horizontal: isMobileWeb ? 10 : 16,

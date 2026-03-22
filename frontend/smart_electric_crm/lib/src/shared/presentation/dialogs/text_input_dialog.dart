@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_typography.dart';
+import 'desktop_dialog_foundation.dart';
 import '../widgets/app_dialog_scrollbar.dart';
 import '../widgets/desktop_web_frame.dart';
 
@@ -53,6 +54,56 @@ class _TextInputDialogState extends State<TextInputDialog> {
 
   @override
   Widget build(BuildContext context) {
+    if (usesDesktopDialogFoundation(context)) {
+      return _buildDesktopDialog(context);
+    }
+    return _buildMobileDialog(context);
+  }
+
+  Widget _buildDesktopDialog(BuildContext context) {
+    return DesktopDialogShell(
+      title: widget.title,
+      accentColor: widget.themeColor,
+      maxWidth: 480,
+      onClose: () => Navigator.of(context).pop(),
+      scrollController: _scrollController,
+      actions: [
+        DesktopDialogSecondaryButton(
+          onPressed: () => Navigator.pop(context),
+          label: widget.cancelText,
+          accentColor: widget.themeColor,
+        ),
+        DesktopDialogPrimaryButton(
+          onPressed: _submit,
+          accentColor: widget.themeColor,
+          child: Text(widget.confirmText),
+        ),
+      ],
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDesktopTextField(
+              controller: _textController,
+              label: widget.labelText,
+              autoFocus: true,
+            ),
+            if (widget.descriptionLabelText != null) ...[
+              const SizedBox(height: 16),
+              _buildDesktopTextField(
+                controller: _descController,
+                label: widget.descriptionLabelText!,
+                maxLines: 3,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileDialog(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final textStyles = context.appTextStyles;
@@ -69,7 +120,6 @@ class _TextInputDialogState extends State<TextInputDialog> {
       isMobileWeb ? 16 : 24,
       isMobileWeb ? 16 : 24,
     );
-
     return Dialog(
       insetPadding: EdgeInsets.symmetric(
         horizontal: isMobileWeb ? 10 : 16,
@@ -228,6 +278,37 @@ class _TextInputDialogState extends State<TextInputDialog> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopTextField({
+    required TextEditingController controller,
+    required String label,
+    bool autoFocus = false,
+    int maxLines = 1,
+  }) {
+    final textStyles = context.appTextStyles;
+    final isSingleLine = maxLines == 1;
+
+    return TextField(
+      controller: controller,
+      autofocus: autoFocus,
+      maxLines: maxLines,
+      textAlignVertical:
+          isSingleLine ? TextAlignVertical.center : TextAlignVertical.top,
+      style: textStyles.input,
+      decoration: desktopDialogInputDecoration(
+        context,
+        label: label,
+        accentColor: widget.themeColor,
+        alignLabelWithHint: !isSingleLine,
+        constraints: isSingleLine
+            ? const BoxConstraints(
+                minHeight: desktopDialogSingleLineFieldHeight,
+                maxHeight: desktopDialogSingleLineFieldHeight,
+              )
+            : null,
       ),
     );
   }

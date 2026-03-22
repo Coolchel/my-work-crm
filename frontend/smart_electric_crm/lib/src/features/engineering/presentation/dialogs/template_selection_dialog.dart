@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
+
 import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
 import '../../../../shared/presentation/widgets/friendly_empty_state.dart';
 
@@ -13,7 +14,8 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
   final Function(T) onSelected;
   final Function(T)? onDelete;
   final Color themeColor;
-  final VoidCallback? onCreate;
+  final Future<void> Function(BuildContext dialogContext)? onCreate;
+  final String createButtonLabel;
 
   const TemplateSelectionDialog({
     super.key,
@@ -23,8 +25,9 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
     required this.getDescription,
     required this.onSelected,
     this.onDelete,
-    this.themeColor = Colors.blue, // Default color
+    this.themeColor = Colors.blue,
     this.onCreate,
+    this.createButtonLabel = 'Сохранить текущий шаблон',
   });
 
   @override
@@ -32,6 +35,7 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
     final textStyles = context.appTextStyles;
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       elevation: 0,
@@ -49,12 +53,11 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                   : Colors.black.withOpacity(0.12),
               blurRadius: isDark ? 12 : 20,
               offset: const Offset(0, 6),
-            )
+            ),
           ],
         ),
         child: Column(
           children: [
-            // Header
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
@@ -69,7 +72,6 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Centered Title
                   Center(
                     child: Text(
                       title,
@@ -81,13 +83,12 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  // Close button on the right
                   Align(
                     alignment: Alignment.centerRight,
                     child: IconButton(
                       onPressed: () => Navigator.of(context).pop(),
                       icon: Icon(Icons.close, color: themeColor),
-                      tooltip: "Закрыть",
+                      tooltip: 'Закрыть',
                       iconSize: 20,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -96,8 +97,6 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Content
             Expanded(
               child: templates.isEmpty
                   ? FriendlyEmptyState(
@@ -108,12 +107,14 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                       accentColor: themeColor,
                       iconSize: 62,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 22),
+                        horizontal: 16,
+                        vertical: 22,
+                      ),
                     )
                   : AppDialogScrollbar.builder(
                       builder: (scrollController) => ListView.separated(
                         controller: scrollController,
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.fromLTRB(12, 12, 22, 12),
                         itemCount: templates.length,
                         separatorBuilder: (ctx, i) => const SizedBox(height: 6),
                         itemBuilder: (context, index) {
@@ -123,27 +124,25 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                       ),
                     ),
             ),
-
-            // Footer (Create New)
             if (onCreate != null)
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                 decoration: BoxDecoration(
                   border: Border(
-                      top: BorderSide(
-                          color: AppDesignTokens.softBorder(context))),
+                    top: BorderSide(color: AppDesignTokens.softBorder(context)),
+                  ),
                 ),
                 child: Center(
                   child: SizedBox(
                     width: 250,
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        onCreate!(); // Trigger create action
-                      },
+                      onPressed: () => onCreate!(context),
                       icon: const Icon(Icons.add_circle_outline, size: 20),
-                      label: const Text("Сохранить текущий щит",
-                          style: TextStyle(fontSize: 13)),
+                      label: Text(
+                        createButtonLabel,
+                        style: const TextStyle(fontSize: 13),
+                      ),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         backgroundColor: themeColor.withOpacity(0.1),
@@ -168,6 +167,7 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final isDark = AppDesignTokens.isDark(context);
     final textStyles = context.appTextStyles;
+
     return Material(
       color: scheme.surface,
       shape: RoundedRectangleBorder(
@@ -187,7 +187,6 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           child: Row(
             children: [
-              // Leading Icon
               Container(
                 width: 32,
                 height: 32,
@@ -196,13 +195,12 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
-                  Icons.description_outlined, // Generic template icon
+                  Icons.description_outlined,
                   color: themeColor,
                   size: 18,
                 ),
               ),
               const SizedBox(width: 10),
-              // Content
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,15 +225,16 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
                   ],
                 ),
               ),
-              // Delete Action
               if (onDelete != null)
                 IconButton(
-                  icon: Icon(Icons.close, // Changed to Cross
-                      size: 16,
-                      color: Colors.grey.shade400),
+                  icon: Icon(
+                    Icons.close,
+                    size: 16,
+                    color: Colors.grey.shade400,
+                  ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  tooltip: "Удалить шаблон",
+                  tooltip: 'Удалить шаблон',
                   onPressed: () => _confirmDelete(context, template),
                 ),
             ],
@@ -250,9 +249,9 @@ class TemplateSelectionDialog<T> extends StatelessWidget {
       context: context,
       barrierColor: Colors.transparent,
       builder: (context) => ConfirmationDialog(
-        title: "Удалить шаблон?",
+        title: 'Удалить шаблон?',
         content: "Вы уверены, что хотите удалить '${getName(template)}'?",
-        confirmText: "Удалить",
+        confirmText: 'Удалить',
         isDestructive: true,
         themeColor: themeColor,
       ),

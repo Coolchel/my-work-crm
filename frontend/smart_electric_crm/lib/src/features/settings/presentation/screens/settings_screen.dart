@@ -6,9 +6,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/api/api_exception.dart';
 import '../../../../core/navigation/app_navigation.dart';
 import '../../../../core/navigation/route_bootstrap_storage.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/presentation/dialogs/confirmation_dialog.dart';
+import '../../../../shared/presentation/dialogs/desktop_dialog_foundation.dart';
 import '../../../../shared/presentation/widgets/compact_section_app_bar.dart';
 import '../../../../shared/presentation/widgets/desktop_web_frame.dart';
 import '../../../../shared/presentation/widgets/app_section_header.dart';
@@ -260,99 +263,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 InkWell(
                   hoverColor: AppDesignTokens.hoverOverlay(context),
                   onTap: () async {
-                    final confirmed = await showDialog<bool>(
-                      context: context,
-                      builder: (context) {
-                        final textStyles = context.appTextStyles;
-                        return Dialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 340),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.1),
-                                    borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(24),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.logout,
-                                          color: Colors.red),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        '\u0412\u044b\u0445\u043e\u0434',
-                                        style: textStyles.dialogTitle.copyWith(
-                                          color: Colors.red,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(24),
-                                  child: Text(
-                                    '\u0412\u044b \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043b\u044c\u043d\u043e \u0445\u043e\u0442\u0438\u0442\u0435 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0441\u0438\u0441\u0442\u0435\u043c\u044b?',
-                                    style:
-                                        textStyles.body.copyWith(fontSize: 15),
-                                  ),
-                                ),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                                  child: Wrap(
-                                    alignment: WrapAlignment.end,
-                                    crossAxisAlignment:
-                                        WrapCrossAlignment.center,
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.pop(context, false),
-                                        child: const Text(
-                                          '\u041e\u0442\u043c\u0435\u043d\u0430',
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red,
-                                          foregroundColor: Theme.of(context)
-                                              .colorScheme
-                                              .surface,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        onPressed: () =>
-                                            Navigator.pop(context, true),
-                                        child: const Text(
-                                          '\u0412\u044b\u0439\u0442\u0438',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    );
+                    final useDesktopDialog =
+                        usesDesktopDialogFoundation(context);
+                    final confirmed = useDesktopDialog
+                        ? await _showDesktopLogoutDialog()
+                        : await _showMobileLogoutDialog();
+                    if (!mounted) {
+                      return;
+                    }
                     if (confirmed == true) {
                       RouteBootstrapStorage.clearPendingRedirect();
                       await ref.read(authProvider.notifier).logout();
-                      if (context.mounted) {
-                        context.go(AppNavigation.loginPath);
+                      if (!context.mounted) {
+                        return;
                       }
+                      context.go(AppNavigation.loginPath);
                     }
                   },
                   child: Padding(
@@ -553,6 +478,118 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: screenContext,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {
+          if (usesDesktopDialogFoundation(dialogContext)) {
+            return DesktopDialogShell(
+              title:
+                  '\u041e\u043f\u0430\u0441\u043d\u0430\u044f \u0437\u043e\u043d\u0430',
+              accentColor: themeColor,
+              maxWidth: 440,
+              onClose: isLoading ? () {} : () => Navigator.pop(dialogContext),
+              actions: [
+                DesktopDialogSecondaryButton(
+                  onPressed:
+                      isLoading ? null : () => Navigator.pop(dialogContext),
+                  label: '\u041e\u0442\u043c\u0435\u043d\u0430',
+                  accentColor: themeColor,
+                ),
+                DesktopDialogPrimaryButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          final password = passwordController.text;
+                          if (password.trim().isEmpty) {
+                            setDialogState(() {
+                              passwordError =
+                                  '\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043f\u0430\u0440\u043e\u043b\u044c \u0434\u043b\u044f \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u044f';
+                            });
+                            return;
+                          }
+
+                          setDialogState(() {
+                            isLoading = true;
+                            passwordError = null;
+                          });
+
+                          try {
+                            final repo = await ref.read(
+                              authRepositoryProvider.future,
+                            );
+                            final user = await repo.getUser();
+                            final username =
+                                (user['username'] ?? '').toString().trim();
+
+                            if (username.isEmpty) {
+                              throw Exception(
+                                '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f',
+                              );
+                            }
+
+                            final isValid = await repo.verifyCurrentPassword(
+                              username: username,
+                              password: password,
+                            );
+
+                            if (!isValid) {
+                              setDialogState(() {
+                                isLoading = false;
+                                passwordError =
+                                    '\u041d\u0435\u0432\u0435\u0440\u043d\u044b\u0439 \u043f\u0430\u0440\u043e\u043b\u044c';
+                              });
+                              return;
+                            }
+
+                            if (!screenContext.mounted) return;
+                            Navigator.pop(dialogContext);
+                            AppNavigation.openCatalog(screenContext);
+                          } catch (_) {
+                            setDialogState(() {
+                              isLoading = false;
+                              passwordError =
+                                  '\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0435 \u0440\u0430\u0437.';
+                            });
+                          }
+                        },
+                  accentColor: themeColor,
+                  child: isLoading
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Theme.of(dialogContext).colorScheme.surface,
+                          ),
+                        )
+                      : const Text(
+                          '\u042f \u043f\u043e\u043d\u0438\u043c\u0430\u044e'),
+                ),
+              ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '\u0412\u044b \u0432\u0445\u043e\u0434\u0438\u0442\u0435 \u0432 \u0440\u0430\u0437\u0434\u0435\u043b \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f \u0441\u043f\u0440\u0430\u0432\u043e\u0447\u043d\u0438\u043a\u0430. \u041b\u044e\u0431\u044b\u0435 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u0437\u0434\u0435\u0441\u044c \u043f\u043e\u0432\u043b\u0438\u044f\u044e\u0442 \u043d\u0430 \u0440\u0430\u0441\u0447\u0435\u0442\u044b \u0432\u043e \u0432\u0441\u0435\u0445 \u043f\u0440\u043e\u0435\u043a\u0442\u0430\u0445. \u0411\u0443\u0434\u044c\u0442\u0435 \u043e\u0441\u0442\u043e\u0440\u043e\u0436\u043d\u044b!',
+                    style: dialogContext.appTextStyles.body.copyWith(
+                      fontSize: 15,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DesktopDialogTextField(
+                    controller: passwordController,
+                    label:
+                        '\u041f\u0430\u0440\u043e\u043b\u044c \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u0430\u043a\u043a\u0430\u0443\u043d\u0442\u0430',
+                    accentColor: themeColor,
+                    enabled: !isLoading,
+                    obscureText: true,
+                    errorText: passwordError,
+                    autofocus: true,
+                  ),
+                ],
+              ),
+            );
+          }
+
           final textStyles = dialogContext.appTextStyles;
           final isMobileWeb =
               DesktopWebFrame.isMobileWeb(dialogContext, maxWidth: 560);
@@ -765,6 +802,121 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
+          final effectiveErrorMessage = errorMessage ?? confirmError;
+          if (usesDesktopDialogFoundation(context)) {
+            return DesktopDialogShell(
+              title:
+                  '\u0421\u043c\u0435\u043d\u0430 \u043f\u0430\u0440\u043e\u043b\u044f',
+              accentColor: themeColor,
+              maxWidth: 440,
+              onClose: isLoading ? () {} : () => Navigator.pop(context),
+              actions: [
+                DesktopDialogSecondaryButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(context),
+                  label: '\u041e\u0442\u043c\u0435\u043d\u0430',
+                  accentColor: themeColor,
+                ),
+                DesktopDialogPrimaryButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          if (newPasswordController.text !=
+                              confirmPasswordController.text) {
+                            setDialogState(() {
+                              errorMessage =
+                                  '\u041d\u043e\u0432\u044b\u0435 \u043f\u0430\u0440\u043e\u043b\u0438 \u043d\u0435 \u0441\u043e\u0432\u043f\u0430\u0434\u0430\u044e\u0442.';
+                            });
+                            return;
+                          }
+
+                          setDialogState(() {
+                            isLoading = true;
+                            errorMessage = null;
+                            confirmError = null;
+                          });
+
+                          try {
+                            final repo =
+                                await ref.read(authRepositoryProvider.future);
+                            await repo.changePassword(
+                              oldPasswordController.text,
+                              newPasswordController.text,
+                            );
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    '\u041f\u0430\u0440\u043e\u043b\u044c \u0443\u0441\u043f\u0435\u0448\u043d\u043e \u0438\u0437\u043c\u0435\u043d\u0435\u043d',
+                                  ),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            setDialogState(() {
+                              isLoading = false;
+                              errorMessage =
+                                  _resolveChangePasswordErrorMessage(e);
+                            });
+                          }
+                        },
+                  accentColor: themeColor,
+                  child: isLoading
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+                        )
+                      : const Text(
+                          '\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c'),
+                ),
+              ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DesktopDialogTextField(
+                    controller: oldPasswordController,
+                    label:
+                        '\u0422\u0435\u043a\u0443\u0449\u0438\u0439 \u043f\u0430\u0440\u043e\u043b\u044c',
+                    accentColor: themeColor,
+                    enabled: !isLoading,
+                    obscureText: true,
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 16),
+                  DesktopDialogTextField(
+                    controller: newPasswordController,
+                    label:
+                        '\u041d\u043e\u0432\u044b\u0439 \u043f\u0430\u0440\u043e\u043b\u044c',
+                    accentColor: themeColor,
+                    enabled: !isLoading,
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 16),
+                  DesktopDialogTextField(
+                    controller: confirmPasswordController,
+                    label:
+                        '\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043d\u0438\u0435',
+                    accentColor: themeColor,
+                    enabled: !isLoading,
+                    obscureText: true,
+                  ),
+                  if (effectiveErrorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    _buildDialogErrorBanner(
+                      context,
+                      effectiveErrorMessage,
+                      accentColor: Colors.red,
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }
+
           final textStyles = context.appTextStyles;
           return Dialog(
             shape:
@@ -821,9 +973,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           confirmPasswordController,
                           'Подтверждение',
                           isEnabled: !isLoading,
-                          errorText: confirmError,
                         ),
-                        if (errorMessage != null) ...[
+                        if (effectiveErrorMessage != null) ...[
                           const SizedBox(height: 16),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -844,7 +995,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    errorMessage!,
+                                    effectiveErrorMessage,
                                     style: textStyles.secondaryBody.copyWith(
                                       color: Colors.red,
                                     ),
@@ -887,7 +1038,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   if (newPasswordController.text !=
                                       confirmPasswordController.text) {
                                     setDialogState(() {
-                                      confirmError = 'Пароли не совпадают';
+                                      confirmError =
+                                          'Новые пароли не совпадают.';
                                     });
                                     return;
                                   }
@@ -974,6 +1126,208 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ?.copyWith(height: 0.8),
       ),
       obscureText: true,
+    );
+  }
+
+  String _resolveChangePasswordErrorMessage(Object error) {
+    final responseMessage = _extractErrorMessage(error);
+    final normalizedMessage = responseMessage?.toLowerCase();
+
+    if (normalizedMessage != null &&
+        (normalizedMessage.contains('wrong old password') ||
+            normalizedMessage.contains('стар') &&
+                normalizedMessage.contains('парол'))) {
+      return 'Старый пароль введен неверно.';
+    }
+
+    if (error is ApiException) {
+      if (error.message == ApiException.genericErrorMessage) {
+        return 'Не удалось сменить пароль. Попробуйте еще раз.';
+      }
+      return error.message;
+    }
+
+    if (responseMessage != null && responseMessage.trim().isNotEmpty) {
+      return responseMessage.trim();
+    }
+
+    return 'Не удалось сменить пароль. Попробуйте еще раз.';
+  }
+
+  String? _extractErrorMessage(Object error) {
+    if (error is ApiException) {
+      return _extractErrorMessage(error.raw) ?? error.message;
+    }
+    if (error is DioException) {
+      return _extractErrorMessageFromData(error.response?.data);
+    }
+    return null;
+  }
+
+  String? _extractErrorMessageFromData(dynamic data) {
+    if (data is Map) {
+      for (final key in const [
+        'old_password',
+        'error',
+        'detail',
+        'message',
+        'new_password',
+        'non_field_errors',
+      ]) {
+        final extracted = _extractErrorTextValue(data[key]);
+        if (extracted != null) {
+          return extracted;
+        }
+      }
+    }
+
+    return _extractErrorTextValue(data);
+  }
+
+  String? _extractErrorTextValue(dynamic value) {
+    if (value is String && value.trim().isNotEmpty) {
+      return value.trim();
+    }
+    if (value is Iterable) {
+      for (final item in value) {
+        final extracted = _extractErrorTextValue(item);
+        if (extracted != null) {
+          return extracted;
+        }
+      }
+    }
+    return null;
+  }
+
+  Future<bool?> _showDesktopLogoutDialog() {
+    return showConfirmationDialog(
+      context: context,
+      title: '\u0412\u044b\u0445\u043e\u0434',
+      content:
+          '\u0412\u044b \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043b\u044c\u043d\u043e \u0445\u043e\u0442\u0438\u0442\u0435 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0441\u0438\u0441\u0442\u0435\u043c\u044b?',
+      confirmText: '\u0412\u044b\u0439\u0442\u0438',
+      cancelText: '\u041e\u0442\u043c\u0435\u043d\u0430',
+      isDangerous: true,
+      themeColor: Colors.red,
+    );
+  }
+
+  Future<bool?> _showMobileLogoutDialog() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        final textStyles = context.appTextStyles;
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 340),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.logout, color: Colors.red),
+                      const SizedBox(width: 12),
+                      Text(
+                        '\u0412\u044b\u0445\u043e\u0434',
+                        style: textStyles.dialogTitle.copyWith(
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    '\u0412\u044b \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043b\u044c\u043d\u043e \u0445\u043e\u0442\u0438\u0442\u0435 \u0432\u044b\u0439\u0442\u0438 \u0438\u0437 \u0441\u0438\u0441\u0442\u0435\u043c\u044b?',
+                    style: textStyles.body.copyWith(fontSize: 15),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child:
+                            const Text('\u041e\u0442\u043c\u0435\u043d\u0430'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.surface,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('\u0412\u044b\u0439\u0442\u0438'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDialogErrorBanner(
+    BuildContext context,
+    String message, {
+    Color accentColor = Colors.red,
+  }) {
+    final textStyles = context.appTextStyles;
+    final isDesktopDialog = usesDesktopDialogFoundation(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDesktopDialog
+            ? accentColor.withOpacity(0.08)
+            : Colors.red.shade50,
+        borderRadius: BorderRadius.circular(isDesktopDialog ? 12 : 8),
+        border: isDesktopDialog
+            ? Border.all(color: accentColor.withOpacity(0.18))
+            : null,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.error_outline,
+            color: accentColor,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: textStyles.secondaryBody.copyWith(color: accentColor),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

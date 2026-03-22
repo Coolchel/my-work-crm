@@ -857,9 +857,9 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
   }
 
   void _showSaveTemplateDialog(
-      BuildContext context, WidgetRef ref, ShieldModel shield) async {
+      BuildContext dialogContext, WidgetRef ref, ShieldModel shield) async {
     final result = await showDialog<dynamic>(
-      context: context,
+      context: dialogContext,
       barrierColor: Colors.transparent,
       builder: (context) => TextInputDialog(
         title: shield.shieldType == 'power'
@@ -892,9 +892,12 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
                 description: description);
         ref.invalidate(ledShieldTemplatesProvider);
       }
+      if (dialogContext.mounted) {
+        Navigator.of(dialogContext).pop();
+      }
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context)
+      if (dialogContext.mounted) {
+        ScaffoldMessenger.of(dialogContext)
             .showSnackBar(SnackBar(content: Text("Ошибка сохранения: $e")));
       }
     }
@@ -922,7 +925,10 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
             onSelected: (t) =>
                 _applyTemplate(context, ref, shield, (t as dynamic).id),
             themeColor: _getColorForType(shield.shieldType),
-            onCreate: () => _showSaveTemplateDialog(context, ref, shield),
+            onCreate: (dialogContext) async =>
+                _showSaveTemplateDialog(dialogContext, ref, shield),
+            createButtonLabel:
+                isPower ? 'Сохранить текущий щит' : 'Сохранить текущий LED щит',
           ),
         );
       }

@@ -53,7 +53,7 @@ void main() {
         final deleteRect = tester.getRect(find.byIcon(Icons.close));
 
         expect((deleteRect.top - titleRect.top).abs(), lessThanOrEqualTo(6));
-        expect(find.text('ОПЛАЧЕНО'), findsOneWidget);
+        expect(find.text('ОПЛАЧЕНО'), findsNothing);
       },
     );
   });

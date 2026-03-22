@@ -197,10 +197,6 @@ class _StageCardState extends State<StageCard> {
             _buildDeleteButton(useMobileLayout: useMobileLayout),
           ],
         ),
-        if (widget.stage.isPaid) ...[
-          SizedBox(height: useMobileLayout ? 8 : 10),
-          _buildPaidBadge(),
-        ],
       ],
     );
   }
@@ -425,6 +421,7 @@ class _StageCardState extends State<StageCard> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildPaidBadge() {
     return Align(
       alignment: Alignment.centerLeft,

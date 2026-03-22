@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/errors/user_friendly_error_mapper.dart';
+import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_typography.dart';
+import '../dialogs/desktop_dialog_foundation.dart';
 
 class ErrorFeedback {
   static Future<void> show(
@@ -34,7 +35,7 @@ class ErrorFeedback {
   static Future<void> showMessage(
     BuildContext context,
     String message, {
-    String title = 'Ошибка',
+    String title = '\u041e\u0448\u0438\u0431\u043a\u0430',
   }) async {
     if (!context.mounted) return;
 
@@ -43,18 +44,38 @@ class ErrorFeedback {
         context: context,
         useRootNavigator: true,
         builder: (dialogContext) {
-          final scheme = Theme.of(dialogContext).colorScheme;
-          final textStyles = dialogContext.appTextStyles;
-          final isNetworkIssue =
-              message.toLowerCase().contains('нет подключения');
-          final isFailure = title.toLowerCase().contains('ошибка') ||
-              message.toLowerCase().contains('не удалось') ||
-              message.toLowerCase().contains('ошибка');
+          final isNetworkIssue = message.toLowerCase().contains(
+              '\u043d\u0435\u0442 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u044f');
+          final isFailure = title
+                  .toLowerCase()
+                  .contains('\u043e\u0448\u0438\u0431\u043a\u0430') ||
+              message.toLowerCase().contains(
+                  '\u043d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c') ||
+              message
+                  .toLowerCase()
+                  .contains('\u043e\u0448\u0438\u0431\u043a\u0430');
           final themeColor = isFailure
               ? Colors.red
               : isNetworkIssue
                   ? Colors.deepOrange
                   : Colors.indigo;
+          final icon = isFailure
+              ? Icons.error_outline
+              : isNetworkIssue
+                  ? Icons.wifi_off_rounded
+                  : Icons.info_outline;
+
+          if (usesDesktopDialogFoundation(dialogContext)) {
+            return DesktopMessageDialog(
+              title: title,
+              message: message,
+              accentColor: themeColor,
+              icon: icon,
+            );
+          }
+
+          final scheme = Theme.of(dialogContext).colorScheme;
+          final textStyles = dialogContext.appTextStyles;
           final isDark = AppDesignTokens.isDark(dialogContext);
 
           return Dialog(
@@ -95,11 +116,7 @@ class ErrorFeedback {
                     child: Row(
                       children: [
                         Icon(
-                          isFailure
-                              ? Icons.error_outline
-                              : isNetworkIssue
-                                  ? Icons.wifi_off_rounded
-                                  : Icons.info_outline,
+                          icon,
                           color: themeColor,
                           size: 22,
                         ),
@@ -132,7 +149,8 @@ class ErrorFeedback {
                       child: FilledButton.icon(
                         onPressed: () => Navigator.of(dialogContext).pop(),
                         icon: const Icon(Icons.check_rounded, size: 18),
-                        label: const Text('Понятно'),
+                        label: const Text(
+                            '\u041f\u043e\u043d\u044f\u0442\u043d\u043e'),
                         style: FilledButton.styleFrom(
                           backgroundColor: themeColor,
                           shape: RoundedRectangleBorder(

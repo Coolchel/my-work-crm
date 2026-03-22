@@ -50,26 +50,20 @@ class _AppDialogScrollbarState extends State<AppDialogScrollbar> {
     final thumbDragColor = isDark
         ? scheme.primary.withOpacity(0.74)
         : scheme.primary.withOpacity(0.60);
-    final trackBaseColor = isDark
-        ? Colors.white.withOpacity(0.04)
-        : scheme.onSurface.withOpacity(0.03);
-    final trackActiveColor = isDark
-        ? Colors.white.withOpacity(0.08)
-        : scheme.primary.withOpacity(0.08);
 
     return ScrollbarTheme(
       data: ScrollbarThemeData(
         interactive: true,
         radius: const Radius.circular(999),
         minThumbLength: 44,
-        crossAxisMargin: 12,
-        mainAxisMargin: 12,
+        crossAxisMargin: 8,
+        mainAxisMargin: 10,
         thickness: WidgetStateProperty.resolveWith<double?>((states) {
           if (states.contains(WidgetState.hovered) ||
               states.contains(WidgetState.dragged)) {
-            return 8;
+            return 6;
           }
-          return 6;
+          return 5;
         }),
         thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
           if (states.contains(WidgetState.dragged)) {
@@ -80,19 +74,9 @@ class _AppDialogScrollbarState extends State<AppDialogScrollbar> {
           }
           return thumbBaseColor;
         }),
-        trackColor: WidgetStateProperty.resolveWith<Color?>((states) {
-          if (states.contains(WidgetState.hovered) ||
-              states.contains(WidgetState.dragged)) {
-            return trackActiveColor;
-          }
-          return trackBaseColor;
-        }),
         trackBorderColor: const WidgetStatePropertyAll(Colors.transparent),
         thumbVisibility: const WidgetStatePropertyAll(true),
-        trackVisibility: WidgetStateProperty.resolveWith<bool?>((states) {
-          return states.contains(WidgetState.hovered) ||
-              states.contains(WidgetState.dragged);
-        }),
+        trackVisibility: const WidgetStatePropertyAll(false),
       ),
       child: Scrollbar(
         controller: controller,
