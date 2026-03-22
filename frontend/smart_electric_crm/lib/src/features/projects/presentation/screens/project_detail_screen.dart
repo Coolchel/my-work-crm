@@ -395,6 +395,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
     final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     final useOverlayPrimaryAction =
         DesktopWebFrame.usesOverlayPrimaryAction(context);
+    final stages = [...widget.project.stages]..sort(_compareStagesForDisplay);
 
     return Scaffold(
       floatingActionButton: useOverlayPrimaryAction
@@ -429,7 +430,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
             hasOverlayAction: useOverlayPrimaryAction,
           );
           final effectiveBottomPadding =
-              useOverlayPrimaryAction && widget.project.stages.isNotEmpty
+              useOverlayPrimaryAction && stages.isNotEmpty
                   ? (bottomPadding - 12).clamp(0.0, double.infinity).toDouble()
                   : bottomPadding;
           final horizontalPadding =
@@ -455,7 +456,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                   showInlineStageAction: !useOverlayPrimaryAction,
                 ),
                 SizedBox(height: isMobileWeb ? 20 : 28),
-                if (widget.project.stages.isEmpty)
+                if (stages.isEmpty)
                   const FriendlyEmptyState(
                     icon: Icons.layers_clear_rounded,
                     title: 'Этапы еще не созданы',
@@ -464,7 +465,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                     accentColor: Colors.indigo,
                     padding: EdgeInsets.symmetric(vertical: 8),
                   ),
-                if (isDesktopWeb && widget.project.stages.isNotEmpty)
+                if (isDesktopWeb && stages.isNotEmpty)
                   LayoutBuilder(
                     builder: (context, constraints) {
                       return GridView.builder(
@@ -476,9 +477,9 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                           mainAxisSpacing: 12,
                           mainAxisExtent: 152,
                         ),
-                        itemCount: widget.project.stages.length,
+                        itemCount: stages.length,
                         itemBuilder: (context, index) {
-                          final stage = widget.project.stages[index];
+                          final stage = stages[index];
                           return StageCard(
                             stage: stage,
                             onTap: () {
@@ -501,7 +502,7 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
                     },
                   )
                 else
-                  ...widget.project.stages.map((stage) {
+                  ...stages.map((stage) {
                     return StageCard(
                       stage: stage,
                       onTap: () {
@@ -545,6 +546,16 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
         existingStageKeys: existingKeys,
       ),
     );
+  }
+
+  int _compareStagesForDisplay(StageModel a, StageModel b) {
+    final createdAtCompare =
+        (b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0))
+            .compareTo(a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0));
+    if (createdAtCompare != 0) {
+      return createdAtCompare;
+    }
+    return b.id.compareTo(a.id);
   }
 
   Widget _buildProjectOverviewCard({

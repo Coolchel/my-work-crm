@@ -89,6 +89,7 @@ class ProjectOperations extends _$ProjectOperations {
     final repository = ref.read(projectRepositoryProvider);
     await repository.addStage(projectId, title);
     ref.invalidate(projectListProvider);
+    ref.invalidate(projectByIdProvider(projectId));
   }
 
   /// Обновляет статус этапа и обновляет список.

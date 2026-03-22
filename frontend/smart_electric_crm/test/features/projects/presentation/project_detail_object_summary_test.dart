@@ -78,4 +78,70 @@ void main() {
       expect(find.byType(StageCard), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'ProjectDetail shows newest stage first in stages list',
+    (tester) async {
+      final project = ProjectModel.fromJson({
+        'id': 1,
+        'address': 'ул. Тестовая, 12',
+        'object_type': 'new_building',
+        'status': 'new',
+        'intercom_code': '',
+        'client_info': '',
+        'source': '',
+        'stages': [
+          {
+            'id': 10,
+            'title': 'stage_1',
+            'status': 'plan',
+            'is_paid': false,
+            'estimate_items': const [],
+            'created_at': DateTime(2026, 3, 1).toIso8601String(),
+            'updated_at': DateTime(2026, 3, 1).toIso8601String(),
+          },
+          {
+            'id': 11,
+            'title': 'stage_3',
+            'status': 'plan',
+            'is_paid': false,
+            'estimate_items': const [],
+            'created_at': DateTime(2026, 3, 5).toIso8601String(),
+            'updated_at': DateTime(2026, 3, 5).toIso8601String(),
+          },
+        ],
+        'shields': const [],
+        'files': const [],
+        'created_at': DateTime(2026, 3, 1).toIso8601String(),
+        'updated_at': DateTime(2026, 3, 5).toIso8601String(),
+      });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            projectByIdProvider('1').overrideWith((ref) async => project),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            home: const ProjectDetailScreen(
+              projectId: '1',
+              initialTab: ProjectDetailSection.stages,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final newerStageTitle = StageCard.getStageTitleDisplay('stage_3');
+      final olderStageTitle = StageCard.getStageTitleDisplay('stage_1');
+
+      expect(find.text(newerStageTitle), findsOneWidget);
+      expect(find.text(olderStageTitle), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text(newerStageTitle)).dy,
+        lessThan(tester.getTopLeft(find.text(olderStageTitle)).dy),
+      );
+    },
+  );
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
+import 'package:smart_electric_crm/src/shared/presentation/dialogs/desktop_dialog_foundation.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
@@ -210,6 +211,180 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
 
   @override
   Widget build(BuildContext context) {
+    if (usesDesktopDialogFoundation(context)) {
+      return _buildDesktopDialog(context);
+    }
+    return _buildMobileDialog(context);
+  }
+
+  Widget _buildDesktopDialog(BuildContext context) {
+    const themeColor = Colors.indigo;
+
+    return DesktopDialogShell(
+      title: _isEditing ? 'Редактировать объект' : 'Новый объект',
+      accentColor: themeColor,
+      maxWidth: 480,
+      onClose: () => Navigator.of(context).pop(),
+      scrollController: _scrollController,
+      actions: _isLoading
+          ? const []
+          : [
+              DesktopDialogSecondaryButton(
+                onPressed: () => Navigator.pop(context),
+                label: 'Отмена',
+                accentColor: themeColor,
+              ),
+              DesktopDialogPrimaryButton(
+                onPressed: _submitForm,
+                accentColor: themeColor,
+                child: Text(_isEditing ? 'Сохранить' : 'Создать'),
+              ),
+            ],
+      child: _isLoading
+          ? const Padding(
+              padding: EdgeInsets.symmetric(vertical: 56),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          : Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildDesktopTextField(
+                    controller: _addressController,
+                    label: 'Адрес объекта',
+                    hint: 'ул. Примерная, д. 1, кв. 1',
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Введите адрес' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDesktopTextField(
+                    controller: _intercomController,
+                    label: 'Код домофона',
+                    hint: '123',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildDesktopTextField(
+                    controller: _clientInfoController,
+                    label: 'Заказчик',
+                    hint: 'Имя, телефон...',
+                  ),
+                  const SizedBox(height: 16),
+                  _buildPopupBtn(
+                    fieldLabel: 'Тип объекта',
+                    valueLabel: _objectTypes[_objectType] ?? _objectType,
+                    items: buildPopupMenuEntriesWithDividers(
+                      _objectTypes.entries
+                          .map((e) => PopupMenuItem(
+                                value: e.key,
+                                height: 40,
+                                mouseCursor: SystemMouseCursors.click,
+                                padding: EdgeInsets.zero,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        _objectTypeIcons[e.key] ?? Icons.domain,
+                                        color: Colors.indigo.shade400,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          e.value,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: context.appTextStyles.body
+                                              .copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                    onSelected: (v) => setState(() => _objectType = v),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildPopupBtn(
+                    fieldLabel: 'Источник',
+                    valueLabel: _source,
+                    items: buildPopupMenuEntriesWithDividers(
+                      _sourceItems
+                          .map((s) => PopupMenuItem(
+                                value: s,
+                                height: 40,
+                                mouseCursor: SystemMouseCursors.click,
+                                padding: EdgeInsets.zero,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        _sourceIcons[s] ?? Icons.person,
+                                        color: Colors.indigo.shade400,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          s,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: context.appTextStyles.body
+                                              .copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+                    ),
+                    onSelected: (v) => setState(() => _source = v),
+                  ),
+                  if (!_isEditing) ...[
+                    const SizedBox(height: 18),
+                    _buildDesktopSectionLabel('Начальные этапы'),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _stageLabels.entries.map((entry) {
+                        final isSelected = _selectedStages[entry.key] ?? false;
+                        return _StageToggleChip(
+                          label: entry.value,
+                          icon: _stageIcons[entry.key] ?? Icons.layers_outlined,
+                          isSelected: isSelected,
+                          onTap: () {
+                            setState(() {
+                              _selectedStages[entry.key] = !isSelected;
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildMobileDialog(BuildContext context) {
     const themeColor = Colors.indigo;
     final isDark = AppDesignTokens.isDark(context);
     final textStyles = context.appTextStyles;
@@ -311,7 +486,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   // 1. Address
-                                  _buildTextField(
+                                  _buildMobileTextField(
                                     controller: _addressController,
                                     label: 'Адрес объекта',
                                     hint: 'ул. Примерная, д. 1, кв. 1',
@@ -322,7 +497,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                                   const SizedBox(height: 10),
 
                                   // 2. Intercom code
-                                  _buildTextField(
+                                  _buildMobileTextField(
                                     controller: _intercomController,
                                     label: 'Код домофона',
                                     hint: '123',
@@ -330,7 +505,7 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
                                   const SizedBox(height: 10),
 
                                   // 3. Client
-                                  _buildTextField(
+                                  _buildMobileTextField(
                                     controller: _clientInfoController,
                                     label: 'Заказчик',
                                     hint: 'Имя, телефон...',
@@ -514,7 +689,31 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildDesktopTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      textAlignVertical: TextAlignVertical.center,
+      style: context.appTextStyles.input,
+      decoration: desktopDialogInputDecoration(
+        context,
+        label: label,
+        hint: hint,
+        accentColor: Colors.indigo,
+        constraints: const BoxConstraints(
+          minHeight: _projectDialogSingleLineFieldHeight,
+          maxHeight: _projectDialogSingleLineFieldHeight,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileTextField({
     required TextEditingController controller,
     required String label,
     required String hint,
@@ -548,6 +747,18 @@ class _AddProjectDialogState extends ConsumerState<AddProjectDialog> {
           fontSize: 12.5,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopSectionLabel(String text) {
+    final textStyles = context.appTextStyles;
+
+    return Text(
+      text,
+      style: textStyles.fieldLabel.copyWith(
+        fontSize: 12.5,
+        color: Colors.indigo.shade400,
       ),
     );
   }

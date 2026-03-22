@@ -12,6 +12,7 @@ class _FakeProjectRepository extends ProjectRepository {
 
   bool createProjectCalled = false;
   bool addStageCalled = false;
+  int fetchProjectCalls = 0;
   int? lastUploadProjectId;
   String? lastUploadPath;
   Uint8List? lastUploadBytes;
@@ -40,6 +41,25 @@ class _FakeProjectRepository extends ProjectRepository {
   @override
   Future<void> addStage(String projectId, String title) async {
     addStageCalled = true;
+  }
+
+  @override
+  Future<ProjectModel> fetchProject(String id) async {
+    fetchProjectCalls += 1;
+    return ProjectModel.fromJson({
+      'id': int.parse(id),
+      'address': 'Test',
+      'object_type': 'new_building',
+      'status': 'new',
+      'intercom_code': '',
+      'client_info': '',
+      'source': '',
+      'stages': const [],
+      'shields': const [],
+      'files': const [],
+      'created_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().toIso8601String(),
+    });
   }
 
   @override
@@ -100,6 +120,27 @@ void main() {
 
     expect(fakeRepository.createProjectCalled, isTrue);
     expect(fakeRepository.addStageCalled, isTrue);
+  });
+
+  test('project operations addStage invalidates project detail provider',
+      () async {
+    final fakeRepository = _FakeProjectRepository();
+    final container = ProviderContainer(
+      overrides: [
+        projectRepositoryProvider.overrideWith((ref) => fakeRepository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(projectByIdProvider('1').future);
+    expect(fakeRepository.fetchProjectCalls, 1);
+
+    await container
+        .read(projectOperationsProvider.notifier)
+        .addStage('1', 'precalc');
+    await container.read(projectByIdProvider('1').future);
+
+    expect(fakeRepository.fetchProjectCalls, 2);
   });
 
   test('project operations uploadFile forwards bytes-based uploads', () async {

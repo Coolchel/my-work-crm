@@ -143,15 +143,16 @@ class DesktopDialogShell extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: actionsPadding,
-                    child: Wrap(
-                      alignment: WrapAlignment.end,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: actions,
+                  if (actions.isNotEmpty)
+                    Padding(
+                      padding: actionsPadding,
+                      child: Wrap(
+                        alignment: WrapAlignment.end,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: actions,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -388,6 +389,7 @@ InputDecoration desktopDialogInputDecoration(
   BuildContext context, {
   required String label,
   required Color accentColor,
+  String? hint,
   String? errorText,
   bool alignLabelWithHint = false,
   BoxConstraints? constraints,
@@ -412,6 +414,7 @@ InputDecoration desktopDialogInputDecoration(
     isDense: true,
     filled: true,
     fillColor: desktopDialogFieldFillColor(context),
+    hintText: hint,
     hintStyle: textStyles.secondaryBody.copyWith(
       color: scheme.onSurfaceVariant.withOpacity(0.75),
     ),
