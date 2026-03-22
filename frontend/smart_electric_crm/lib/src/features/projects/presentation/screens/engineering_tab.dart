@@ -66,7 +66,11 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
   Widget build(BuildContext context) {
     final useOverlayPrimaryAction =
         DesktopWebFrame.usesOverlayPrimaryAction(context);
-    final sortedShields = List<ShieldModel>.from(widget.project.shields)
+    final visibleShields = _resolveVisibleShields(
+      context,
+      widget.project.shields,
+    );
+    final sortedShields = List<ShieldModel>.from(visibleShields)
       ..sort((a, b) {
         final order = {'power': 0, 'multimedia': 1, 'led': 2};
         return (order[a.shieldType] ?? 99).compareTo(order[b.shieldType] ?? 99);
@@ -104,7 +108,7 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
                   ? (bottomPadding - 12).clamp(0.0, double.infinity).toDouble()
                   : bottomPadding;
           final showCenteredAddCard =
-              !useOverlayPrimaryAction && widget.project.shields.isEmpty;
+              !useOverlayPrimaryAction && sortedShields.isEmpty;
           final horizontalPadding =
               DesktopWebFrame.centeredContentHorizontalPadding(
             context,
@@ -133,7 +137,7 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
                     ? MainAxisAlignment.center
                     : MainAxisAlignment.start,
                 children: [
-                  if (widget.project.shields.isEmpty && useOverlayPrimaryAction)
+                  if (sortedShields.isEmpty && useOverlayPrimaryAction)
                     const FriendlyEmptyState(
                       icon: Icons.settings_input_component_outlined,
                       title: 'Нет щитов',
@@ -147,8 +151,7 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
                           projectId: widget.project.id.toString(),
                         )),
                   if (!useOverlayPrimaryAction) ...[
-                    if (widget.project.shields.isNotEmpty)
-                      const SizedBox(height: 24),
+                    if (sortedShields.isNotEmpty) const SizedBox(height: 24),
                     _AddShieldCard(
                       onTap: () => _showAddShieldDialog(
                         context,
@@ -175,6 +178,54 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
       context: context,
       builder: (context) => AddShieldDialog(projectId: projectId),
     );
+  }
+
+  List<ShieldModel> _resolveVisibleShields(
+    BuildContext context,
+    List<ShieldModel> shields,
+  ) {
+    if (DesktopWebFrame.isMobileWeb(context, maxWidth: 700)) {
+      return shields;
+    }
+
+    final placeholderCandidateCountByType = <String, int>{};
+    for (final shield in shields) {
+      if (_isDesktopPlaceholderShieldCandidate(shield)) {
+        placeholderCandidateCountByType.update(
+          shield.shieldType,
+          (count) => count + 1,
+          ifAbsent: () => 1,
+        );
+      }
+    }
+
+    return shields.where((shield) {
+      if (!_isDesktopPlaceholderShieldCandidate(shield)) {
+        return true;
+      }
+      return placeholderCandidateCountByType[shield.shieldType] != 1;
+    }).toList(growable: false);
+  }
+
+  bool _isDesktopPlaceholderShieldCandidate(ShieldModel shield) {
+    final expectedName = switch (shield.shieldType) {
+      'power' => 'Силовой щит',
+      'led' => 'LED щит',
+      'multimedia' => 'Слаботочка',
+      _ => null,
+    };
+
+    if (expectedName == null ||
+        shield.name != expectedName ||
+        shield.mounting != 'internal') {
+      return false;
+    }
+
+    return shield.groups.isEmpty &&
+        shield.ledZones.isEmpty &&
+        shield.internetLinesCount == 0 &&
+        shield.notes.trim().isEmpty &&
+        shield.multimediaNotes.trim().isEmpty;
   }
 }
 

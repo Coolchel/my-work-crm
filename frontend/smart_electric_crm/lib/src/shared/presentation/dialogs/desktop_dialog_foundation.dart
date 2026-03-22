@@ -9,6 +9,7 @@ const double desktopDialogMaxWidth = 560;
 const double desktopDialogSingleLineFieldHeight = 56;
 const double desktopDialogActionButtonWidth = 132;
 const double desktopDialogActionButtonHeight = 40;
+const String desktopDialogCloseTooltip = 'Закрыть';
 
 bool usesDesktopDialogFoundation(
   BuildContext context, {
@@ -116,8 +117,7 @@ class DesktopDialogShell extends StatelessWidget {
                         Align(
                           alignment: Alignment.centerRight,
                           child: Tooltip(
-                            message: MaterialLocalizations.of(context)
-                                .closeButtonTooltip,
+                            message: desktopDialogCloseTooltip,
                             child: IconButton(
                               onPressed:
                                   onClose ?? () => Navigator.of(context).pop(),

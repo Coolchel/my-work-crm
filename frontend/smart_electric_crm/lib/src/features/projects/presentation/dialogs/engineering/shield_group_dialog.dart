@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
+import 'package:smart_electric_crm/src/shared/presentation/dialogs/desktop_dialog_foundation.dart';
+import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
-import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
+
 import '../../../../engineering/data/models/shield_group_model.dart';
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
@@ -16,12 +18,13 @@ class ShieldGroupDialog extends StatefulWidget {
   final ShieldGroupModel? group;
   final Color themeColor;
 
-  const ShieldGroupDialog(
-      {required this.projectId,
-      required this.shieldId,
-      this.group,
-      required this.themeColor,
-      super.key});
+  const ShieldGroupDialog({
+    required this.projectId,
+    required this.shieldId,
+    this.group,
+    required this.themeColor,
+    super.key,
+  });
 
   @override
   State<ShieldGroupDialog> createState() => _ShieldGroupDialogState();
@@ -70,370 +73,436 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
     super.dispose();
   }
 
+  Future<void> _save(WidgetRef ref) async {
+    if (_isSaving) {
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    final data = {
+      'device_type': _selectedDeviceType,
+      'rating': _selectedRating,
+      'poles': _selectedPoles,
+      'zone': _zoneController.text,
+      'quantity': 1,
+    };
+
+    try {
+      if (widget.group != null) {
+        await ref
+            .read(engineeringRepositoryProvider)
+            .updateShieldGroup(widget.group!.id, data);
+      } else {
+        await ref
+            .read(engineeringRepositoryProvider)
+            .addShieldGroup(widget.shieldId, data);
+      }
+      ref.invalidate(projectListProvider);
+      ref.invalidate(projectByIdProvider(widget.projectId));
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e, st) {
+      if (mounted) {
+        debugPrint('ShieldGroupDialog save failed: $e\n$st');
+        await ErrorFeedback.show(
+          context,
+          e,
+          fallbackMessage: 'Не удалось сохранить группу.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isEdit = widget.group != null;
     final themeColor = widget.themeColor;
     final isDark = AppDesignTokens.isDark(context);
-    final textStyles = context.appTextStyles;
-    final scheme = Theme.of(context).colorScheme;
 
     return Theme(
       data: Theme.of(context).copyWith(
         colorScheme:
             Theme.of(context).colorScheme.copyWith(primary: themeColor),
       ),
-      child: Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 500),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: isDark
-                    ? Colors.black.withOpacity(0.34)
-                    : Colors.black.withOpacity(0.12),
-                blurRadius: isDark ? 12 : 20,
-                offset: const Offset(0, 6),
-              )
+      child: usesDesktopDialogFoundation(context)
+          ? _buildDesktopDialog(context, themeColor)
+          : _buildMobileDialog(context, themeColor, isDark),
+    );
+  }
+
+  Widget _buildDesktopDialog(BuildContext context, Color themeColor) {
+    final isEdit = widget.group != null;
+
+    return DesktopDialogShell(
+      title: isEdit ? 'Редактировать группу' : 'Добавить группу',
+      accentColor: themeColor,
+      maxWidth: 520,
+      onClose: () => Navigator.of(context).pop(),
+      scrollController: _scrollController,
+      actions: [
+        DesktopDialogSecondaryButton(
+          onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+          label: 'Отмена',
+          accentColor: themeColor,
+        ),
+        Consumer(
+          builder: (context, ref, _) => DesktopDialogPrimaryButton(
+            onPressed: _isSaving ? null : () => _save(ref),
+            accentColor: themeColor,
+            child: _isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(isEdit ? 'Сохранить' : 'Добавить'),
+          ),
+        ),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildDeviceTypeDropdown(themeColor),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(child: _buildRatingDropdown(themeColor)),
+              const SizedBox(width: 12),
+              Expanded(child: _buildPolesDropdown(themeColor)),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  color: ShieldUiPalette.blendAccentSurface(
-                    context,
-                    themeColor,
-                    baseColor: Theme.of(context).colorScheme.surface,
-                    lightOpacity: 0.06,
-                    darkOpacity: 0.16,
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(24),
-                    topRight: Radius.circular(24),
-                  ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _zoneController,
+            textAlignVertical: TextAlignVertical.center,
+            decoration: desktopDialogInputDecoration(
+              context,
+              label: 'Зона / Потребитель',
+              hint: 'Например: Кухня',
+              accentColor: themeColor,
+              constraints: const BoxConstraints(
+                minHeight: appPopupSelectFieldHeight,
+                maxHeight: appPopupSelectFieldHeight,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileDialog(
+    BuildContext context,
+    Color themeColor,
+    bool isDark,
+  ) {
+    final isEdit = widget.group != null;
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? Colors.black.withOpacity(0.34)
+                  : Colors.black.withOpacity(0.12),
+              blurRadius: isDark ? 12 : 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: ShieldUiPalette.blendAccentSurface(
+                  context,
+                  themeColor,
+                  baseColor: Theme.of(context).colorScheme.surface,
+                  lightOpacity: 0.06,
+                  darkOpacity: 0.16,
                 ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Center(
-                      child: Text(
-                        isEdit ? "Редактировать группу" : "Добавить группу",
-                        style: textStyles.dialogTitle.copyWith(
-                          color: scheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: Icon(Icons.close, color: themeColor),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        iconSize: 20,
-                      ),
-                    ),
-                  ],
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
               ),
-
-              // Content
-              Flexible(
-                child: AppDialogScrollbar(
-                  controller: _scrollController,
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Device Type Dropdown
-                        AppPopupSelectField<String>(
-                          fieldLabel: "Тип устройства",
-                          valueLabel: _deviceTypes[_selectedDeviceType] ??
-                              'Диф.автомат',
-                          items: buildPopupMenuEntriesWithDividers(
-                            _deviceTypes.entries
-                                .map((e) => PopupMenuItem<String>(
-                                      value: e.key,
-                                      height: 40,
-                                      mouseCursor: SystemMouseCursors.click,
-                                      padding: EdgeInsets.zero,
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              _getDeviceIcon(e.key),
-                                              size: 18,
-                                              color: _getDeviceTypeColor(e.key)
-                                                  .withOpacity(0.7),
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Text(e.value,
-                                                style: const TextStyle(
-                                                    fontSize: 13)),
-                                          ],
-                                        ),
-                                      ),
-                                    ))
-                                .toList(),
-                          ),
-                          onSelected: (value) =>
-                              setState(() => _selectedDeviceType = value),
-                        ),
-                        const SizedBox(height: 10),
-                        // Rating and Poles Row
-                        Row(
-                          children: [
-                            Expanded(
-                              child: AppPopupSelectField<String>(
-                                fieldLabel: "Номинал",
-                                valueLabel: _selectedRating,
-                                items: buildPopupMenuEntriesWithDividers(
-                                  [
-                                    '6A',
-                                    '10A',
-                                    '16A',
-                                    '20A',
-                                    '25A',
-                                    '32A',
-                                    '40A',
-                                    '50A',
-                                    '63A',
-                                    '80A'
-                                  ]
-                                      .map(
-                                        (choice) => PopupMenuItem<String>(
-                                          value: choice,
-                                          height: 40,
-                                          mouseCursor: SystemMouseCursors.click,
-                                          padding: EdgeInsets.zero,
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 16),
-                                            child: Row(
-                                              children: [
-                                                Icon(Icons.flash_on,
-                                                    color:
-                                                        Colors.orange.shade600,
-                                                    size: 18),
-                                                const SizedBox(width: 8),
-                                                Text(choice,
-                                                    style: const TextStyle(
-                                                        fontSize: 13)),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                      .toList(),
-                                ),
-                                onSelected: (value) =>
-                                    setState(() => _selectedRating = value),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: AppPopupSelectField<String>(
-                                fieldLabel: "Полюса",
-                                valueLabel: _selectedPoles,
-                                items: buildPopupMenuEntriesWithDividers(
-                                  ['1P', '2P', '3P', '4P']
-                                      .map(
-                                        (choice) => PopupMenuItem<String>(
-                                          value: choice,
-                                          height: 40,
-                                          mouseCursor: SystemMouseCursors.click,
-                                          padding: EdgeInsets.zero,
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 16),
-                                            child: Row(
-                                              children: [
-                                                Icon(Icons.electric_bolt,
-                                                    color: Colors.blue.shade600,
-                                                    size: 18),
-                                                const SizedBox(width: 8),
-                                                Text(choice,
-                                                    style: const TextStyle(
-                                                        fontSize: 13)),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                      .toList(),
-                                ),
-                                onSelected: (value) =>
-                                    setState(() => _selectedPoles = value),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        TextField(
-                          controller: _zoneController,
-                          textAlignVertical: TextAlignVertical.center,
-                          decoration: InputDecoration(
-                            labelText: "Зона / Потребитель",
-                            floatingLabelBehavior: FloatingLabelBehavior.always,
-                            hintText: "Например: Кухня",
-                            constraints: const BoxConstraints(
-                              minHeight: appPopupSelectFieldHeight,
-                              maxHeight: appPopupSelectFieldHeight,
-                            ),
-                            hintStyle: textStyles.secondaryBody.copyWith(
-                              color: scheme.onSurfaceVariant.withOpacity(0.75),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color:
-                                    ShieldUiPalette.neutralFieldBorder(context),
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color:
-                                    ShieldUiPalette.neutralFieldBorder(context),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: ShieldUiPalette.blendAccentBorder(
-                                  context,
-                                  themeColor,
-                                  lightOpacity: 0.34,
-                                  darkOpacity: 0.44,
-                                ),
-                                width: 1.5,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Center(
+                    child: Text(
+                      isEdit ? 'Редактировать группу' : 'Добавить группу',
+                      style: textStyles.dialogTitle.copyWith(
+                        color: scheme.onSurface,
+                      ),
                     ),
                   ),
-                ),
-              ),
-
-              // Footer
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      style: TextButton.styleFrom(
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onSurface),
-                      child: const Text("Отмена"),
+                      icon: Icon(Icons.close, color: themeColor),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      iconSize: 20,
                     ),
-                    const SizedBox(width: 8),
-                    Consumer(builder: (context, ref, _) {
-                      return FilledButton(
-                        onPressed: _isSaving
-                            ? null
-                            : () async {
-                                setState(() => _isSaving = true);
-                                try {
-                                  final data = {
-                                    'device_type': _selectedDeviceType,
-                                    'rating': _selectedRating,
-                                    'poles': _selectedPoles,
-                                    'zone': _zoneController.text,
-                                    'quantity': 1,
-                                  };
-                                  if (isEdit) {
-                                    await ref
-                                        .read(engineeringRepositoryProvider)
-                                        .updateShieldGroup(
-                                            widget.group!.id, data);
-                                  } else {
-                                    await ref
-                                        .read(engineeringRepositoryProvider)
-                                        .addShieldGroup(widget.shieldId, data);
-                                  }
-                                  ref.invalidate(projectListProvider);
-                                  ref.invalidate(
-                                      projectByIdProvider(widget.projectId));
-                                  if (context.mounted) Navigator.pop(context);
-                                } catch (e, st) {
-                                  if (context.mounted) {
-                                    debugPrint(
-                                        'ShieldGroupDialog save failed: $e\n$st');
-                                    await ErrorFeedback.show(
-                                      context,
-                                      e,
-                                      fallbackMessage:
-                                          'Не удалось сохранить группу.',
-                                    );
-                                  }
-                                } finally {
-                                  if (mounted) {
-                                    setState(() => _isSaving = false);
-                                  }
-                                }
-                              },
-                        style: FilledButton.styleFrom(
-                          backgroundColor:
-                              ShieldUiPalette.primaryActionBackground(
+                  ),
+                ],
+              ),
+            ),
+            Flexible(
+              child: AppDialogScrollbar(
+                controller: _scrollController,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildDeviceTypeDropdown(themeColor),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(child: _buildRatingDropdown(themeColor)),
+                          const SizedBox(width: 10),
+                          Expanded(child: _buildPolesDropdown(themeColor)),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _zoneController,
+                        textAlignVertical: TextAlignVertical.center,
+                        decoration: InputDecoration(
+                          labelText: 'Зона / Потребитель',
+                          floatingLabelBehavior: FloatingLabelBehavior.always,
+                          hintText: 'Например: Кухня',
+                          constraints: const BoxConstraints(
+                            minHeight: appPopupSelectFieldHeight,
+                            maxHeight: appPopupSelectFieldHeight,
+                          ),
+                          hintStyle: textStyles.secondaryBody.copyWith(
+                            color: scheme.onSurfaceVariant.withOpacity(0.75),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color:
+                                  ShieldUiPalette.neutralFieldBorder(context),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color:
+                                  ShieldUiPalette.neutralFieldBorder(context),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: ShieldUiPalette.blendAccentBorder(
+                                context,
+                                themeColor,
+                                lightOpacity: 0.34,
+                                darkOpacity: 0.44,
+                              ),
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed:
+                        _isSaving ? null : () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    child: const Text('Отмена'),
+                  ),
+                  const SizedBox(width: 8),
+                  Consumer(
+                    builder: (context, ref, _) => FilledButton(
+                      onPressed: _isSaving ? null : () => _save(ref),
+                      style: FilledButton.styleFrom(
+                        backgroundColor:
+                            ShieldUiPalette.primaryActionBackground(
+                          context,
+                          themeColor,
+                        ),
+                        foregroundColor:
+                            ShieldUiPalette.primaryActionForeground(context),
+                        side: BorderSide(
+                          color: ShieldUiPalette.blendAccentBorder(
                             context,
                             themeColor,
-                          ),
-                          foregroundColor:
-                              ShieldUiPalette.primaryActionForeground(context),
-                          side: BorderSide(
-                            color: ShieldUiPalette.blendAccentBorder(
-                              context,
-                              themeColor,
-                              lightOpacity: 0.20,
-                              darkOpacity: 0.34,
-                            ),
-                          ),
-                          minimumSize: const Size(120, 44),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
+                            lightOpacity: 0.20,
+                            darkOpacity: 0.34,
                           ),
                         ),
-                        child: _isSaving
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white))
-                            : Text(isEdit ? 'Сохранить' : 'Добавить'),
-                      );
-                    }),
-                  ],
-                ),
+                        minimumSize: const Size(120, 44),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(isEdit ? 'Сохранить' : 'Добавить'),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // Resolve icon by device type.
+  Widget _buildDeviceTypeDropdown(Color themeColor) {
+    return AppPopupSelectField<String>(
+      fieldLabel: 'Тип устройства',
+      valueLabel: _deviceTypes[_selectedDeviceType] ?? 'Диф.автомат',
+      accentColor: themeColor,
+      items: buildPopupMenuEntriesWithDividers(
+        _deviceTypes.entries
+            .map(
+              (entry) => PopupMenuItem<String>(
+                value: entry.key,
+                height: 40,
+                mouseCursor: SystemMouseCursors.click,
+                padding: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _getDeviceIcon(entry.key),
+                        size: 18,
+                        color: _getDeviceTypeColor(entry.key).withOpacity(0.7),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(entry.value, style: const TextStyle(fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ),
+            )
+            .toList(),
+      ),
+      onSelected: (value) => setState(() => _selectedDeviceType = value),
+    );
+  }
+
+  Widget _buildRatingDropdown(Color themeColor) {
+    return AppPopupSelectField<String>(
+      fieldLabel: 'Номинал',
+      valueLabel: _selectedRating,
+      accentColor: themeColor,
+      items: buildPopupMenuEntriesWithDividers(
+        ['6A', '10A', '16A', '20A', '25A', '32A', '40A', '50A', '63A', '80A']
+            .map(
+              (choice) => PopupMenuItem<String>(
+                value: choice,
+                height: 40,
+                mouseCursor: SystemMouseCursors.click,
+                padding: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.flash_on,
+                        color: Colors.orange.shade600,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(choice, style: const TextStyle(fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ),
+            )
+            .toList(),
+      ),
+      onSelected: (value) => setState(() => _selectedRating = value),
+    );
+  }
+
+  Widget _buildPolesDropdown(Color themeColor) {
+    return AppPopupSelectField<String>(
+      fieldLabel: 'Полюса',
+      valueLabel: _selectedPoles,
+      accentColor: themeColor,
+      items: buildPopupMenuEntriesWithDividers(
+        ['1P', '2P', '3P', '4P']
+            .map(
+              (choice) => PopupMenuItem<String>(
+                value: choice,
+                height: 40,
+                mouseCursor: SystemMouseCursors.click,
+                padding: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.electric_bolt,
+                        color: Colors.blue.shade600,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(choice, style: const TextStyle(fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ),
+            )
+            .toList(),
+      ),
+      onSelected: (value) => setState(() => _selectedPoles = value),
+    );
+  }
+
   IconData _getDeviceIcon(String type) {
     switch (type) {
       case 'circuit_breaker':
@@ -453,7 +522,6 @@ class _ShieldGroupDialogState extends State<ShieldGroupDialog> {
     }
   }
 
-  // Resolve accent color by device type.
   Color _getDeviceTypeColor(String type) {
     const calmPalette = <String, Color>{
       'load_switch': Color(0xFF98635D),

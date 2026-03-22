@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_theme.dart';
+import 'package:smart_electric_crm/src/features/engineering/data/models/shield_model.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/project_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/screens/project_detail_screen.dart';
@@ -174,6 +175,62 @@ void main() {
     },
     variant: TargetPlatformVariant.only(TargetPlatform.windows),
   );
+
+  testWidgets(
+    'ProjectDetail shields tab hides untouched backend placeholder shields on Windows',
+    (tester) async {
+      await _pumpProjectDetail(
+        tester,
+        width: 1280,
+        project: _buildProjectWithShields([
+          _buildShield(id: 7, name: 'Силовой щит', shieldType: 'power'),
+          _buildShield(id: 8, name: 'LED щит', shieldType: 'led'),
+          _buildShield(
+            id: 9,
+            name: 'Слаботочка',
+            shieldType: 'multimedia',
+          ),
+        ]),
+        initialTab: ProjectDetailSection.shields,
+      );
+
+      expect(
+        find.byKey(const ValueKey('engineering_add_shield_card')),
+        findsOneWidget,
+      );
+      expect(find.text('Силовой щит'), findsNothing);
+      expect(find.text('LED щит'), findsNothing);
+      expect(find.text('Слаботочка'), findsNothing);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.windows),
+  );
+
+  testWidgets(
+    'ProjectDetail shields tab keeps real user shields visible while hiding untouched placeholders on Windows',
+    (tester) async {
+      await _pumpProjectDetail(
+        tester,
+        width: 1280,
+        project: _buildProjectWithShields([
+          _buildShield(id: 7, name: 'Силовой щит', shieldType: 'power'),
+          _buildShield(id: 8, name: 'LED щит', shieldType: 'led'),
+          _buildShield(
+            id: 9,
+            name: 'Слаботочка',
+            shieldType: 'multimedia',
+          ),
+          _buildShield(id: 10, name: 'Щит кухни', shieldType: 'power'),
+        ]),
+        initialTab: ProjectDetailSection.shields,
+      );
+
+      expect(find.text('Щит кухни'), findsOneWidget);
+      expect(find.text('Силовой щит'), findsNothing);
+      expect(find.text('LED щит'), findsNothing);
+      expect(find.text('Слаботочка'), findsNothing);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.windows),
+  );
 }
 
 Finder _shieldCardFinder() {
@@ -283,4 +340,30 @@ ProjectModel _buildProject({
     'created_at': DateTime(2026, 3, 1).toIso8601String(),
     'updated_at': DateTime(2026, 3, 2).toIso8601String(),
   });
+}
+
+ProjectModel _buildProjectWithShields(List<Map<String, Object?>> shields) {
+  return _buildProject().copyWith(
+    shields: shields.map((shield) => ShieldModel.fromJson(shield)).toList(),
+  );
+}
+
+Map<String, Object?> _buildShield({
+  required int id,
+  required String name,
+  required String shieldType,
+}) {
+  return {
+    'id': id,
+    'project': 1,
+    'name': name,
+    'shield_type': shieldType,
+    'mounting': 'internal',
+    'groups': const [],
+    'led_zones': const [],
+    'internet_lines_count': 0,
+    'multimedia_notes': '',
+    'notes': '',
+    'suggested_size': null,
+  };
 }

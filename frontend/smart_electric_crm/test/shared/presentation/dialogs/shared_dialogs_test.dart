@@ -26,6 +26,13 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(DesktopDialogShell), findsOneWidget);
+      final closeTooltip = tester.widget<Tooltip>(
+        find.ancestor(
+          of: find.byIcon(Icons.close),
+          matching: find.byType(Tooltip),
+        ),
+      );
+      expect(closeTooltip.message, desktopDialogCloseTooltip);
       expect(
         tester.getSize(find.widgetWithText(TextButton, 'Cancel')),
         tester.getSize(find.widgetWithText(FilledButton, 'Delete')),

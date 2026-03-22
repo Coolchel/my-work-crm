@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
+import 'package:smart_electric_crm/src/shared/presentation/dialogs/desktop_dialog_foundation.dart';
+import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_dialog_scrollbar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
-import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
+
 import '../../../../engineering/presentation/providers/engineering_providers.dart';
 import '../../providers/project_providers.dart';
 import '../../utils/shield_ui_palette.dart';
 
 class AddShieldDialog extends StatefulWidget {
   final String projectId;
+
   const AddShieldDialog({required this.projectId, super.key});
 
   @override
@@ -22,6 +25,7 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
   final ScrollController _scrollController = ScrollController();
   String _type = 'power';
   String _mounting = 'internal';
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -30,15 +34,48 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
     super.dispose();
   }
 
+  Future<void> _save(WidgetRef ref) async {
+    if (_isSaving) {
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    final shieldName =
+        _nameController.text.isEmpty ? 'Щит квартирный' : _nameController.text;
+
+    try {
+      await ref
+          .read(engineeringRepositoryProvider)
+          .addShield(widget.projectId, {
+        'name': shieldName,
+        'shield_type': _type,
+        'mounting': _mounting,
+      });
+      ref.invalidate(projectListProvider);
+      ref.invalidate(projectByIdProvider(widget.projectId));
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e, st) {
+      if (mounted) {
+        debugPrint('AddShieldDialog save failed: $e\n$st');
+        await ErrorFeedback.show(
+          context,
+          e,
+          fallbackMessage: 'Не удалось добавить щит. Попробуйте снова.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const themeColor = Colors.indigo;
     final isDark = AppDesignTokens.isDark(context);
-    final textStyles = context.appTextStyles;
-    final scheme = Theme.of(context).colorScheme;
-    final powerAccent = ShieldUiPalette.resolveShield('power').accent;
-    final multimediaAccent = ShieldUiPalette.resolveShield('multimedia').accent;
-    final ledAccent = ShieldUiPalette.resolveShield('led').accent;
 
     return Theme(
       data: Theme.of(context).copyWith(
@@ -47,305 +84,349 @@ class _AddShieldDialogState extends State<AddShieldDialog> {
         hoverColor: themeColor.withOpacity(isDark ? 0.24 : 0.10),
         highlightColor: themeColor.withOpacity(isDark ? 0.18 : 0.08),
       ),
-      child: Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) => ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: 450,
-                maxHeight: constraints.maxHeight * 0.86,
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isDark
-                          ? Colors.black.withOpacity(0.34)
-                          : Colors.black.withOpacity(0.12),
-                      blurRadius: isDark ? 12 : 20,
-                      offset: const Offset(0, 6),
-                    )
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Header
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: themeColor.withOpacity(0.12),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(24),
-                          topRight: Radius.circular(24),
-                        ),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Center(
-                            child: Text(
-                              "Добавить щит",
-                              style: textStyles.dialogTitle.copyWith(
-                                color: themeColor.withOpacity(0.8),
-                              ),
-                            ),
-                          ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Tooltip(
-                              message: "Закрыть",
-                              child: IconButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                icon:
-                                    const Icon(Icons.close, color: themeColor),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                iconSize: 20,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+      child: usesDesktopDialogFoundation(context)
+          ? _buildDesktopDialog(context, themeColor)
+          : _buildMobileDialog(context, themeColor),
+    );
+  }
 
-                    // Content
-                    Flexible(
-                      child: AppDialogScrollbar(
+  Widget _buildDesktopDialog(BuildContext context, Color themeColor) {
+    return DesktopDialogShell(
+      title: 'Добавить щит',
+      accentColor: themeColor,
+      maxWidth: 460,
+      onClose: () => Navigator.of(context).pop(),
+      scrollController: _scrollController,
+      actions: [
+        DesktopDialogSecondaryButton(
+          onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
+          label: 'Отмена',
+          accentColor: themeColor,
+        ),
+        Consumer(
+          builder: (context, ref, _) => DesktopDialogPrimaryButton(
+            onPressed: _isSaving ? null : () => _save(ref),
+            accentColor: themeColor,
+            child: _isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text('Добавить'),
+          ),
+        ),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DesktopDialogTextField(
+            controller: _nameController,
+            label: 'Название щита',
+            accentColor: themeColor,
+            autofocus: true,
+          ),
+          const SizedBox(height: 16),
+          _buildTypeDropdown(themeColor),
+          const SizedBox(height: 16),
+          _buildMountingDropdown(themeColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileDialog(BuildContext context, Color themeColor) {
+    final isDark = AppDesignTokens.isDark(context);
+    final textStyles = context.appTextStyles;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) => ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 450,
+              maxHeight: constraints.maxHeight * 0.86,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.black.withOpacity(0.34)
+                        : Colors.black.withOpacity(0.12),
+                    blurRadius: isDark ? 12 : 20,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: themeColor.withOpacity(0.12),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
+                      ),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Center(
+                          child: Text(
+                            'Добавить щит',
+                            style: textStyles.dialogTitle.copyWith(
+                              color: themeColor.withOpacity(0.8),
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Tooltip(
+                            message: 'Закрыть',
+                            child: IconButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              icon: Icon(Icons.close, color: themeColor),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              iconSize: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                    child: AppDialogScrollbar(
+                      controller: _scrollController,
+                      child: SingleChildScrollView(
                         controller: _scrollController,
-                        child: SingleChildScrollView(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              TextField(
-                                controller: _nameController,
-                                decoration: InputDecoration(
-                                  labelText: "Название щита",
-                                  floatingLabelBehavior:
-                                      FloatingLabelBehavior.always,
-                                  hintText: "Щит квартирный",
-                                  hintStyle: textStyles.secondaryBody.copyWith(
-                                    color: scheme.onSurfaceVariant
-                                        .withOpacity(0.75),
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              controller: _nameController,
+                              decoration: InputDecoration(
+                                labelText: 'Название щита',
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always,
+                                hintText: 'Щит квартирный',
+                                hintStyle: textStyles.secondaryBody.copyWith(
+                                  color:
+                                      scheme.onSurfaceVariant.withOpacity(0.75),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: themeColor.withOpacity(0.2),
                                   ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                        color: themeColor.withOpacity(0.2)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: themeColor.withOpacity(0.2),
                                   ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(
-                                        color: themeColor.withOpacity(0.2)),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                        color: themeColor, width: 2),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: themeColor,
+                                    width: 2,
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 16),
-                              // Type Dropdown
-                              AppPopupSelectField<String>(
-                                fieldLabel: "Тип",
-                                valueLabel: _getTypeLabel(_type),
-                                items: buildPopupMenuEntriesWithDividers([
-                                  PopupMenuItem(
-                                    value: 'power',
-                                    height: 40,
-                                    mouseCursor: SystemMouseCursors.click,
-                                    padding: EdgeInsets.zero,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.bolt,
-                                              color: powerAccent, size: 20),
-                                          const SizedBox(width: 12),
-                                          const Text('Силовой',
-                                              style: TextStyle(fontSize: 13)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'multimedia',
-                                    height: 40,
-                                    mouseCursor: SystemMouseCursors.click,
-                                    padding: EdgeInsets.zero,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.router,
-                                              color: multimediaAccent,
-                                              size: 20),
-                                          const SizedBox(width: 12),
-                                          const Text('Слаботочный',
-                                              style: TextStyle(fontSize: 13)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'led',
-                                    height: 40,
-                                    mouseCursor: SystemMouseCursors.click,
-                                    padding: EdgeInsets.zero,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.lightbulb,
-                                              color: ledAccent, size: 20),
-                                          const SizedBox(width: 12),
-                                          const Text('LED',
-                                              style: TextStyle(fontSize: 13)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ]),
-                                onSelected: (value) =>
-                                    setState(() => _type = value),
-                              ),
-                              const SizedBox(height: 16),
-                              // Mounting Dropdown
-                              AppPopupSelectField<String>(
-                                fieldLabel: "Монтаж",
-                                valueLabel: _getMountingLabel(_mounting),
-                                items: buildPopupMenuEntriesWithDividers([
-                                  PopupMenuItem(
-                                    value: 'internal',
-                                    height: 40,
-                                    mouseCursor: SystemMouseCursors.click,
-                                    padding: EdgeInsets.zero,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.door_front_door,
-                                              color: Colors.indigo.shade400,
-                                              size: 20),
-                                          const SizedBox(width: 12),
-                                          const Text('Внутренний',
-                                              style: TextStyle(fontSize: 13)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'external',
-                                    height: 40,
-                                    mouseCursor: SystemMouseCursors.click,
-                                    padding: EdgeInsets.zero,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.apartment,
-                                              color: Colors.indigo.shade400,
-                                              size: 20),
-                                          const SizedBox(width: 12),
-                                          const Text('Наружный',
-                                              style: TextStyle(fontSize: 13)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ]),
-                                onSelected: (value) =>
-                                    setState(() => _mounting = value),
-                              ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTypeDropdown(themeColor),
+                            const SizedBox(height: 16),
+                            _buildMountingDropdown(themeColor),
+                          ],
                         ),
                       ),
                     ),
-                    // Footer
-                    Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            style: TextButton.styleFrom(
-                                foregroundColor:
-                                    Theme.of(context).colorScheme.onSurface),
-                            child: const Text("Отмена"),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: _isSaving
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          style: TextButton.styleFrom(
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onSurface,
                           ),
-                          const SizedBox(width: 8),
-                          Consumer(builder: (context, ref, _) {
-                            return FilledButton(
-                              onPressed: () async {
-                                // Use default name if field is empty
-                                final shieldName = _nameController.text.isEmpty
-                                    ? 'Щит квартирный'
-                                    : _nameController.text;
-                                try {
-                                  await ref
-                                      .read(engineeringRepositoryProvider)
-                                      .addShield(widget.projectId, {
-                                    'name': shieldName,
-                                    'shield_type': _type,
-                                    'mounting': _mounting,
-                                  });
-                                  ref.invalidate(projectListProvider);
-                                  ref.invalidate(
-                                      projectByIdProvider(widget.projectId));
-                                  if (context.mounted) Navigator.pop(context);
-                                } catch (e, st) {
-                                  if (context.mounted) {
-                                    debugPrint(
-                                        'AddShieldDialog save failed: $e\n$st');
-                                    await ErrorFeedback.show(
-                                      context,
-                                      e,
-                                      fallbackMessage:
-                                          'Не удалось добавить щит. Попробуйте снова.',
-                                    );
-                                  }
-                                }
-                              },
-                              style: FilledButton.styleFrom(
-                                backgroundColor: themeColor,
-                                minimumSize: const Size(120, 44),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
+                          child: const Text('Отмена'),
+                        ),
+                        const SizedBox(width: 8),
+                        Consumer(
+                          builder: (context, ref, _) => FilledButton(
+                            onPressed: _isSaving ? null : () => _save(ref),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: themeColor,
+                              minimumSize: const Size(120, 44),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
                               ),
-                              child: const Text('Добавить'),
-                            );
-                          }),
-                        ],
-                      ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                            ),
+                            child: _isSaving
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text('Добавить'),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTypeDropdown(Color themeColor) {
+    final powerAccent = ShieldUiPalette.resolveShield('power').accent;
+    final multimediaAccent = ShieldUiPalette.resolveShield('multimedia').accent;
+    final ledAccent = ShieldUiPalette.resolveShield('led').accent;
+
+    return AppPopupSelectField<String>(
+      fieldLabel: 'Тип',
+      valueLabel: _getTypeLabel(_type),
+      accentColor: themeColor,
+      items: buildPopupMenuEntriesWithDividers([
+        PopupMenuItem(
+          value: 'power',
+          height: 40,
+          mouseCursor: SystemMouseCursors.click,
+          padding: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(Icons.bolt, color: powerAccent, size: 20),
+                const SizedBox(width: 12),
+                const Text('Силовой', style: TextStyle(fontSize: 13)),
+              ],
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'multimedia',
+          height: 40,
+          mouseCursor: SystemMouseCursors.click,
+          padding: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(Icons.router, color: multimediaAccent, size: 20),
+                const SizedBox(width: 12),
+                const Text('Слаботочный', style: TextStyle(fontSize: 13)),
+              ],
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'led',
+          height: 40,
+          mouseCursor: SystemMouseCursors.click,
+          padding: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(Icons.lightbulb, color: ledAccent, size: 20),
+                const SizedBox(width: 12),
+                const Text('LED', style: TextStyle(fontSize: 13)),
+              ],
+            ),
+          ),
+        ),
+      ]),
+      onSelected: (value) => setState(() => _type = value),
+    );
+  }
+
+  Widget _buildMountingDropdown(Color themeColor) {
+    return AppPopupSelectField<String>(
+      fieldLabel: 'Монтаж',
+      valueLabel: _getMountingLabel(_mounting),
+      accentColor: themeColor,
+      items: buildPopupMenuEntriesWithDividers([
+        PopupMenuItem(
+          value: 'internal',
+          height: 40,
+          mouseCursor: SystemMouseCursors.click,
+          padding: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.door_front_door,
+                  color: Colors.indigo.shade400,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                const Text('Внутренний', style: TextStyle(fontSize: 13)),
+              ],
+            ),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'external',
+          height: 40,
+          mouseCursor: SystemMouseCursors.click,
+          padding: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.apartment,
+                  color: Colors.indigo.shade400,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                const Text('Наружный', style: TextStyle(fontSize: 13)),
+              ],
+            ),
+          ),
+        ),
+      ]),
+      onSelected: (value) => setState(() => _mounting = value),
     );
   }
 

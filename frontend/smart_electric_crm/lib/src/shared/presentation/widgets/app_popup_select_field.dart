@@ -41,6 +41,7 @@ Color _popupFieldFillColor(BuildContext context) {
 InputDecoration _popupFieldDecoration(
   BuildContext context, {
   required String label,
+  required Color accentColor,
   BoxConstraints? constraints,
   EdgeInsetsGeometry? contentPadding,
 }) {
@@ -48,7 +49,7 @@ InputDecoration _popupFieldDecoration(
   final textStyles = context.appTextStyles;
   final labelStyle = textStyles.fieldLabel.copyWith(
     fontSize: 12.5,
-    color: Colors.indigo.shade400,
+    color: accentColor.withOpacity(0.82),
   );
 
   return InputDecoration(
@@ -73,7 +74,7 @@ InputDecoration _popupFieldDecoration(
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: Colors.indigo, width: 2),
+      borderSide: BorderSide(color: accentColor.withOpacity(0.9), width: 1.25),
     ),
     contentPadding: contentPadding ?? const EdgeInsets.fromLTRB(16, 18, 12, 10),
   );
@@ -85,6 +86,7 @@ class AppPopupSelectField<T> extends StatefulWidget {
   final List<PopupMenuEntry<T>> items;
   final ValueChanged<T> onSelected;
   final bool enabled;
+  final Color accentColor;
 
   const AppPopupSelectField({
     super.key,
@@ -93,6 +95,7 @@ class AppPopupSelectField<T> extends StatefulWidget {
     required this.items,
     required this.onSelected,
     this.enabled = true,
+    this.accentColor = Colors.indigo,
   });
 
   @override
@@ -168,13 +171,14 @@ class _AppPopupSelectFieldState<T> extends State<AppPopupSelectField<T>> {
                     decoration: _popupFieldDecoration(
                       context,
                       label: widget.fieldLabel,
+                      accentColor: widget.accentColor,
                       constraints: const BoxConstraints(
                         minHeight: appPopupSelectFieldHeight,
                         maxHeight: appPopupSelectFieldHeight,
                       ),
                     ).copyWith(
                       fillColor: _isHovered
-                          ? Colors.indigo.withOpacity(0.04)
+                          ? widget.accentColor.withOpacity(0.04)
                           : _popupFieldFillColor(context),
                       suffixIcon: Align(
                         widthFactor: 1,
