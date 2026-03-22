@@ -27,6 +27,7 @@ import 'package:smart_electric_crm/src/shared/presentation/dialogs/text_input_di
 import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_section_app_bar.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/content_tab_strip.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/mobile_overlay_action_button.dart';
 
 class EstimateScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -420,12 +421,11 @@ class _EstimateScreenState extends ConsumerState<EstimateScreen> {
               message: 'Добавить позицию',
               preferBelow: false,
               verticalOffset: 32,
-              child: FloatingActionButton(
-                heroTag: 'add_estimate_item',
+              child: MobileOverlayActionButton(
+                key: const ValueKey('estimate_mobile_add_action'),
                 onPressed: _showSearchDialog,
                 backgroundColor: _currentAddActionColor,
                 foregroundColor: Theme.of(context).colorScheme.surface,
-                child: const Icon(Icons.add),
               ),
             )
           : null,

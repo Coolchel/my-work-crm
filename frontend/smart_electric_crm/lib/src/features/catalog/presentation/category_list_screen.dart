@@ -22,6 +22,7 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/content_tab_s
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_side_menu.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/mobile_overlay_action_button.dart';
 
 part 'widgets/category_list_screen_components.dart';
 
@@ -131,36 +132,14 @@ Widget _buildCatalogDesktopSideMenu(
 
 Widget _buildCatalogOverlayActionButton(
   BuildContext context, {
-  required String heroTag,
+  Key? key,
   required String tooltip,
   required VoidCallback onTap,
 }) {
-  final theme = Theme.of(context);
-  final backgroundColor = theme.floatingActionButtonTheme.backgroundColor ??
-      theme.colorScheme.primary;
-  final foregroundColor = theme.floatingActionButtonTheme.foregroundColor ??
-      theme.colorScheme.surface;
-  final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
-
-  return Tooltip(
-    message: tooltip,
-    preferBelow: false,
-    verticalOffset: 32,
-    child: isMobileWeb
-        ? FloatingActionButton.small(
-            heroTag: heroTag,
-            onPressed: onTap,
-            backgroundColor: backgroundColor,
-            foregroundColor: foregroundColor,
-            child: const Icon(Icons.add),
-          )
-        : FloatingActionButton(
-            heroTag: heroTag,
-            onPressed: onTap,
-            backgroundColor: backgroundColor,
-            foregroundColor: foregroundColor,
-            child: const Icon(Icons.add),
-          ),
+  return MobileOverlayActionButton(
+    key: key,
+    tooltip: tooltip,
+    onPressed: onTap,
   );
 }
 
@@ -840,9 +819,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
       floatingActionButton: useOverlayPrimaryAction
           ? _buildCatalogOverlayActionButton(
               context,
-              heroTag: _currentIndex == 0
-                  ? 'add-system-section'
-                  : 'add-catalog-category',
+              key: const ValueKey('catalog_mobile_add_action'),
               tooltip:
                   _currentIndex == 0 ? 'Добавить раздел' : 'Добавить категорию',
               onTap: _currentIndex == 0

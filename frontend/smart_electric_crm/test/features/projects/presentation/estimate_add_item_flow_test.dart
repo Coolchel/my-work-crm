@@ -45,7 +45,8 @@ void main() {
           platform: TargetPlatform.android,
         );
 
-        await tester.tap(find.byType(FloatingActionButton));
+        await tester
+            .tap(find.byKey(const ValueKey('estimate_mobile_add_action')));
         await tester.pumpAndSettle();
 
         final searchField = find.descendant(
@@ -248,7 +249,8 @@ void main() {
           platform: TargetPlatform.android,
         );
 
-        await tester.tap(find.byType(FloatingActionButton));
+        await tester
+            .tap(find.byKey(const ValueKey('estimate_mobile_add_action')));
         await tester.pumpAndSettle();
 
         await tester.tap(find.byIcon(Icons.add_circle_outline));

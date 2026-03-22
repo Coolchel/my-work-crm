@@ -54,7 +54,7 @@ void main() {
       expect(
         bottomPadding,
         DesktopWebFrame.mobileContentEndPadding +
-            DesktopWebFrame.overlayActionBottomClearance,
+            DesktopWebFrame.mobileOverlayActionBottomClearance,
       );
     },
     variant: TargetPlatformVariant.only(TargetPlatform.android),

@@ -15,6 +15,7 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/compact_secti
 import 'package:smart_electric_crm/src/shared/presentation/widgets/content_tab_strip.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/mobile_overlay_action_button.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
@@ -402,17 +403,19 @@ class _StagesTabState extends ConsumerState<_StagesTab> {
               preferBelow: false,
               verticalOffset: 32,
               child: isMobileWeb
-                  ? FloatingActionButton.small(
+                  ? MobileOverlayActionButton(
+                      key: const ValueKey(
+                          'project_detail_mobile_add_stage_action'),
                       onPressed: () => _showAddStageDialog(context, ref),
                       backgroundColor: Colors.indigo,
                       foregroundColor: Theme.of(context).colorScheme.surface,
-                      child: const Icon(Icons.add),
                     )
-                  : FloatingActionButton(
+                  : MobileOverlayActionButton(
+                      key: const ValueKey(
+                          'project_detail_mobile_add_stage_action'),
                       onPressed: () => _showAddStageDialog(context, ref),
                       backgroundColor: Colors.indigo,
                       foregroundColor: Theme.of(context).colorScheme.surface,
-                      child: const Icon(Icons.add),
                     ),
             )
           : null,

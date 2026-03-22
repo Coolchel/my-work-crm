@@ -18,6 +18,7 @@ import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/human_friendly_date_formatter.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/mobile_overlay_action_button.dart';
 
 // Filter enums
 enum SortOrder { newest, oldest }
@@ -642,16 +643,10 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen>
             },
           ),
           floatingActionButton: useOverlayPrimaryAction
-              ? Tooltip(
+              ? MobileOverlayActionButton(
                   message: 'Добавить объект',
-                  preferBelow: false,
-                  verticalOffset: 32,
-                  child: FloatingActionButton(
-                    heroTag: 'add_project',
-                    elevation: 4,
-                    onPressed: openAddProjectDialog,
-                    child: const Icon(Icons.add),
-                  ),
+                  key: const ValueKey('project_list_mobile_add_action'),
+                  onPressed: openAddProjectDialog,
                 )
               : null,
         );

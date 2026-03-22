@@ -6,7 +6,9 @@ import 'package:smart_electric_crm/src/core/utils/app_number_formatter.dart';
 import 'package:smart_electric_crm/src/features/catalog/data/catalog_repository.dart';
 import 'package:smart_electric_crm/src/shared/presentation/utils/error_feedback.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/app_popup_select_field.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/mobile_overlay_action_button.dart';
 
 class ItemListScreen extends ConsumerWidget {
   final int categoryId;
@@ -23,6 +25,19 @@ class ItemListScreen extends ConsumerWidget {
     final itemsAsync = ref.watch(fetchCategoryItemsProvider(categoryId));
     final theme = Theme.of(context);
     final textStyles = context.appTextStyles;
+    final useOverlayPrimaryAction =
+        DesktopWebFrame.usesOverlayPrimaryAction(context);
+    final bottomPadding = DesktopWebFrame.scrollableContentBottomPadding(
+      context,
+      hasOverlayAction: useOverlayPrimaryAction,
+    );
+
+    void openCreateItemDialog() {
+      showDialog(
+        context: context,
+        builder: (_) => _CreateItemDialog(categoryId: categoryId),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -39,6 +54,7 @@ class ItemListScreen extends ConsumerWidget {
             );
           }
           return ListView.builder(
+            padding: EdgeInsets.only(bottom: bottomPadding),
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
@@ -64,16 +80,17 @@ class ItemListScreen extends ConsumerWidget {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: null,
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (_) => _CreateItemDialog(categoryId: categoryId),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: useOverlayPrimaryAction
+          ? MobileOverlayActionButton(
+              key: const ValueKey('item_list_mobile_add_action'),
+              message: 'Добавить позицию',
+              onPressed: openCreateItemDialog,
+            )
+          : FloatingActionButton(
+              heroTag: null,
+              onPressed: openCreateItemDialog,
+              child: const Icon(Icons.add),
+            ),
     );
   }
 }

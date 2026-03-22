@@ -18,6 +18,9 @@ final class DesktopWebFrame {
   static const double mobileContentEndPadding = 24;
   static const double desktopContentEndPadding = shellSidebarBottomOffset;
   static const double overlayActionBottomClearance = 24;
+  static const double mobileOverlayActionSize = 56;
+  static const double mobileOverlayActionMargin = 16;
+  static const double mobileOverlayActionBottomClearance = 48;
 
   static bool _isDesktopSurface() {
     if (kIsWeb) {
@@ -191,7 +194,16 @@ final class DesktopWebFrame {
       return endPadding + safeBottom;
     }
 
-    return endPadding + overlayActionClearance + safeBottom;
+    final usesMobileOverlayMetrics = usesMobileContentPadding(
+      context,
+      maxWidth: maxWidth,
+    );
+
+    return endPadding +
+        (usesMobileOverlayMetrics
+            ? mobileOverlayActionBottomClearance
+            : overlayActionClearance) +
+        safeBottom;
   }
 
   static EdgeInsets pagePadding(

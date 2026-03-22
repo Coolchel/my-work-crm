@@ -5,6 +5,7 @@ import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
 import 'package:smart_electric_crm/src/core/theme/app_typography.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/desktop_web_frame.dart';
 import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empty_state.dart';
+import 'package:smart_electric_crm/src/shared/presentation/widgets/mobile_overlay_action_button.dart';
 
 import '../../data/models/project_model.dart';
 import '../../../engineering/data/models/shield_model.dart';
@@ -63,7 +64,6 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobileWeb = DesktopWebFrame.isMobileWeb(context, maxWidth: 700);
     final useOverlayPrimaryAction =
         DesktopWebFrame.usesOverlayPrimaryAction(context);
     final sortedShields = List<ShieldModel>.from(widget.project.shields)
@@ -78,33 +78,16 @@ class _EngineeringTabState extends ConsumerState<EngineeringTab> {
               message: 'Добавить щит',
               preferBelow: false,
               verticalOffset: 32,
-              child: isMobileWeb
-                  ? FloatingActionButton.small(
-                      heroTag: 'add_shield_fab',
-                      onPressed: () => _showAddShieldDialog(
-                        context,
-                        ref,
-                        widget.project.id.toString(),
-                      ),
-                      backgroundColor: Colors.indigo,
-                      foregroundColor: Theme.of(context).colorScheme.surface,
-                      elevation: 2,
-                      tooltip: null,
-                      child: const Icon(Icons.add),
-                    )
-                  : FloatingActionButton(
-                      heroTag: 'add_shield_fab',
-                      onPressed: () => _showAddShieldDialog(
-                        context,
-                        ref,
-                        widget.project.id.toString(),
-                      ),
-                      backgroundColor: Colors.indigo,
-                      foregroundColor: Theme.of(context).colorScheme.surface,
-                      elevation: 2,
-                      tooltip: null,
-                      child: const Icon(Icons.add),
-                    ),
+              child: MobileOverlayActionButton(
+                key: const ValueKey('engineering_mobile_add_shield_action'),
+                onPressed: () => _showAddShieldDialog(
+                  context,
+                  ref,
+                  widget.project.id.toString(),
+                ),
+                backgroundColor: Colors.indigo,
+                foregroundColor: Theme.of(context).colorScheme.surface,
+              ),
             )
           : null,
       body: LayoutBuilder(

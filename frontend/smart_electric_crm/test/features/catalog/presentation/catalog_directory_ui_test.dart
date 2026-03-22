@@ -35,6 +35,24 @@ void main() {
     );
 
     testWidgets(
+      'uses mobile overlay add action on Android root catalog screen',
+      (tester) async {
+        await _pumpCatalogScreen(
+          tester,
+          width: 390,
+          initialTab: CatalogSection.system,
+          targetPlatform: TargetPlatform.android,
+        );
+
+        expect(
+          find.byKey(const ValueKey('catalog_mobile_add_action')),
+          findsOneWidget,
+        );
+        expect(find.byType(FloatingActionButton), findsNothing);
+      },
+    );
+
+    testWidgets(
       'keeps root catalog content separated from desktop shell menu',
       (tester) async {
         await _pumpCatalogScreen(

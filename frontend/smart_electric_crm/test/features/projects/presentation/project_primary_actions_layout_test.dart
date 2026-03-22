@@ -33,6 +33,25 @@ void main() {
   );
 
   testWidgets(
+    'ProjectList uses mobile overlay add action on Android',
+    (tester) async {
+      await _pumpProjectList(
+        tester,
+        width: 390,
+        project: _buildProject(),
+        platform: TargetPlatform.android,
+      );
+
+      expect(
+        find.byKey(const ValueKey('project_list_mobile_add_action')),
+        findsOneWidget,
+      );
+      expect(find.byType(FloatingActionButton), findsNothing);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
+
+  testWidgets(
     'ProjectDetail stages tab shows contextual add action instead of FAB on Windows',
     (tester) async {
       await _pumpProjectDetail(
@@ -52,6 +71,26 @@ void main() {
   );
 
   testWidgets(
+    'ProjectDetail stages tab uses mobile overlay add action on Android',
+    (tester) async {
+      await _pumpProjectDetail(
+        tester,
+        width: 390,
+        project: _buildProject(),
+        initialTab: ProjectDetailSection.stages,
+        platform: TargetPlatform.android,
+      );
+
+      expect(
+        find.byKey(const ValueKey('project_detail_mobile_add_stage_action')),
+        findsOneWidget,
+      );
+      expect(find.byType(FloatingActionButton), findsNothing);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
+
+  testWidgets(
     'ProjectDetail shields tab shows add shield card instead of FAB on Windows',
     (tester) async {
       await _pumpProjectDetail(
@@ -68,6 +107,26 @@ void main() {
       expect(find.byType(FloatingActionButton), findsNothing);
     },
     variant: TargetPlatformVariant.only(TargetPlatform.windows),
+  );
+
+  testWidgets(
+    'ProjectDetail shields tab uses mobile overlay add action on Android',
+    (tester) async {
+      await _pumpProjectDetail(
+        tester,
+        width: 390,
+        project: _buildProject(),
+        initialTab: ProjectDetailSection.shields,
+        platform: TargetPlatform.android,
+      );
+
+      expect(
+        find.byKey(const ValueKey('engineering_mobile_add_shield_action')),
+        findsOneWidget,
+      );
+      expect(find.byType(FloatingActionButton), findsNothing);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
   );
 
   testWidgets(
@@ -125,6 +184,7 @@ Future<void> _pumpProjectList(
   WidgetTester tester, {
   required double width,
   required ProjectModel project,
+  TargetPlatform platform = TargetPlatform.windows,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, 900);
@@ -139,7 +199,7 @@ Future<void> _pumpProjectList(
         projectListProvider.overrideWith((ref) async => [project]),
       ],
       child: MaterialApp(
-        theme: AppTheme.light().copyWith(platform: TargetPlatform.windows),
+        theme: AppTheme.light().copyWith(platform: platform),
         home: const ProjectListScreen(),
       ),
     ),
@@ -153,6 +213,7 @@ Future<void> _pumpProjectDetail(
   required double width,
   required ProjectModel project,
   required ProjectDetailSection initialTab,
+  TargetPlatform platform = TargetPlatform.windows,
 }) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, 900);
@@ -167,7 +228,7 @@ Future<void> _pumpProjectDetail(
         projectByIdProvider('1').overrideWith((ref) async => project),
       ],
       child: MaterialApp(
-        theme: AppTheme.light().copyWith(platform: TargetPlatform.windows),
+        theme: AppTheme.light().copyWith(platform: platform),
         home: ProjectDetailScreen(
           projectId: '1',
           initialTab: initialTab,
