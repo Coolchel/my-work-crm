@@ -69,6 +69,56 @@ void main() {
     },
     variant: TargetPlatformVariant.only(TargetPlatform.windows),
   );
+
+  testWidgets(
+    'ProjectDetail shields add card matches shield card width on wide Windows layout',
+    (tester) async {
+      await _pumpProjectDetail(
+        tester,
+        width: 1280,
+        project: _buildProject(withShield: true),
+        initialTab: ProjectDetailSection.shields,
+      );
+
+      final shieldRect = tester.getRect(_shieldCardFinder());
+      final addCardRect = tester.getRect(
+        find.byKey(const ValueKey('engineering_add_shield_card')),
+      );
+
+      expect(
+        (addCardRect.width - shieldRect.width).abs(),
+        lessThanOrEqualTo(1),
+      );
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.windows),
+  );
+
+  testWidgets(
+    'ProjectDetail shields add card matches shield card width on narrower Windows layout',
+    (tester) async {
+      await _pumpProjectDetail(
+        tester,
+        width: 720,
+        project: _buildProject(withShield: true),
+        initialTab: ProjectDetailSection.shields,
+      );
+
+      final shieldRect = tester.getRect(_shieldCardFinder());
+      final addCardRect = tester.getRect(
+        find.byKey(const ValueKey('engineering_add_shield_card')),
+      );
+
+      expect(
+        (addCardRect.width - shieldRect.width).abs(),
+        lessThanOrEqualTo(1),
+      );
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.windows),
+  );
+}
+
+Finder _shieldCardFinder() {
+  return find.byKey(const ValueKey('shield_card_7'));
 }
 
 Future<void> _pumpProjectList(

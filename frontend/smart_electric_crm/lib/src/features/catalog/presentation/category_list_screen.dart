@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:smart_electric_crm/src/core/navigation/app_navigation.dart';
 import 'package:smart_electric_crm/src/core/theme/app_design_tokens.dart';
@@ -27,6 +28,7 @@ part 'widgets/category_list_screen_components.dart';
 const double _catalogDesktopMenuTop = 20;
 const double _catalogContentMaxWidth = 1380;
 const double _catalogDesktopViewportFadeHeight = 28;
+const String _catalogNestedRouteNamePrefix = 'catalog-nested:';
 
 double _catalogHorizontalContentPadding(BuildContext context) {
   return DesktopWebFrame.contentHorizontalPadding(context);
@@ -44,6 +46,35 @@ EdgeInsetsDirectional _catalogScrollableContentPadding(
     _catalogHorizontalContentPadding(context) + scrollableEndInset,
     bottom,
   );
+}
+
+MaterialPageRoute<T> _buildCatalogNestedRoute<T>({
+  required String name,
+  required WidgetBuilder builder,
+}) {
+  return MaterialPageRoute<T>(
+    settings: RouteSettings(name: '$_catalogNestedRouteNamePrefix$name'),
+    builder: builder,
+  );
+}
+
+void _returnToCatalogRootTab(
+  BuildContext context, {
+  required int index,
+  required ValueChanged<int> onSelectTab,
+}) {
+  onSelectTab(index);
+  Navigator.of(context).popUntil((route) {
+    final routeName = route.settings.name;
+    return routeName == null ||
+        !routeName.startsWith(_catalogNestedRouteNamePrefix);
+  });
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final controller = index == 0
+        ? AppNavigation.directorySystemScrollController
+        : AppNavigation.directoryCatalogScrollController;
+    controller.scrollToTop(animated: false);
+  });
 }
 
 Widget _buildCatalogDesktopSideMenu(
@@ -375,15 +406,177 @@ class CategoryListScreen extends ConsumerStatefulWidget {
     this.initialTab = CatalogSection.system,
     this.onTabChanged,
     this.onBackPressed,
+    this.onOpenSystemSection,
+    this.onOpenCatalogCategory,
     super.key,
   });
 
   final CatalogSection initialTab;
   final ValueChanged<CatalogSection>? onTabChanged;
   final VoidCallback? onBackPressed;
+  final ValueChanged<DirectorySection>? onOpenSystemSection;
+  final ValueChanged<CatalogCategory>? onOpenCatalogCategory;
 
   @override
   ConsumerState<CategoryListScreen> createState() => _CategoryListScreenState();
+}
+
+class DirectorySectionRouteScreen extends ConsumerWidget {
+  const DirectorySectionRouteScreen({
+    required this.sectionId,
+    this.from,
+    super.key,
+  });
+
+  final int sectionId;
+  final String? from;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sectionsAsync = ref.watch(directorySectionsProvider);
+
+    return sectionsAsync.when(
+      data: (sections) {
+        final section = sections.cast<DirectorySection?>().firstWhere(
+              (entry) => entry?.id == sectionId,
+              orElse: () => null,
+            );
+        if (section == null) {
+          return const _CatalogRouteErrorScaffold(
+            title: 'Система',
+            message: 'Раздел справочника не найден.',
+          );
+        }
+
+        return _SectionEntriesScreen(
+          section: section,
+          onError: (message) => _showCatalogRouteError(context, message),
+          onSelectTab: (index) {
+            context.go(
+              AppNavigation.catalogLocation(
+                tab:
+                    index == 1 ? CatalogSection.catalog : CatalogSection.system,
+                from: from,
+              ),
+            );
+          },
+          onBackPressed: () => context.go(
+            AppNavigation.catalogLocation(
+              tab: CatalogSection.system,
+              from: from,
+            ),
+          ),
+        );
+      },
+      loading: () => const _CatalogRouteLoadingScaffold(title: 'Система'),
+      error: (error, _) => _CatalogRouteErrorScaffold(
+        title: 'Система',
+        message: 'Не удалось загрузить раздел: $error',
+      ),
+    );
+  }
+}
+
+class CatalogCategoryRouteScreen extends ConsumerWidget {
+  const CatalogCategoryRouteScreen({
+    required this.categoryId,
+    this.from,
+    super.key,
+  });
+
+  final int categoryId;
+  final String? from;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categoriesAsync = ref.watch(catalogCategoriesProvider);
+
+    return categoriesAsync.when(
+      data: (categories) {
+        final category = categories.cast<CatalogCategory?>().firstWhere(
+              (entry) => entry?.id == categoryId,
+              orElse: () => null,
+            );
+        if (category == null) {
+          return const _CatalogRouteErrorScaffold(
+            title: 'Каталог',
+            message: 'Категория каталога не найдена.',
+          );
+        }
+
+        return _CategoryItemsScreen(
+          category: category,
+          onError: (message) => _showCatalogRouteError(context, message),
+          onSelectTab: (index) {
+            context.go(
+              AppNavigation.catalogLocation(
+                tab:
+                    index == 1 ? CatalogSection.catalog : CatalogSection.system,
+                from: from,
+              ),
+            );
+          },
+          onBackPressed: () => context.go(
+            AppNavigation.catalogLocation(
+              tab: CatalogSection.catalog,
+              from: from,
+            ),
+          ),
+        );
+      },
+      loading: () => const _CatalogRouteLoadingScaffold(title: 'Каталог'),
+      error: (error, _) => _CatalogRouteErrorScaffold(
+        title: 'Каталог',
+        message: 'Не удалось загрузить категорию: $error',
+      ),
+    );
+  }
+}
+
+class _CatalogRouteLoadingScaffold extends StatelessWidget {
+  const _CatalogRouteLoadingScaffold({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: CompactSectionAppBar(title: title, subtitle: 'Загрузка'),
+      body: const Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+class _CatalogRouteErrorScaffold extends StatelessWidget {
+  const _CatalogRouteErrorScaffold({
+    required this.title,
+    required this.message,
+  });
+
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: CompactSectionAppBar(title: title, subtitle: 'Ошибка'),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(message, textAlign: TextAlign.center),
+        ),
+      ),
+    );
+  }
+}
+
+void _showCatalogRouteError(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: Colors.red.shade700,
+    ),
+  );
 }
 
 class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
@@ -580,7 +773,9 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
               tooltip: _isSyncingSystemSections
                   ? 'Синхронизация...'
                   : 'Синхронизировать',
-              color: AppDesignTokens.surface2(context),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Colors.white,
               isLoading: _isSyncingSystemSections,
               onTap: _isSyncingSystemSections
                   ? null
@@ -600,7 +795,8 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
               scrollController: _systemScrollController,
               isSyncing: _isSyncingSystemSections,
               onError: (message) => _showSnack(message, isError: true),
-              onSelectTab: (index) => setState(() => _currentIndex = index),
+              onSelectTab: _handleSectionSelection,
+              onOpenSection: widget.onOpenSystemSection,
               topContentInset: localNavSpacing.contentInset,
               scrollableEndInset: scrollableEndInset,
               bottomContentPadding: bottomPadding,
@@ -608,7 +804,8 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
             _CatalogTab(
               scrollController: _catalogScrollController,
               onError: (message) => _showSnack(message, isError: true),
-              onSelectTab: (index) => setState(() => _currentIndex = index),
+              onSelectTab: _handleSectionSelection,
+              onOpenCategory: widget.onOpenCatalogCategory,
               topContentInset: localNavSpacing.contentInset,
               scrollableEndInset: scrollableEndInset,
               bottomContentPadding: bottomPadding,

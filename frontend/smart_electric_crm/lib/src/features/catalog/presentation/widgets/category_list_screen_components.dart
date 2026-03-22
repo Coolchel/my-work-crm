@@ -20,44 +20,24 @@ class _AppBarActionButton extends StatefulWidget {
 }
 
 class _AppBarActionButtonState extends State<_AppBarActionButton> {
-  bool _isHovered = false;
-
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor:
-          widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
-      child: Tooltip(
-        message: widget.tooltip,
-        child: InkWell(
-          onTap: widget.onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: _isHovered
-                  ? Colors.grey.shade500.withOpacity(0.1)
-                  : Colors.transparent,
-              shape: BoxShape.circle,
-            ),
-            child: widget.isLoading
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: widget.color,
-                    ),
-                  )
-                : Icon(
-                    widget.icon,
-                    size: 24,
-                    color: widget.color,
-                  ),
-          ),
-        ),
+    return Tooltip(
+      message: widget.tooltip,
+      child: IconButton(
+        onPressed: widget.onTap,
+        iconSize: 24,
+        color: widget.color,
+        icon: widget.isLoading
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: widget.color,
+                ),
+              )
+            : Icon(widget.icon),
       ),
     );
   }
@@ -68,6 +48,7 @@ class _SystemSectionsTab extends ConsumerStatefulWidget {
   final bool isSyncing;
   final ValueChanged<String> onError;
   final ValueChanged<int> onSelectTab;
+  final ValueChanged<DirectorySection>? onOpenSection;
   final double topContentInset;
   final double scrollableEndInset;
   final double bottomContentPadding;
@@ -77,6 +58,7 @@ class _SystemSectionsTab extends ConsumerStatefulWidget {
     required this.isSyncing,
     required this.onError,
     required this.onSelectTab,
+    this.onOpenSection,
     this.topContentInset = 0,
     this.scrollableEndInset = 0,
     this.bottomContentPadding = 0,
@@ -191,8 +173,14 @@ class _SystemSectionsTabState extends ConsumerState<_SystemSectionsTab> {
               extraText:
                   section.description.isEmpty ? null : section.description,
               onTap: () {
+                final onOpenSection = widget.onOpenSection;
+                if (onOpenSection != null) {
+                  onOpenSection(section);
+                  return;
+                }
                 Navigator.of(context).push(
-                  MaterialPageRoute(
+                  _buildCatalogNestedRoute(
+                    name: 'section-entries',
                     builder: (_) => _SectionEntriesScreen(
                       section: section,
                       onError: widget.onError,
@@ -280,11 +268,13 @@ class _SectionEntriesScreen extends ConsumerStatefulWidget {
   final DirectorySection section;
   final ValueChanged<String> onError;
   final ValueChanged<int> onSelectTab;
+  final VoidCallback? onBackPressed;
 
   const _SectionEntriesScreen({
     required this.section,
     required this.onError,
     required this.onSelectTab,
+    this.onBackPressed,
   });
 
   @override
@@ -326,6 +316,10 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
   }
 
   void _handleBack(BuildContext context) {
+    widget.onBackPressed?.call();
+    if (widget.onBackPressed != null) {
+      return;
+    }
     Navigator.of(context).maybePop();
   }
 
@@ -568,12 +562,15 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
             key: const ValueKey('directory_entries_local_nav'),
             selectedIndex: 0,
             onSelected: (index) {
-              if (index == 0) {
-                AppNavigation.directorySystemScrollController.scrollToTop();
+              if (widget.onBackPressed != null) {
+                widget.onSelectTab(index);
                 return;
               }
-              widget.onSelectTab(index);
-              Navigator.of(context).pop();
+              _returnToCatalogRootTab(
+                context,
+                index: index,
+                onSelectTab: widget.onSelectTab,
+              );
             },
             topPadding: localNavSpacing.topPadding,
             bottomPadding: localNavSpacing.bottomPadding,
@@ -817,13 +814,15 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
                         key: const ValueKey('directory_entries_local_nav'),
                         selectedIndex: 0,
                         onSelected: (index) {
-                          if (index == 0) {
-                            AppNavigation.directorySystemScrollController
-                                .scrollToTop();
+                          if (widget.onBackPressed != null) {
+                            widget.onSelectTab(index);
                             return;
                           }
-                          widget.onSelectTab(index);
-                          Navigator.of(context).pop();
+                          _returnToCatalogRootTab(
+                            context,
+                            index: index,
+                            onSelectTab: widget.onSelectTab,
+                          );
                         },
                         topPadding: localNavSpacing.topPadding,
                         bottomPadding: localNavSpacing.bottomPadding,
@@ -881,6 +880,7 @@ class _CatalogTab extends ConsumerStatefulWidget {
   final ScrollController scrollController;
   final ValueChanged<String> onError;
   final ValueChanged<int> onSelectTab;
+  final ValueChanged<CatalogCategory>? onOpenCategory;
   final double topContentInset;
   final double scrollableEndInset;
   final double bottomContentPadding;
@@ -889,6 +889,7 @@ class _CatalogTab extends ConsumerStatefulWidget {
     required this.scrollController,
     required this.onError,
     required this.onSelectTab,
+    this.onOpenCategory,
     this.topContentInset = 0,
     this.scrollableEndInset = 0,
     this.bottomContentPadding = 0,
@@ -966,8 +967,14 @@ class _CatalogTabState extends ConsumerState<_CatalogTab> {
               extraText:
                   'Коэффициент труда: ${AppNumberFormatter.decimal(category.laborCoefficient)}',
               onTap: () {
+                final onOpenCategory = widget.onOpenCategory;
+                if (onOpenCategory != null) {
+                  onOpenCategory(category);
+                  return;
+                }
                 Navigator.of(context).push(
-                  MaterialPageRoute(
+                  _buildCatalogNestedRoute(
+                    name: 'category-items',
                     builder: (_) => _CategoryItemsScreen(
                       category: category,
                       onError: widget.onError,
@@ -1045,11 +1052,13 @@ class _CategoryItemsScreen extends ConsumerStatefulWidget {
   final CatalogCategory category;
   final ValueChanged<String> onError;
   final ValueChanged<int> onSelectTab;
+  final VoidCallback? onBackPressed;
 
   const _CategoryItemsScreen({
     required this.category,
     required this.onError,
     required this.onSelectTab,
+    this.onBackPressed,
   });
 
   @override
@@ -1091,6 +1100,10 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
   }
 
   void _handleBack(BuildContext context) {
+    widget.onBackPressed?.call();
+    if (widget.onBackPressed != null) {
+      return;
+    }
     Navigator.of(context).maybePop();
   }
 
@@ -1337,12 +1350,15 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
             key: const ValueKey('category_items_local_nav'),
             selectedIndex: 1,
             onSelected: (index) {
-              if (index == 1) {
-                AppNavigation.directoryCatalogScrollController.scrollToTop();
+              if (widget.onBackPressed != null) {
+                widget.onSelectTab(index);
                 return;
               }
-              widget.onSelectTab(index);
-              Navigator.of(context).pop();
+              _returnToCatalogRootTab(
+                context,
+                index: index,
+                onSelectTab: widget.onSelectTab,
+              );
             },
             topPadding: localNavSpacing.topPadding,
             bottomPadding: localNavSpacing.bottomPadding,
@@ -1585,13 +1601,15 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
                         key: const ValueKey('category_items_local_nav'),
                         selectedIndex: 1,
                         onSelected: (index) {
-                          if (index == 1) {
-                            AppNavigation.directoryCatalogScrollController
-                                .scrollToTop();
+                          if (widget.onBackPressed != null) {
+                            widget.onSelectTab(index);
                             return;
                           }
-                          widget.onSelectTab(index);
-                          Navigator.of(context).pop();
+                          _returnToCatalogRootTab(
+                            context,
+                            index: index,
+                            onSelectTab: widget.onSelectTab,
+                          );
                         },
                         topPadding: localNavSpacing.topPadding,
                         bottomPadding: localNavSpacing.bottomPadding,

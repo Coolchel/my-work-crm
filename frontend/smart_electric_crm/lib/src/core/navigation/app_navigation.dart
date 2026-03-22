@@ -195,6 +195,34 @@ class AppNavigation {
     ).toString();
   }
 
+  static String catalogSystemSectionLocation({
+    required String sectionId,
+    String? from,
+  }) {
+    final queryParameters = <String, String>{};
+    if (from != null && from.isNotEmpty) {
+      queryParameters['from'] = from;
+    }
+    return Uri(
+      path: '$catalogPath/system/$sectionId',
+      queryParameters: queryParameters.isEmpty ? null : queryParameters,
+    ).toString();
+  }
+
+  static String catalogCategoryLocation({
+    required String categoryId,
+    String? from,
+  }) {
+    final queryParameters = <String, String>{};
+    if (from != null && from.isNotEmpty) {
+      queryParameters['from'] = from;
+    }
+    return Uri(
+      path: '$catalogPath/category/$categoryId',
+      queryParameters: queryParameters.isEmpty ? null : queryParameters,
+    ).toString();
+  }
+
   static String fileViewerLocation({
     required String url,
     required String title,
@@ -276,6 +304,32 @@ class AppNavigation {
     context.push(
       catalogLocation(
         tab: tab,
+        from: from ?? currentLocation(context),
+      ),
+    );
+  }
+
+  static void openCatalogSystemSection(
+    BuildContext context, {
+    required String sectionId,
+    String? from,
+  }) {
+    context.push(
+      catalogSystemSectionLocation(
+        sectionId: sectionId,
+        from: from ?? currentLocation(context),
+      ),
+    );
+  }
+
+  static void openCatalogCategory(
+    BuildContext context, {
+    required String categoryId,
+    String? from,
+  }) {
+    context.push(
+      catalogCategoryLocation(
+        categoryId: categoryId,
         from: from ?? currentLocation(context),
       ),
     );

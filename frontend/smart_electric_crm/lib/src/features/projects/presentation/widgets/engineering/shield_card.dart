@@ -107,6 +107,7 @@ class _ShieldCardState extends ConsumerState<ShieldCard>
     final textStyles = context.appTextStyles;
 
     return MouseRegion(
+      key: ValueKey('shield_card_${widget.shield.id}'),
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(

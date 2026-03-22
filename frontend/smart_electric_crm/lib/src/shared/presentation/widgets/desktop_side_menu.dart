@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/app_design_tokens.dart';
 import '../../../core/theme/app_typography.dart';
 
 class DesktopSideMenuItem {
@@ -47,7 +48,9 @@ class DesktopSideMenu extends StatelessWidget {
             : scheme.surface.withOpacity(0.98),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: scheme.outlineVariant.withOpacity(isDark ? 0.5 : 0.35),
+          color: isDark
+              ? AppDesignTokens.softBorder(context)
+              : scheme.outlineVariant.withOpacity(0.35),
           width: 1,
         ),
         boxShadow: [

@@ -91,6 +91,120 @@ void main() {
     );
 
     testWidgets(
+      'returns to catalog root when switching from system nested screen',
+      (tester) async {
+        await _pumpCatalogScreen(
+          tester,
+          width: 1280,
+          initialTab: CatalogSection.system,
+        );
+
+        await tester.tap(find.text(_longSectionName));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('directory_entries_local_nav')),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.byKey(const ValueKey('directory_entries_local_nav_catalog')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('directory_entries_local_nav')),
+          findsNothing,
+        );
+        expect(find.byKey(const ValueKey('catalog_local_nav')), findsOneWidget);
+        expect(find.text(_categoryName), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'returns to system root when tapping system from system nested screen',
+      (tester) async {
+        await _pumpCatalogScreen(
+          tester,
+          width: 1280,
+          initialTab: CatalogSection.system,
+        );
+
+        await tester.tap(find.text(_longSectionName));
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.byKey(const ValueKey('directory_entries_local_nav_system')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('directory_entries_local_nav')),
+          findsNothing,
+        );
+        expect(find.byKey(const ValueKey('catalog_local_nav')), findsOneWidget);
+        expect(find.text(_longSectionName), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'returns to system root when switching from catalog nested screen',
+      (tester) async {
+        await _pumpCatalogScreen(
+          tester,
+          width: 1280,
+          initialTab: CatalogSection.catalog,
+        );
+
+        await tester.tap(find.text(_categoryName));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('category_items_local_nav')),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.byKey(const ValueKey('category_items_local_nav_system')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('category_items_local_nav')),
+          findsNothing,
+        );
+        expect(find.byKey(const ValueKey('catalog_local_nav')), findsOneWidget);
+        expect(find.text(_longSectionName), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'returns to catalog root when tapping catalog from catalog nested screen',
+      (tester) async {
+        await _pumpCatalogScreen(
+          tester,
+          width: 1280,
+          initialTab: CatalogSection.catalog,
+        );
+
+        await tester.tap(find.text(_categoryName));
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.byKey(const ValueKey('category_items_local_nav_catalog')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('category_items_local_nav')),
+          findsNothing,
+        );
+        expect(find.byKey(const ValueKey('catalog_local_nav')), findsOneWidget);
+        expect(find.text(_categoryName), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'keeps system section titles readable on narrow layout',
       (tester) async {
         await _pumpCatalogScreen(
@@ -181,6 +295,46 @@ void main() {
         expect(find.text(_longItemName), findsOneWidget);
         final itemTitle = tester.widget<Text>(find.text(_longItemName));
         expect(itemTitle.maxLines, 1);
+      },
+    );
+
+    testWidgets(
+      'desktop side menu uses the shared soft border in dark theme',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: ThemeMode.dark,
+            home: Scaffold(
+              body: DesktopSideMenu(
+                items: [
+                  DesktopSideMenuItem(
+                    label: 'Test',
+                    icon: const Icon(Icons.home_outlined),
+                    selectedIcon: const Icon(Icons.home),
+                    isSelected: true,
+                    onTap: () {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        final decoration = tester
+            .widget<DecoratedBox>(
+              find
+                  .descendant(
+                    of: find.byType(DesktopSideMenu),
+                    matching: find.byType(DecoratedBox),
+                  )
+                  .first,
+            )
+            .decoration as BoxDecoration;
+        final border = decoration.border! as Border;
+
+        expect(border.top.color, const Color(0x1FFFFFFF));
       },
     );
   });
@@ -277,11 +431,12 @@ Future<void> _pumpCatalogScreen(
   required double width,
   required CatalogSection initialTab,
   TargetPlatform targetPlatform = TargetPlatform.windows,
+  ThemeMode themeMode = ThemeMode.light,
 }) async {
   SharedPreferences.setMockInitialValues({
     'show_welcome_screen': false,
     'show_catalog_menu': true,
-    'app_theme_mode': ThemeMode.light.index,
+    'app_theme_mode': themeMode.index,
   });
 
   tester.view.devicePixelRatio = 1;
@@ -302,6 +457,7 @@ Future<void> _pumpCatalogScreen(
       child: MaterialApp(
         theme: AppTheme.light().copyWith(platform: targetPlatform),
         darkTheme: AppTheme.dark(),
+        themeMode: themeMode,
         home: CategoryListScreen(initialTab: initialTab),
       ),
     ),

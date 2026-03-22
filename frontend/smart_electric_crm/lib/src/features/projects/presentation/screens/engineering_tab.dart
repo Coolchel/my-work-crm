@@ -227,130 +227,127 @@ class _AddShieldCardState extends State<_AddShieldCard> {
               ];
 
     return MouseRegion(
+      key: const ValueKey('engineering_add_shield_card'),
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: Align(
-        alignment: Alignment.center,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            minHeight: 92,
-            maxHeight: 92,
-            maxWidth: 560,
-          ),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: AppDesignTokens.cardBorder(
-                  context,
-                  hovered: borderHovered,
-                ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minHeight: 92,
+          maxHeight: 92,
+          minWidth: double.infinity,
+        ),
+        child: AnimatedContainer(
+          width: double.infinity,
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: AppDesignTokens.cardBorder(
+                context,
+                hovered: borderHovered,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color:
-                      AppDesignTokens.cardShadow(context, hovered: _isHovered),
-                  blurRadius: _isHovered ? 18 : 14,
-                  offset: const Offset(0, 6),
-                ),
-              ],
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                key: const ValueKey('engineering_add_shield_card'),
-                onTap: widget.onTap,
-                borderRadius: BorderRadius.circular(24),
-                hoverColor: Colors.transparent,
-                highlightColor: Colors.transparent,
-                overlayColor: WidgetStateProperty.resolveWith((states) {
-                  if (states.contains(WidgetState.pressed)) {
-                    return AppDesignTokens.pressedOverlay(context);
-                  }
-                  return Colors.transparent;
-                }),
-                child: Container(
-                  width: double.infinity,
-                  height: 92,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: bgGradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: AppDesignTokens.cardShadow(context, hovered: _isHovered),
+                blurRadius: _isHovered ? 18 : 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.onTap,
+              borderRadius: BorderRadius.circular(24),
+              hoverColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              overlayColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return AppDesignTokens.pressedOverlay(context);
+                }
+                return Colors.transparent;
+              }),
+              child: Container(
+                width: double.infinity,
+                height: 92,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: bgGradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: isDark
-                                ? const [Color(0xFF4E67CF), Color(0xFF3A4FA8)]
-                                : [
-                                    Colors.indigo.shade600,
-                                    Colors.indigo.shade400,
-                                  ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isDark
+                              ? const [Color(0xFF4E67CF), Color(0xFF3A4FA8)]
+                              : [
+                                  Colors.indigo.shade600,
+                                  Colors.indigo.shade400,
+                                ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                Colors.indigo.withOpacity(isDark ? 0.24 : 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
                           ),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.indigo
-                                  .withOpacity(isDark ? 0.24 : 0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.add,
-                          color: scheme.onPrimary,
-                          size: 24,
-                        ),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Новый щит',
-                              style: textStyles.sectionTitle.copyWith(
-                                fontSize: 17,
-                                color: scheme.onSurface,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Добавить щит в текущий объект',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: textStyles.secondaryBody.copyWith(
-                                color: isDark
-                                    ? scheme.onSurfaceVariant.withOpacity(0.9)
-                                    : Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
+                      child: Icon(
+                        Icons.add,
+                        color: scheme.onPrimary,
+                        size: 24,
                       ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: isDark
-                            ? scheme.onSurfaceVariant.withOpacity(0.8)
-                            : Colors.indigo.withOpacity(0.5),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Новый щит',
+                            style: textStyles.sectionTitle.copyWith(
+                              fontSize: 17,
+                              color: scheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Добавить щит в текущий объект',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textStyles.secondaryBody.copyWith(
+                              color: isDark
+                                  ? scheme.onSurfaceVariant.withOpacity(0.9)
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: isDark
+                          ? scheme.onSurfaceVariant.withOpacity(0.8)
+                          : Colors.indigo.withOpacity(0.5),
+                    ),
+                  ],
                 ),
               ),
             ),

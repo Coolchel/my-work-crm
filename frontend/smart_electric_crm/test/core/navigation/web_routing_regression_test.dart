@@ -9,6 +9,10 @@ import 'package:smart_electric_crm/main.dart';
 import 'package:smart_electric_crm/src/core/navigation/app_router.dart';
 import 'package:smart_electric_crm/src/features/auth/data/auth_repository.dart';
 import 'package:smart_electric_crm/src/features/auth/presentation/providers/auth_provider.dart';
+import 'package:smart_electric_crm/src/features/catalog/data/directory_repository.dart';
+import 'package:smart_electric_crm/src/features/catalog/domain/catalog_item.dart';
+import 'package:smart_electric_crm/src/features/catalog/domain/category_model.dart';
+import 'package:smart_electric_crm/src/features/catalog/domain/directory_models.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/project_model.dart';
 import 'package:smart_electric_crm/src/features/projects/data/models/stage_model.dart';
 import 'package:smart_electric_crm/src/features/projects/presentation/providers/project_providers.dart';
@@ -51,6 +55,72 @@ class _SuccessfulAuthRepository extends AuthRepository {
   @override
   Future<Map<String, dynamic>> getUser() async {
     return <String, dynamic>{'username': 'test-user'};
+  }
+}
+
+class _RoutingCatalogDirectoryRepository extends DirectoryRepository {
+  _RoutingCatalogDirectoryRepository() : super(client: Dio());
+
+  @override
+  Future<void> bootstrapDirectory() async {}
+
+  @override
+  Future<List<DirectorySection>> getSections() async {
+    return const [
+      DirectorySection(
+        id: 1,
+        code: 'currencies',
+        name: 'Currencies',
+        description: 'System currencies',
+      ),
+    ];
+  }
+
+  @override
+  Future<List<DirectoryEntry>> getEntries(int sectionId) async {
+    return const [
+      DirectoryEntry(
+        id: 1,
+        section: 1,
+        code: 'usd',
+        name: 'USD',
+        sortOrder: 1,
+        isActive: true,
+        metadata: <String, dynamic>{},
+      ),
+    ];
+  }
+
+  @override
+  Future<List<CatalogCategory>> getCategories() async {
+    return [
+      CatalogCategory(
+        id: 10,
+        name: 'Catalog category',
+        slug: 'catalog-category',
+        laborCoefficient: 1.0,
+      ),
+    ];
+  }
+
+  @override
+  Future<List<CatalogItem>> getCategoryItems(int categoryId) async {
+    return [
+      CatalogItem(
+        id: 101,
+        category: categoryId,
+        name: 'Cable',
+        unit: 'pcs',
+        defaultPrice: 100,
+        defaultCurrency: 'USD',
+        itemType: 'material',
+      ),
+    ];
+  }
+
+  @override
+  Future<List<CatalogItem>> getWorkItems() async {
+    return const [];
   }
 }
 
@@ -458,4 +528,75 @@ void main() {
     expect(find.text('Смета'), findsOneWidget);
     expect(find.text('Работы'), findsWidgets);
   });
+
+  testWidgets('catalog nested navigation stays on go_router paths',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'show_welcome_screen': false,
+      'show_catalog_menu': true,
+    });
+    tester.binding.platformDispatcher.defaultRouteNameTestValue =
+        '/catalog?from=%2Fsettings';
+    addTearDown(
+      () => tester.binding.platformDispatcher.clearAllTestValues(),
+    );
+
+    final container = ProviderContainer(
+      overrides: [
+        authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+        directoryRepositoryProvider
+            .overrideWithValue(_RoutingCatalogDirectoryRepository()),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final router = container.read(appRouterProvider);
+
+    await pumpWithViewport(
+      tester,
+      size: const Size(1440, 1024),
+      child: UncontrolledProviderScope(
+        container: container,
+        child: const MyApp(),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path, '/catalog');
+
+    await tester.tap(find.text('Currencies'));
+    await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path, '/catalog/system/1');
+
+    await tester.tap(
+      find.byKey(const ValueKey('directory_entries_local_nav_system')),
+    );
+    await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path, '/catalog');
+
+    await tester.tap(find.byKey(const ValueKey('catalog_local_nav_catalog')));
+    await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path, '/catalog');
+    expect(
+      router.routeInformationProvider.value.uri.queryParameters['tab'],
+      'catalog',
+    );
+
+    await tester.tap(find.text('Catalog category'));
+    await tester.pumpAndSettle();
+    expect(
+      router.routeInformationProvider.value.uri.path,
+      '/catalog/category/10',
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey('category_items_local_nav_catalog')),
+    );
+    await tester.pumpAndSettle();
+    expect(router.routeInformationProvider.value.uri.path, '/catalog');
+    expect(
+      router.routeInformationProvider.value.uri.queryParameters['tab'],
+      'catalog',
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 }

@@ -127,6 +127,49 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           );
         },
+        routes: [
+          GoRoute(
+            path: 'system/:sectionId',
+            pageBuilder: (context, state) {
+              final sectionId =
+                  int.tryParse(state.pathParameters['sectionId'] ?? '');
+              final from = state.uri.queryParameters['from'];
+
+              return NoTransitionPage<void>(
+                key: ValueKey(
+                    'catalog-system-section:${sectionId ?? 'invalid'}'),
+                child: sectionId == null
+                    ? const _RouteErrorScreen(
+                        message: 'Не удалось открыть раздел справочника.',
+                      )
+                    : DirectorySectionRouteScreen(
+                        sectionId: sectionId,
+                        from: from,
+                      ),
+              );
+            },
+          ),
+          GoRoute(
+            path: 'category/:categoryId',
+            pageBuilder: (context, state) {
+              final categoryId =
+                  int.tryParse(state.pathParameters['categoryId'] ?? '');
+              final from = state.uri.queryParameters['from'];
+
+              return NoTransitionPage<void>(
+                key: ValueKey('catalog-category:${categoryId ?? 'invalid'}'),
+                child: categoryId == null
+                    ? const _RouteErrorScreen(
+                        message: 'Не удалось открыть категорию каталога.',
+                      )
+                    : CatalogCategoryRouteScreen(
+                        categoryId: categoryId,
+                        from: from,
+                      ),
+              );
+            },
+          ),
+        ],
       ),
       GoRoute(
         path: AppNavigation.fileViewerPath,
@@ -494,6 +537,22 @@ class _CatalogRouteScreen extends StatelessWidget {
       initialTab: initialTab,
       onBackPressed: () => context.go(from ??
           AppNavigation.locationForShellSection(AppShellSection.settings)),
+      onOpenSystemSection: (section) {
+        context.push(
+          AppNavigation.catalogSystemSectionLocation(
+            sectionId: section.id.toString(),
+            from: from,
+          ),
+        );
+      },
+      onOpenCatalogCategory: (category) {
+        context.push(
+          AppNavigation.catalogCategoryLocation(
+            categoryId: category.id.toString(),
+            from: from,
+          ),
+        );
+      },
       onTabChanged: (tab) {
         context.go(
           AppNavigation.catalogLocation(
