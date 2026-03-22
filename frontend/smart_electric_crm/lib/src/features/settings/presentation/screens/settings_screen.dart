@@ -142,7 +142,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 curve: Curves.easeOutCubic,
                 padding: EdgeInsets.only(left: shellSidebarInset),
                 child: DesktopWebPageFrame(
-                  maxWidth: 1160,
+                  maxWidth: 1380,
                   padding: EdgeInsets.zero,
                   child: SizedBox(
                     width: constraints.maxWidth,

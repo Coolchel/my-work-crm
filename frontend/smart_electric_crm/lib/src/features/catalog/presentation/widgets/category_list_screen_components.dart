@@ -406,6 +406,7 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
         ),
         body: _CatalogScreenScaffoldBody(
           showWelcome: showWelcome,
+          scrollController: _scrollController,
           localNavigationRightInset: scrollableEndInset,
           content: entriesAsync.when(
             data: (entries) {
@@ -1176,6 +1177,7 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
         ),
         body: _CatalogScreenScaffoldBody(
           showWelcome: showWelcome,
+          scrollController: _scrollController,
           localNavigationRightInset: scrollableEndInset,
           content: itemsAsync.when(
             data: (items) {

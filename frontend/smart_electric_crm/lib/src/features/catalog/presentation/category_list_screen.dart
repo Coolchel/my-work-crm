@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ui';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -25,8 +24,8 @@ import 'package:smart_electric_crm/src/shared/presentation/widgets/friendly_empt
 
 part 'widgets/category_list_screen_components.dart';
 
-const double _catalogDesktopMenuTop = 118;
-const double _catalogContentMaxWidth = 1160;
+const double _catalogDesktopMenuTop = 20;
+const double _catalogContentMaxWidth = 1380;
 const double _catalogDesktopViewportFadeHeight = 28;
 
 double _catalogHorizontalContentPadding(BuildContext context) {
@@ -55,6 +54,7 @@ Widget _buildCatalogDesktopSideMenu(
 
   return DesktopSideMenu(
     compact: !isWideSidebar,
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 30),
     items: [
       if (showWelcome)
         DesktopSideMenuItem(
@@ -142,25 +142,20 @@ Widget _buildCatalogDesktopBottomFadeMask(BuildContext context) {
   return IgnorePointer(
     child: Align(
       alignment: Alignment.bottomCenter,
-      child: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            height: _catalogDesktopViewportFadeHeight,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  background.withOpacity(0),
-                  Color.alphaBlend(
-                    scheme.surface.withOpacity(isDark ? 0.20 : 0.10),
-                    background,
-                  ),
-                ],
+      child: Container(
+        height: _catalogDesktopViewportFadeHeight,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              background.withOpacity(0),
+              Color.alphaBlend(
+                scheme.surface.withOpacity(isDark ? 0.16 : 0.08),
+                background,
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -170,18 +165,90 @@ Widget _buildCatalogDesktopBottomFadeMask(BuildContext context) {
 
 bool _useCatalogNestedShellLayout() => true;
 
-class _CatalogScreenScaffoldBody extends StatelessWidget {
+class _CatalogScreenScaffoldBody extends StatefulWidget {
   const _CatalogScreenScaffoldBody({
     required this.showWelcome,
     required this.content,
     required this.localNavigation,
+    this.scrollController,
     this.localNavigationRightInset = 0,
   });
 
   final bool showWelcome;
   final Widget content;
   final Widget localNavigation;
+  final ScrollController? scrollController;
   final double localNavigationRightInset;
+
+  @override
+  State<_CatalogScreenScaffoldBody> createState() =>
+      _CatalogScreenScaffoldBodyState();
+}
+
+class _CatalogScreenScaffoldBodyState
+    extends State<_CatalogScreenScaffoldBody> {
+  double _desktopBottomFadeOpacity = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _bindScrollController(widget.scrollController);
+  }
+
+  @override
+  void didUpdateWidget(covariant _CatalogScreenScaffoldBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.scrollController, widget.scrollController)) {
+      oldWidget.scrollController?.removeListener(_handleBoundScroll);
+      _bindScrollController(widget.scrollController);
+    } else {
+      _syncFadeFromBoundScroll();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.scrollController?.removeListener(_handleBoundScroll);
+    super.dispose();
+  }
+
+  void _bindScrollController(ScrollController? controller) {
+    controller?.addListener(_handleBoundScroll);
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _syncFadeFromBoundScroll());
+  }
+
+  void _handleBoundScroll() {
+    _syncFadeFromBoundScroll();
+  }
+
+  void _syncFadeFromBoundScroll() {
+    final controller = widget.scrollController;
+    if (controller == null || !controller.hasClients) {
+      _updateDesktopBottomFadeOpacity(0);
+      return;
+    }
+    _updateDesktopBottomFadeOpacity(controller.position.extentAfter);
+  }
+
+  void _updateDesktopBottomFadeOpacity(double extentAfter) {
+    final nextOpacity = ((extentAfter - 4) / 24).clamp(0.0, 1.0);
+    if ((_desktopBottomFadeOpacity - nextOpacity).abs() < 0.01 || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _desktopBottomFadeOpacity = nextOpacity;
+    });
+  }
+
+  bool _handleDesktopScrollMetrics(ScrollMetrics metrics) {
+    if (axisDirectionToAxis(metrics.axisDirection) != Axis.vertical) {
+      return false;
+    }
+    _updateDesktopBottomFadeOpacity(metrics.extentAfter);
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -194,49 +261,94 @@ class _CatalogScreenScaffoldBody extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final contentHost = Stack(
-          children: [
-            Positioned.fill(
-              bottom: hasSidebar ? shellViewportBottomInset : 0,
-              child: DesktopWebPageFrame(
-                maxWidth: _catalogContentMaxWidth,
-                padding: EdgeInsets.zero,
-                child: content,
-              ),
-            ),
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: DesktopWebPageFrame(
-                maxWidth: _catalogContentMaxWidth,
-                padding: EdgeInsets.zero,
-                child: Padding(
-                  padding: EdgeInsets.only(right: localNavigationRightInset),
-                  child: localNavigation,
-                ),
-              ),
-            ),
-            if (hasSidebar) _buildCatalogDesktopBottomFadeMask(context),
-          ],
-        );
-
         final constrainedHost = hasSidebar
             ? SizedBox(
                 width: (constraints.maxWidth - shellSidebarInset)
                     .clamp(0.0, double.infinity),
                 height: constraints.maxHeight,
-                child: contentHost,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: DesktopWebPageFrame(
+                        maxWidth: _catalogContentMaxWidth,
+                        padding: EdgeInsets.zero,
+                        child: widget.content,
+                      ),
+                    ),
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: DesktopWebPageFrame(
+                        maxWidth: _catalogContentMaxWidth,
+                        padding: EdgeInsets.zero,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            right: widget.localNavigationRightInset,
+                          ),
+                          child: widget.localNavigation,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               )
-            : contentHost;
+            : Stack(
+                children: [
+                  Positioned.fill(
+                    child: DesktopWebPageFrame(
+                      maxWidth: _catalogContentMaxWidth,
+                      padding: EdgeInsets.zero,
+                      child: widget.content,
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: DesktopWebPageFrame(
+                      maxWidth: _catalogContentMaxWidth,
+                      padding: EdgeInsets.zero,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          right: widget.localNavigationRightInset,
+                        ),
+                        child: widget.localNavigation,
+                      ),
+                    ),
+                  ),
+                ],
+              );
 
         return Stack(
           children: [
-            AnimatedPadding(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOutCubic,
-              padding: EdgeInsets.only(left: shellSidebarInset),
-              child: constrainedHost,
+            Positioned.fill(
+              bottom: hasSidebar ? shellViewportBottomInset : 0,
+              child: NotificationListener<ScrollMetricsNotification>(
+                onNotification: (notification) =>
+                    _handleDesktopScrollMetrics(notification.metrics),
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notification) =>
+                      _handleDesktopScrollMetrics(notification.metrics),
+                  child: Stack(
+                    children: [
+                      AnimatedPadding(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeOutCubic,
+                        padding: EdgeInsets.only(left: shellSidebarInset),
+                        child: constrainedHost,
+                      ),
+                      if (hasSidebar)
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 160),
+                          curve: Curves.easeOut,
+                          opacity: _desktopBottomFadeOpacity,
+                          child: _buildCatalogDesktopBottomFadeMask(context),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
             ),
             if (hasSidebar)
               Positioned(
@@ -247,7 +359,7 @@ class _CatalogScreenScaffoldBody extends StatelessWidget {
                   top: false,
                   child: _buildCatalogDesktopSideMenu(
                     context,
-                    showWelcome: showWelcome,
+                    showWelcome: widget.showWelcome,
                   ),
                 ),
               ),
@@ -479,6 +591,7 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
       ),
       body: _CatalogScreenScaffoldBody(
         showWelcome: showWelcome,
+        scrollController: _activeScrollController,
         localNavigationRightInset: scrollableEndInset,
         content: IndexedStack(
           index: _currentIndex,
