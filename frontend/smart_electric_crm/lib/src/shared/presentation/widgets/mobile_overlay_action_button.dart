@@ -43,20 +43,20 @@ class _MobileOverlayActionButtonState extends State<MobileOverlayActionButton> {
         scheme.onPrimary;
     final surfaceBlend = isDark ? scheme.surfaceContainerHigh : scheme.surface;
     final topColor = Color.alphaBlend(
-      Colors.white.withOpacity(isDark ? 0.08 : 0.18),
+      Colors.white.withOpacity(isDark ? 0.05 : 0.12),
       baseBackground,
     );
     final bottomColor = Color.alphaBlend(
-      Colors.black.withOpacity(isDark ? 0.08 : 0.04),
+      Colors.black.withOpacity(isDark ? 0.05 : 0.03),
       baseBackground,
     );
     final borderColor = Color.alphaBlend(
-      (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.12 : 0.08),
+      (isDark ? Colors.white : Colors.black).withOpacity(isDark ? 0.10 : 0.06),
       baseBackground,
     );
-    final haloColor = baseBackground.withOpacity(isDark ? 0.26 : 0.22);
+    final haloColor = baseBackground.withOpacity(isDark ? 0.18 : 0.14);
     final shellColor = Color.alphaBlend(
-      surfaceBlend.withOpacity(isDark ? 0.14 : 0.08),
+      surfaceBlend.withOpacity(isDark ? 0.10 : 0.05),
       baseBackground,
     );
     final borderRadius = BorderRadius.circular(20);
@@ -70,6 +70,8 @@ class _MobileOverlayActionButtonState extends State<MobileOverlayActionButton> {
         scale: _isPressed ? 0.97 : 1,
         child: Material(
           color: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: borderRadius),
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: widget.onPressed,
             onHighlightChanged: (value) {
@@ -79,6 +81,8 @@ class _MobileOverlayActionButtonState extends State<MobileOverlayActionButton> {
               setState(() => _isPressed = value);
             },
             borderRadius: borderRadius,
+            overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+            splashFactory: NoSplash.splashFactory,
             splashColor: Colors.transparent,
             highlightColor: Colors.transparent,
             hoverColor: Colors.transparent,
@@ -95,14 +99,14 @@ class _MobileOverlayActionButtonState extends State<MobileOverlayActionButton> {
                 border: Border.all(color: borderColor),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.30 : 0.13),
-                    blurRadius: isDark ? 18 : 16,
-                    offset: const Offset(0, 8),
+                    color: Colors.black.withOpacity(isDark ? 0.24 : 0.10),
+                    blurRadius: isDark ? 16 : 14,
+                    offset: const Offset(0, 7),
                   ),
                   BoxShadow(
                     color: haloColor,
-                    blurRadius: 18,
-                    offset: const Offset(0, 10),
+                    blurRadius: 14,
+                    offset: const Offset(0, 9),
                     spreadRadius: -8,
                   ),
                 ],

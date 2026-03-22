@@ -31,6 +31,124 @@ const double _catalogContentMaxWidth = 1380;
 const double _catalogDesktopViewportFadeHeight = 28;
 const String _catalogNestedRouteNamePrefix = 'catalog-nested:';
 
+class _CatalogMobileNavigationFrame extends ConsumerWidget {
+  const _CatalogMobileNavigationFrame({
+    required this.child,
+  });
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!DesktopWebFrame.usesOverlayPrimaryAction(context)) {
+      return child;
+    }
+
+    final showWelcome = ref.watch(
+      appSettingsProvider.select((value) => value.showWelcome),
+    );
+
+    return Scaffold(
+      body: child,
+      bottomNavigationBar: _CatalogMobileProgramNavigationBar(
+        showWelcome: showWelcome,
+      ),
+    );
+  }
+}
+
+class _CatalogMobileProgramNavigationBar extends StatelessWidget {
+  const _CatalogMobileProgramNavigationBar({
+    required this.showWelcome,
+  });
+
+  final bool showWelcome;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final destinations = [
+      if (showWelcome)
+        (
+          section: AppShellSection.home,
+          destination: const NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Главная',
+          ),
+        ),
+      (
+        section: AppShellSection.projects,
+        destination: const NavigationDestination(
+          icon: Icon(Icons.description_outlined),
+          selectedIcon: Icon(Icons.description),
+          label: 'Объекты',
+        ),
+      ),
+      (
+        section: AppShellSection.finance,
+        destination: const NavigationDestination(
+          icon: Icon(Icons.account_balance_wallet_outlined),
+          selectedIcon: Icon(Icons.account_balance_wallet),
+          label: 'Финансы',
+        ),
+      ),
+      (
+        section: AppShellSection.statistics,
+        destination: const NavigationDestination(
+          icon: Icon(Icons.bar_chart_outlined),
+          selectedIcon: Icon(Icons.bar_chart),
+          label: 'Статистика',
+        ),
+      ),
+      (
+        section: AppShellSection.settings,
+        destination: const NavigationDestination(
+          icon: Icon(Icons.settings_outlined),
+          selectedIcon: Icon(Icons.settings),
+          label: 'Настройки',
+        ),
+      ),
+    ];
+
+    final selectedIndex = destinations.indexWhere(
+      (item) => item.section == AppShellSection.settings,
+    );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDark
+            ? scheme.surfaceContainerHigh
+            : scheme.surface.withOpacity(0.98),
+        border: Border(
+          top: BorderSide(
+            color: scheme.outlineVariant.withOpacity(isDark ? 0.55 : 0.4),
+            width: 0.8,
+          ),
+        ),
+      ),
+      child: NavigationBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        selectedIndex: selectedIndex,
+        onDestinationSelected: (index) {
+          final section = destinations[index].section;
+          if (section == AppShellSection.home) {
+            AppNavigation.goHome(scrollToTop: false);
+            return;
+          }
+          AppNavigation.goToShellSection(context, section);
+        },
+        destinations: [
+          for (final item in destinations) item.destination,
+        ],
+      ),
+    );
+  }
+}
+
 double _catalogHorizontalContentPadding(BuildContext context) {
   return DesktopWebFrame.contentHorizontalPadding(context);
 }
@@ -427,22 +545,25 @@ class DirectorySectionRouteScreen extends ConsumerWidget {
           );
         }
 
-        return _SectionEntriesScreen(
-          section: section,
-          onError: (message) => _showCatalogRouteError(context, message),
-          onSelectTab: (index) {
-            context.go(
+        return _CatalogMobileNavigationFrame(
+          child: _SectionEntriesScreen(
+            section: section,
+            onError: (message) => _showCatalogRouteError(context, message),
+            onSelectTab: (index) {
+              context.go(
+                AppNavigation.catalogLocation(
+                  tab: index == 1
+                      ? CatalogSection.catalog
+                      : CatalogSection.system,
+                  from: from,
+                ),
+              );
+            },
+            onBackPressed: () => context.go(
               AppNavigation.catalogLocation(
-                tab:
-                    index == 1 ? CatalogSection.catalog : CatalogSection.system,
+                tab: CatalogSection.system,
                 from: from,
               ),
-            );
-          },
-          onBackPressed: () => context.go(
-            AppNavigation.catalogLocation(
-              tab: CatalogSection.system,
-              from: from,
             ),
           ),
         );
@@ -483,22 +604,25 @@ class CatalogCategoryRouteScreen extends ConsumerWidget {
           );
         }
 
-        return _CategoryItemsScreen(
-          category: category,
-          onError: (message) => _showCatalogRouteError(context, message),
-          onSelectTab: (index) {
-            context.go(
+        return _CatalogMobileNavigationFrame(
+          child: _CategoryItemsScreen(
+            category: category,
+            onError: (message) => _showCatalogRouteError(context, message),
+            onSelectTab: (index) {
+              context.go(
+                AppNavigation.catalogLocation(
+                  tab: index == 1
+                      ? CatalogSection.catalog
+                      : CatalogSection.system,
+                  from: from,
+                ),
+              );
+            },
+            onBackPressed: () => context.go(
               AppNavigation.catalogLocation(
-                tab:
-                    index == 1 ? CatalogSection.catalog : CatalogSection.system,
+                tab: CatalogSection.catalog,
                 from: from,
               ),
-            );
-          },
-          onBackPressed: () => context.go(
-            AppNavigation.catalogLocation(
-              tab: CatalogSection.catalog,
-              from: from,
             ),
           ),
         );
@@ -826,6 +950,9 @@ class _CategoryListScreenState extends ConsumerState<CategoryListScreen> {
                   ? _openCreateSectionDialog
                   : _openCreateCategoryDialog,
             )
+          : null,
+      bottomNavigationBar: useOverlayPrimaryAction
+          ? _CatalogMobileProgramNavigationBar(showWelcome: showWelcome)
           : null,
     );
   }

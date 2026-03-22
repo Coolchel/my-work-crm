@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,6 +31,7 @@ void main() {
         );
         expect(find.byType(FloatingActionButton), findsNothing);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
 
     testWidgets(
@@ -48,8 +48,28 @@ void main() {
           find.byKey(const ValueKey('catalog_mobile_add_action')),
           findsOneWidget,
         );
+        expect(find.byType(NavigationBar), findsOneWidget);
         expect(find.byType(FloatingActionButton), findsNothing);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
+
+    testWidgets(
+      'keeps program navigation bar visible in nested directory route on Android',
+      (tester) async {
+        await _pumpCatalogScreen(
+          tester,
+          width: 390,
+          initialTab: CatalogSection.system,
+          targetPlatform: TargetPlatform.android,
+        );
+
+        await tester.tap(find.text(_longSectionName));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(NavigationBar), findsOneWidget);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
     );
 
     testWidgets(
@@ -66,6 +86,7 @@ void main() {
 
         expect(titleRect.left, greaterThan(menuRect.right));
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
 
     testWidgets(
@@ -86,6 +107,32 @@ void main() {
         );
         expect(find.byType(FloatingActionButton), findsNothing);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
+    );
+
+    testWidgets(
+      'uses floating add action in section entries screen on Android',
+      (tester) async {
+        await _pumpCatalogScreen(
+          tester,
+          width: 390,
+          initialTab: CatalogSection.system,
+          targetPlatform: TargetPlatform.android,
+        );
+
+        await tester.tap(find.text(_longSectionName));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('directory_entries_mobile_add_action')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('directory_entries_add_action')),
+          findsNothing,
+        );
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
     );
 
     testWidgets(
@@ -106,6 +153,32 @@ void main() {
         );
         expect(find.byType(FloatingActionButton), findsNothing);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
+    );
+
+    testWidgets(
+      'uses floating add action in category items screen on Android',
+      (tester) async {
+        await _pumpCatalogScreen(
+          tester,
+          width: 390,
+          initialTab: CatalogSection.catalog,
+          targetPlatform: TargetPlatform.android,
+        );
+
+        await tester.tap(find.text(_categoryName));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const ValueKey('category_items_mobile_add_action')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const ValueKey('category_items_add_action')),
+          findsNothing,
+        );
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
     );
 
     testWidgets(
@@ -137,6 +210,7 @@ void main() {
         expect(find.byKey(const ValueKey('catalog_local_nav')), findsOneWidget);
         expect(find.text(_categoryName), findsOneWidget);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
 
     testWidgets(
@@ -163,6 +237,7 @@ void main() {
         expect(find.byKey(const ValueKey('catalog_local_nav')), findsOneWidget);
         expect(find.text(_longSectionName), findsOneWidget);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
 
     testWidgets(
@@ -194,6 +269,7 @@ void main() {
         expect(find.byKey(const ValueKey('catalog_local_nav')), findsOneWidget);
         expect(find.text(_longSectionName), findsOneWidget);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
 
     testWidgets(
@@ -220,6 +296,7 @@ void main() {
         expect(find.byKey(const ValueKey('catalog_local_nav')), findsOneWidget);
         expect(find.text(_categoryName), findsOneWidget);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
 
     testWidgets(
@@ -240,6 +317,7 @@ void main() {
         expect(title.maxLines, 2);
         expect(title.overflow, TextOverflow.ellipsis);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
 
     testWidgets(
@@ -267,6 +345,7 @@ void main() {
         expect(
             descriptionRect.top - subtitleRect.bottom, lessThanOrEqualTo(12));
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
 
     testWidgets(
@@ -290,6 +369,7 @@ void main() {
         expect(title.maxLines, 2);
         expect(title.overflow, TextOverflow.ellipsis);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
 
     testWidgets(
@@ -314,6 +394,7 @@ void main() {
         final itemTitle = tester.widget<Text>(find.text(_longItemName));
         expect(itemTitle.maxLines, 1);
       },
+      variant: TargetPlatformVariant.only(TargetPlatform.windows),
     );
 
     testWidgets(
@@ -459,8 +540,6 @@ Future<void> _pumpCatalogScreen(
 
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = Size(width, 1200);
-  final previousPlatform = debugDefaultTargetPlatformOverride;
-  debugDefaultTargetPlatformOverride = targetPlatform;
   addTearDown(() {
     tester.view.resetPhysicalSize();
     tester.view.resetDevicePixelRatio();
@@ -482,5 +561,4 @@ Future<void> _pumpCatalogScreen(
   );
 
   await tester.pumpAndSettle();
-  debugDefaultTargetPlatformOverride = previousPlatform;
 }

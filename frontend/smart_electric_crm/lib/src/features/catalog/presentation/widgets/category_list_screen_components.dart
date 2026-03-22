@@ -181,10 +181,12 @@ class _SystemSectionsTabState extends ConsumerState<_SystemSectionsTab> {
                 Navigator.of(context).push(
                   _buildCatalogNestedRoute(
                     name: 'section-entries',
-                    builder: (_) => _SectionEntriesScreen(
-                      section: section,
-                      onError: widget.onError,
-                      onSelectTab: widget.onSelectTab,
+                    builder: (_) => _CatalogMobileNavigationFrame(
+                      child: _SectionEntriesScreen(
+                        section: section,
+                        onError: widget.onError,
+                        onSelectTab: widget.onSelectTab,
+                      ),
                     ),
                   ),
                 );
@@ -575,15 +577,18 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
             topPadding: localNavSpacing.topPadding,
             bottomPadding: localNavSpacing.bottomPadding,
             itemWidth: localNavItemWidth,
-            trailing: ContentTabStripActionButton(
-              key: const ValueKey('directory_entries_add_action'),
-              icon: Icons.add,
-              label: 'Добавить',
-              tooltip: 'Добавить запись',
-              width: localNavItemWidth,
-              onTap: _openCreateEntryDialog,
-            ),
-            trailingReservedWidth: localNavItemWidth,
+            trailing: useOverlayPrimaryAction
+                ? null
+                : ContentTabStripActionButton(
+                    key: const ValueKey('directory_entries_add_action'),
+                    icon: Icons.add,
+                    label: 'Добавить',
+                    tooltip: 'Добавить запись',
+                    width: localNavItemWidth,
+                    onTap: _openCreateEntryDialog,
+                  ),
+            trailingReservedWidth:
+                useOverlayPrimaryAction ? null : localNavItemWidth,
             items: const [
               ContentTabStripItem(
                 label: 'Система',
@@ -598,6 +603,14 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
             ],
           ),
         ),
+        floatingActionButton: useOverlayPrimaryAction
+            ? _buildCatalogOverlayActionButton(
+                context,
+                key: const ValueKey('directory_entries_mobile_add_action'),
+                tooltip: 'Добавить запись',
+                onTap: _openCreateEntryDialog,
+              )
+            : null,
       );
     }
 
@@ -827,15 +840,20 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
                         topPadding: localNavSpacing.topPadding,
                         bottomPadding: localNavSpacing.bottomPadding,
                         itemWidth: localNavItemWidth,
-                        trailing: ContentTabStripActionButton(
-                          key: const ValueKey('directory_entries_add_action'),
-                          icon: Icons.add,
-                          label: 'Добавить',
-                          tooltip: 'Добавить запись',
-                          width: localNavItemWidth,
-                          onTap: _openCreateEntryDialog,
-                        ),
-                        trailingReservedWidth: localNavItemWidth,
+                        trailing: useOverlayPrimaryAction
+                            ? null
+                            : ContentTabStripActionButton(
+                                key: const ValueKey(
+                                  'directory_entries_add_action',
+                                ),
+                                icon: Icons.add,
+                                label: 'Добавить',
+                                tooltip: 'Добавить запись',
+                                width: localNavItemWidth,
+                                onTap: _openCreateEntryDialog,
+                              ),
+                        trailingReservedWidth:
+                            useOverlayPrimaryAction ? null : localNavItemWidth,
                         items: const [
                           ContentTabStripItem(
                             label: 'Система',
@@ -872,6 +890,14 @@ class _SectionEntriesScreenState extends ConsumerState<_SectionEntriesScreen> {
           ),
         ),
       ),
+      floatingActionButton: useOverlayPrimaryAction
+          ? _buildCatalogOverlayActionButton(
+              context,
+              key: const ValueKey('directory_entries_mobile_add_action'),
+              tooltip: 'Добавить запись',
+              onTap: _openCreateEntryDialog,
+            )
+          : null,
     );
   }
 }
@@ -975,10 +1001,12 @@ class _CatalogTabState extends ConsumerState<_CatalogTab> {
                 Navigator.of(context).push(
                   _buildCatalogNestedRoute(
                     name: 'category-items',
-                    builder: (_) => _CategoryItemsScreen(
-                      category: category,
-                      onError: widget.onError,
-                      onSelectTab: widget.onSelectTab,
+                    builder: (_) => _CatalogMobileNavigationFrame(
+                      child: _CategoryItemsScreen(
+                        category: category,
+                        onError: widget.onError,
+                        onSelectTab: widget.onSelectTab,
+                      ),
                     ),
                   ),
                 );
@@ -1363,17 +1391,20 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
             topPadding: localNavSpacing.topPadding,
             bottomPadding: localNavSpacing.bottomPadding,
             itemWidth: localNavItemWidth,
-            trailing: ContentTabStripActionButton(
-              key: const ValueKey('category_items_add_action'),
-              icon: Icons.add,
-              label: 'Добавить',
-              tooltip: 'Добавить позицию',
-              width: localNavItemWidth,
-              onTap: () => _openCreateItemDialog(
-                workItemsAsync.value ?? const <CatalogItem>[],
-              ),
-            ),
-            trailingReservedWidth: localNavItemWidth,
+            trailing: useOverlayPrimaryAction
+                ? null
+                : ContentTabStripActionButton(
+                    key: const ValueKey('category_items_add_action'),
+                    icon: Icons.add,
+                    label: 'Добавить',
+                    tooltip: 'Добавить позицию',
+                    width: localNavItemWidth,
+                    onTap: () => _openCreateItemDialog(
+                      workItemsAsync.value ?? const <CatalogItem>[],
+                    ),
+                  ),
+            trailingReservedWidth:
+                useOverlayPrimaryAction ? null : localNavItemWidth,
             items: const [
               ContentTabStripItem(
                 label: 'Система',
@@ -1388,6 +1419,16 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
             ],
           ),
         ),
+        floatingActionButton: useOverlayPrimaryAction
+            ? _buildCatalogOverlayActionButton(
+                context,
+                key: const ValueKey('category_items_mobile_add_action'),
+                tooltip: 'Добавить позицию',
+                onTap: () => _openCreateItemDialog(
+                  workItemsAsync.value ?? const <CatalogItem>[],
+                ),
+              )
+            : null,
       );
     }
 
@@ -1614,17 +1655,21 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
                         topPadding: localNavSpacing.topPadding,
                         bottomPadding: localNavSpacing.bottomPadding,
                         itemWidth: localNavItemWidth,
-                        trailing: ContentTabStripActionButton(
-                          key: const ValueKey('category_items_add_action'),
-                          icon: Icons.add,
-                          label: 'Добавить',
-                          tooltip: 'Добавить позицию',
-                          width: localNavItemWidth,
-                          onTap: () => _openCreateItemDialog(
-                            workItemsAsync.value ?? const <CatalogItem>[],
-                          ),
-                        ),
-                        trailingReservedWidth: localNavItemWidth,
+                        trailing: useOverlayPrimaryAction
+                            ? null
+                            : ContentTabStripActionButton(
+                                key:
+                                    const ValueKey('category_items_add_action'),
+                                icon: Icons.add,
+                                label: 'Добавить',
+                                tooltip: 'Добавить позицию',
+                                width: localNavItemWidth,
+                                onTap: () => _openCreateItemDialog(
+                                  workItemsAsync.value ?? const <CatalogItem>[],
+                                ),
+                              ),
+                        trailingReservedWidth:
+                            useOverlayPrimaryAction ? null : localNavItemWidth,
                         items: const [
                           ContentTabStripItem(
                             label: 'Система',
@@ -1661,6 +1706,16 @@ class _CategoryItemsScreenState extends ConsumerState<_CategoryItemsScreen> {
           ),
         ),
       ),
+      floatingActionButton: useOverlayPrimaryAction
+          ? _buildCatalogOverlayActionButton(
+              context,
+              key: const ValueKey('category_items_mobile_add_action'),
+              tooltip: 'Добавить позицию',
+              onTap: () => _openCreateItemDialog(
+                workItemsAsync.value ?? const <CatalogItem>[],
+              ),
+            )
+          : null,
     );
   }
 

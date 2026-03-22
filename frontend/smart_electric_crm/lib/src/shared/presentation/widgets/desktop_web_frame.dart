@@ -20,7 +20,7 @@ final class DesktopWebFrame {
   static const double overlayActionBottomClearance = 24;
   static const double mobileOverlayActionSize = 56;
   static const double mobileOverlayActionMargin = 16;
-  static const double mobileOverlayActionBottomClearance = 48;
+  static const double mobileOverlayActionBottomClearance = 40;
 
   static bool _isDesktopSurface() {
     if (kIsWeb) {
